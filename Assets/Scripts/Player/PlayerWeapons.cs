@@ -3,6 +3,7 @@ using Hunt.Combat;
 using Hunt.Core;
 using Hunt.Data;
 using Hunt.Monsters;
+using Hunt.Stats;
 using Hunt.UI;
 using Hunt.Weapons;
 using UnityEngine;
@@ -145,7 +146,7 @@ namespace Hunt.Player
         {
             var stats = player.Stats;
             float s = Mathf.Lerp(w.data.spreadHip, w.data.spreadAds, aim);
-            bool runGun = stats.data.passive == CharacterPassive.ScoutRunAndGun;
+            bool runGun = stats.Has(Trait.RunAndGun);
             if (player.Controller.IsMoving && !runGun) s += w.data.spreadMovePenalty;
             s += Mathf.Min(shotIndex, 10) * 0.08f * (1f - aim * 0.7f); // 연사 블룸
             s *= stats.SpreadMult * w.SpreadMult;
@@ -198,9 +199,8 @@ namespace Hunt.Player
             }
 
             float weakBonus = stats.WeakPointBonus + w.WeakPointBonus;
-            if (stats.data.passive == CharacterPassive.MarksmanSteady && player.Controller.StationaryTime >= 1f) weakBonus += 0.5f;
+            if (stats.Has(Trait.SteadyAim) && player.Controller.StationaryTime >= 1f) weakBonus += 0.5f;
             float kbMult = stats.KnockbackMult * w.KnockbackMult * inf.KnockbackMultiplier;
-            if (stats.data.passive == CharacterPassive.BruiserBloodlust) kbMult *= 1.3f;
 
             var info = new DamageInfo
             {

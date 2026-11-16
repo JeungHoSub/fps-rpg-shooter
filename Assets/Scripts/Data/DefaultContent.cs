@@ -11,11 +11,9 @@ namespace Hunt.Data
     /// </summary>
     public static class DefaultContent
     {
-        static List<CharacterData> characters;
         static List<WeaponData> weapons;
         static Dictionary<MonsterArchetype, MonsterData> monsters;
 
-        public static List<CharacterData> Characters { get { if (characters == null) BuildCharacters(); return characters; } }
         public static List<WeaponData> Weapons { get { if (weapons == null) BuildWeapons(); return weapons; } }
         public static WeaponData Pistol => Weapons[0];
 
@@ -25,35 +23,25 @@ namespace Hunt.Data
             return monsters[a];
         }
 
-        // ------------------------------------------------------------------ 캐릭터
-        static void BuildCharacters()
+        // ------------------------------------------------------------------ 주인공
+        static CharacterData hunter;
+
+        /// <summary>단일 주인공. 모든 스탯이 균등하게 시작하고, 플레이어의 투자로 성격이 정해진다.</summary>
+        public static CharacterData Hunter
         {
-            characters = new List<CharacterData>
+            get
             {
-                Character("bruiser", "브루저", "탱커",
-                    "무거운 무기를 다루는 근접 전투형. 괴물 무리를 몸으로 막아낸다.",
-                    new StatBlock(14, 6, 6, 14, 5, 5), new StatBlock(1.5f, 0.5f, 0.5f, 1.5f, 0.5f, 0.5f),
-                    CharacterPassive.BruiserBloodlust, "피의 갈증: 처치 시 HP 4 회복, 넉백 +30%"),
-
-                Character("scout", "스카우트", "기동 딜러",
-                    "빠른 발로 전장을 휘젓는 유격수. 이동 사격에 특화.",
-                    new StatBlock(5, 15, 9, 7, 9, 5), new StatBlock(0.5f, 1.5f, 1f, 0.5f, 1f, 0.5f),
-                    CharacterPassive.ScoutRunAndGun, "런앤건: 이동 중 탄퍼짐 페널티 없음"),
-
-                Character("marksman", "마크스맨", "저격 딜러",
-                    "약점을 정확히 꿰뚫는 저격수. 반동 제어와 집중력이 뛰어나다.",
-                    new StatBlock(5, 7, 14, 6, 14, 4), new StatBlock(0.5f, 0.5f, 1.5f, 0.5f, 1.5f, 0.5f),
-                    CharacterPassive.MarksmanSteady, "정조준: 1초간 정지 시 약점 데미지 +50%"),
-            };
-        }
-
-        static CharacterData Character(string id, string name, string role, string desc,
-            StatBlock stats, StatBlock growth, CharacterPassive passive, string passiveDesc)
-        {
-            var c = ScriptableObject.CreateInstance<CharacterData>();
-            c.id = id; c.name = id; c.displayName = name; c.role = role; c.description = desc;
-            c.baseStats = stats; c.growthPerLevel = growth; c.passive = passive; c.passiveDescription = passiveDesc;
-            return c;
+                if (hunter == null)
+                {
+                    hunter = ScriptableObject.CreateInstance<CharacterData>();
+                    hunter.id = "hunter"; hunter.name = "hunter"; hunter.displayName = "헌터";
+                    hunter.description = "홀로 남은 생존자. 괴물을 사냥하며 강해진다.";
+                    hunter.baseStats = new StatBlock(8, 8, 8, 8, 8, 8);
+                    hunter.growthPerLevel = new StatBlock(0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f);
+                    hunter.startingStatPoints = 6;
+                }
+                return hunter;
+            }
         }
 
         // ------------------------------------------------------------------ 무기

@@ -96,39 +96,49 @@ namespace Hunt.UI
             DrawNotes();
         }
 
-        // ================================================================ 캐릭터 선택
+        // ================================================================ 시작 화면 (직업 없음: 스탯 분배 + 시작 특성 + 무기)
         void DrawSelect(GameManager gm)
         {
             Fill(new Rect(0, 0, W, H), new Color(0, 0, 0, 0.55f));
             GUI.Label(new Rect(0, 40, W, 90), "PROJECT: HUNT", title);
-            GUI.Label(new Rect(0, 125, W, 40), "진화하는 괴물을 사냥하라", labelC);
+            GUI.Label(new Rect(0, 125, W, 40), $"{gm.Character.displayName} — {gm.Character.description}", labelC);
 
-            var chars = DefaultContent.Characters;
-            float cw = 400, ch = 400, gap = 30;
-            float x0 = W / 2 - (chars.Count * cw + (chars.Count - 1) * gap) / 2;
-            for (int i = 0; i < chars.Count; i++)
+            var preview = gm.PreviewStats();
+
+            // 스탯 분배
+            var lp = new Rect(W / 2 - 620, 175, 600, 420);
+            Fill(lp, new Color(0.1f, 0.1f, 0.12f, 0.85f));
+            GUI.Label(new Rect(lp.x + 20, lp.y + 12, 560, 34), $"<b>시작 스탯 분배</b>   남은 포인트 <color=#ffd966>{gm.StartPointsLeft}</color>", label);
+            float y = lp.y + 60;
+            foreach (var t in CharacterStats.All)
             {
-                var c = chars[i];
-                var r = new Rect(x0 + i * (cw + gap), 190, cw, ch);
-                bool sel = gm.SelectedCharacter == c;
-                Fill(r, sel ? new Color(0.25f, 0.35f, 0.5f, 0.9f) : new Color(0.1f, 0.1f, 0.12f, 0.85f));
-                if (GUI.Button(r, GUIContent.none, GUIStyle.none)) gm.SelectedCharacter = c;
-
-                GUI.Label(new Rect(r.x + 20, r.y + 12, cw - 40, 40), $"<b><size=30>{c.displayName}</size></b>  <color=#aaa>{c.role}</color>", label);
-                GUI.Label(new Rect(r.x + 20, r.y + 58, cw - 40, 60), c.description, Wrap(small));
-                var st = new CharacterStats(c);
-                float y = r.y + 125;
-                foreach (var t in CharacterStats.All)
-                {
-                    float v = st.Get(t);
-                    GUI.Label(new Rect(r.x + 20, y, 120, 26), StatName(t), small);
-                    Fill(new Rect(r.x + 130, y + 7, 200, 12), new Color(1, 1, 1, 0.1f));
-                    Fill(new Rect(r.x + 130, y + 7, 200 * Mathf.Clamp01(v / 20f), 12), StatColor(t));
-                    GUI.Label(new Rect(r.x + 340, y, 40, 26), v.ToString("0"), small);
-                    y += 28;
-                }
-                GUI.Label(new Rect(r.x + 20, y + 10, cw - 40, 60), $"<color=#ffd966>{c.passiveDescription}</color>", Wrap(small));
+                float v = preview.Get(t);
+                GUI.Label(new Rect(lp.x + 20, y, 80, 30), $"<b>{StatName(t)}</b>", label);
+                Fill(new Rect(lp.x + 100, y + 10, 200, 12), new Color(1, 1, 1, 0.1f));
+                Fill(new Rect(lp.x + 100, y + 10, 200 * Mathf.Clamp01(v / 20f), 12), StatColor(t));
+                GUI.Label(new Rect(lp.x + 310, y, 40, 30), v.ToString("0"), label);
+                GUI.enabled = gm.StartAllocation[(int)t] > 0;
+                if (GUI.Button(new Rect(lp.x + 355, y + 2, 34, 28), "-", button)) gm.AdjustStartStat(t, -1);
+                GUI.enabled = gm.StartPointsLeft > 0;
+                if (GUI.Button(new Rect(lp.x + 393, y + 2, 34, 28), "+", button)) gm.AdjustStartStat(t, +1);
+                GUI.enabled = true;
+                GUI.Label(new Rect(lp.x + 440, y, 150, 30), $"<color=#999>{StatDesc(t)}</color>", new GUIStyle(small) { fontSize = 13, wordWrap = true });
+                y += 56;
             }
+
+            // 시작 특성
+            var rp = new Rect(W / 2 + 20, 175, 600, 420);
+            Fill(rp, new Color(0.1f, 0.1f, 0.12f, 0.85f));
+            GUI.Label(new Rect(rp.x + 20, rp.y + 12, 560, 34), $"<b>시작 특성</b> (1개)   <color=#aaa>이후 {Traits.PickEveryLevels}레벨마다 하나씩 추가</color>", label);
+            var all = Traits.All;
+            for (int i = 0; i < all.Length; i++)
+            {
+                var t = all[i];
+                var r = new Rect(rp.x + 20 + (i % 2) * 285, rp.y + 60 + (i / 2) * 88, 275, 80);
+                GUI.color = gm.StartTrait == t ? new Color(0.5f, 0.9f, 1f) : Color.white;
+                if (GUI.Button(r, TraitText(t), button)) gm.StartTrait = t;
+            }
+            GUI.color = Color.white;
 
             // 무기 선택
             float wy = 620;
@@ -149,7 +159,6 @@ namespace Hunt.UI
                 GUI.color = Color.white;
             }
 
-            var preview = new CharacterStats(gm.SelectedCharacter);
             float weight = DefaultContent.Pistol.weight;
             foreach (var w in gm.SelectedPrimaries) weight += w.weight;
             float pen = preview.WeightPenalty(weight);
@@ -157,7 +166,9 @@ namespace Hunt.UI
             GUI.Label(new Rect(0, wy + 170, W, 30),
                 $"장비 무게 <color={wcol}>{weight:0.0} / {preview.CarryCapacity:0.0}</color>" + (pen < 1f ? $"  (과적: 이동·조준 속도 {Mathf.RoundToInt((1 - pen) * 100)}% 감소)" : ""), labelC);
 
-            if (GUI.Button(new Rect(W / 2 - 150, wy + 215, 300, 64), "<size=28><b>출격</b></size>", button)) gm.StartGame();
+            GUI.enabled = gm.StartPointsLeft == 0;
+            if (GUI.Button(new Rect(W / 2 - 150, wy + 215, 300, 64), gm.StartPointsLeft == 0 ? "<size=28><b>출격</b></size>" : "<size=20>스탯 포인트를 모두 분배하세요</size>", button)) gm.StartGame();
+            GUI.enabled = true;
 
             GUI.Label(new Rect(0, H - 70, W, 60),
                 "WASD 이동 · Shift 달리기 · Space 점프 · 좌클릭 사격 · 우클릭 조준 · R 재장전 · 1/2/3 무기 교체\n" +
@@ -293,7 +304,8 @@ namespace Hunt.UI
             var panel = new Rect(W / 2 - pw / 2, 130, pw, ph);
             Fill(panel, new Color(0.06f, 0.06f, 0.08f, 0.94f));
 
-            string[] names = { "스탯", "무기 · 파츠", "진화 정보" };
+            bool pending = p.StatPoints > 0 || p.PendingTraitPicks > 0;
+            string[] names = { pending ? "스탯 · 특성 (!)" : "스탯 · 특성", "무기 · 파츠", "진화 정보" };
             for (int i = 0; i < 3; i++)
             {
                 GUI.color = (int)tab == i ? new Color(1f, 0.9f, 0.5f) : Color.white;
@@ -341,10 +353,39 @@ namespace Hunt.UI
                 $"치명타             {s.CritChance * 100:0.0}%  ×{s.CritMultiplier:0.00}\n" +
                 $"약점 추가 배율     +{s.WeakPointBonus * 100:0}%\n" +
                 $"감염 저항          ×{s.InfectionResistMult:0.00}\n" +
-                $"변이 비용          ×{s.AbilityCostMult:0.00}   지속 ×{s.AbilityDurationMult:0.00}\n\n" +
-                $"<color=#ffd966>{s.data.passiveDescription}</color>";
-            GUI.Label(new Rect(x2, r.y + 40, 580, 560), d, Wrap(small));
+                $"변이 비용          ×{s.AbilityCostMult:0.00}   지속 ×{s.AbilityDurationMult:0.00}";
+            GUI.Label(new Rect(x2, r.y + 40, 580, 320), d, Wrap(small));
+
+            // 특성
+            float ty = r.y + 360;
+            string owned = "";
+            foreach (var t in s.traits) owned += (owned.Length > 0 ? ", " : "") + Traits.Name(t);
+            GUI.Label(new Rect(x2, ty, 580, 50), $"<b>보유 특성</b>  <color=#7fd8ff>{owned}</color>", Wrap(small));
+            ty += 50;
+
+            p.EnsureTraitOffer();
+            if (p.PendingTraitPicks > 0)
+            {
+                GUI.Label(new Rect(x2, ty, 580, 30), $"<color=#ffd966><b>새 특성 선택</b> ({p.PendingTraitPicks}회 남음)</color>", label);
+                ty += 34;
+                for (int i = 0; i < p.TraitOffer.Count; i++)
+                {
+                    var t = p.TraitOffer[i];
+                    if (GUI.Button(new Rect(x2 + i * 190, ty, 180, 100), TraitText(t), button))
+                    {
+                        p.PickTrait(t);
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                int next = (p.Level / Traits.PickEveryLevels + 1) * Traits.PickEveryLevels;
+                GUI.Label(new Rect(x2, ty, 580, 30), $"<color=#888>다음 특성 선택: Lv.{next}</color>", small);
+            }
         }
+
+        static string TraitText(Trait t) => $"<b>{Traits.Name(t)}</b>\n<size=14>{Traits.Describe(t)}</size>";
 
         void DrawWeaponsTab(PlayerCharacter p, Rect r)
         {

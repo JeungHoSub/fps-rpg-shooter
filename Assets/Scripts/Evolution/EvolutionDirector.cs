@@ -26,7 +26,7 @@ namespace Hunt.Evolution
 
     /// <summary>
     /// A: 적응형 진화 시스템.
-    /// 웨이브 동안 팀이 "어떤 속성 / 어떤 무기 / 어느 부위"로 피해를 줬는지 집계하고,
+    /// 웨이브 동안 플레이어가 "어떤 속성 / 어떤 무기 / 어느 부위"로 피해를 줬는지 집계하고,
     /// 웨이브가 끝나면 가장 많이 당한 방식에 내성을 얻는다.
     /// </summary>
     public class EvolutionDirector : MonoBehaviour

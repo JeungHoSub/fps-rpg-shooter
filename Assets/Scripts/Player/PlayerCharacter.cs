@@ -31,9 +31,16 @@ namespace Hunt.Player
         public PlayerWeapons Weapons { get; private set; }
         public InfectionSystem Infection { get; private set; }
 
-        public void Init(CharacterData data, List<WeaponData> loadout, Camera cam)
+        // 특성 선택 (3레벨마다 1회)
+        public int PendingTraitPicks { get; private set; }
+        public readonly List<Trait> TraitOffer = new List<Trait>();
+
+        public void Init(CharacterData data, int[] startAllocation, Trait startTrait, List<WeaponData> loadout, Camera cam)
         {
             Stats = new CharacterStats(data);
+            foreach (var t in CharacterStats.All)
+                for (int i = 0; i < startAllocation[(int)t]; i++) Stats.Allocate(t);
+            Stats.traits.Add(startTrait);
             Hp = Stats.MaxHp;
 
             Infection = gameObject.AddComponent<InfectionSystem>();
@@ -75,13 +82,14 @@ namespace Hunt.Player
             var evo = EvolutionDirector.Instance != null ? EvolutionDirector.Instance.Profile : null;
             float reward = evo != null ? evo.RewardMultiplier : 1f;
             AddXp(Mathf.RoundToInt(m.Data.xp * reward));
-            AddGold(Mathf.RoundToInt(m.Data.gold * reward));
+            bool scavenger = Stats.Has(Trait.Scavenger);
+            AddGold(Mathf.RoundToInt(m.Data.gold * reward * (scavenger ? 1.3f : 1f)));
 
-            if (Stats.data.passive == CharacterPassive.BruiserBloodlust) Heal(4f);
+            if (Stats.Has(Trait.Bloodlust)) Heal(4f);
 
             // D: 파츠 드랍. 진화 세대가 높을수록 희귀 파츠 확률 증가.
             float luck = evo != null ? evo.PartLuck : 0f;
-            if (Random.value < m.Data.partDropChance * (1f + luck))
+            if (Random.value < m.Data.partDropChance * (1f + luck) * (scavenger ? 1.4f : 1f))
             {
                 Rarity? forced = m.IsBoss ? Rarity.Legendary : (Rarity?)null;
                 var part = PartGenerator.Generate(Level + (m.Generation), luck, forced);
@@ -110,7 +118,30 @@ namespace Hunt.Player
                 StatPoints += 3;
                 Hp = Mathf.Min(Stats.MaxHp, Stats.MaxHp * hpRatio + Stats.MaxHp * 0.2f);
                 HUD.Notify($"레벨 업! Lv.{Level} — 스탯 포인트 +3 (웨이브 사이 [Tab] 메뉴에서 분배)", new Color(1f, 0.9f, 0.3f));
+                if (Level % Traits.PickEveryLevels == 0)
+                {
+                    PendingTraitPicks++;
+                    HUD.Notify("새 특성을 고를 수 있다! (웨이브 사이 [Tab] 메뉴)", new Color(0.5f, 0.9f, 1f));
+                }
             }
+        }
+
+        /// <summary>선택 대기 중이면 후보 3개를 준비해 둔다.</summary>
+        public void EnsureTraitOffer()
+        {
+            if (PendingTraitPicks > 0 && TraitOffer.Count == 0)
+                TraitOffer.AddRange(Traits.Offer(Stats.traits, 3));
+        }
+
+        public void PickTrait(Trait t)
+        {
+            if (PendingTraitPicks <= 0 || !TraitOffer.Contains(t)) return;
+            float hpRatio = Hp / Stats.MaxHp;
+            Stats.traits.Add(t);
+            Hp = Stats.MaxHp * hpRatio;
+            PendingTraitPicks--;
+            TraitOffer.Clear();
+            HUD.Notify($"특성 획득: {Traits.Name(t)}", new Color(0.5f, 0.9f, 1f));
         }
 
         public void SpendStatPoint(StatType t)

@@ -3,6 +3,7 @@ using Hunt.Data;
 using Hunt.Evolution;
 using Hunt.Monsters;
 using Hunt.Player;
+using Hunt.Stats;
 using Hunt.UI;
 using Hunt.Waves;
 using UnityEngine;
@@ -33,16 +34,44 @@ namespace Hunt.Core
         public EvolutionDirector Evolution { get; private set; }
         public Camera ActiveCamera { get; private set; }
 
-        // 선택 화면
-        public CharacterData SelectedCharacter;
+        // 시작 화면: 직업 대신 스탯 분배 + 시작 특성 + 무기
+        public CharacterData Character => DefaultContent.Hunter;
+        public readonly int[] StartAllocation = new int[6];
+        public Trait StartTrait = Trait.Bloodlust;
         public readonly List<WeaponData> SelectedPrimaries = new List<WeaponData>();
+
+        public int StartPointsLeft
+        {
+            get
+            {
+                int used = 0;
+                foreach (var v in StartAllocation) used += v;
+                return Character.startingStatPoints - used;
+            }
+        }
+
+        public void AdjustStartStat(StatType t, int delta)
+        {
+            int i = (int)t;
+            if (delta > 0 && StartPointsLeft > 0) StartAllocation[i]++;
+            else if (delta < 0 && StartAllocation[i] > 0) StartAllocation[i]--;
+        }
+
+        /// <summary>시작 화면 미리보기용 스탯 (분배·특성 반영).</summary>
+        public CharacterStats PreviewStats()
+        {
+            var s = new CharacterStats(Character);
+            foreach (var t in CharacterStats.All)
+                for (int k = 0; k < StartAllocation[(int)t]; k++) s.Allocate(t);
+            s.traits.Add(StartTrait);
+            return s;
+        }
 
         Transform world;
 
         void Awake()
         {
             Instance = this;
-            SelectedCharacter = DefaultContent.Characters[0];
             SelectedPrimaries.Add(DefaultContent.Weapons[1]); // 돌격소총
             SelectedPrimaries.Add(DefaultContent.Weapons[3]); // 샷건
             BuildWorld();
@@ -117,7 +146,7 @@ namespace Hunt.Core
 
             var loadout = new List<WeaponData>(SelectedPrimaries) { DefaultContent.Pistol };
             Player = go.AddComponent<PlayerCharacter>();
-            Player.Init(SelectedCharacter, loadout, cam);
+            Player.Init(Character, StartAllocation, StartTrait, loadout, cam);
 
             Waves.Setup(world, Player);
             StartNextWave();
