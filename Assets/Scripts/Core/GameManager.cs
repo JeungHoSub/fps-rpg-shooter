@@ -6,6 +6,7 @@ using Hunt.Player;
 using Hunt.Stats;
 using Hunt.UI;
 using Hunt.Waves;
+using Hunt.Weapons;
 using UnityEngine;
 
 namespace Hunt.Core
@@ -72,6 +73,7 @@ namespace Hunt.Core
         void Awake()
         {
             Instance = this;
+            SFX.Init(gameObject);
             SelectedPrimaries.Add(DefaultContent.Weapons[1]); // 돌격소총
             SelectedPrimaries.Add(DefaultContent.Weapons[3]); // 샷건
             BuildWorld();
@@ -87,6 +89,7 @@ namespace Hunt.Core
         {
             world = new GameObject("World").transform;
             Effects.Root = world;
+            FX.Init(world);
             var arena = ArenaBuilder.Build(world);
             Navigation.Build(arena);
             Evolution = world.gameObject.AddComponent<EvolutionDirector>();
@@ -142,7 +145,19 @@ namespace Hunt.Core
             cam.backgroundColor = RenderSettings.fogColor;
             cam.clearFlags = CameraClearFlags.SolidColor;
             camGo.AddComponent<AudioListener>();
+            cam.cullingMask &= ~(1 << GunModelBuilder.ViewLayer);
             ActiveCamera = cam;
+
+            // 1인칭 무기 전용 카메라: 무기가 벽에 파묻히지 않고, 조준 줌과 무관하게 같은 크기로 보인다
+            var weaponCamGo = new GameObject("WeaponCamera");
+            weaponCamGo.transform.SetParent(camGo.transform, false);
+            var weaponCam = weaponCamGo.AddComponent<Camera>();
+            weaponCam.clearFlags = CameraClearFlags.Depth;
+            weaponCam.cullingMask = 1 << GunModelBuilder.ViewLayer;
+            weaponCam.depth = cam.depth + 1;
+            weaponCam.fieldOfView = 55f;
+            weaponCam.nearClipPlane = 0.01f;
+            weaponCam.farClipPlane = 5f;
 
             var loadout = new List<WeaponData>(SelectedPrimaries) { DefaultContent.Pistol };
             Player = go.AddComponent<PlayerCharacter>();

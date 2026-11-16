@@ -4,7 +4,6 @@ using Hunt.Core;
 using Hunt.Data;
 using Hunt.Monsters;
 using Hunt.Stats;
-using Hunt.UI;
 using Hunt.Weapons;
 using UnityEngine;
 
@@ -13,7 +12,8 @@ namespace Hunt.Player
     /// <summary>사격 / 재장전 / 조준 / 무기 교체 / 반동. 캐릭터 스탯과 파츠 옵션이 모두 여기서 합쳐진다.</summary>
     public class PlayerWeapons : MonoBehaviour
     {
-        const int RaycastMask = ~(1 << 2); // Ignore Raycast 레이어(플레이어) 제외
+        // 플레이어(2: Ignore Raycast)와 1인칭 무기(1: TransparentFX) 레이어는 사격 판정에서 제외
+        const int RaycastMask = ~((1 << 2) | (1 << GunModelBuilder.ViewLayer));
 
         public readonly List<WeaponInstance> Slots = new List<WeaponInstance>();
         public int CurrentIndex { get; private set; }
@@ -21,8 +21,12 @@ namespace Hunt.Player
 
         public bool IsReloading => reloadTime > 0f;
         public float ReloadProgress => reloadTotal > 0f ? 1f - reloadTime / reloadTotal : 0f;
+        public float SwapProgress => swapTotal > 0f && swapTime > 0f ? Mathf.Sin(swapTime / swapTotal * Mathf.PI) : 0f;
+        /// <summary>교체 진행도 0→1 (0.5에서 총이 가장 아래).</summary>
+        public float SwapPhase => swapTotal > 0f && swapTime > 0f ? 1f - swapTime / swapTotal : 1f;
         public bool IsAiming => aim > 0.5f;
         public float Aim => aim;
+        public bool IsScoped => viewModel != null && viewModel.IsScoped;
         public float CurrentSpread { get; private set; }
         public float HitMarker { get; private set; }
         public bool LastHitWeak { get; private set; }
@@ -41,12 +45,10 @@ namespace Hunt.Player
 
         PlayerCharacter player;
         Camera cam;
-        Transform viewModel;
-        Renderer viewRenderer;
-        Vector3 viewBasePos = new Vector3(0.28f, -0.28f, 0.6f);
+        WeaponViewModel viewModel;
 
-        float fireCooldown, reloadTime, reloadTotal, swapTime, aim, lastShotTime = -10f, kick;
-        int shotIndex, postReloadShots;
+        float fireCooldown, reloadTime, reloadTotal, swapTime, swapTotal, aim, lastShotTime = -10f;
+        int shotIndex, postReloadShots, reloadStage;
 
         public void Init(PlayerCharacter p, Camera camera, List<WeaponData> loadout)
         {
@@ -54,25 +56,11 @@ namespace Hunt.Player
             cam = camera;
             foreach (var w in loadout) Slots.Add(new WeaponInstance(w));
 
-            var vm = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            vm.name = "ViewModel";
-            Destroy(vm.GetComponent<Collider>());
-            vm.layer = 2;
-            vm.transform.SetParent(cam.transform, false);
-            vm.transform.localPosition = viewBasePos;
-            viewModel = vm.transform;
-            viewRenderer = vm.GetComponent<Renderer>();
-            ApplyViewModel();
-        }
-
-        void ApplyViewModel()
-        {
-            var w = Current;
-            if (w == null) return;
-            float len = w.data.weaponClass == WeaponClass.Sniper ? 0.8f : w.data.weaponClass == WeaponClass.Pistol ? 0.25f : 0.55f;
-            float thick = w.data.weaponClass == WeaponClass.LMG ? 0.16f : 0.1f;
-            viewModel.localScale = new Vector3(thick, thick * 1.3f, len);
-            viewRenderer.material.color = w.data.viewColor;
+            var holder = new GameObject("WeaponHolder");
+            holder.layer = GunModelBuilder.ViewLayer;
+            holder.transform.SetParent(cam.transform, false);
+            viewModel = holder.AddComponent<WeaponViewModel>();
+            viewModel.Init(p);
         }
 
         void Update()
@@ -99,16 +87,19 @@ namespace Hunt.Player
             }
             if (swapTime > 0f) swapTime -= dt;
 
-            // ---- 재장전 ----
+            // ---- 재장전 (진행도에 맞춰 탄창 빼는/끼우는 소리) ----
             if (reloadTime > 0f)
             {
                 reloadTime -= dt;
+                float p = ReloadProgress;
+                if (reloadStage == 0 && p > 0.3f) { SFX.Play(SFX.MagOut, 0.7f); reloadStage = 1; }
+                if (reloadStage == 1 && p > 0.72f) { SFX.Play(SFX.MagIn, 0.8f); reloadStage = 2; }
                 if (reloadTime <= 0f) FinishReload(w);
             }
             else if (input && Input.GetKeyDown(KeyCode.R)) StartReload(w);
 
             // ---- 조준 (ADS): 조준 속도 = 무기 기본 × 제어 스탯 × 무게 페널티 ----
-            bool wantAim = input && Input.GetMouseButton(1) && !IsReloading;
+            bool wantAim = input && Input.GetMouseButton(1) && !IsReloading && !ctrl.IsSprinting;
             float adsSpeed = stats.AdsSpeedMult * ctrl.WeightPenalty / Mathf.Max(0.05f, w.data.adsTime);
             aim = Mathf.MoveTowards(aim, wantAim ? 1f : 0f, adsSpeed * dt);
             cam.fieldOfView = Mathf.Lerp(PlayerController.BaseFov, w.data.adsFov, aim);
@@ -122,8 +113,10 @@ namespace Hunt.Player
             bool trigger = input && (w.data.automatic ? Input.GetMouseButton(0) : Input.GetMouseButtonDown(0));
             if (trigger && fireCooldown <= 0f && swapTime <= 0f && !IsReloading)
             {
+                if (ctrl.IsSprinting) ctrl.CancelSprint();
                 if (w.ammoInMag > 0) Fire(w);
                 else if (w.reserve > 0) StartReload(w);
+                else if (Input.GetMouseButtonDown(0)) SFX.Play(SFX.Empty, 0.8f);
             }
 
             // 사격을 멈추면 반동 회복, 반동 패턴 인덱스 리셋
@@ -132,14 +125,6 @@ namespace Hunt.Player
                 ctrl.RecoverRecoil(dt, stats.RecoilRecovery);
                 if (Time.time - lastShotTime > 0.35f) shotIndex = 0;
             }
-
-            // ---- 뷰모델 연출 ----
-            kick = Mathf.MoveTowards(kick, 0f, dt * 6f);
-            Vector3 target = Vector3.Lerp(viewBasePos, new Vector3(0f, -0.18f, 0.5f), aim);
-            if (IsReloading) target += new Vector3(0f, -0.25f, 0f);
-            if (swapTime > 0f) target += new Vector3(0f, -0.4f, 0f);
-            target += new Vector3(0f, 0f, -kick * 0.12f);
-            viewModel.localPosition = Vector3.Lerp(viewModel.localPosition, target, dt * 18f);
         }
 
         float ComputeSpread(WeaponInstance w)
@@ -161,8 +146,8 @@ namespace Hunt.Player
             reloadTime = 0f;
             reloadTotal = 0f;
             shotIndex = 0;
-            swapTime = 0.45f / player.Stats.SwapSpeedMult;
-            ApplyViewModel();
+            swapTotal = swapTime = 0.45f / player.Stats.SwapSpeedMult;
+            SFX.Play(SFX.Swap, 0.6f);
         }
 
         void StartReload(WeaponInstance w)
@@ -170,6 +155,7 @@ namespace Hunt.Player
             if (IsReloading || w.ammoInMag >= w.MagazineSize || w.reserve <= 0) return;
             float baseTime = w.ammoInMag == 0 ? w.data.emptyReloadTime : w.data.reloadTime;
             reloadTotal = reloadTime = baseTime / (player.Stats.ReloadSpeedMult * w.ReloadSpeedMult);
+            reloadStage = 0;
         }
 
         void FinishReload(WeaponInstance w)
@@ -179,6 +165,7 @@ namespace Hunt.Player
             w.ammoInMag += take;
             w.reserve -= take;
             reloadTime = reloadTotal = 0f;
+            SFX.Play(SFX.Rack, 0.8f);
             if (w.Has(AffixType.PostReloadBurst)) postReloadShots = 3;
         }
 
@@ -189,7 +176,6 @@ namespace Hunt.Player
             fireCooldown = w.FireInterval;
             w.ammoInMag--;
             lastShotTime = Time.time;
-            kick = 1f;
 
             float burst = 1f;
             if (postReloadShots > 0)
@@ -217,11 +203,22 @@ namespace Hunt.Player
                 minFalloffMultiplier = w.data.minFalloff,
             };
 
-            Vector3 origin = cam.transform.position;
-            Vector3 muzzle = viewModel.position + viewModel.forward * viewModel.localScale.z * 0.5f;
-            Color tracer = w.DamageType == DamageType.Physical ? new Color(1f, 0.9f, 0.6f) : CombatNames.ColorOf(w.DamageType);
+            // 연출: 총 모델 반동 / 총성 / 화면 흔들림
+            viewModel.OnFire(w);
+            SFX.Play(SFX.Shot(w.data.weaponClass), 0.85f);
+            float shake = w.data.weaponClass == WeaponClass.Shotgun || w.data.weaponClass == WeaponClass.Sniper ? 1.2f : 0.35f;
+            player.Controller.AddShake(shake * Mathf.Lerp(1f, 0.5f, aim));
 
-            for (int i = 0; i < Mathf.Max(1, w.data.pellets); i++)
+            Vector3 origin = cam.transform.position;
+            Vector3 muzzle = viewModel.MuzzlePosition;
+            Color tracer = w.DamageType == DamageType.Physical ? new Color(1f, 0.85f, 0.5f) : CombatNames.ColorOf(w.DamageType);
+            int pellets = Mathf.Max(1, w.data.pellets);
+            float tracerWidth = pellets > 1 ? 0.012f : 0.025f;
+
+            bool anyHit = false, anyWeak = false, anyKill = false;
+            Vector3 killPos = Vector3.zero, hurtPos = Vector3.zero;
+
+            for (int i = 0; i < pellets; i++)
             {
                 Vector3 dir = SpreadDirection(cam.transform, CurrentSpread);
                 Vector3 end = origin + dir * 150f;
@@ -235,10 +232,30 @@ namespace Hunt.Player
                         info.hitPoint = hit.point;
                         info.direction = dir;
                         var res = part.ReceiveHit(info);
+                        if (res.hit)
+                        {
+                            anyHit = true;
+                            hurtPos = hit.point;
+                            anyWeak |= res.zone == HitZone.WeakPoint || res.zone == HitZone.Head;
+                            if (res.killed) { anyKill = true; killPos = hit.point; }
+                            FX.ImpactFlesh(hit.point, dir, FleshColor(res.zone), res.crit ? 10 : 5);
+                        }
                         OnHitResult(w, res, info, hit.point);
                     }
+                    else
+                    {
+                        FX.ImpactWorld(hit.point, hit.normal);
+                    }
                 }
-                Effects.Line(muzzle, end, tracer, 0.015f, 0.04f);
+                // 산탄은 일부 펠릿만 예광탄 표시
+                if (pellets == 1 || i % 3 == 0) FX.Tracer(muzzle, end, tracer, tracerWidth);
+            }
+
+            if (anyKill) { SFX.Play(SFX.KillTick, 0.6f, 0f); SFX.PlayAt(SFX.MonsterDie, killPos, 0.9f); }
+            else if (anyHit)
+            {
+                SFX.Play(anyWeak ? SFX.WeakTick : SFX.HitTick, 0.45f, 0f);
+                SFX.MonsterHurtAt(hurtPos);
             }
 
             // C: 고정 패턴 × (제어 스탯 + 파츠) + 제어 스탯에 반비례하는 노이즈
@@ -249,6 +266,16 @@ namespace Hunt.Player
             shotIndex++;
 
             if (w.ammoInMag == 0 && w.reserve > 0) StartReload(w);
+        }
+
+        static Color FleshColor(HitZone zone)
+        {
+            switch (zone)
+            {
+                case HitZone.WeakPoint: return new Color(1f, 0.6f, 0.1f);
+                case HitZone.Armor: return new Color(0.85f, 0.8f, 0.65f);
+                default: return new Color(0.45f, 0.05f, 0.08f);
+            }
         }
 
         void OnHitResult(WeaponInstance w, DamageResult res, DamageInfo info, Vector3 point)
@@ -268,6 +295,7 @@ namespace Hunt.Player
         void Explode(Vector3 point, float damage, DamageType type)
         {
             Effects.Burst(point, 3f, CombatNames.ColorOf(type == DamageType.Physical ? DamageType.Fire : type));
+            SFX.PlayAt(SFX.Shot(WeaponClass.Shotgun), point, 1f);
             var hits = Physics.OverlapSphere(point, 3f, RaycastMask, QueryTriggerInteraction.Ignore);
             var done = new HashSet<Monster>();
             foreach (var h in hits)

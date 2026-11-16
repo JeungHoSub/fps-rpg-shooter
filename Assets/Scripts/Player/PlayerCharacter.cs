@@ -61,6 +61,8 @@ namespace Hunt.Player
             if (IsDead) return;
             Hp -= dmg * Infection.DamageTakenMultiplier;
             HurtFlash = 0.25f;
+            SFX.Play(SFX.PlayerHurt, 0.8f);
+            Controller.AddShake(Mathf.Clamp(dmg * 0.08f, 0.5f, 3f));
             Infection.AddInfection(infection);
             if (Hp <= 0f)
             {

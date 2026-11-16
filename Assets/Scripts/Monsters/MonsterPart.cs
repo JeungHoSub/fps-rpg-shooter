@@ -17,6 +17,7 @@ namespace Hunt.Monsters
         public bool broken;
 
         Renderer rend;
+        Collider col;
         Color baseColor;
         float flash;
 
@@ -27,6 +28,7 @@ namespace Hunt.Monsters
             breakable = hp > 0f;
             partHp = partMaxHp = hp;
             rend = GetComponent<Renderer>();
+            col = GetComponent<Collider>();
             if (rend != null) baseColor = rend.material.color;
         }
 
@@ -64,10 +66,16 @@ namespace Hunt.Monsters
                 flash -= Time.deltaTime;
                 rend.material.color = flash > 0f ? Color.white : CurrentColor();
             }
+            else if (zone == HitZone.WeakPoint && (col == null || col.enabled))
+            {
+                rend.material.color = CurrentColor();
+            }
         }
 
         Color CurrentColor()
         {
+            // 약점은 맥동하듯 빛나서 멀리서도 눈에 띈다
+            if (zone == HitZone.WeakPoint) return baseColor * (1f + 0.35f * Mathf.Sin(Time.time * 6f));
             if (!breakable || broken) return baseColor;
             // 내구도가 낮을수록 붉게 금이 간 느낌
             float t = 1f - Mathf.Clamp01(partHp / partMaxHp);

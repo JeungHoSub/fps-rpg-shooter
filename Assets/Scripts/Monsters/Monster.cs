@@ -30,6 +30,7 @@ namespace Hunt.Monsters
         float legSlow = 1f;
 
         Vector3 knockVel;
+        Vector3 lastHitDir;
         float stagger;
         float attackTimer;
         float spitTimer;
@@ -218,6 +219,8 @@ namespace Hunt.Monsters
                 part.TakePartDamage(0f); // 피격 플래시
             }
 
+            lastHitDir = info.direction;
+
             // 저지력 → 넉백
             Vector3 kdir = info.direction;
             kdir.y = 0f;
@@ -350,6 +353,8 @@ namespace Hunt.Monsters
             IsDead = true;
             Alive.Remove(this);
             if (GameManager.Instance != null) GameManager.Instance.OnMonsterKilled(this);
+            FX.BloodBurst(transform.position + Vector3.up * Data.scale, new Color(0.4f, 0.05f, 0.08f), Data.scale);
+            MonsterGib.Shatter(this, lastHitDir);
             Destroy(gameObject);
         }
     }

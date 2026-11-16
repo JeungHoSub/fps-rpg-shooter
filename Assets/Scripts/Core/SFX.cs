@@ -1,0 +1,224 @@
+using System;
+using System.Collections.Generic;
+using Hunt.Combat;
+using UnityEngine;
+
+namespace Hunt.Core
+{
+    /// <summary>
+    /// 코드로 합성하는 임시 사운드 (외부 에셋 없음). 정식 사운드가 들어오면 클립만 교체하면 된다.
+    /// 플레이어 소리는 2D, 괴물 소리는 3D 위치 재생.
+    /// </summary>
+    public static class SFX
+    {
+        const int Rate = 44100;
+        const int Voices = 10;
+
+        static readonly AudioSource[] voices = new AudioSource[Voices];
+        static int nextVoice;
+        static readonly Dictionary<string, AudioClip> cache = new Dictionary<string, AudioClip>();
+        static float lastHurt;
+
+        public static void Init(GameObject host)
+        {
+            if (voices[0] != null) return;
+            for (int i = 0; i < Voices; i++)
+            {
+                var s = host.AddComponent<AudioSource>();
+                s.playOnAwake = false;
+                s.spatialBlend = 0f;
+                voices[i] = s;
+            }
+        }
+
+        public static void Play(AudioClip clip, float volume = 1f, float pitchJitter = 0.04f)
+        {
+            if (clip == null || voices[0] == null) return;
+            var s = voices[nextVoice];
+            nextVoice = (nextVoice + 1) % Voices;
+            s.pitch = 1f + UnityEngine.Random.Range(-pitchJitter, pitchJitter);
+            s.volume = volume;
+            s.clip = clip;
+            s.Play();
+        }
+
+        public static void PlayAt(AudioClip clip, Vector3 pos, float volume = 1f)
+        {
+            if (clip != null) AudioSource.PlayClipAtPoint(clip, pos, volume);
+        }
+
+        /// <summary>괴물 피격음은 너무 잦지 않게 제한.</summary>
+        public static void MonsterHurtAt(Vector3 pos)
+        {
+            if (Time.time - lastHurt < 0.09f) return;
+            lastHurt = Time.time;
+            PlayAt(MonsterHurt, pos, 0.7f);
+        }
+
+        // ------------------------------------------------------------------ 클립
+        public static AudioClip Shot(WeaponClass c) => Get("shot_" + c, () => MakeShot(c));
+        public static AudioClip Empty => Get("empty", () => MakeClick(0.05f, 2600f, 0.5f));
+        public static AudioClip MagOut => Get("magout", () => MakeClick(0.09f, 900f, 0.8f));
+        public static AudioClip MagIn => Get("magin", () => MakeClick(0.12f, 1300f, 1f));
+        public static AudioClip Rack => Get("rack", () => MakeRack());
+        public static AudioClip Swap => Get("swap", () => MakeClick(0.07f, 700f, 0.6f));
+        public static AudioClip HitTick => Get("hit", () => MakeTone(0.045f, 1500f, 1500f, 0.5f));
+        public static AudioClip WeakTick => Get("weak", () => MakeTone(0.06f, 2300f, 2600f, 0.6f));
+        public static AudioClip KillTick => Get("kill", () => MakeKill());
+        public static AudioClip MonsterHurt => Get("mhurt", () => MakeGrowl(0.25f, 70f, 1f));
+        public static AudioClip MonsterDie => Get("mdie", () => MakeGrowl(0.7f, 55f, 0.6f));
+        public static AudioClip PlayerHurt => Get("phurt", () => MakeThud());
+
+        static AudioClip Get(string key, Func<AudioClip> make)
+        {
+            if (!cache.TryGetValue(key, out var c) || c == null)
+            {
+                c = make();
+                c.name = key;
+                cache[key] = c;
+            }
+            return c;
+        }
+
+        static AudioClip Clip(string name, float[] data)
+        {
+            var c = AudioClip.Create(name, data.Length, 1, Rate, false);
+            c.SetData(data, 0);
+            return c;
+        }
+
+        static float SoftClip(float x) => x / (1f + Mathf.Abs(x));
+
+        /// <summary>총성 = 초반 날카로운 파열음 + 저역 필터 노이즈 몸통 + 저음 쿵 + 잔향 꼬리.</summary>
+        static AudioClip MakeShot(WeaponClass c)
+        {
+            float len, decay, thumpHz, thumpDecay, lp, crack, tail;
+            switch (c)
+            {
+                case WeaponClass.Pistol: len = 0.35f; decay = 22f; thumpHz = 120f; thumpDecay = 20f; lp = 0.35f; crack = 0.7f; tail = 0.12f; break;
+                case WeaponClass.SMG: len = 0.25f; decay = 30f; thumpHz = 150f; thumpDecay = 26f; lp = 0.45f; crack = 0.55f; tail = 0.08f; break;
+                case WeaponClass.Shotgun: len = 0.7f; decay = 9f; thumpHz = 60f; thumpDecay = 8f; lp = 0.22f; crack = 0.9f; tail = 0.2f; break;
+                case WeaponClass.Sniper: len = 1.1f; decay = 7f; thumpHz = 48f; thumpDecay = 5f; lp = 0.28f; crack = 1.1f; tail = 0.25f; break;
+                case WeaponClass.LMG: len = 0.35f; decay = 19f; thumpHz = 85f; thumpDecay = 15f; lp = 0.33f; crack = 0.8f; tail = 0.12f; break;
+                default: len = 0.4f; decay = 17f; thumpHz = 95f; thumpDecay = 14f; lp = 0.38f; crack = 0.85f; tail = 0.14f; break;
+            }
+            int n = (int)(Rate * len);
+            var d = new float[n];
+            var rnd = new System.Random(1000 + (int)c);
+            float f1 = 0f, f2 = 0f;
+            for (int i = 0; i < n; i++)
+            {
+                float t = (float)i / Rate;
+                float noise = (float)(rnd.NextDouble() * 2.0 - 1.0);
+                f1 += lp * (noise - f1);
+                f2 += 0.05f * (noise - f2);
+                float s = noise * Mathf.Exp(-t * 140f) * crack
+                          + f1 * Mathf.Exp(-t * decay) * 1.6f
+                          + Mathf.Sin(2f * Mathf.PI * thumpHz * t * (1f - t * 0.6f)) * Mathf.Exp(-t * thumpDecay) * 0.9f
+                          + f2 * Mathf.Exp(-t * 4f) * tail * 6f;
+                float attack = Mathf.Clamp01(t * 2000f);
+                d[i] = SoftClip(s * 1.4f) * attack * 0.9f;
+            }
+            return Clip("shot", d);
+        }
+
+        static AudioClip MakeClick(float len, float hz, float amp)
+        {
+            int n = (int)(Rate * len);
+            var d = new float[n];
+            var rnd = new System.Random(7);
+            for (int i = 0; i < n; i++)
+            {
+                float t = (float)i / Rate;
+                float noise = (float)(rnd.NextDouble() * 2.0 - 1.0);
+                float click = noise * Mathf.Exp(-t * 300f) + Mathf.Sin(2f * Mathf.PI * hz * t) * Mathf.Exp(-t * 80f) * 0.6f;
+                float second = t > len * 0.45f ? noise * Mathf.Exp(-(t - len * 0.45f) * 350f) * 0.7f : 0f;
+                d[i] = SoftClip((click + second) * amp);
+            }
+            return Clip("click", d);
+        }
+
+        static AudioClip MakeRack()
+        {
+            int n = (int)(Rate * 0.25f);
+            var d = new float[n];
+            var rnd = new System.Random(11);
+            for (int i = 0; i < n; i++)
+            {
+                float t = (float)i / Rate;
+                float noise = (float)(rnd.NextDouble() * 2.0 - 1.0);
+                float a = noise * Mathf.Exp(-t * 250f);
+                float b = t > 0.11f ? noise * Mathf.Exp(-(t - 0.11f) * 220f) * 1.2f + Mathf.Sin(2f * Mathf.PI * 1100f * t) * Mathf.Exp(-(t - 0.11f) * 60f) * 0.5f : 0f;
+                d[i] = SoftClip(a + b);
+            }
+            return Clip("rack", d);
+        }
+
+        static AudioClip MakeTone(float len, float hzStart, float hzEnd, float amp)
+        {
+            int n = (int)(Rate * len);
+            var d = new float[n];
+            float phase = 0f;
+            for (int i = 0; i < n; i++)
+            {
+                float t = (float)i / Rate;
+                float hz = Mathf.Lerp(hzStart, hzEnd, t / len);
+                phase += 2f * Mathf.PI * hz / Rate;
+                d[i] = Mathf.Sin(phase) * Mathf.Exp(-t * 50f) * amp;
+            }
+            return Clip("tone", d);
+        }
+
+        static AudioClip MakeKill()
+        {
+            int n = (int)(Rate * 0.2f);
+            var d = new float[n];
+            float phase = 0f;
+            for (int i = 0; i < n; i++)
+            {
+                float t = (float)i / Rate;
+                float hz = t < 0.07f ? 1200f : 1800f;
+                phase += 2f * Mathf.PI * hz / Rate;
+                float env = t < 0.07f ? Mathf.Exp(-t * 30f) : Mathf.Exp(-(t - 0.07f) * 25f);
+                d[i] = Mathf.Sin(phase) * env * 0.5f;
+            }
+            return Clip("kill", d);
+        }
+
+        /// <summary>괴물 울음: 저역 노이즈를 낮은 주파수로 진폭 변조.</summary>
+        static AudioClip MakeGrowl(float len, float modHz, float pitchDrop)
+        {
+            int n = (int)(Rate * len);
+            var d = new float[n];
+            var rnd = new System.Random(23);
+            float f = 0f, phase = 0f;
+            for (int i = 0; i < n; i++)
+            {
+                float t = (float)i / Rate;
+                float noise = (float)(rnd.NextDouble() * 2.0 - 1.0);
+                f += 0.08f * (noise - f);
+                float hz = modHz * (1f - t / len * pitchDrop * 0.5f);
+                phase += 2f * Mathf.PI * hz / Rate;
+                float env = Mathf.Clamp01(t * 30f) * Mathf.Clamp01((len - t) * 6f);
+                d[i] = SoftClip(f * 6f * (0.6f + 0.4f * Mathf.Sin(phase)) * env);
+            }
+            return Clip("growl", d);
+        }
+
+        static AudioClip MakeThud()
+        {
+            int n = (int)(Rate * 0.25f);
+            var d = new float[n];
+            var rnd = new System.Random(31);
+            float f = 0f;
+            for (int i = 0; i < n; i++)
+            {
+                float t = (float)i / Rate;
+                float noise = (float)(rnd.NextDouble() * 2.0 - 1.0);
+                f += 0.1f * (noise - f);
+                d[i] = SoftClip((Mathf.Sin(2f * Mathf.PI * 70f * t) * 0.8f + f * 3f) * Mathf.Exp(-t * 18f));
+            }
+            return Clip("thud", d);
+        }
+    }
+}

@@ -189,19 +189,26 @@ namespace Hunt.UI
 
             var w = p.Weapons.Current;
 
-            // 조준선: 실제 탄퍼짐 각도를 화면 픽셀로 변환
+            if (p.Weapons.IsScoped) DrawScope();
+
+            // 조준선: 실제 탄퍼짐 각도를 화면 픽셀로 변환. 조준(ADS) 중에는 총의 가늠자를 쓰므로 숨긴다.
             if (gm.State != GameState.GameOver && !gm.MenuOpen)
             {
-                float fov = cam != null ? cam.fieldOfView : 75f;
-                float gapPx = Mathf.Tan(p.Weapons.CurrentSpread * Mathf.Deg2Rad) / Mathf.Tan(fov * 0.5f * Mathf.Deg2Rad) * (H / 2f);
-                gapPx = Mathf.Clamp(gapPx, 3f, 300f);
-                Color cc = p.Weapons.IsAiming && w.data.weaponClass == WeaponClass.Sniper ? new Color(1, 0.3f, 0.3f) : new Color(0.6f, 1f, 0.6f);
-                float cx = W / 2, cy = H / 2, len = 12;
-                Fill(new Rect(cx - 1, cy - gapPx - len, 2, len), cc);
-                Fill(new Rect(cx - 1, cy + gapPx, 2, len), cc);
-                Fill(new Rect(cx - gapPx - len, cy - 1, len, 2), cc);
-                Fill(new Rect(cx + gapPx, cy - 1, len, 2), cc);
-                Fill(new Rect(cx - 1, cy - 1, 2, 2), cc);
+                float cx = W / 2, cy = H / 2;
+                float alpha = 1f - Mathf.Clamp01((p.Weapons.Aim - 0.3f) / 0.4f);
+                if (alpha > 0.01f)
+                {
+                    float fov = cam != null ? cam.fieldOfView : 75f;
+                    float gapPx = Mathf.Tan(p.Weapons.CurrentSpread * Mathf.Deg2Rad) / Mathf.Tan(fov * 0.5f * Mathf.Deg2Rad) * (H / 2f);
+                    gapPx = Mathf.Clamp(gapPx, 3f, 300f);
+                    Color cc = new Color(0.6f, 1f, 0.6f, alpha);
+                    float len = 12;
+                    Fill(new Rect(cx - 1, cy - gapPx - len, 2, len), cc);
+                    Fill(new Rect(cx - 1, cy + gapPx, 2, len), cc);
+                    Fill(new Rect(cx - gapPx - len, cy - 1, len, 2), cc);
+                    Fill(new Rect(cx + gapPx, cy - 1, len, 2), cc);
+                    Fill(new Rect(cx - 1, cy - 1, 2, 2), cc);
+                }
 
                 if (p.Weapons.HitMarker > 0f)
                 {
@@ -269,6 +276,43 @@ namespace Hunt.UI
                 Fill(new Rect(r.x + r.width * 0.33f, r.y, 2, r.height), Color.black);
                 Fill(new Rect(r.x + r.width * 0.66f, r.y, 2, r.height), Color.black);
             }
+        }
+
+        static Texture2D scopeMask;
+
+        /// <summary>저격 스코프 화면: 원형 시야 + 십자선, 나머지는 검게.</summary>
+        void DrawScope()
+        {
+            if (scopeMask == null)
+            {
+                const int N = 512;
+                scopeMask = new Texture2D(N, N, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp };
+                var px = new Color32[N * N];
+                float r = N * 0.5f;
+                for (int y = 0; y < N; y++)
+                    for (int x = 0; x < N; x++)
+                    {
+                        float d = Mathf.Sqrt((x - r + 0.5f) * (x - r + 0.5f) + (y - r + 0.5f) * (y - r + 0.5f)) / r;
+                        byte a = (byte)(Mathf.Clamp01((d - 0.94f) / 0.06f) * 255); // 가장자리 부드럽게
+                        px[y * N + x] = new Color32(0, 0, 0, a);
+                    }
+                scopeMask.SetPixels32(px);
+                scopeMask.Apply();
+            }
+            float size = H;
+            float x0 = W / 2 - size / 2;
+            Fill(new Rect(0, 0, x0 + 1, H), Color.black);
+            Fill(new Rect(x0 + size - 1, 0, W - x0 - size + 1, H), Color.black);
+            GUI.DrawTexture(new Rect(x0, 0, size, size), scopeMask);
+
+            Color line = new Color(0, 0, 0, 0.9f);
+            float cx = W / 2, cy = H / 2;
+            Fill(new Rect(x0, cy - 1, size, 2), line);
+            Fill(new Rect(cx - 1, 0, 2, H), line);
+            Fill(new Rect(x0 + size * 0.2f, cy - 3, size * 0.25f, 6), line);
+            Fill(new Rect(x0 + size * 0.55f, cy - 3, size * 0.25f, 6), line);
+            Fill(new Rect(cx - 3, cy + size * 0.08f, 6, size * 0.35f), line);
+            Fill(new Rect(cx - 2, cy - 2, 4, 4), new Color(1f, 0.2f, 0.2f));
         }
 
         void DrawDamageNumbers(Camera cam)

@@ -36,7 +36,16 @@ namespace Hunt.Player
             yaw = transform.eulerAngles.y;
         }
 
+        public bool IsSprinting { get; private set; }
+        float shake, sprintBlock;
+
         public void AddRecoil(Vector2 kick) { recoil += kick; }
+
+        /// <summary>화면 흔들림 추가 (도 단위).</summary>
+        public void AddShake(float degrees) { shake = Mathf.Min(shake + degrees, 4f); }
+
+        /// <summary>사격 시 달리기를 잠시 끊는다.</summary>
+        public void CancelSprint() { sprintBlock = 0.3f; IsSprinting = false; }
 
         public void RecoverRecoil(float dt, float rate)
         {
@@ -46,7 +55,7 @@ namespace Hunt.Player
         void Update()
         {
             var gm = GameManager.Instance;
-            if (gm == null || !gm.IsWorldRunning || player == null || player.IsDead) return;
+            if (gm == null || !gm.IsWorldRunning || player == null || player.IsDead) { IsSprinting = false; return; }
             float dt = Time.deltaTime;
             bool input = gm.AcceptsGameplayInput;
 
@@ -62,8 +71,13 @@ namespace Hunt.Player
             float jx = jitter > 0f ? (Mathf.PerlinNoise(Time.time * 3f, 0f) * 2f - 1f) * jitter : 0f;
             float jy = jitter > 0f ? (Mathf.PerlinNoise(0f, Time.time * 3f) * 2f - 1f) * jitter : 0f;
 
+            // 화면 흔들림 (사격·피격): 짧은 롤 + 미세 피치
+            shake *= Mathf.Exp(-12f * dt);
+            float roll = (Mathf.PerlinNoise(Time.time * 40f, 7f) * 2f - 1f) * shake;
+            float shakePitch = (Mathf.PerlinNoise(3f, Time.time * 40f) * 2f - 1f) * shake * 0.5f;
+
             transform.rotation = Quaternion.Euler(0f, yaw + recoil.x + jx, 0f);
-            cam.transform.localRotation = Quaternion.Euler(Mathf.Clamp(pitch - recoil.y + jy, -89f, 89f), 0f, 0f);
+            cam.transform.localRotation = Quaternion.Euler(Mathf.Clamp(pitch - recoil.y + jy + shakePitch, -89f, 89f), 0f, roll);
 
             // ---- 이동 ----
             WeightPenalty = player.Stats.WeightPenalty(player.Weapons.TotalWeight);
@@ -73,7 +87,10 @@ namespace Hunt.Player
                 wish = transform.right * Input.GetAxisRaw("Horizontal") + transform.forward * Input.GetAxisRaw("Vertical");
                 if (wish.sqrMagnitude > 1f) wish.Normalize();
             }
-            bool sprint = input && Input.GetKey(KeyCode.LeftShift) && !player.Weapons.IsAiming;
+            if (sprintBlock > 0f) sprintBlock -= dt;
+            bool forward = input && Input.GetAxisRaw("Vertical") > 0.1f;
+            bool sprint = forward && Input.GetKey(KeyCode.LeftShift) && !player.Weapons.IsAiming && sprintBlock <= 0f;
+            IsSprinting = sprint;
             float speed = player.Stats.MoveSpeed * WeightPenalty * player.Infection.MoveMultiplier * MoveMultiplier * (sprint ? 1.45f : 1f);
 
             if (cc.isGrounded)
