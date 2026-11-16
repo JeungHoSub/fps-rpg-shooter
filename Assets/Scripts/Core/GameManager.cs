@@ -50,6 +50,7 @@ namespace Hunt.Core
 
         void OnDestroy()
         {
+            Navigation.Clear();
             if (Instance == this) Instance = null;
         }
 
@@ -57,7 +58,8 @@ namespace Hunt.Core
         {
             world = new GameObject("World").transform;
             Effects.Root = world;
-            ArenaBuilder.Build(world);
+            var arena = ArenaBuilder.Build(world);
+            Navigation.Build(arena);
             Evolution = world.gameObject.AddComponent<EvolutionDirector>();
             Waves = world.gameObject.AddComponent<WaveManager>();
             LastEvolution = new List<string>();
@@ -163,6 +165,7 @@ namespace Hunt.Core
             Player = null;
             Monster.Alive.Clear();
             DamageNumbers.Clear();
+            Navigation.Clear();
             Destroy(world.gameObject);
             BuildWorld();
         }

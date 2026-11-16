@@ -5,8 +5,12 @@ namespace Hunt.Core
     /// <summary>테스트용 100×100m 아레나. 레벨 디자인이 들어오면 씬으로 대체.</summary>
     public static class ArenaBuilder
     {
-        public static void Build(Transform root)
+        /// <returns>지형만 담은 루트 (NavMesh 굽기 대상)</returns>
+        public static Transform Build(Transform worldRoot)
         {
+            var root = new GameObject("Arena").transform;
+            root.SetParent(worldRoot, false);
+
             var ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
             ground.name = "Ground";
             ground.transform.SetParent(root, false);
@@ -47,6 +51,7 @@ namespace Hunt.Core
             RenderSettings.fog = true;
             RenderSettings.fogColor = new Color(0.12f, 0.12f, 0.15f);
             RenderSettings.fogDensity = 0.015f;
+            return root;
         }
 
         static GameObject Box(Transform root, Vector3 pos, Vector3 size, Color c)

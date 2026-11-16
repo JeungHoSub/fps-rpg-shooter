@@ -62,7 +62,7 @@
 
 ```
 Assets/Scripts/
-  Core/       GameBootstrap, GameManager(게임 흐름), ArenaBuilder, Effects
+  Core/       GameBootstrap, GameManager(게임 흐름), ArenaBuilder, Navigation(런타임 NavMesh), Effects
   Combat/     DamageType·HitZone·DamageInfo, DamageCalculator
   Stats/      CharacterStats (모든 파생 수치 계산을 한 곳에서)
   Data/       CharacterData·WeaponData·MonsterData (ScriptableObject), DefaultContent(기본값)
@@ -75,13 +75,14 @@ Assets/Scripts/
 ```
 
 - **컨셉 교체 대비**: 괴물 외형은 `MonsterFactory` 한 곳에서만 만든다. 컨셉이 정해지면 여기만 모델/프리팹으로 바꾸면 되고, `MonsterData`와 `Monster` 로직은 그대로 쓴다.
+- **길찾기**: 아레나를 만든 직후 NavMesh를 런타임에 굽는다(추가 패키지 없음). 괴물은 NavMeshAgent를 쓰지 않고 경로의 코너만 받아 자체 이동 로직(넉백·분리·경직)으로 움직인다. 넉백으로 밀려도 장애물을 뚫지 않고 벽면을 따라 미끄러진다.
 - **밸런스 데이터**: 지금은 `DefaultContent.cs`에 코드로 들어 있다. `Create > Hunt > Character/Weapon/Monster`로 ScriptableObject 에셋을 만들어 에디터에서 조정할 수 있다.
 
 ## 다음 단계 후보
 
 - [ ] 실제 모델·애니메이션·사운드·파티클
 - [ ] UGUI/UI Toolkit으로 정식 UI
-- [ ] NavMesh 기반 괴물 길찾기 (현재는 직선 추적 + 분리)
+- [x] NavMesh 기반 괴물 길찾기 (런타임 굽기, `Core/Navigation.cs`)
 - [ ] 저장/불러오기 (레벨, 파츠 인벤토리)
 - [ ] 멀티플레이 협동 (Netcode for GameObjects 등)
 - [ ] 엔지니어·메딕 캐릭터, 액티브 스킬

@@ -88,8 +88,7 @@ namespace Hunt.Waves
             float hpScale = 1f + 0.12f * (Wave - 1);
             if (a == MonsterArchetype.Boss) hpScale = 1f + 0.4f * (Wave / BossEvery - 1);
             var evo = EvolutionDirector.Instance != null ? EvolutionDirector.Instance.Profile : new EvolutionProfile();
-            Vector3 pos = at ?? SpawnPoint();
-            pos.y = 0f;
+            Vector3 pos = Navigation.Snap(at ?? SpawnPoint());
             return MonsterFactory.Create(data, pos, evo, hpScale, player, root);
         }
 

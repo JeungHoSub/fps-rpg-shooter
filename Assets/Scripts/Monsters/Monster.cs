@@ -7,6 +7,7 @@ using Hunt.Player;
 using Hunt.UI;
 using Hunt.Waves;
 using UnityEngine;
+using UnityEngine.AI;
 
 namespace Hunt.Monsters
 {
@@ -38,6 +39,12 @@ namespace Hunt.Monsters
 
         PlayerCharacter target;
         Transform head;
+
+        // 길찾기
+        readonly NavMeshPath navPath = new NavMeshPath();
+        readonly Vector3[] corners = new Vector3[32];
+        int cornerCount, cornerIdx;
+        float repathTimer;
 
         // 보스: 활성 약점이 페이즈마다 이동
         readonly List<MonsterPart> bossWeakPoints = new List<MonsterPart>();
@@ -87,8 +94,7 @@ namespace Hunt.Monsters
             to.y = 0f;
             float dist = to.magnitude;
             Vector3 dir = dist > 0.01f ? to / dist : transform.forward;
-
-            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(dir), dt * 8f);
+            Vector3 pathDir = PathDirection(target.transform.position, dir, dt);
 
             float phaseSpeed = IsBoss ? 1f + BossPhase * 0.2f : 1f;
             float spd = speed * legSlow * (slowTime > 0f ? 0.55f : 1f) * phaseSpeed;
@@ -96,14 +102,20 @@ namespace Hunt.Monsters
             Vector3 move = Vector3.zero;
             if (Data.archetype == MonsterArchetype.Spitter)
             {
-                if (dist > 12f) move = dir;
+                if (dist > 12f) move = pathDir;
                 else if (dist < 7f) move = -dir;
             }
             else if (dist > Data.attackRange)
             {
-                move = dir;
+                move = pathDir;
             }
             if (stagger > 0f) { stagger -= dt; move = Vector3.zero; }
+
+            // 멀리 있을 땐 가는 방향을, 가까우면 플레이어를 바라본다
+            Vector3 faceDir = move.sqrMagnitude > 0.01f && dist > Data.attackRange + 1.5f ? move : dir;
+            faceDir.y = 0f;
+            if (faceDir.sqrMagnitude > 0.0001f)
+                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(faceDir), dt * 8f);
 
             // 무리 간 분리
             Vector3 sep = Vector3.zero;
@@ -121,7 +133,7 @@ namespace Hunt.Monsters
             pos.x = Mathf.Clamp(pos.x, -47f, 47f);
             pos.z = Mathf.Clamp(pos.z, -47f, 47f);
             pos.y = 0f;
-            transform.position = pos;
+            transform.position = Navigation.Constrain(transform.position, pos);
             knockVel *= Mathf.Exp(-6f * dt);
 
             // 공격
@@ -149,6 +161,29 @@ namespace Hunt.Monsters
                     spitTimer = 1.6f;
                 }
             }
+        }
+
+        /// <summary>NavMesh 경로의 다음 코너 방향. 경로가 없거나 끝에 도달하면 직선 방향을 쓴다.</summary>
+        Vector3 PathDirection(Vector3 targetPos, Vector3 fallback, float dt)
+        {
+            if (!Navigation.Ready) return fallback;
+
+            repathTimer -= dt;
+            if (repathTimer <= 0f)
+            {
+                repathTimer = 0.25f + Random.value * 0.2f; // 괴물마다 갱신 타이밍 분산
+                cornerCount = Navigation.FindPath(transform.position, targetPos, navPath, corners);
+                cornerIdx = 1;
+            }
+
+            while (cornerIdx < cornerCount)
+            {
+                Vector3 d = corners[cornerIdx] - transform.position;
+                d.y = 0f;
+                if (d.sqrMagnitude > 0.35f * 0.35f) return d.normalized;
+                cornerIdx++;
+            }
+            return fallback;
         }
 
         void Spit()
