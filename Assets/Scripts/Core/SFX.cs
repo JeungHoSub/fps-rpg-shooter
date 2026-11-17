@@ -68,6 +68,52 @@ namespace Hunt.Core
         public static AudioClip MonsterHurt => Get("mhurt", () => MakeGrowl(0.25f, 70f, 1f));
         public static AudioClip MonsterDie => Get("mdie", () => MakeGrowl(0.7f, 55f, 0.6f));
         public static AudioClip PlayerHurt => Get("phurt", () => MakeThud());
+        public static AudioClip UiHover => Get("uihover", () => MakeTone(0.035f, 900f, 1100f, 0.18f));
+        public static AudioClip UiClick => Get("uiclick", () => MakeClick(0.06f, 520f, 0.45f));
+        /// <summary>출정·웨이브 시작: 낮게 울리는 징 소리.</summary>
+        public static AudioClip Gong => Get("gong", () => MakeGong());
+        public static AudioClip LevelUp => Get("levelup", () => MakeChime());
+
+        static AudioClip MakeGong()
+        {
+            int n = (int)(Rate * 2.4f);
+            var d = new float[n];
+            var rnd = new System.Random(41);
+            for (int i = 0; i < n; i++)
+            {
+                float t = (float)i / Rate;
+                float noise = (float)(rnd.NextDouble() * 2.0 - 1.0);
+                float env = Mathf.Exp(-t * 1.6f);
+                float beat = 1f + 0.25f * Mathf.Sin(2f * Mathf.PI * 3.1f * t); // 징 특유의 맥놀이
+                float s = Mathf.Sin(2f * Mathf.PI * 92f * t) * 0.7f
+                          + Mathf.Sin(2f * Mathf.PI * 138f * t) * 0.35f
+                          + Mathf.Sin(2f * Mathf.PI * 231f * t) * 0.2f * Mathf.Exp(-t * 2f)
+                          + noise * Mathf.Exp(-t * 60f) * 0.4f;
+                d[i] = SoftClip(s * env * beat * 1.2f) * Mathf.Clamp01(t * 400f);
+            }
+            return Clip("gong", d);
+        }
+
+        static AudioClip MakeChime()
+        {
+            int n = (int)(Rate * 0.9f);
+            var d = new float[n];
+            float[] notes = { 523f, 659f, 784f, 1046f };
+            for (int i = 0; i < n; i++)
+            {
+                float t = (float)i / Rate;
+                float s = 0f;
+                for (int k = 0; k < notes.Length; k++)
+                {
+                    float st = k * 0.09f;
+                    if (t < st) continue;
+                    float lt = t - st;
+                    s += Mathf.Sin(2f * Mathf.PI * notes[k] * lt) * Mathf.Exp(-lt * 4f) * 0.3f;
+                }
+                d[i] = s;
+            }
+            return Clip("chime", d);
+        }
 
         static AudioClip Get(string key, Func<AudioClip> make)
         {
