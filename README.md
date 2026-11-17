@@ -1,13 +1,16 @@
-# PROJECT: HUNT (가제)
+# 역병의 마을 (가제) — PROJECT: HUNT
 
-1인칭 **싱글플레이** PvE 슈터 + RPG 성장. 직업 없이 주인공 한 명이 스탯 투자와 특성 선택으로 빌드를 만든다. 카스온라인 좀비 모드처럼 웨이브로 몰려오는 괴물을 사냥한다.
-기획 초안: [Docs/GAME_DESIGN_DRAFT.md](Docs/GAME_DESIGN_DRAFT.md)
+비가 그치지 않는 한국 시골 마을. 조선 때 봉인된 역병이 깨어나 마을 사람들과 무덤 속 옛 망자가 함께 걸어 나온다.
+1인칭 **싱글플레이** PvE 슈터 + RPG 성장. 직업 없이 주인공 한 명이 스탯 각인과 특성 계약으로 빌드를 만든다.
+
+- 세계관/분위기: [Docs/CONCEPT_KR_HORROR.md](Docs/CONCEPT_KR_HORROR.md)
+- 시스템 기획 초안: [Docs/GAME_DESIGN_DRAFT.md](Docs/GAME_DESIGN_DRAFT.md)
 
 ## 실행 방법
 
 1. Unity Hub → **Add project from disk** → 이 폴더 선택 (Unity 6 기준, 2021.3.18 이상이면 동작)
 2. 프로젝트가 열리면 아무 씬(빈 씬도 가능)에서 **Play**
-3. 시작 스탯 포인트 6개를 분배하고, 시작 특성 1개와 주무기 2개를 고른 뒤 **출격**
+3. 시작 화면에서 **壹 능력치 각인 → 貳 특성 계약 → 參 무장 선택 → 肆 출정** 순서로 진행 (Enter로 다음 단계)
 
 씬과 프리팹 없이 코드만으로 아레나, 플레이어, 괴물, UI를 모두 만든다 (`GameBootstrap`).
 직접 만든 씬에서 자동 구성을 끄려면 씬에 `NoHuntBootstrap` 이라는 이름의 빈 오브젝트를 두면 된다.
@@ -25,10 +28,10 @@
 | 1·2·3, 휠 | 무기 교체 |
 | Q | 변이: 광폭화 (감염 게이지 소모) |
 | E | 변이: 재생 (감염 게이지 소모) |
-| H | 해독제 (폭주 해제) |
-| Tab | 정비 메뉴 열기/닫기 (웨이브 사이) |
-| Enter | 다음 웨이브 바로 시작 |
-| Esc | 일시정지 |
+| H | 청심환 (폭주 해제) |
+| Tab | 야영지 열기/닫기 (밤과 밤 사이) |
+| Enter | 다음 밤 바로 맞이하기 |
+| Esc | 일시정지 (마우스 감도·소리 크기 설정) |
 
 ## 구현된 차별화 요소 (A–E)
 
@@ -74,7 +77,8 @@ Assets/Scripts/
   Monsters/   Monster(AI·피격), MonsterPart(부위), MonsterFactory(외형), MonsterProjectile
   Evolution/  EvolutionDirector, EvolutionProfile
   Waves/      WaveManager
-  UI/         HUD(IMGUI), DamageNumbers
+  UI/         HUD(진입점), StartScreen, GameHud, CampMenu(야영지), EndScreens,
+              UITheme(먹·한지·진홍·금 테마, 코드 생성 텍스처), UIKit(위젯), RadarChart, GameText(문구)
 ```
 
 - **컨셉 교체 대비**: 괴물 외형은 `MonsterFactory` 한 곳에서만 만든다. 컨셉이 정해지면 여기만 모델/프리팹으로 바꾸면 되고, `MonsterData`와 `Monster` 로직은 그대로 쓴다.
@@ -84,7 +88,8 @@ Assets/Scripts/
 ## 다음 단계 후보
 
 - [ ] 실제 모델·애니메이션·사운드·파티클
-- [ ] UGUI/UI Toolkit으로 정식 UI
+- [x] 테마 UI 전면 개편 (IMGUI 기반, 코드 생성 텍스처)
+- [ ] 비·어둠·안개·손전등, 시골 마을 맵, 좀비 외형, 소리 시스템, 오행, 밤낮 순환 (컨셉 문서 7장)
 - [x] NavMesh 기반 괴물 길찾기 (런타임 굽기, `Core/Navigation.cs`)
 - [ ] 저장/불러오기 (레벨, 파츠 인벤토리)
 - [ ] 특성 추가 / 특성 간 시너지

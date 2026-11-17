@@ -268,12 +268,12 @@ namespace Hunt.Monsters
                 legSlow = Mathf.Min(legSlow, 0.45f);
                 part.transform.localScale = new Vector3(part.transform.localScale.x, part.transform.localScale.y * 0.5f, part.transform.localScale.z);
                 part.SetBaseColor(new Color(0.45f, 0.05f, 0.05f));
-                HUD.Notify("다리 파괴! 이동 속도 감소", new Color(1f, 0.7f, 0.3f));
+                HUD.Notify("다리를 꺾었다 — 망자가 절뚝인다", new Color(1f, 0.7f, 0.3f));
             }
             else if (part.zone == HitZone.Armor)
             {
                 part.gameObject.SetActive(false);
-                HUD.Notify("장갑 파괴! 약점 노출", new Color(1f, 0.7f, 0.3f));
+                HUD.Notify("갑주가 부서졌다 — 급소가 드러났다", new Color(1f, 0.7f, 0.3f));
             }
         }
 
@@ -329,7 +329,7 @@ namespace Hunt.Monsters
                 activeWeak = (activeWeak + 1) % bossWeakPoints.Count;
                 RefreshBossWeakPoints();
             }
-            HUD.Notify(phase == 1 ? "보스 2페이즈: 약점이 이동했다! 부하 소환!" : "보스 3페이즈: 광폭화! 산성 투사체!", new Color(1f, 0.35f, 0.35f));
+            HUD.Notify(phase == 1 ? "대감이 울부짖는다 — 급소가 옮겨가고 망자들이 몰려온다" : "대감이 미쳐 날뛴다 — 검은 피를 토한다", new Color(1f, 0.35f, 0.35f));
             if (WaveManager.Instance != null)
                 for (int i = 0; i < 3 + phase * 2; i++)
                     WaveManager.Instance.Spawn(MonsterArchetype.Runner, transform.position + Random.insideUnitSphere.Flat() * 4f);

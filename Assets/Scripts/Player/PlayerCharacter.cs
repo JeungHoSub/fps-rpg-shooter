@@ -96,7 +96,7 @@ namespace Hunt.Player
                 Rarity? forced = m.IsBoss ? Rarity.Legendary : (Rarity?)null;
                 var part = PartGenerator.Generate(Level + (m.Generation), luck, forced);
                 Inventory.Add(part);
-                HUD.Notify($"파츠 획득: {part.Title}", WeaponPart.RarityColor(part.rarity));
+                HUD.Notify($"부품을 주웠다 — {part.Title}", WeaponPart.RarityColor(part.rarity));
             }
         }
 
@@ -119,11 +119,12 @@ namespace Hunt.Player
                 Stats.SetLevel(Level + 1);
                 StatPoints += 3;
                 Hp = Mathf.Min(Stats.MaxHp, Stats.MaxHp * hpRatio + Stats.MaxHp * 0.2f);
-                HUD.Notify($"레벨 업! Lv.{Level} — 스탯 포인트 +3 (웨이브 사이 [Tab] 메뉴에서 분배)", new Color(1f, 0.9f, 0.3f));
+                SFX.Play(SFX.LevelUp, 0.7f, 0f);
+                HUD.Notify($"더 강해졌다 — Lv.{Level}  ·  각인 +3 (야영지에서 새긴다)", new Color(1f, 0.9f, 0.3f));
                 if (Level % Traits.PickEveryLevels == 0)
                 {
                     PendingTraitPicks++;
-                    HUD.Notify("새 특성을 고를 수 있다! (웨이브 사이 [Tab] 메뉴)", new Color(0.5f, 0.9f, 1f));
+                    HUD.Notify("새 계약을 맺을 수 있다 (야영지)", new Color(0.5f, 0.9f, 1f));
                 }
             }
         }
@@ -143,7 +144,7 @@ namespace Hunt.Player
             Hp = Stats.MaxHp * hpRatio;
             PendingTraitPicks--;
             TraitOffer.Clear();
-            HUD.Notify($"특성 획득: {Traits.Name(t)}", new Color(0.5f, 0.9f, 1f));
+            HUD.Notify($"계약을 맺었다 — {Traits.Name(t)}", new Color(0.5f, 0.9f, 1f));
         }
 
         public void SpendStatPoint(StatType t)

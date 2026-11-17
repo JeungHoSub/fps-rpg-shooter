@@ -55,14 +55,14 @@ namespace Hunt.Player
         {
             frenzyTime = FrenzyDuration;
             rageTime = 0f;
-            HUD.Notify("감염 100% — 폭주! 조준 불안정 (H: 해독제)", new Color(0.8f, 0.2f, 1f));
+            HUD.Notify("역병이 온몸을 덮쳤다 — 폭주! (H: 청심환)", new Color(0.8f, 0.2f, 1f));
         }
 
         void EndFrenzy(bool cured)
         {
             frenzyTime = 0f;
             Gauge = cured ? 20f : 45f;
-            HUD.Notify(cured ? "해독 완료" : "폭주가 가라앉았다", new Color(0.7f, 0.9f, 1f));
+            HUD.Notify(cured ? "청심환을 삼켰다 — 정신이 돌아온다" : "폭주가 가라앉았다", new Color(0.7f, 0.9f, 1f));
         }
 
         void Update()
@@ -98,24 +98,24 @@ namespace Hunt.Player
         void TryRage()
         {
             if (IsFrenzy || IsRage) return;
-            if (Gauge < RageCostFinal) { HUD.Notify("감염 게이지 부족", Color.gray); return; }
+            if (Gauge < RageCostFinal) { HUD.Notify("역병 기운이 모자라다", Color.gray); return; }
             Gauge -= RageCostFinal;
             rageTime = RageDuration * player.Stats.AbilityDurationMult;
-            HUD.Notify("변이: 광폭화 (데미지 +30%, 이동속도 +20%, 넉백 +50%)", new Color(1f, 0.4f, 0.3f));
+            HUD.Notify("광폭화 — 피가 끓는다 (피해 +30% · 이동 +20% · 저지력 +50%)", new Color(1f, 0.4f, 0.3f));
         }
 
         void TryRegen()
         {
             if (IsFrenzy || IsRegen) return;
-            if (Gauge < RegenCostFinal) { HUD.Notify("감염 게이지 부족", Color.gray); return; }
+            if (Gauge < RegenCostFinal) { HUD.Notify("역병 기운이 모자라다", Color.gray); return; }
             Gauge -= RegenCostFinal;
             regenTime = RegenDuration * player.Stats.AbilityDurationMult;
-            HUD.Notify("변이: 재생", new Color(0.4f, 1f, 0.5f));
+            HUD.Notify("재생 — 상처가 기어 붙는다", new Color(0.4f, 1f, 0.5f));
         }
 
         void TryAntidote()
         {
-            if (Antidotes <= 0) { HUD.Notify("해독제 없음", Color.gray); return; }
+            if (Antidotes <= 0) { HUD.Notify("청심환이 없다", Color.gray); return; }
             if (!IsFrenzy && Gauge < 30f) return;
             Antidotes--;
             if (IsFrenzy) EndFrenzy(true);

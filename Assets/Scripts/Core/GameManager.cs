@@ -220,7 +220,8 @@ namespace Hunt.Core
             State = GameState.Playing;
             MenuOpen = false;
             Waves.StartWave(Waves.Wave + 1);
-            HUD.Notify(Waves.IsBossWave ? $"웨이브 {Waves.Wave} — 보스 출현!" : $"웨이브 {Waves.Wave} 시작", new Color(1f, 0.5f, 0.4f));
+            HUD.Notify(Waves.IsBossWave ? $"{GameHud.NightName(Waves.Wave)} — 역병 대감이 깨어났다" : $"{GameHud.NightName(Waves.Wave)}이 왔다", new Color(1f, 0.45f, 0.4f));
+            if (Waves.Wave > 1) SFX.Play(SFX.Gong, 0.8f, 0f);
         }
 
         public void OnWaveCleared()
@@ -235,8 +236,8 @@ namespace Hunt.Core
             Player.Infection.Antidotes = Mathf.Min(2, Player.Infection.Antidotes + 1);
             Player.AddGold(40 + 20 * Waves.Wave);
 
-            HUD.Notify($"웨이브 {Waves.Wave} 클리어! 보급 완료", new Color(0.5f, 1f, 0.6f));
-            if (LastEvolution.Count > 0) HUD.Notify("괴물들이 진화했다…", new Color(0.85f, 0.4f, 1f));
+            HUD.Notify($"{GameHud.NightName(Waves.Wave)}을 버텼다 — 날이 밝는다", new Color(0.5f, 1f, 0.6f));
+            if (LastEvolution.Count > 0) HUD.Notify("망자들이 당신의 사냥법을 배웠다… (야영지 · 역병 연구)", new Color(0.85f, 0.4f, 1f));
         }
 
         public void OnMonsterKilled(Monster m)

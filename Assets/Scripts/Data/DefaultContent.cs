@@ -101,25 +101,25 @@ namespace Hunt.Data
         {
             monsters = new Dictionary<MonsterArchetype, MonsterData>();
 
-            var runner = MonsterDef("runner", "러너", MonsterArchetype.Runner, new Color(0.55f, 0.6f, 0.5f));
+            var runner = MonsterDef("runner", "역병 주민", MonsterArchetype.Runner, new Color(0.55f, 0.6f, 0.5f));
             runner.maxHp = 90; runner.moveSpeed = 5.2f; runner.attackDamage = 8; runner.attackInterval = 0.9f;
             runner.infectionPerHit = 7; runner.xp = 10; runner.gold = 4; runner.partDropChance = 0.04f;
             monsters[runner.archetype] = runner;
 
-            var brute = MonsterDef("brute", "브루트", MonsterArchetype.Brute, new Color(0.45f, 0.3f, 0.3f));
+            var brute = MonsterDef("brute", "장군 망자", MonsterArchetype.Brute, new Color(0.45f, 0.3f, 0.3f));
             brute.maxHp = 600; brute.defense = 6; brute.moveSpeed = 2.6f; brute.knockbackResist = 0.75f;
             brute.attackDamage = 25; brute.attackRange = 2.4f; brute.attackInterval = 1.6f; brute.infectionPerHit = 15;
             brute.scale = 1.6f; brute.xp = 45; brute.gold = 20; brute.partDropChance = 0.25f;
             brute.resistances = new float[] { 0.1f, 0f, -0.2f, 0f, 0f };
             monsters[brute.archetype] = brute;
 
-            var spitter = MonsterDef("spitter", "스피터", MonsterArchetype.Spitter, new Color(0.4f, 0.55f, 0.2f));
+            var spitter = MonsterDef("spitter", "토혈귀", MonsterArchetype.Spitter, new Color(0.4f, 0.55f, 0.2f));
             spitter.maxHp = 140; spitter.moveSpeed = 3.4f; spitter.attackDamage = 12; spitter.attackRange = 16f;
             spitter.attackInterval = 2.6f; spitter.infectionPerHit = 12; spitter.xp = 18; spitter.gold = 8;
             spitter.partDropChance = 0.08f; spitter.resistances = new float[] { 0f, -0.3f, 0f, 0f, 0.5f };
             monsters[spitter.archetype] = spitter;
 
-            var boss = MonsterDef("boss", "변이체 군주", MonsterArchetype.Boss, new Color(0.35f, 0.15f, 0.3f));
+            var boss = MonsterDef("boss", "역병 대감", MonsterArchetype.Boss, new Color(0.35f, 0.15f, 0.3f));
             boss.maxHp = 6000; boss.defense = 8; boss.moveSpeed = 2.8f; boss.knockbackResist = 0.95f;
             boss.attackDamage = 35; boss.attackRange = 3.6f; boss.attackInterval = 1.8f; boss.infectionPerHit = 20;
             boss.scale = 2.8f; boss.xp = 400; boss.gold = 200; boss.partDropChance = 1f;
