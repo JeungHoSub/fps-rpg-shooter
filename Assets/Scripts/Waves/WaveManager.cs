@@ -92,13 +92,24 @@ namespace Hunt.Waves
             return MonsterFactory.Create(data, pos, evo, hpScale, player, root);
         }
 
+        /// <summary>망자는 무덤·논 끝·마을 어귀·산자락에서 걸어 나온다 (플레이어와 가까운 곳은 피한다).</summary>
         Vector3 SpawnPoint()
         {
+            var anchors = VillageBuilder.SpawnAnchors;
             Vector3 p = Vector3.zero;
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 12; i++)
             {
-                float ang = Random.Range(0f, Mathf.PI * 2f);
-                p = new Vector3(Mathf.Cos(ang), 0f, Mathf.Sin(ang)) * Random.Range(38f, 45f);
+                if (anchors.Count > 0)
+                {
+                    var a = anchors[Random.Range(0, anchors.Count)];
+                    Vector2 off = Random.insideUnitCircle * 3.5f;
+                    p = a + new Vector3(off.x, 0f, off.y);
+                }
+                else
+                {
+                    float ang = Random.Range(0f, Mathf.PI * 2f);
+                    p = new Vector3(Mathf.Cos(ang), 0f, Mathf.Sin(ang)) * Random.Range(38f, 45f);
+                }
                 if (player == null || Vector3.Distance(p, player.transform.position) > 20f) break;
             }
             return p;

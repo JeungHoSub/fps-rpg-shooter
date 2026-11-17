@@ -30,6 +30,7 @@ namespace Hunt.Monsters
             rend = GetComponent<Renderer>();
             col = GetComponent<Collider>();
             if (rend != null) baseColor = rend.material.color;
+            if (rend != null && zone == HitZone.WeakPoint) rend.material.EnableKeyword("_EMISSION"); // 어둠 속에서도 보이는 급소
         }
 
         public void SetBaseColor(Color c)
@@ -68,7 +69,13 @@ namespace Hunt.Monsters
             }
             else if (zone == HitZone.WeakPoint && (col == null || col.enabled))
             {
-                rend.material.color = CurrentColor();
+                var c = CurrentColor();
+                rend.material.color = c;
+                rend.material.SetColor("_EmissionColor", c * 0.9f);
+            }
+            else if (zone == HitZone.WeakPoint)
+            {
+                rend.material.SetColor("_EmissionColor", Color.black); // 보스의 닫힌 급소
             }
         }
 

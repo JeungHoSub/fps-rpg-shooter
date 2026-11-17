@@ -136,8 +136,9 @@ namespace Hunt.Core
             world = new GameObject("World").transform;
             Effects.Root = world;
             FX.Init(world);
-            var arena = ArenaBuilder.Build(world);
+            var arena = VillageBuilder.Build(world);
             Navigation.Build(arena);
+            world.gameObject.AddComponent<Atmosphere>().Init(world);
             Evolution = world.gameObject.AddComponent<EvolutionDirector>();
             Waves = world.gameObject.AddComponent<WaveManager>();
             LastEvolution = new List<string>();
@@ -182,6 +183,7 @@ namespace Hunt.Core
             cc.height = 1.8f;
             cc.radius = 0.35f;
             cc.center = new Vector3(0f, 0.9f, 0f);
+            cc.stepOffset = 0.4f;
 
             var camGo = new GameObject("PlayerCamera");
             camGo.layer = 2;
@@ -208,6 +210,7 @@ namespace Hunt.Core
             weaponCam.farClipPlane = 5f;
 
             var loadout = new List<WeaponData>(SelectedPrimaries) { DefaultContent.Pistol };
+            go.AddComponent<Flashlight>().Init(camGo.transform);
             Player = go.AddComponent<PlayerCharacter>();
             Player.Init(Character, StartAllocation, StartTrait, loadout, cam);
 

@@ -15,6 +15,7 @@ namespace Hunt.UI
         float W, H;
         float hpTrail = 1f;
         float bossTrail = 1f;
+        float introTime;
         static Texture2D scopeMask;
 
         public static string NightName(int n)
@@ -102,6 +103,31 @@ namespace Hunt.UI
             UIKit.Text(new Rect(W - 330, 18, 300, 28), $"엽전 <color=#{UIKit.Hex(UITheme.GoldBright)}>{p.Gold}</color>     처치 <color=#{UIKit.Hex(UITheme.Bone)}>{p.Kills}</color>", 18, UITheme.BoneDim, TextAnchor.MiddleRight, serif: true);
 
             DrawBoss(dt);
+            DrawIntro(gm, dt);
+        }
+
+        /// <summary>첫째 밤: 목표와 조작 안내 (25초 뒤 사라짐).</summary>
+        void DrawIntro(GameManager gm, float dt)
+        {
+            if (gm.Waves.Wave != 1) { introTime = 0f; return; }
+            if (gm.State != GameState.Playing) return;
+            introTime += dt;
+            float a = Mathf.Clamp01(introTime * 1.5f) * Mathf.Clamp01((26f - introTime) / 2f);
+            if (a <= 0f) return;
+            UIKit.Alpha = a;
+            var r = new Rect(30, 300, 400, 330);
+            UIKit.Panel(r, "첫 째  밤");
+            UIKit.Text(new Rect(r.x + 24, r.y + 66, r.width - 48, 60),
+                "아침까지 살아남아라.\n망자는 <color=#" + UIKit.Hex(UITheme.BloodBright) + ">무덤</color>과 논, 마을 어귀에서 온다.", 17, UITheme.Bone, TextAnchor.UpperLeft, serif: true, wrap: true);
+            string keys =
+                "<b>F</b>   손전등\n" +
+                "<b>우클릭</b>   조준  ·  <b>R</b> 재장전\n" +
+                "<b>Shift</b>   달리기  ·  <b>1 2 3</b> 무기\n" +
+                "<b>Q / E</b>   역병의 힘 (맞으면 차오른다)\n" +
+                "<b>H</b>   청심환 (폭주 해제)\n" +
+                "주황빛 <color=#" + UIKit.Hex(new Color(1f, 0.6f, 0.1f)) + ">급소</color>를 노려라 — 피해 3배";
+            UIKit.Text(new Rect(r.x + 24, r.y + 136, r.width - 48, 180), keys, 16, UITheme.BoneDim, TextAnchor.UpperLeft, wrap: true);
+            UIKit.Alpha = 1f;
         }
 
         // ------------------------------------------------------------------ 부품

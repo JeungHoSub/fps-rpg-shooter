@@ -1,0 +1,48 @@
+using Hunt.Core;
+using UnityEngine;
+
+namespace Hunt.Player
+{
+    /// <summary>손전등 (F). 어두운 밤의 주 광원. 시점보다 살짝 늦게 따라와 흔들린다.</summary>
+    public class Flashlight : MonoBehaviour
+    {
+        Light spot;
+        Transform cam;
+        Quaternion lagRot;
+        public bool IsOn => spot != null && spot.enabled;
+
+        public void Init(Transform camera)
+        {
+            cam = camera;
+            var go = new GameObject("Flashlight");
+            go.transform.SetParent(camera, false);
+            go.transform.localPosition = new Vector3(0.18f, -0.12f, 0.1f);
+            spot = go.AddComponent<Light>();
+            spot.type = LightType.Spot;
+            spot.color = new Color(1f, 0.93f, 0.82f);
+            spot.range = 32f;
+            spot.spotAngle = 52f;
+            spot.innerSpotAngle = 24f;
+            spot.intensity = 2.6f;
+            spot.shadows = LightShadows.Soft;
+            spot.shadowStrength = 0.85f;
+            lagRot = camera.rotation;
+        }
+
+        void Update()
+        {
+            var gm = GameManager.Instance;
+            if (spot == null || gm == null) return;
+            if (gm.AcceptsGameplayInput && Input.GetKeyDown(KeyCode.F))
+            {
+                spot.enabled = !spot.enabled;
+                SFX.Play(SFX.FlashlightClick, 0.6f);
+            }
+            // 빛줄기가 시점을 살짝 늦게 따라온다
+            lagRot = Quaternion.Slerp(lagRot, cam.rotation, Time.deltaTime * 14f);
+            spot.transform.rotation = lagRot;
+            // 배터리가 약한 듯 아주 가끔 흔들림
+            spot.intensity = 2.6f * (0.96f + 0.04f * Mathf.PerlinNoise(Time.time * 6f, 3.3f));
+        }
+    }
+}

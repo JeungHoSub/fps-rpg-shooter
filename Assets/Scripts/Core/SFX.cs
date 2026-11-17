@@ -74,6 +74,76 @@ namespace Hunt.Core
         public static AudioClip Gong => Get("gong", () => MakeGong());
         public static AudioClip LevelUp => Get("levelup", () => MakeChime());
 
+        public static AudioClip RainLoop => Get("rain", () => MakeRain());
+        public static AudioClip Thunder => Get("thunder", () => MakeThunder());
+        public static AudioClip FlashlightClick => Get("flash", () => MakeClick(0.04f, 3000f, 0.35f));
+
+        /// <summary>빗소리 루프 (6초, 이음매 없이 반복). 넓은 대역 쏴— 소리 + 지붕·웅덩이에 떨어지는 빗방울.</summary>
+        static AudioClip MakeRain()
+        {
+            int n = Rate * 6;
+            var d = new float[n];
+            var rnd = new System.Random(77);
+            float b0 = 0, b1 = 0, b2 = 0, hp = 0, prev = 0;
+            for (int i = 0; i < n; i++)
+            {
+                float white = (float)(rnd.NextDouble() * 2.0 - 1.0);
+                // 핑크 노이즈 근사
+                b0 = 0.99765f * b0 + white * 0.099046f;
+                b1 = 0.963f * b1 + white * 0.2965164f;
+                b2 = 0.57f * b2 + white * 1.0526913f;
+                float pink = (b0 + b1 + b2 + white * 0.1848f) * 0.18f;
+                // 고역만 살짝 (쏴—)
+                hp = 0.92f * (hp + white - prev);
+                prev = white;
+                d[i] = pink * 0.55f + hp * 0.06f;
+            }
+            // 빗방울 톡톡
+            for (int k = 0; k < 2600; k++)
+            {
+                int at = rnd.Next(n);
+                float amp = (float)rnd.NextDouble() * 0.25f + 0.05f;
+                float freq = 1800f + (float)rnd.NextDouble() * 3500f;
+                int len = 500;
+                for (int j = 0; j < len && at + j < n; j++)
+                {
+                    float t = (float)j / Rate;
+                    d[at + j] += Mathf.Sin(2f * Mathf.PI * freq * t) * Mathf.Exp(-t * 900f) * amp;
+                }
+            }
+            // 처음과 끝을 겹쳐 이음매 제거
+            int fade = Rate / 2;
+            for (int i = 0; i < fade; i++)
+            {
+                float t = (float)i / fade;
+                d[i] = d[i] * t + d[n - fade + i] * (1f - t);
+            }
+            var trimmed = new float[n - fade];
+            System.Array.Copy(d, trimmed, trimmed.Length);
+            for (int i = 0; i < trimmed.Length; i++) trimmed[i] = SoftClip(trimmed[i] * 1.2f);
+            return Clip("rain", trimmed);
+        }
+
+        /// <summary>천둥: 멀리서 우르릉 굴러오는 저음.</summary>
+        static AudioClip MakeThunder()
+        {
+            int n = (int)(Rate * 5f);
+            var d = new float[n];
+            var rnd = new System.Random(99);
+            float f1 = 0f, f2 = 0f;
+            for (int i = 0; i < n; i++)
+            {
+                float t = (float)i / Rate;
+                float noise = (float)(rnd.NextDouble() * 2.0 - 1.0);
+                f1 += 0.02f * (noise - f1);
+                f2 += 0.004f * (f1 - f2);
+                float env = Mathf.Clamp01(t * 3f) * Mathf.Exp(-t * 0.8f) * (0.7f + 0.3f * Mathf.Sin(t * 7f + Mathf.Sin(t * 2.3f) * 3f));
+                float crack = t < 0.3f ? noise * Mathf.Exp(-t * 12f) * 0.25f : 0f;
+                d[i] = SoftClip((f1 * 18f + f2 * 40f) * env + crack);
+            }
+            return Clip("thunder", d);
+        }
+
         static AudioClip MakeGong()
         {
             int n = (int)(Rate * 2.4f);

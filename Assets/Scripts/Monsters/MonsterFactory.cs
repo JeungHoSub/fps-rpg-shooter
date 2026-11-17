@@ -37,8 +37,9 @@ namespace Hunt.Monsters
             m.SetHead(head.transform);
 
             // 눈 (판정 없음)
-            Deco(PrimitiveType.Sphere, root.transform, new Vector3(0.09f, 1.8f, 0.28f), Vector3.one * 0.08f, Color.red);
-            Deco(PrimitiveType.Sphere, root.transform, new Vector3(-0.09f, 1.8f, 0.28f), Vector3.one * 0.08f, Color.red);
+            // 어둠 속에서 붉게 빛나는 눈
+            Deco(PrimitiveType.Sphere, root.transform, new Vector3(0.09f, 1.8f, 0.28f), Vector3.one * 0.08f, new Color(1f, 0.15f, 0.1f), true);
+            Deco(PrimitiveType.Sphere, root.transform, new Vector3(-0.09f, 1.8f, 0.28f), Vector3.one * 0.08f, new Color(1f, 0.15f, 0.1f), true);
 
             // 팔 (몸통 판정)
             float armW = heavy ? 0.24f : 0.14f;
@@ -111,14 +112,15 @@ namespace Hunt.Monsters
             return part;
         }
 
-        static void Deco(PrimitiveType type, Transform parent, Vector3 lpos, Vector3 lscale, Color c)
+        static void Deco(PrimitiveType type, Transform parent, Vector3 lpos, Vector3 lscale, Color c, bool glow = false)
         {
             var go = GameObject.CreatePrimitive(type);
             Object.Destroy(go.GetComponent<Collider>());
             go.transform.SetParent(parent, false);
             go.transform.localPosition = lpos;
             go.transform.localScale = lscale;
-            go.GetComponent<Renderer>().material.color = c;
+            if (glow) go.GetComponent<Renderer>().sharedMaterial = Hunt.Core.FX.UnlitMaterial(c);
+            else go.GetComponent<Renderer>().material.color = c;
         }
     }
 }

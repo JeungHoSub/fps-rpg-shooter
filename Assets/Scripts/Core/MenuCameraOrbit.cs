@@ -5,8 +5,8 @@ namespace Hunt.Core
     /// <summary>시작 화면 배경: 아레나를 천천히 도는 카메라. 살짝 흔들려 불안한 느낌을 준다.</summary>
     public class MenuCameraOrbit : MonoBehaviour
     {
-        public float radius = 26f;
-        public float height = 6f;
+        public float radius = 21f;
+        public float height = 4.5f;
         public float speed = 4f; // 도/초
 
         float angle = 200f;
