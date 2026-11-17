@@ -24,3 +24,9 @@ https://polyhaven.com
 
 ## 사운드
 모든 효과음(총성, 빗소리, 천둥, 징, UI 등)은 코드로 합성 (`Assets/Scripts/Core/SFX.cs`).
+
+## 좀비 모델 — Quaternius "Animated Zombie" (CC0)
+https://quaternius.com/packs/animatedzombie.html
+
+`Assets/Resources/Zombies/ZombieSmooth.fbx`, `ZombieTexture.png`
+애니메이션: Idle, Walk, Run, Crawl, Bite
