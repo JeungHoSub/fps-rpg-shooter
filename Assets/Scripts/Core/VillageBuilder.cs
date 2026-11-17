@@ -337,8 +337,8 @@ namespace Hunt.Core
         static void Entrance()
         {
             // 장승 한 쌍
-            Jangseung(new Vector3(-4.4f, 0f, -40f), "天\n下\n大\n將\n軍", true);
-            Jangseung(new Vector3(4.4f, 0f, -40f), "地\n下\n女\n將\n軍", false);
+            Jangseung(new Vector3(-4.4f, 0f, -40f), "천\n하\n대\n장\n군", true);
+            Jangseung(new Vector3(4.4f, 0f, -40f), "지\n하\n여\n장\n군", false);
 
             // 버스정류장
             var bus = Group("버스정류장", new Vector3(7.5f, 0f, -28f), -90f);

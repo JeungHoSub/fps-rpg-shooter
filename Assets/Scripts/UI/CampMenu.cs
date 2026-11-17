@@ -39,16 +39,16 @@ namespace Hunt.UI
             UIKit.Panel(win);
 
             // 제목
-            UIKit.Text(new Rect(win.x, win.y + 14, win.width, 46), "야  영  지", 34, UITheme.GoldBright, TextAnchor.MiddleCenter, serif: true, bold: true);
-            UIKit.Text(new Rect(win.x, win.y + 56, win.width, 24), $"날이 밝았다. 망자들은 그늘로 숨었다.  ·  다음 밤까지 {gm.IntermissionTime:0}초", 16, UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true);
+            UIKit.BrushTitle(new Rect(win.x, win.y + 12, win.width, 48), "서낭당", 38, new Color(0f, 0f, 0f, 0.7f), UITheme.GoldBright);
+            UIKit.Text(new Rect(win.x, win.y + 56, win.width, 24), $"날이 밝았다. 망자들은 그늘로 숨었다. 서낭당 돌무더기 앞에서 숨을 고른다.  ·  다음 밤까지 {gm.IntermissionTime:0}초", 16, UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true);
             UIKit.Divider(new Rect(win.x + 200, win.y + 86, win.width - 400, 10));
 
             // 탭
             string[] names =
             {
-                p.StatPoints > 0 || p.PendingTraitPicks > 0 ? "능력치 · 계약  ◆" : "능력치 · 계약",
-                "무기 · 파츠",
-                gm.LastEvolution.Count > 0 ? "역병 연구  ◆" : "역병 연구",
+                p.StatPoints > 0 || p.PendingTraitPicks > 0 ? "몸 · 기질  ●" : "몸 · 기질",
+                "무기 · 부품",
+                gm.LastEvolution.Count > 0 ? "역병 일지  ●" : "역병 일지",
             };
             float tw = 260;
             float tx = win.center.x - (tw * 3 + 20) / 2;
@@ -66,7 +66,7 @@ namespace Hunt.UI
             // 아래
             float by = win.yMax - 78;
             if (UIKit.Button(new Rect(win.center.x - 190, by, 380, 60), "밤을 맞이한다", 26, false, true, "Enter")) gm.StartNextWave();
-            UIKit.Text(new Rect(win.x + 30, by, 400, 60), "Tab — 야영지를 닫고 마을을 둘러본다", 15, UITheme.Ash);
+            UIKit.Text(new Rect(win.x + 30, by, 400, 60), "Tab — 서낭당을 떠나 마을을 둘러본다", 15, UITheme.Ash);
             UIKit.Text(new Rect(win.xMax - 430, by, 400, 60), $"엽전 <color=#{UIKit.Hex(UITheme.GoldBright)}>{p.Gold}</color>   ·   청심환 ×{p.Infection.Antidotes}", 18, UITheme.BoneDim, TextAnchor.MiddleRight, serif: true);
             UIKit.Alpha = 1f;
         }
@@ -80,8 +80,8 @@ namespace Hunt.UI
             var right = new Rect(c.x + lw + 20, c.y, c.width - lw - 20, c.height);
 
             UIKit.NineSlice(left, UITheme.Slot, 10, Color.white);
-            UIKit.Text(new Rect(left.x + 24, left.y + 12, 400, 34), $"<b>Lv.{p.Level}</b>  각인", 22, UITheme.Bone, serif: true);
-            UIKit.Text(new Rect(left.xMax - 300, left.y + 12, 276, 34), $"남은 각인  <color=#{UIKit.Hex(p.StatPoints > 0 ? UITheme.GoldBright : UITheme.Ash)}>{p.StatPoints}</color>", 22, UITheme.BoneDim, TextAnchor.MiddleRight, serif: true);
+            UIKit.Text(new Rect(left.x + 24, left.y + 12, 400, 34), $"<b>Lv.{p.Level}</b>  단련", 22, UITheme.Bone, serif: true);
+            UIKit.Text(new Rect(left.xMax - 300, left.y + 12, 276, 34), $"남은 단련  <color=#{UIKit.Hex(p.StatPoints > 0 ? UITheme.GoldBright : UITheme.Ash)}>{p.StatPoints}</color>", 22, UITheme.BoneDim, TextAnchor.MiddleRight, serif: true);
 
             float y = left.y + 58;
             float rowH = (left.height - 70) / 6f;
@@ -89,7 +89,7 @@ namespace Hunt.UI
             {
                 var row = new Rect(left.x + 14, y, left.width - 28, rowH - 6);
                 UIKit.Tex(new Rect(row.x, row.yMax, row.width, 2), UITheme.LineFade, new Color(0.5f, 0.38f, 0.2f, 0.35f));
-                UIKit.Emblem(new Rect(row.x + 8, row.center.y - 24, 48, 48), GameText.StatGlyph(t), UITheme.Gold);
+                UIKit.Emblem(new Rect(row.x + 8, row.center.y - 24, 48, 48), GameText.StatGlyph(t), UITheme.Gold, s.Allocated(t) > 0);
                 UIKit.Text(new Rect(row.x + 70, row.y + 4, 150, 30), GameText.StatName(t), 22, UITheme.Bone, serif: true, bold: true);
                 UIKit.Text(new Rect(row.x + 70, row.y + 34, row.width - 200, 22), GameText.StatEffects(t, s), 14, UITheme.BoneDim);
 
@@ -121,7 +121,7 @@ namespace Hunt.UI
             float ty = right.y + 290;
             UIKit.Divider(new Rect(right.x + 20, ty, right.width - 40, 10));
             ty += 16;
-            UIKit.Text(new Rect(right.x + 20, ty, right.width - 40, 28), "맺은 계약", 20, UITheme.Gold, TextAnchor.MiddleCenter, serif: true, bold: true);
+            UIKit.Text(new Rect(right.x + 20, ty, right.width - 40, 28), "지닌 기질", 20, UITheme.Gold, TextAnchor.MiddleCenter, serif: true, bold: true);
             ty += 34;
             int n = s.traits.Count, k = 0;
             float ex = right.center.x - n * 56 / 2f;
@@ -137,7 +137,7 @@ namespace Hunt.UI
             p.EnsureTraitOffer();
             if (p.PendingTraitPicks > 0)
             {
-                UIKit.Text(new Rect(right.x + 20, ty, right.width - 40, 28), $"새 계약을 맺을 수 있다  ({p.PendingTraitPicks})", 18, UITheme.GoldBright, TextAnchor.MiddleCenter, serif: true, bold: true);
+                UIKit.Text(new Rect(right.x + 20, ty, right.width - 40, 28), $"새 기질을 얻을 수 있다  ({p.PendingTraitPicks})", 18, UITheme.GoldBright, TextAnchor.MiddleCenter, serif: true, bold: true);
                 ty += 34;
                 float cw = (right.width - 40 - 20) / 3f;
                 for (int i = 0; i < p.TraitOffer.Count; i++)
@@ -157,7 +157,7 @@ namespace Hunt.UI
             else
             {
                 int next = (p.Level / Traits.PickEveryLevels + 1) * Traits.PickEveryLevels;
-                UIKit.Text(new Rect(right.x + 20, ty, right.width - 40, 28), $"다음 계약 — Lv.{next}", 17, UITheme.Ash, TextAnchor.MiddleCenter, serif: true);
+                UIKit.Text(new Rect(right.x + 20, ty, right.width - 40, 28), $"다음 기질 — Lv.{next}", 17, UITheme.Ash, TextAnchor.MiddleCenter, serif: true);
             }
         }
 
@@ -166,12 +166,12 @@ namespace Hunt.UI
         {
             switch (s)
             {
-                case PartSlot.Barrel: return "銃";
-                case PartSlot.Magazine: return "彈";
-                case PartSlot.Stock: return "托";
-                case PartSlot.Scope: return "照";
-                case PartSlot.Muzzle: return "口";
-                default: return "符";
+                case PartSlot.Barrel: return "총";
+                case PartSlot.Magazine: return "탄";
+                case PartSlot.Stock: return "받";
+                case PartSlot.Scope: return "눈";
+                case PartSlot.Muzzle: return "구";
+                default: return "부";
             }
         }
 
@@ -269,7 +269,7 @@ namespace Hunt.UI
                 else UIKit.TooltipIf(r, $"<b>{WeaponPart.SlotName(slot)}</b>\n비어 있다. 오른쪽 짐에서 골라 단다.");
             }
             UIKit.Text(new Rect(mid.x + 20, mid.yMax - 90, mid.width - 40, 80),
-                "부착물은 총의 모양에도 드러난다.\n특수 모듈(符)은 탄환에 오행의 기운을 싣는다.", 14, UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true, wrap: true);
+                "부착물은 총의 모양에도 드러난다.\n부적(부)은 탄환에 기운을 싣는다.", 14, UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true, wrap: true);
 
             // ---- 오른쪽: 짐 (인벤토리) ----
             var right = new Rect(mid.xMax + 18, c.y, c.xMax - mid.xMax - 18, c.height);
@@ -372,7 +372,7 @@ namespace Hunt.UI
             UIKit.Text(new Rect(left.x + 30, y, left.width - 60, 110), misc, 16, UITheme.BoneDim, TextAnchor.UpperLeft, wrap: true);
 
             // 기록
-            UIKit.Text(new Rect(right.x, right.y + 16, right.width, 30), "역병 일지", 22, UITheme.Gold, TextAnchor.MiddleCenter, serif: true, bold: true);
+            UIKit.Text(new Rect(right.x, right.y + 16, right.width, 30), "지난 밤들의 기록", 22, UITheme.Gold, TextAnchor.MiddleCenter, serif: true, bold: true);
             var view = new Rect(right.x + 20, right.y + 60, right.width - 30, right.height - 76);
             var inner = new Rect(0, 0, view.width - 18, Mathf.Max(view.height, evo.history.Count * 30));
             historyScroll = GUI.BeginScrollView(view, historyScroll, inner, GUIStyle.none, GUI.skin.verticalScrollbar);

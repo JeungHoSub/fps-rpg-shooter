@@ -15,7 +15,7 @@ namespace Hunt.UI
             UIKit.Fill(new Rect(0, 0, W, H), new Color(0.02f, 0.01f, 0.015f, 0.7f));
             UIKit.Vignette(W, H, new Color(0, 0, 0, 0.9f));
 
-            var r = new Rect(W / 2 - 300, H / 2 - 290, 600, 580);
+            var r = new Rect(W / 2 - 320, H / 2 - 370, 640, 740);
             UIKit.Panel(r, "숨  을  고 른 다");
 
             float y = r.y + 90;
@@ -35,7 +35,24 @@ namespace Hunt.UI
             UIKit.Text(new Rect(r.x + 60, y, 160, 30), "소리 크기", 18, UITheme.Bone, serif: true);
             GameSettings.Volume = UIKit.Slider(new Rect(r.x + 220, y, r.width - 340, 30), GameSettings.Volume, 0f, 1f, "vol");
             UIKit.Text(new Rect(r.xMax - 110, y, 60, 30), $"{GameSettings.Volume * 100:0}%", 18, UITheme.GoldBright, TextAnchor.MiddleRight, bold: true);
-            y += 70;
+            y += 54;
+
+            // 그래픽 품질 (PC가 멈추거나 끊기면 '하')
+            UIKit.Text(new Rect(r.x + 60, y + 4, 160, 30), "그래픽", 18, UITheme.Bone, serif: true);
+            float bw = (r.width - 340) / 3f;
+            for (int i = 0; i < 3; i++)
+            {
+                var lvl = (GfxLevel)i;
+                string label = lvl == GfxLevel.Low ? "하" : lvl == GfxLevel.Medium ? "중" : "상";
+                if (UIKit.Button(new Rect(r.x + 220 + i * (bw + 6), y, bw, 38), label, 18, QualityManager.Level == lvl)) QualityManager.Set(lvl);
+            }
+            y += 46;
+            Color fpsCol = QualityManager.Fps < 30f ? UITheme.BloodBright : QualityManager.Fps < 50f ? UITheme.Warn : UITheme.Good;
+            UIKit.Text(new Rect(r.x + 60, y, r.width - 120, 22),
+                $"현재 <color=#{UIKit.Hex(fpsCol)}>{QualityManager.Fps:0} FPS</color>   ·   {(QualityManager.AutoDetected ? "사양에 맞춰 자동 선택됨" : "직접 고름")}", 14, UITheme.BoneDim);
+            y += 22;
+            UIKit.Text(new Rect(r.x + 60, y, r.width - 120, 22), QualityManager.DeviceSummary, 13, UITheme.Ash);
+            y += 40;
 
             UIKit.Divider(new Rect(r.x + 60, y, r.width - 120, 10));
             y += 28;

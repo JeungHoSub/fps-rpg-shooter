@@ -79,12 +79,12 @@ namespace Hunt.UI
 
             // ---- 역병 능력 슬롯 ----
             float sx = 262, sy = H - 112, ss = 76;
-            AbilitySlot(new Rect(sx, sy, ss, ss), "Q", "狂", "광폭화", inf.IsRage, inf.RageTime / 6f, inf.Gauge >= inf.RageCostFinal && !inf.IsFrenzy, $"{inf.RageCostFinal:0}",
-                "<b>광폭화 (狂)</b>\n역병 기운을 태워 6초간\n• 피해 +30%  • 이동 +20%  • 저지력 +50%");
-            AbilitySlot(new Rect(sx + ss + 14, sy, ss, ss), "E", "生", "재생", inf.IsRegen, inf.IsRegen ? 1f : 0f, inf.Gauge >= inf.RegenCostFinal && !inf.IsFrenzy, $"{inf.RegenCostFinal:0}",
-                "<b>재생 (生)</b>\n역병 기운으로 4초간 생명 50 회복");
-            AbilitySlot(new Rect(sx + (ss + 14) * 2, sy, ss, ss), "H", "藥", "해독", false, 0f, inf.Antidotes > 0, $"×{inf.Antidotes}",
-                "<b>청심환 (藥)</b>\n폭주를 즉시 멈추거나 역병 기운을 40 낮춘다.\n밤을 넘길 때마다 하나씩 얻는다 (최대 2).");
+            AbilitySlot(new Rect(sx, sy, ss, ss), "Q", "광", "광폭화", inf.IsRage, inf.RageTime / 6f, inf.Gauge >= inf.RageCostFinal && !inf.IsFrenzy, $"{inf.RageCostFinal:0}",
+                "<b>광폭화</b>\n역병 기운을 태워 6초간\n• 피해 +30%  • 이동 +20%  • 저지력 +50%");
+            AbilitySlot(new Rect(sx + ss + 14, sy, ss, ss), "E", "생", "재생", inf.IsRegen, inf.IsRegen ? 1f : 0f, inf.Gauge >= inf.RegenCostFinal && !inf.IsFrenzy, $"{inf.RegenCostFinal:0}",
+                "<b>재생</b>\n역병 기운으로 4초간 생명 50 회복");
+            AbilitySlot(new Rect(sx + (ss + 14) * 2, sy, ss, ss), "H", "약", "청심환", false, 0f, inf.Antidotes > 0, $"×{inf.Antidotes}",
+                "<b>청심환</b>\n폭주를 즉시 멈추거나 역병 기운을 40 낮춘다.\n밤을 넘길 때마다 하나씩 얻는다 (최대 2).");
 
             // ---- 탄약 / 무기 ----
             DrawWeapon(p);
@@ -93,7 +93,7 @@ namespace Hunt.UI
             var xr = new Rect(W / 2 - 380, H - 30, 760, 10);
             UIKit.Bar(xr, (float)p.Xp / p.XpToNext, UITheme.Gold);
             UIKit.Text(new Rect(xr.x, xr.y - 26, xr.width, 22),
-                $"Lv.{p.Level}   ·   {p.Xp} / {p.XpToNext}" + (p.StatPoints > 0 || p.PendingTraitPicks > 0 ? $"   ·   <color=#{UIKit.Hex(UITheme.GoldBright)}>새 각인 {p.StatPoints}{(p.PendingTraitPicks > 0 ? " · 새 계약" : "")} — 야영지에서</color>" : ""),
+                $"Lv.{p.Level}   ·   {p.Xp} / {p.XpToNext}" + (p.StatPoints > 0 || p.PendingTraitPicks > 0 ? $"   ·   <color=#{UIKit.Hex(UITheme.GoldBright)}>새 단련 {p.StatPoints}{(p.PendingTraitPicks > 0 ? " · 새 기질" : "")} — 서낭당에서</color>" : ""),
                 14, UITheme.BoneDim, TextAnchor.MiddleCenter);
 
             // ---- 위쪽: 밤 표식 / 남은 망자 ----
@@ -220,7 +220,7 @@ namespace Hunt.UI
             if (gm.State == GameState.Intermission)
             {
                 UIKit.Text(new Rect(r.x, r.y + 6, r.width, 34), "날이 밝았다", 24, UITheme.GoldBright, TextAnchor.MiddleCenter, serif: true, bold: true);
-                UIKit.Text(new Rect(r.x, r.y + 38, r.width, 24), $"다음 밤까지 {gm.IntermissionTime:0}초  ·  Tab 야영지  ·  Enter 밤을 맞는다", 15, UITheme.BoneDim, TextAnchor.MiddleCenter);
+                UIKit.Text(new Rect(r.x, r.y + 38, r.width, 24), $"다음 밤까지 {gm.IntermissionTime:0}초  ·  Tab 서낭당  ·  Enter 밤을 맞는다", 15, UITheme.BoneDim, TextAnchor.MiddleCenter);
             }
             else
             {

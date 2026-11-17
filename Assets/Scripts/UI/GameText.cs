@@ -26,17 +26,17 @@ namespace Hunt.UI
             }
         }
 
-        /// <summary>문장(紋章)에 새길 한자.</summary>
+        /// <summary>도장에 새길 한글 한 글자.</summary>
         public static string StatGlyph(StatType t)
         {
             switch (t)
             {
-                case StatType.STR: return "力";
-                case StatType.AGI: return "疾";
-                case StatType.CTL: return "制";
-                case StatType.VIT: return "命";
-                case StatType.FOC: return "眼";
-                default: return "術";
+                case StatType.STR: return "힘";
+                case StatType.AGI: return "날";
+                case StatType.CTL: return "손";
+                case StatType.VIT: return "숨";
+                case StatType.FOC: return "눈";
+                default: return "꾀";
             }
         }
 
@@ -71,12 +71,12 @@ namespace Hunt.UI
         {
             switch (t)
             {
-                case StatType.STR: return "<b>근력 (力)</b>\n\n• 소지 무게 한도 +1.5 / 포인트\n• 저지력(넉백) +1% / 포인트\n\n무거운 경기관총·저격총을 들어도 느려지지 않는다.";
-                case StatType.AGI: return "<b>민첩 (疾)</b>\n\n• 이동 속도 +1% / 포인트\n• 재장전 속도 +1.5% / 포인트\n• 무기 교체 속도 +2% / 포인트";
-                case StatType.CTL: return "<b>제어 (制)</b>\n\n• 반동의 무작위 흔들림 감소 (반동 모양은 유지 → 외울 수 있다)\n• 반동 회복 속도 +3% / 포인트\n• 탄퍼짐 감소, 조준 속도 증가";
-                case StatType.VIT: return "<b>생명 (命)</b>\n\n• 최대 생명 +10 / 포인트\n• 역병 기운 축적 감소";
-                case StatType.FOC: return "<b>집중 (眼)</b>\n\n• 치명타 확률 +0.5% / 포인트\n• 치명타 배율 +1% / 포인트\n• 약점 피해 +2% / 포인트";
-                default: return "<b>기술 (術)</b>\n\n• 역병 능력(광폭화·재생) 비용 감소\n• 역병 능력 지속시간 증가";
+                case StatType.STR: return "<b>근력</b>\n\n• 소지 무게 한도 +1.5 / 포인트\n• 저지력(넉백) +1% / 포인트\n\n무거운 경기관총·저격총을 들어도 느려지지 않는다.";
+                case StatType.AGI: return "<b>민첩</b>\n\n• 이동 속도 +1% / 포인트\n• 재장전 속도 +1.5% / 포인트\n• 무기 교체 속도 +2% / 포인트";
+                case StatType.CTL: return "<b>제어</b>\n\n• 반동의 무작위 흔들림 감소 (반동 모양은 유지 → 외울 수 있다)\n• 반동 회복 속도 +3% / 포인트\n• 탄퍼짐 감소, 조준 속도 증가";
+                case StatType.VIT: return "<b>생명</b>\n\n• 최대 생명 +10 / 포인트\n• 역병 기운 축적 감소";
+                case StatType.FOC: return "<b>집중</b>\n\n• 치명타 확률 +0.5% / 포인트\n• 치명타 배율 +1% / 포인트\n• 약점 피해 +2% / 포인트";
+                default: return "<b>기술</b>\n\n• 역병 능력(광폭화·재생) 비용 감소\n• 역병 능력 지속시간 증가";
             }
         }
 
@@ -85,14 +85,14 @@ namespace Hunt.UI
         {
             switch (t)
             {
-                case Trait.Bloodlust: return "血";
-                case Trait.RunAndGun: return "走";
-                case Trait.SteadyAim: return "靜";
-                case Trait.ThickSkin: return "皮";
-                case Trait.MutantAffinity: return "疫";
-                case Trait.Scavenger: return "拾";
-                case Trait.QuickHands: return "手";
-                default: return "壯";
+                case Trait.Bloodlust: return "피";
+                case Trait.RunAndGun: return "발";
+                case Trait.SteadyAim: return "숨";
+                case Trait.ThickSkin: return "살";
+                case Trait.MutantAffinity: return "병";
+                case Trait.Scavenger: return "줍";
+                case Trait.QuickHands: return "손";
+                default: return "짐";
             }
         }
 

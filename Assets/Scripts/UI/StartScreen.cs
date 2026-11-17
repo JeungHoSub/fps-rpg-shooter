@@ -13,13 +13,13 @@ namespace Hunt.UI
     /// </summary>
     public class StartScreen
     {
-        static readonly string[] StepNames = { "능력치 각인", "특성 계약", "무장 선택", "출정" };
-        static readonly string[] StepNumerals = { "壹", "貳", "參", "肆" };
+        static readonly string[] StepNames = { "몸 만들기", "기질 고르기", "무기 챙기기", "길 나서기" };
+        static readonly string[] StepNumerals = { "하나", "둘", "셋", "넷" };
         static readonly string[] StepHints =
         {
-            "타고난 몸에 각인을 새긴다",
-            "살아남기 위한 단 하나의 계약",
-            "두 자루의 주무기를 고른다",
+            "타고난 몸을 단련한다",
+            "어떤 사람으로 버틸 것인가",
+            "두 자루를 메고 간다",
             "빗속으로 걸어 나간다",
         };
 
@@ -106,9 +106,10 @@ namespace Hunt.UI
         {
             float y = 26 - (1f - appear) * 20f;
             UIKit.Text(new Rect(0, y, W, 24), SpaceOut(GameText.TitleSub), 16, UITheme.GoldDim, TextAnchor.MiddleCenter, bold: true);
-            UIKit.Text(new Rect(0, y + 22, W, 80), GameText.Title, 66, UITheme.Bone, TextAnchor.MiddleCenter, serif: true, bold: true);
-            // 제목 뒤 핏빛 번짐
-            UIKit.Tex(new Rect(W / 2 - 260, y + 20, 520, 90), UITheme.Glow, new Color(0.8f, 0.05f, 0.05f, 0.18f + 0.05f * Mathf.Sin(Time.unscaledTime * 1.3f)));
+            // 먹 붓질 위에 궁서체 제목, 옆에 붉은 낙관
+            UIKit.BrushTitle(new Rect(0, y + 22, W, 80), GameText.Title, 70, new Color(0f, 0f, 0f, 0.85f), UITheme.GoldBright);
+            float tw = UIKit.TextWidth(GameText.Title, 70, true);
+            UIKit.Emblem(new Rect(W / 2 + tw / 2 + 14, y + 34, 58, 58), "역병", UITheme.Blood, true);
             UIKit.Text(new Rect(0, y + 100, W, 30), GameText.Tagline, 18, UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true);
             UIKit.Divider(new Rect(W / 2 - 360, y + 138, 720, 12));
         }
@@ -142,7 +143,7 @@ namespace Hunt.UI
         void DrawSheet(GameManager gm)
         {
             var r = new Rect(W - 470, 200, 430, 760);
-            UIKit.Panel(r, "헌 터  기 록 서");
+            UIKit.Panel(r, "사냥꾼 수첩");
 
             var s = gm.PreviewStats();
             CharacterStats p = null;
@@ -197,7 +198,7 @@ namespace Hunt.UI
 
             UIKit.Divider(new Rect(r.x + 30, y, r.width - 60, 10));
             y += 18;
-            UIKit.Text(new Rect(r.x + 28, y, r.width - 56, 26), $"계약  <color=#{UIKit.Hex(UITheme.GoldBright)}>{Traits.Name(gm.StartTrait)}</color>", 18, UITheme.BoneDim, serif: true);
+            UIKit.Text(new Rect(r.x + 28, y, r.width - 56, 26), $"기질  <color=#{UIKit.Hex(UITheme.GoldBright)}>{Traits.Name(gm.StartTrait)}</color>", 18, UITheme.BoneDim, serif: true);
             y += 28;
             string arms = "";
             foreach (var wd in gm.SelectedPrimaries) arms += (arms.Length > 0 ? " · " : "") + wd.displayName;
@@ -221,12 +222,12 @@ namespace Hunt.UI
         // ------------------------------------------------------------------ Ⅰ 능력치 각인
         void DrawStats(GameManager gm, Rect c)
         {
-            UIKit.Panel(c, "壹 · 능 력 치  각 인");
+            UIKit.Panel(c, "하나 · 몸 만들기");
             float y = c.y + 70;
 
             // 남은 각인 포인트
             int total = gm.Character.startingStatPoints, left = gm.StartPointsLeft;
-            UIKit.Text(new Rect(c.x + 30, y, 300, 34), "남은 각인", 20, UITheme.BoneDim, serif: true);
+            UIKit.Text(new Rect(c.x + 30, y, 300, 34), "남은 단련", 20, UITheme.BoneDim, serif: true);
             for (int i = 0; i < total; i++)
             {
                 var pr = new Rect(c.x + 140 + i * 30, y + 6, 22, 22);
@@ -246,7 +247,7 @@ namespace Hunt.UI
                 var pr = GameText.Presets[i];
                 var br = new Rect(bx + i * (bw + 8), y - 4, bw, 42);
                 if (UIKit.Button(br, pr.name, 18)) gm.ApplyStartPreset(pr.alloc);
-                UIKit.TooltipIf(br, $"<b>추천 각인: {pr.name}</b>\n{pr.desc}");
+                UIKit.TooltipIf(br, $"<b>추천: {pr.name}</b>\n{pr.desc}");
             }
             if (UIKit.Button(new Rect(bx + GameText.Presets.Length * (bw + 8), y - 4, bw, 42), "초기화", 18)) gm.ResetStartAllocation();
             y += 56;
@@ -260,7 +261,7 @@ namespace Hunt.UI
                 UIKit.Fill(row, new Color(1f, 0.8f, 0.5f, 0.03f + hv * 0.05f));
                 UIKit.Tex(new Rect(row.x, row.yMax - 2, row.width, 2), UITheme.LineFade, new Color(0.5f, 0.38f, 0.2f, 0.4f));
 
-                UIKit.Emblem(new Rect(row.x + 10, row.y + 12, 56, 56), GameText.StatGlyph(t), UITheme.Gold);
+                UIKit.Emblem(new Rect(row.x + 10, row.y + 12, 56, 56), GameText.StatGlyph(t), UITheme.Gold, gm.StartAllocation[(int)t] > 0);
                 UIKit.Text(new Rect(row.x + 84, row.y + 8, 180, 34), GameText.StatName(t), 26, UITheme.Bone, serif: true, bold: true);
                 UIKit.Text(new Rect(row.x + 84, row.y + 44, 260, 24), GameText.StatShort(t), 15, UITheme.BoneDim);
 
@@ -290,9 +291,9 @@ namespace Hunt.UI
         // ------------------------------------------------------------------ Ⅱ 특성 계약
         void DrawTraits(GameManager gm, Rect c)
         {
-            UIKit.Panel(c, "貳 · 특 성  계 약");
+            UIKit.Panel(c, "둘 · 기질 고르기");
             UIKit.Text(new Rect(c.x + 30, c.y + 66, c.width - 60, 30),
-                $"하나를 골라 계약한다. 이후 {Traits.PickEveryLevels}레벨마다 무작위 셋 중 하나를 더 고를 수 있다.", 17, UITheme.BoneDim, TextAnchor.MiddleCenter);
+                $"하나를 고른다. 이후 {Traits.PickEveryLevels}레벨마다 셋 중 하나를 더 얻는다.", 17, UITheme.BoneDim, TextAnchor.MiddleCenter);
 
             var all = Traits.All;
             int cols = 4;
@@ -320,8 +321,8 @@ namespace Hunt.UI
                 if (sel)
                 {
                     var seal = new Rect(r.xMax - 64, r.y + 12, 52, 52);
-                    UIKit.Tex(seal, UITheme.Circle, new Color(0.6f, 0.05f, 0.05f, 0.9f));
-                    UIKit.Text(seal, "契", 26, UITheme.Bone, TextAnchor.MiddleCenter, serif: true, bold: true);
+                    UIKit.Tex(seal, UITheme.Seal, UITheme.Blood);
+                    UIKit.Text(seal, "택", 26, UITheme.GoldBright, TextAnchor.MiddleCenter, serif: true);
                 }
                 if (click) gm.StartTrait = t;
             }
@@ -330,7 +331,7 @@ namespace Hunt.UI
         // ------------------------------------------------------------------ Ⅲ 무장 선택
         void DrawWeapons(GameManager gm, Rect c)
         {
-            UIKit.Panel(c, "參 · 무 장  선 택");
+            UIKit.Panel(c, "셋 · 무기 챙기기");
             int count = gm.SelectedPrimaries.Count;
             UIKit.Text(new Rect(c.x + 30, c.y + 66, c.width - 60, 30),
                 $"주무기 <color=#{UIKit.Hex(count == GameManager.MaxPrimaries ? UITheme.Good : UITheme.GoldBright)}>{count} / {GameManager.MaxPrimaries}</color>  ·  권총(P9)은 기본 지급", 18, UITheme.BoneDim, TextAnchor.MiddleCenter);
@@ -399,7 +400,7 @@ namespace Hunt.UI
         // ------------------------------------------------------------------ Ⅳ 출정
         void DrawDeploy(GameManager gm, Rect c)
         {
-            UIKit.Panel(c, "肆 · 출 정");
+            UIKit.Panel(c, "넷 · 길 나서기");
             float y = c.y + 90;
             UIKit.Text(new Rect(c.x, y, c.width, 50), "준비는 끝났다.", 40, UITheme.Bone, TextAnchor.MiddleCenter, serif: true, bold: true);
             y += 56;
@@ -418,7 +419,7 @@ namespace Hunt.UI
             }
             UIKit.Text(new Rect(c.x, y, c.width, 30), stats, 19, UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true);
             y += 44;
-            UIKit.Text(new Rect(c.x, y, c.width, 30), $"계약 — <color=#{UIKit.Hex(UITheme.GoldBright)}>{Traits.Name(gm.StartTrait)}</color> : {Traits.Describe(gm.StartTrait)}", 19, UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true);
+            UIKit.Text(new Rect(c.x, y, c.width, 30), $"기질 — <color=#{UIKit.Hex(UITheme.GoldBright)}>{Traits.Name(gm.StartTrait)}</color> : {Traits.Describe(gm.StartTrait)}", 19, UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true);
             y += 40;
             string arms = "";
             foreach (var wd in gm.SelectedPrimaries) arms += $"{wd.displayName}  ·  ";
@@ -430,14 +431,14 @@ namespace Hunt.UI
             var br = new Rect(c.center.x - 170, y, 340, 84);
             float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 2.5f);
             if (ready) UIKit.Tex(new Rect(br.x - 60, br.y - 40, br.width + 120, br.height + 80), UITheme.Glow, new Color(0.9f, 0.1f, 0.08f, 0.25f + 0.2f * pulse));
-            if (UIKit.Button(br, "출  정", 38, false, ready, ready ? "Enter" : "각인 포인트를 모두 새겨라")) TryDeploy(gm);
+            if (UIKit.Button(br, "길 나서기", 36, false, ready, ready ? "Enter" : "단련 포인트를 모두 써라")) TryDeploy(gm);
         }
 
         void TryDeploy(GameManager gm)
         {
             if (gm.StartPointsLeft > 0)
             {
-                Hunt.UI.HUD.Notify("각인 포인트를 모두 새겨야 출정할 수 있다.", UITheme.Warn);
+                Hunt.UI.HUD.Notify("단련 포인트를 모두 써야 길을 나설 수 있다.", UITheme.Warn);
                 GoTo(0);
                 return;
             }
@@ -456,14 +457,15 @@ namespace Hunt.UI
                     GoTo(step + 1);
             }
             UIKit.Text(new Rect(c.x + 220, y, c.width - 460, 54),
-                "WASD 이동 · Shift 달리기 · 좌클릭 사격 · 우클릭 조준 · R 재장전\nQ 광폭화 · E 재생 · H 해독 · Tab 야영지 · Esc 일시정지", 14, UITheme.Ash, TextAnchor.MiddleCenter);
+                "WASD 이동 · Shift 달리기 · 좌클릭 사격 · 우클릭 조준 · R 재장전 · F 손전등\nQ 광폭화 · E 재생 · H 청심환 · Tab 서낭당 · Esc 일시정지", 14, UITheme.Ash, TextAnchor.MiddleCenter);
+            UIKit.Text(new Rect(0, H - 30, W - 30, 24), $"그래픽 품질: {QualityManager.Name(QualityManager.Level)}{(QualityManager.AutoDetected ? " (내 PC에 맞춰 자동)" : "")}  ·  게임 중 Esc에서 바꿀 수 있다", 13, UITheme.Ash, TextAnchor.MiddleRight);
         }
 
         static string StepWarn(int s)
         {
             switch (s)
             {
-                case 0: return "포인트가 남아 있다";
+                case 0: return "단련 포인트가 남았다";
                 case 2: return "주무기를 더 고를 수 있다";
                 default: return null;
             }

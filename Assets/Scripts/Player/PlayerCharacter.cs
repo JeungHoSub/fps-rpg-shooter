@@ -120,11 +120,11 @@ namespace Hunt.Player
                 StatPoints += 3;
                 Hp = Mathf.Min(Stats.MaxHp, Stats.MaxHp * hpRatio + Stats.MaxHp * 0.2f);
                 SFX.Play(SFX.LevelUp, 0.7f, 0f);
-                HUD.Notify($"더 강해졌다 — Lv.{Level}  ·  각인 +3 (야영지에서 새긴다)", new Color(1f, 0.9f, 0.3f));
+                HUD.Notify($"더 강해졌다 — Lv.{Level}  ·  단련 +3 (서낭당에서)", new Color(1f, 0.9f, 0.3f));
                 if (Level % Traits.PickEveryLevels == 0)
                 {
                     PendingTraitPicks++;
-                    HUD.Notify("새 계약을 맺을 수 있다 (야영지)", new Color(0.5f, 0.9f, 1f));
+                    HUD.Notify("새 기질을 얻을 수 있다 (서낭당)", new Color(0.5f, 0.9f, 1f));
                 }
             }
         }
@@ -144,7 +144,7 @@ namespace Hunt.Player
             Hp = Stats.MaxHp * hpRatio;
             PendingTraitPicks--;
             TraitOffer.Clear();
-            HUD.Notify($"계약을 맺었다 — {Traits.Name(t)}", new Color(0.5f, 0.9f, 1f));
+            HUD.Notify($"새 기질 — {Traits.Name(t)}", new Color(0.5f, 0.9f, 1f));
         }
 
         public void SpendStatPoint(StatType t)

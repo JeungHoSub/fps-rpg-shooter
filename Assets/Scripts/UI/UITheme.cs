@@ -5,22 +5,25 @@ using UnityEngine;
 namespace Hunt.UI
 {
     /// <summary>
-    /// 다크 판타지 호러 테마: 핏빛 검정 바탕, 금빛 테두리, 진홍 포인트, 세리프 제목.
-    /// 모든 텍스처는 코드로 생성한다 (아트 에셋 없이 동작, 이후 이미지로 교체 가능).
+    /// 한국풍 테마: 먹(검정) 바탕 + 한지(바랜 미색) 글씨·선 + 낙관(도장)의 붉은색만 포인트로.
+    /// 제목은 궁서체, 장식은 창살 무늬와 먹점. 빨강·금 조합과 한자 장식은 쓰지 않는다.
+    /// 이름(Gold, Blood…)은 기존 코드 호환을 위해 유지하고 값만 한지·낙관 색으로 바꿨다.
+    /// 모든 텍스처는 코드로 생성한다.
     /// </summary>
     public static class UITheme
     {
         // ---- 팔레트 ----
-        public static readonly Color Ink = new Color(0.03f, 0.02f, 0.025f);
-        public static readonly Color Gold = new Color(0.86f, 0.68f, 0.36f);
-        public static readonly Color GoldDim = new Color(0.52f, 0.39f, 0.2f);
-        public static readonly Color GoldBright = new Color(1f, 0.87f, 0.58f);
-        public static readonly Color Blood = new Color(0.62f, 0.06f, 0.08f);
-        public static readonly Color BloodBright = new Color(0.92f, 0.16f, 0.16f);
-        public static readonly Color BloodDark = new Color(0.24f, 0.02f, 0.04f);
-        public static readonly Color Bone = new Color(0.92f, 0.87f, 0.77f);
-        public static readonly Color BoneDim = new Color(0.64f, 0.58f, 0.5f);
-        public static readonly Color Ash = new Color(0.42f, 0.38f, 0.36f);
+        public static readonly Color Ink = new Color(0.05f, 0.05f, 0.055f);          // 먹
+        public static readonly Color Gold = new Color(0.84f, 0.79f, 0.68f);          // 한지
+        public static readonly Color GoldDim = new Color(0.46f, 0.43f, 0.38f);       // 바랜 한지
+        public static readonly Color GoldBright = new Color(0.97f, 0.94f, 0.86f);    // 새 한지
+        public static readonly Color Blood = new Color(0.6f, 0.13f, 0.1f);           // 낙관 인주
+        public static readonly Color BloodBright = new Color(0.85f, 0.24f, 0.17f);
+        public static readonly Color BloodDark = new Color(0.24f, 0.05f, 0.04f);
+        public static readonly Color Bone = new Color(0.9f, 0.87f, 0.8f);
+        public static readonly Color BoneDim = new Color(0.6f, 0.58f, 0.54f);
+        public static readonly Color Ash = new Color(0.4f, 0.39f, 0.37f);
+        public static readonly Color Indigo = new Color(0.2f, 0.26f, 0.36f);         // 쪽빛
         public static readonly Color Infect = new Color(0.5f, 0.18f, 0.7f);
         public static readonly Color InfectBright = new Color(0.82f, 0.45f, 1f);
         public static readonly Color Good = new Color(0.55f, 0.88f, 0.45f);
@@ -30,7 +33,8 @@ namespace Hunt.UI
         public static Font Sans { get; private set; }
 
         public static Texture2D Pixel, Panel, PanelHeader, Frame, Button, ButtonHover, ButtonPress, ButtonSelected,
-            Slot, Diamond, DiamondHollow, Circle, Orb, OrbRing, Vignette, Glow, BarFill, LineFade;
+            Slot, Diamond, DiamondHollow, Circle, Orb, OrbRing, Vignette, Glow, BarFill, LineFade,
+            Lattice, Brush, Seal, Paper;
 
         static readonly Dictionary<string, GUIStyle> styles = new Dictionary<string, GUIStyle>();
         static bool ready;
@@ -41,25 +45,66 @@ namespace Hunt.UI
             ready = true;
             styles.Clear();
 
-            Serif = TryFont(new[] { "Batang", "바탕", "BatangChe", "Gungsuh", "Noto Serif KR", "Noto Serif CJK KR", "Malgun Gothic" }, 28);
+            // 제목: 궁서체 (윈도우 기본 붓글씨체) → 없으면 바탕
+            Serif = TryFont(new[] { "Gungsuh", "궁서", "GungsuhChe", "궁서체", "Batang", "바탕", "Nanum Myeongjo", "Noto Serif KR", "Noto Serif CJK KR", "Malgun Gothic" }, 28);
             Sans = TryFont(new[] { "Malgun Gothic", "맑은 고딕", "Noto Sans KR", "Noto Sans CJK KR", "Apple SD Gothic Neo", "Arial" }, 20);
 
             Pixel = Make(2, 2, (x, y) => Color.white);
-            Panel = Chamfered(48, 7, new Color(0.10f, 0.055f, 0.06f, 0.95f), new Color(0.045f, 0.03f, 0.035f, 0.95f), GoldDim, new Color(0.35f, 0.25f, 0.12f, 0.8f));
-            PanelHeader = Chamfered(48, 7, new Color(0.32f, 0.04f, 0.06f, 0.97f), new Color(0.13f, 0.03f, 0.04f, 0.97f), Gold, new Color(0.6f, 0.45f, 0.2f, 0.6f));
-            Frame = Chamfered(32, 5, Color.clear, Color.clear, Color.white, Color.clear);
-            Button = Chamfered(32, 5, new Color(0.16f, 0.06f, 0.07f, 0.96f), new Color(0.07f, 0.035f, 0.04f, 0.96f), GoldDim, Color.clear);
-            ButtonHover = Chamfered(32, 5, new Color(0.42f, 0.08f, 0.09f, 0.98f), new Color(0.18f, 0.04f, 0.05f, 0.98f), Gold, Color.clear);
-            ButtonPress = Chamfered(32, 5, new Color(0.12f, 0.03f, 0.04f, 1f), new Color(0.3f, 0.05f, 0.06f, 1f), GoldBright, Color.clear);
-            ButtonSelected = Chamfered(32, 5, new Color(0.5f, 0.36f, 0.14f, 0.98f), new Color(0.22f, 0.12f, 0.05f, 0.98f), GoldBright, Color.clear);
-            Slot = Chamfered(32, 4, new Color(0.05f, 0.035f, 0.04f, 0.95f), new Color(0.11f, 0.07f, 0.07f, 0.95f), new Color(0.3f, 0.22f, 0.12f), Color.clear);
+            var rnd = new System.Random(7);
+            // 먹 바탕: 한지 결이 살짝 비치는 검정 + 두 줄 한지색 테두리 (모서리는 각지게)
+            Panel = Framed(64, new Color(0.075f, 0.072f, 0.075f, 0.93f), new Color(0.045f, 0.043f, 0.047f, 0.93f), GoldDim, new Color(0.32f, 0.3f, 0.27f, 0.9f), 0.025f, rnd);
+            PanelHeader = Framed(64, new Color(0.13f, 0.125f, 0.12f, 0.96f), new Color(0.09f, 0.087f, 0.085f, 0.96f), Gold, Color.clear, 0.02f, rnd);
+            Frame = Framed(32, Color.clear, Color.clear, Color.white, Color.clear, 0f, rnd);
+            Button = Framed(32, new Color(0.11f, 0.105f, 0.11f, 0.95f), new Color(0.07f, 0.068f, 0.072f, 0.95f), GoldDim, Color.clear, 0.02f, rnd);
+            ButtonHover = Framed(32, new Color(0.22f, 0.21f, 0.2f, 0.97f), new Color(0.14f, 0.135f, 0.13f, 0.97f), Gold, Color.clear, 0.02f, rnd);
+            ButtonPress = Framed(32, new Color(0.06f, 0.06f, 0.065f, 1f), new Color(0.1f, 0.1f, 0.1f, 1f), GoldBright, Color.clear, 0f, rnd);
+            // 선택됨: 한지 바탕에 먹 테두리 (색이 뒤집힌다)
+            ButtonSelected = Framed(32, new Color(0.9f, 0.86f, 0.76f, 0.98f), new Color(0.8f, 0.76f, 0.66f, 0.98f), new Color(0.15f, 0.13f, 0.12f), Color.clear, 0.04f, rnd);
+            Slot = Framed(32, new Color(0.05f, 0.05f, 0.055f, 0.92f), new Color(0.09f, 0.088f, 0.09f, 0.92f), new Color(0.26f, 0.25f, 0.23f), Color.clear, 0.02f, rnd);
 
-            Diamond = Make(32, 32, (x, y) => A(Color.white, 1f - Mathf.Clamp01((Mathf.Abs(x - 15.5f) + Mathf.Abs(y - 15.5f) - 14f))));
-            DiamondHollow = Make(32, 32, (x, y) =>
+            // 먹점 / 고리
+            Diamond = Make(32, 32, (x, y) => A(Color.white, Mathf.Clamp01(13.5f - Dist(x, y, 15.5f, 15.5f))));
+            DiamondHollow = Make(32, 32, (x, y) => A(Color.white, Mathf.Clamp01(1.4f - Mathf.Abs(Dist(x, y, 15.5f, 15.5f) - 12f))));
+
+            // 창살 무늬 (띠살문): 가로세로 살이 엇갈린 격자
+            Lattice = Make(48, 48, (x, y) =>
             {
-                float d = Mathf.Abs(x - 15.5f) + Mathf.Abs(y - 15.5f);
-                return A(Color.white, Mathf.Clamp01(1f - Mathf.Abs(d - 12.5f) / 1.6f));
+                bool border = x < 3 || y < 3 || x > 44 || y > 44;
+                bool v = (x % 12) < 2;
+                bool h = (y % 16) < 2 && (y / 16) % 1 == 0;
+                return border || v || h ? Color.white : Color.clear;
             });
+
+            // 붓질: 가로로 긴 먹 자국 (가장자리가 거칠게 번진다)
+            Brush = Make(256, 64, (x, y) =>
+            {
+                float t = x / 255f;
+                float half = 22f * Mathf.Sin(Mathf.Clamp01(t * 1.05f) * Mathf.PI) + 6f * Mathf.PerlinNoise(x * 0.05f, 3.1f);
+                float d = Mathf.Abs(y - 31.5f - 5f * Mathf.Sin(t * 5f));
+                float edge = Mathf.Clamp01((half - d) / 3f);
+                float streak = 0.75f + 0.25f * Mathf.PerlinNoise(x * 0.02f, y * 0.6f);
+                float dry = t > 0.82f ? Mathf.Clamp01((Mathf.PerlinNoise(x * 0.3f, y * 0.4f) - (t - 0.82f) * 3f) * 2f) : 1f; // 끝이 갈라짐
+                return new Color(1f, 1f, 1f, edge * streak * dry);
+            });
+
+            // 낙관: 붉은 사각 도장 (테두리가 살짝 뭉개짐)
+            Seal = Make(64, 64, (x, y) =>
+            {
+                float n = Mathf.PerlinNoise(x * 0.25f, y * 0.25f);
+                bool outer = x > 2 && y > 2 && x < 61 && y < 61;
+                bool rim = outer && (x < 8 || y < 8 || x > 55 || y > 55);
+                float a = outer ? (rim ? 1f : 0.88f) : 0f;
+                if (n < 0.28f) a *= 0.35f; // 인주가 덜 묻은 곳
+                return new Color(1f, 1f, 1f, a);
+            });
+
+            // 한지 결 (아주 옅게 깔리는 섬유 무늬)
+            Paper = Make(128, 128, (x, y) =>
+            {
+                float f = Mathf.PerlinNoise(x * 0.08f, y * 0.5f) * 0.6f + Mathf.PerlinNoise(x * 0.4f, y * 0.05f) * 0.4f;
+                return new Color(1f, 1f, 1f, f * 0.08f);
+            });
+
             Circle = Make(128, 128, (x, y) => A(Color.white, Mathf.Clamp01((63.5f - Dist(x, y, 63.5f, 63.5f)) * 0.8f)));
             Orb = Make(128, 128, (x, y) =>
             {
@@ -137,6 +182,19 @@ namespace Hunt.UI
                 if (!Inside(x, y, 2)) return border;
                 if (innerLine.a > 0f && Inside(x, y, 4) && !Inside(x, y, 5)) return innerLine;
                 return Color.Lerp(fillBottom, fillTop, y / (float)(n - 1));
+            });
+        }
+
+        /// <summary>각진 사각 패널: 세로 그라데이션 + 한지 결 + 1px 외곽선 + 안쪽 보조선(두 줄 테두리).</summary>
+        static Texture2D Framed(int n, Color fillTop, Color fillBottom, Color border, Color innerLine, float grain, System.Random rnd)
+        {
+            return Make(n, n, (x, y) =>
+            {
+                if (x == 0 || y == 0 || x == n - 1 || y == n - 1) return border;
+                if (innerLine.a > 0f && (x == 3 || y == 3 || x == n - 4 || y == n - 4) && x >= 3 && y >= 3 && x <= n - 4 && y <= n - 4) return innerLine;
+                var c = Color.Lerp(fillBottom, fillTop, y / (float)(n - 1));
+                if (c.a > 0f && grain > 0f) c *= 1f + ((float)rnd.NextDouble() - 0.5f) * grain * 2f;
+                return c;
             });
         }
 

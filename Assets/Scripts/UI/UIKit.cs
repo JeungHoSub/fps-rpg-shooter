@@ -85,26 +85,28 @@ namespace Hunt.UI
             NineSlice(r, UITheme.Panel, 12, new Color(1, 1, 1, alpha));
             if (title != null)
             {
+                // 제목: 궁서체 + 아래 한 줄, 양옆에 작은 창살 무늬
                 var h = new Rect(r.x + 14, r.y + 10, r.width - 28, 44);
-                NineSlice(h, UITheme.PanelHeader, 12, new Color(1, 1, 1, alpha));
-                Text(h, title, 24, UITheme.GoldBright, TextAnchor.MiddleCenter, serif: true, bold: true);
-                Ornament(new Vector2(h.x + 22, h.center.y), 10, UITheme.Gold);
-                Ornament(new Vector2(h.xMax - 22, h.center.y), 10, UITheme.Gold);
+                Text(h, title, 26, UITheme.GoldBright, TextAnchor.MiddleCenter, serif: true);
+                float tw = Mathf.Min(TextWidth(title, 26, true) + 60f, h.width - 40f);
+                Tex(new Rect(h.center.x - tw / 2f, h.yMax + 2, tw, 2), UITheme.LineFade, new Color(0.84f, 0.79f, 0.68f, 0.6f * alpha));
+                Ornament(new Vector2(h.center.x - tw / 2f - 14f, h.center.y + 2), 9, UITheme.GoldDim);
+                Ornament(new Vector2(h.center.x + tw / 2f + 14f, h.center.y + 2), 9, UITheme.GoldDim);
             }
         }
 
+        /// <summary>작은 창살 무늬 장식.</summary>
         public static void Ornament(Vector2 c, float size, Color col)
         {
-            Tex(new Rect(c.x - size, c.y - size, size * 2, size * 2), UITheme.Glow, new Color(col.r, col.g, col.b, 0.35f));
-            Tex(new Rect(c.x - size * 0.5f, c.y - size * 0.5f, size, size), UITheme.Diamond, col);
+            Tex(new Rect(c.x - size * 0.6f, c.y - size * 0.6f, size * 1.2f, size * 1.2f), UITheme.Lattice, col);
         }
 
-        /// <summary>양 끝이 흐려지는 금색 선 + 가운데 마름모.</summary>
+        /// <summary>양 끝이 흐려지는 가는 붓선 + 가운데 먹점.</summary>
         public static void Divider(Rect r, Color? color = null)
         {
             var c = color ?? UITheme.GoldDim;
-            Tex(new Rect(r.x, r.center.y - 1.5f, r.width, 3), UITheme.LineFade, c);
-            Ornament(r.center, 7, c);
+            Tex(new Rect(r.x, r.center.y - 1f, r.width, 2), UITheme.LineFade, c);
+            Tex(new Rect(r.center.x - 4, r.center.y - 4, 8, 8), UITheme.Diamond, c);
         }
 
         public static void Vignette(float W, float H, Color c)
@@ -112,13 +114,31 @@ namespace Hunt.UI
             Tex(new Rect(-W * 0.1f, -H * 0.1f, W * 1.2f, H * 1.2f), UITheme.Vignette, c);
         }
 
-        /// <summary>마름모 안에 한 글자를 새긴 문장(紋章).</summary>
+        /// <summary>
+        /// 한글 한 글자를 새긴 도장(낙관). filled = 붉은 인주 도장, 아니면 먹선 도장.
+        /// </summary>
         public static void Emblem(Rect r, string glyph, Color c, bool filled = true)
         {
-            Tex(new Rect(r.x - r.width * 0.3f, r.y - r.height * 0.3f, r.width * 1.6f, r.height * 1.6f), UITheme.Glow, new Color(c.r, c.g, c.b, 0.18f));
-            Tex(r, UITheme.Diamond, filled ? new Color(c.r * 0.35f, c.g * 0.2f, c.b * 0.2f, 0.95f) : new Color(0, 0, 0, 0.6f));
-            Tex(r, UITheme.DiamondHollow, c);
-            Text(r, glyph, Mathf.RoundToInt(r.height * 0.36f), UITheme.Bone, TextAnchor.MiddleCenter, serif: true, bold: true);
+            var sq = new Rect(r.x + r.width * 0.12f, r.y + r.height * 0.12f, r.width * 0.76f, r.height * 0.76f);
+            if (filled)
+            {
+                Tex(sq, UITheme.Seal, UITheme.Blood);
+                Text(sq, glyph, Mathf.RoundToInt(sq.height * 0.58f), UITheme.GoldBright, TextAnchor.MiddleCenter, serif: true, shadow: false);
+            }
+            else
+            {
+                Fill(sq, new Color(0f, 0f, 0f, 0.35f));
+                NineSlice(sq, UITheme.Frame, 4, c);
+                Text(sq, glyph, Mathf.RoundToInt(sq.height * 0.58f), c, TextAnchor.MiddleCenter, serif: true, shadow: false);
+            }
+        }
+
+        /// <summary>붓질 자국 위에 큰 제목 (시작·사망 화면).</summary>
+        public static void BrushTitle(Rect r, string text, int size, Color ink, Color textColor)
+        {
+            float w = Mathf.Max(r.width * 0.6f, TextWidth(text, size, true) + 160f);
+            Tex(new Rect(r.center.x - w / 2f, r.y - r.height * 0.15f, w, r.height * 1.3f), UITheme.Brush, ink);
+            Text(r, text, size, textColor, TextAnchor.MiddleCenter, serif: true);
         }
 
         // ------------------------------------------------------------------ 상호작용
