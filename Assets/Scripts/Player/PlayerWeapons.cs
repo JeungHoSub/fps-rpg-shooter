@@ -206,8 +206,9 @@ namespace Hunt.Player
             // 연출: 총 모델 반동 / 총성 / 화면 흔들림
             viewModel.OnFire(w);
             SFX.Play(SFX.Shot(w.data.weaponClass), 0.85f);
-            float shake = w.data.weaponClass == WeaponClass.Shotgun || w.data.weaponClass == WeaponClass.Sniper ? 1.2f : 0.35f;
+            float shake = w.data.weaponClass == WeaponClass.Shotgun || w.data.weaponClass == WeaponClass.Sniper ? 1.4f : 0.45f;
             player.Controller.AddShake(shake * Mathf.Lerp(1f, 0.5f, aim));
+            player.Controller.AddPunch(Punch(w.data.weaponClass) * Mathf.Lerp(1f, 0.6f, aim), Random.Range(-0.35f, 0.35f) * Punch(w.data.weaponClass));
 
             Vector3 origin = cam.transform.position;
             Vector3 muzzle = viewModel.MuzzlePosition;
@@ -251,9 +252,16 @@ namespace Hunt.Player
                 if (pellets == 1 || i % 3 == 0) FX.Tracer(muzzle, end, tracer, tracerWidth);
             }
 
-            if (anyKill) { SFX.Play(SFX.KillTick, 0.6f, 0f); SFX.PlayAt(SFX.MonsterDie, killPos, 0.9f); }
+            if (anyHit) SFX.Play(SFX.FleshHit, pellets > 1 ? 0.75f : 0.55f, 0.08f);
+            if (anyKill)
+            {
+                SFX.Play(SFX.KillTick, 0.6f, 0f);
+                SFX.PlayAt(SFX.MonsterDie, killPos, 0.9f);
+                GameManager.Instance.HitStop(0.06f); // 처치 순간 멈칫
+            }
             else if (anyHit)
             {
+                if (anyWeak && w.data.weaponClass == WeaponClass.Sniper) GameManager.Instance.HitStop(0.04f);
                 SFX.Play(anyWeak ? SFX.WeakTick : SFX.HitTick, 0.45f, 0f);
                 SFX.MonsterHurtAt(hurtPos);
             }
@@ -266,6 +274,20 @@ namespace Hunt.Player
             shotIndex++;
 
             if (w.ammoInMag == 0 && w.reserve > 0) StartReload(w);
+        }
+
+        /// <summary>무기별 시점 반동 크기 (도).</summary>
+        static float Punch(WeaponClass c)
+        {
+            switch (c)
+            {
+                case WeaponClass.Pistol: return 1.3f;
+                case WeaponClass.SMG: return 0.55f;
+                case WeaponClass.Shotgun: return 3.4f;
+                case WeaponClass.Sniper: return 4.2f;
+                case WeaponClass.LMG: return 0.75f;
+                default: return 0.9f;
+            }
         }
 
         static Color FleshColor(HitZone zone)

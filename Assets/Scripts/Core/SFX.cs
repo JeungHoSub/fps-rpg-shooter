@@ -75,6 +75,25 @@ namespace Hunt.Core
         public static AudioClip LevelUp => Get("levelup", () => MakeChime());
 
         public static AudioClip RainLoop => Get("rain", () => MakeRain());
+        /// <summary>살에 박히는 둔탁한 소리 (타격감).</summary>
+        public static AudioClip FleshHit => Get("flesh", () => MakeFlesh());
+
+        static AudioClip MakeFlesh()
+        {
+            int n = (int)(Rate * 0.16f);
+            var d = new float[n];
+            var rnd = new System.Random(55);
+            float f = 0f;
+            for (int i = 0; i < n; i++)
+            {
+                float t = (float)i / Rate;
+                float noise = (float)(rnd.NextDouble() * 2.0 - 1.0);
+                f += 0.18f * (noise - f);
+                float thump = Mathf.Sin(2f * Mathf.PI * (140f - t * 400f) * t) * Mathf.Exp(-t * 30f);
+                d[i] = SoftClip((thump * 1.1f + f * 2.2f * Mathf.Exp(-t * 45f) + noise * Mathf.Exp(-t * 300f) * 0.3f) * 1.3f);
+            }
+            return Clip("flesh", d);
+        }
         public static AudioClip Thunder => Get("thunder", () => MakeThunder());
         public static AudioClip FlashlightClick => Get("flash", () => MakeClick(0.04f, 3000f, 0.35f));
 

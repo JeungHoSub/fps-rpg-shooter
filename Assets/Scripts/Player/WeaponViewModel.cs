@@ -75,8 +75,8 @@ namespace Hunt.Player
             EnsureModel();
             if (model == null) return;
             float s = model.kickStrength * Mathf.Lerp(1f, 0.6f, player.Weapons.Aim);
-            kickPos += new Vector3(0f, 0.006f * s, -0.035f * s);
-            kickRot += new Vector3(-6f * s, Random.Range(-1.5f, 1.5f) * s, Random.Range(-3f, 3f) * s);
+            kickPos += new Vector3(0f, 0.008f * s, -0.05f * s);
+            kickRot += new Vector3(-8.5f * s, Random.Range(-2f, 2f) * s, Random.Range(-4f, 4f) * s);
 
             flashTime = 0.045f;
             float big = w.data.weaponClass == Combat.WeaponClass.Shotgun || w.data.weaponClass == Combat.WeaponClass.Sniper ? 1.6f : 1f;

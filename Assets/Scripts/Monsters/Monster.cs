@@ -71,6 +71,9 @@ namespace Hunt.Monsters
 
         public void SetHead(Transform t) { head = t; }
 
+        ZombieRig rig;
+        public void SetRig(ZombieRig r) { rig = r; }
+
         public void SetBossWeakPoints(List<MonsterPart> wps)
         {
             bossWeakPoints.Clear();
@@ -118,6 +121,9 @@ namespace Hunt.Monsters
             if (faceDir.sqrMagnitude > 0.0001f)
                 transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(faceDir), dt * 8f);
 
+            if (rig != null)
+                rig.SetLocomotion(move.sqrMagnitude > 0.01f ? spd : 0f, legSlow < 1f, Data.archetype == MonsterArchetype.Runner && dist > 3f);
+
             // 무리 간 분리
             Vector3 sep = Vector3.zero;
             foreach (var o in Alive)
@@ -148,6 +154,7 @@ namespace Hunt.Monsters
                 else if (dist <= Data.attackRange + 0.4f)
                 {
                     target.TakeDamage(Data.attackDamage, Data.infectionPerHit);
+                    if (rig != null) rig.PlayBite();
                     attackTimer = Data.attackInterval;
                 }
             }
@@ -189,6 +196,7 @@ namespace Hunt.Monsters
 
         void Spit()
         {
+            if (rig != null) rig.PlayBite();
             Vector3 from = head != null ? head.position + transform.forward * 0.4f : transform.position + Vector3.up * 1.6f;
             MonsterProjectile.Launch(transform.parent, from, target, Data.attackDamage, Data.infectionPerHit);
         }
@@ -225,8 +233,12 @@ namespace Hunt.Monsters
             Vector3 kdir = info.direction;
             kdir.y = 0f;
             float kb = info.knockback * (1f - knockbackResist);
-            knockVel += kdir.normalized * kb * 1.5f;
-            if (kb > 3f) stagger = Mathf.Max(stagger, 0.25f);
+            // 타격감: 맞을 때마다 확실히 뒤로 밀린다 (무거운 놈은 덜)
+            knockVel += kdir.normalized * (kb * 2.2f + 0.5f * (1f - knockbackResist));
+            if (knockVel.magnitude > 9f) knockVel = knockVel.normalized * 9f;
+            if (kb > 1.2f) stagger = Mathf.Max(stagger, Mathf.Min(0.35f, 0.08f + kb * 0.05f));
+            if (rig != null)
+                rig.Flinch(info.direction, Mathf.Clamp01(kb / 4f + (crit ? 0.3f : 0f) + (zone == HitZone.WeakPoint ? 0.2f : 0f)), zone == HitZone.Head);
 
             ApplyStatus(info.type, hpDmg);
             if (EvolutionDirector.Instance != null)
@@ -266,8 +278,11 @@ namespace Hunt.Monsters
             if (part.zone == HitZone.Leg)
             {
                 legSlow = Mathf.Min(legSlow, 0.45f);
-                part.transform.localScale = new Vector3(part.transform.localScale.x, part.transform.localScale.y * 0.5f, part.transform.localScale.z);
-                part.SetBaseColor(new Color(0.45f, 0.05f, 0.05f));
+                if (rig == null)
+                {
+                    part.transform.localScale = new Vector3(part.transform.localScale.x, part.transform.localScale.y * 0.5f, part.transform.localScale.z);
+                    part.SetBaseColor(new Color(0.45f, 0.05f, 0.05f));
+                }
                 HUD.Notify("다리를 꺾었다 — 망자가 절뚝인다", new Color(1f, 0.7f, 0.3f));
             }
             else if (part.zone == HitZone.Armor)
@@ -354,7 +369,20 @@ namespace Hunt.Monsters
             Alive.Remove(this);
             if (GameManager.Instance != null) GameManager.Instance.OnMonsterKilled(this);
             FX.BloodBurst(transform.position + Vector3.up * Data.scale, new Color(0.4f, 0.05f, 0.08f), Data.scale);
-            MonsterGib.Shatter(this, lastHitDir);
+            if (rig != null && rig.Pivot != null)
+            {
+                // 판정체·급소 제거 후 그 자세로 쓰러진다
+                foreach (var part in rig.Pivot.GetComponentsInChildren<MonsterPart>(true))
+                {
+                    var c = part.GetComponent<Collider>();
+                    if (c != null) c.enabled = false;
+                    part.gameObject.layer = 2;
+                    if (part.zone == HitZone.WeakPoint) part.gameObject.SetActive(false);
+                    Destroy(part);
+                }
+                rig.Die(lastHitDir, transform.parent);
+            }
+            else MonsterGib.Shatter(this, lastHitDir);
             Destroy(gameObject);
         }
     }

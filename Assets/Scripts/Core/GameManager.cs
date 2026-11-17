@@ -256,6 +256,15 @@ namespace Hunt.Core
             MenuOpen = false;
         }
 
+        float hitStopUntil;
+
+        /// <summary>히트스톱: 아주 짧게 시간을 늦춰 타격을 강조한다.</summary>
+        public void HitStop(float seconds)
+        {
+            if (Paused) return;
+            hitStopUntil = Mathf.Max(hitStopUntil, Time.unscaledTime + seconds);
+        }
+
         public void TogglePause()
         {
             if (State != GameState.Playing && State != GameState.Intermission) return;
@@ -285,6 +294,7 @@ namespace Hunt.Core
             if ((State == GameState.Playing || State == GameState.Intermission) && Input.GetKeyDown(KeyCode.Escape))
                 TogglePause();
             if (Paused) return;
+            Time.timeScale = Time.unscaledTime < hitStopUntil ? 0.06f : 1f;
 
             switch (State)
             {

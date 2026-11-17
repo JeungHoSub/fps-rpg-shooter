@@ -37,6 +37,10 @@ namespace Hunt.Player
 
         public bool IsSprinting { get; private set; }
         float shake, sprintBlock;
+        Vector2 punch, punchVel; // 사격 시 화면이 튀었다 돌아오는 반동 (조준점과 별개)
+
+        /// <summary>시점 반동 (도). 스프링처럼 튀었다가 돌아온다.</summary>
+        public void AddPunch(float pitchUp, float yaw) { punchVel += new Vector2(yaw, pitchUp) * 28f; }
 
         public void AddRecoil(Vector2 kick) { recoil += kick; }
 
@@ -70,13 +74,18 @@ namespace Hunt.Player
             float jx = jitter > 0f ? (Mathf.PerlinNoise(Time.time * 3f, 0f) * 2f - 1f) * jitter : 0f;
             float jy = jitter > 0f ? (Mathf.PerlinNoise(0f, Time.time * 3f) * 2f - 1f) * jitter : 0f;
 
+            // 시점 반동 스프링
+            punchVel -= punch * 260f * dt;
+            punchVel *= Mathf.Exp(-14f * dt);
+            punch += punchVel * dt;
+
             // 화면 흔들림 (사격·피격): 짧은 롤 + 미세 피치
             shake *= Mathf.Exp(-12f * dt);
             float roll = (Mathf.PerlinNoise(Time.time * 40f, 7f) * 2f - 1f) * shake;
             float shakePitch = (Mathf.PerlinNoise(3f, Time.time * 40f) * 2f - 1f) * shake * 0.5f;
 
             transform.rotation = Quaternion.Euler(0f, yaw + recoil.x + jx, 0f);
-            cam.transform.localRotation = Quaternion.Euler(Mathf.Clamp(pitch - recoil.y + jy + shakePitch, -89f, 89f), 0f, roll);
+            cam.transform.localRotation = Quaternion.Euler(Mathf.Clamp(pitch - recoil.y - punch.y + jy + shakePitch, -89f, 89f), punch.x, roll);
 
             // ---- 이동 ----
             WeightPenalty = player.Stats.WeightPenalty(player.Weapons.TotalWeight);

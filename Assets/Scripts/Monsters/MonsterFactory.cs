@@ -19,6 +19,9 @@ namespace Hunt.Monsters
 
         public static Monster Create(MonsterData d, Vector3 position, EvolutionProfile evo, float hpScale, PlayerCharacter target, Transform parent)
         {
+            // 애니메이션 좀비 모델이 있으면 그것으로, 없으면 아래 도형 괴물로
+            if (ZombieRig.Available) return CreateRigged(d, position, evo, hpScale, target, parent);
+
             var root = new GameObject($"{d.displayName}");
             root.transform.SetParent(parent, false);
             root.transform.position = position;
@@ -85,6 +88,191 @@ namespace Hunt.Monsters
             }
 
             return m;
+        }
+
+        // ================================================================ 애니메이션 모델 좀비
+        static readonly Color[] VillagerTints =
+        {
+            new Color(0.85f, 0.85f, 0.8f), new Color(0.72f, 0.78f, 0.9f), new Color(0.92f, 0.8f, 0.68f),
+            new Color(0.7f, 0.76f, 0.64f), new Color(0.8f, 0.7f, 0.72f),
+        };
+        static readonly Color ArmorRed = new Color(0.38f, 0.07f, 0.06f);   // 두정갑 (조선 갑옷)
+        static readonly Color Brass = new Color(0.75f, 0.58f, 0.25f);
+        static readonly Color GatBlack = new Color(0.03f, 0.03f, 0.035f);
+
+        static Color RigTint(MonsterData d, EvolutionProfile evo)
+        {
+            Color c;
+            switch (d.archetype)
+            {
+                case MonsterArchetype.Brute: c = new Color(0.72f, 0.6f, 0.55f); break;
+                case MonsterArchetype.Spitter: c = new Color(0.62f, 0.8f, 0.5f); break;
+                case MonsterArchetype.Boss: c = new Color(0.62f, 0.48f, 0.62f); break;
+                default: c = VillagerTints[Random.Range(0, VillagerTints.Length)]; break;
+            }
+            // 진화할수록 핏기 없이 보랏빛으로
+            return Color.Lerp(c, new Color(0.55f, 0.4f, 0.65f), Mathf.Min(0.45f, evo.generation * 0.07f));
+        }
+
+        static Monster CreateRigged(MonsterData d, Vector3 position, EvolutionProfile evo, float hpScale, PlayerCharacter target, Transform parent)
+        {
+            var root = new GameObject($"{d.displayName}");
+            root.transform.SetParent(parent, false);
+            root.transform.position = position;
+            root.transform.rotation = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
+            var R = root.transform;
+
+            var m = root.AddComponent<Monster>();
+            m.Init(d, hpScale, evo, target);
+
+            float height = 1.8f * d.scale * Random.Range(0.95f, 1.05f);
+            var rig = ZombieRig.Create(R, height, RigTint(d, evo));
+            m.SetRig(rig);
+            float u = rig.Unit;
+            Vector3 up = Vector3.up;
+            Transform neck = rig.Neck != null ? rig.Neck : rig.Spine2;
+
+            // ---- 판정체 (보이지 않음): 머리 · 몸통 · 팔 · 다리 ----
+            var headCenter = rig.HeadTop != null ? Vector3.Lerp(rig.Head.position, rig.HeadTop.position, 0.45f) : rig.Head.position + up * 0.1f * u;
+            Volume(PrimitiveType.Sphere, m, HitZone.Head, rig.Head, headCenter, Quaternion.identity, Vector3.one * 0.3f * u);
+            m.SetHead(rig.Head);
+            Between(m, HitZone.Body, rig.Spine != null ? rig.Spine : rig.Hips, rig.Hips.position - up * 0.08f * u, neck.position, 0.42f * u, 0.3f * u, R);
+            if (rig.LeftArm != null && rig.LeftHand != null) Between(m, HitZone.Body, rig.LeftArm, rig.LeftArm.position, rig.LeftHand.position, 0.13f * u, 0.13f * u, R);
+            if (rig.RightArm != null && rig.RightHand != null) Between(m, HitZone.Body, rig.RightArm, rig.RightArm.position, rig.RightHand.position, 0.13f * u, 0.13f * u, R);
+            float legHp = d.maxHp * hpScale * (d.archetype == MonsterArchetype.Boss ? 0.08f : 0.18f) * evo.legHpMult;
+            if (rig.LeftUpLeg != null && rig.LeftFoot != null) Between(m, HitZone.Leg, rig.LeftUpLeg, rig.LeftUpLeg.position, rig.LeftFoot.position, 0.17f * u, 0.17f * u, R, legHp);
+            if (rig.RightUpLeg != null && rig.RightFoot != null) Between(m, HitZone.Leg, rig.RightUpLeg, rig.RightUpLeg.position, rig.RightFoot.position, 0.17f * u, 0.17f * u, R, legHp);
+
+            // ---- 어둠 속에서 빛나는 눈 ----
+            var eyeBase = rig.Head.position + R.forward * 0.11f * u + up * 0.06f * u;
+            foreach (var sx in new[] { -0.045f, 0.045f })
+                Cosmetic(PrimitiveType.Sphere, rig.Head, eyeBase + R.right * sx * u, Quaternion.identity, Vector3.one * 0.035f * u, new Color(1f, 0.15f, 0.08f), true);
+
+            var chest = rig.Spine2.position;
+            bool heavy = d.archetype == MonsterArchetype.Brute || d.archetype == MonsterArchetype.Boss;
+
+            // ---- 장군 망자 / 역병 대감: 두정갑 앞판 (부수면 가슴 급소가 드러난다) ----
+            if (heavy)
+            {
+                float armorHp = d.maxHp * hpScale * (d.archetype == MonsterArchetype.Boss ? 0.12f : 0.45f);
+                var plate = Visible(PrimitiveType.Cube, m, HitZone.Armor, rig.Spine2, chest + R.forward * 0.2f * u - up * 0.05f * u, R.rotation,
+                    new Vector3(0.5f, 0.5f, 0.08f) * u, ArmorRed, armorHp);
+                for (int i = 0; i < 9; i++)
+                {
+                    var stud = chest + R.forward * 0.245f * u + R.right * ((i % 3) - 1) * 0.14f * u + up * (0.12f - (i / 3) * 0.13f) * u;
+                    Cosmetic(PrimitiveType.Sphere, plate.transform, stud, Quaternion.identity, Vector3.one * 0.035f * u, Brass, false);
+                }
+            }
+            // 장군 망자: 조선 투구 (장식)
+            if (d.archetype == MonsterArchetype.Brute)
+            {
+                var top = rig.HeadTop != null ? rig.HeadTop.position : rig.Head.position + up * 0.2f * u;
+                Cosmetic(PrimitiveType.Sphere, rig.Head, top - up * 0.06f * u, Quaternion.identity, new Vector3(0.3f, 0.2f, 0.32f) * u, new Color(0.2f, 0.18f, 0.16f), false);
+                Cosmetic(PrimitiveType.Cylinder, rig.Head, top + up * 0.08f * u, Quaternion.identity, new Vector3(0.025f, 0.08f, 0.025f) * u, Brass, false);
+                Cosmetic(PrimitiveType.Cylinder, rig.Head, top - up * 0.1f * u, Quaternion.identity, new Vector3(0.38f, 0.015f, 0.38f) * u, ArmorRed, false);
+            }
+            // 역병 대감: 갓
+            if (d.archetype == MonsterArchetype.Boss)
+            {
+                var top = rig.HeadTop != null ? rig.HeadTop.position : rig.Head.position + up * 0.2f * u;
+                Cosmetic(PrimitiveType.Cylinder, rig.Head, top - up * 0.02f * u, Quaternion.identity, new Vector3(0.75f, 0.006f, 0.75f) * u, GatBlack, false);
+                Cosmetic(PrimitiveType.Cylinder, rig.Head, top + up * 0.08f * u, Quaternion.identity, new Vector3(0.26f, 0.1f, 0.26f) * u, GatBlack, false);
+            }
+            // 토혈귀: 부풀어 오른 배
+            if (d.archetype == MonsterArchetype.Spitter && rig.Spine != null)
+                Cosmetic(PrimitiveType.Sphere, rig.Spine, rig.Spine.position + R.forward * 0.12f * u, Quaternion.identity, new Vector3(0.42f, 0.4f, 0.36f) * u, new Color(0.35f, 0.42f, 0.25f), false);
+
+            // ---- 투구 (진화: 헤드샷 대응) ----
+            if (evo.helmetLevel > 0)
+            {
+                float hs = 0.36f * u * (1f + 0.05f * evo.helmetLevel);
+                Visible(PrimitiveType.Sphere, m, HitZone.Armor, rig.Head, headCenter + up * 0.02f * u, R.rotation, new Vector3(hs, hs * 0.9f, hs * 1.05f), BoneColor,
+                    d.maxHp * hpScale * 0.12f * evo.helmetLevel);
+            }
+
+            // ---- 급소 (빛남) ----
+            if (d.archetype == MonsterArchetype.Boss)
+            {
+                m.SetBossWeakPoints(new List<MonsterPart>
+                {
+                    RigWeakPoint(m, rig, R, WeakPointLocation.Back, 0.2f * u),
+                    RigWeakPoint(m, rig, R, WeakPointLocation.Shoulder, 0.2f * u),
+                    RigWeakPoint(m, rig, R, WeakPointLocation.Front, 0.2f * u),
+                });
+            }
+            else
+            {
+                RigWeakPoint(m, rig, R, evo.weakPoint, (d.archetype == MonsterArchetype.Runner ? 0.15f : 0.19f) * u);
+            }
+            return m;
+        }
+
+        static MonsterPart RigWeakPoint(Monster m, ZombieRig rig, Transform R, WeakPointLocation loc, float size)
+        {
+            var c = rig.Spine2.position;
+            Vector3 p;
+            switch (loc)
+            {
+                case WeakPointLocation.Back: p = c - R.forward * 0.15f * rig.Unit; break;
+                case WeakPointLocation.Shoulder: p = c + R.right * 0.2f * rig.Unit + Vector3.up * 0.1f * rig.Unit; break;
+                default: p = c + R.forward * 0.13f * rig.Unit - Vector3.up * 0.04f * rig.Unit; break;
+            }
+            return Visible(PrimitiveType.Sphere, m, HitZone.WeakPoint, rig.Spine2, p, Quaternion.identity, Vector3.one * size, WeakPointColor);
+        }
+
+        /// <summary>보이지 않는 판정체를 월드 좌표로 만든 뒤 뼈에 붙인다 (뼈를 따라 움직인다).</summary>
+        static MonsterPart Volume(PrimitiveType type, Monster m, HitZone zone, Transform bone, Vector3 worldPos, Quaternion worldRot, Vector3 worldScale, float hp = -1f)
+        {
+            var go = GameObject.CreatePrimitive(type);
+            go.name = zone + "_Hit";
+            Object.DestroyImmediate(go.GetComponent<MeshRenderer>());
+            Object.DestroyImmediate(go.GetComponent<MeshFilter>());
+            go.transform.position = worldPos;
+            go.transform.rotation = worldRot;
+            go.transform.localScale = worldScale;
+            go.transform.SetParent(bone, true);
+            var part = go.AddComponent<MonsterPart>();
+            part.Setup(m, zone, hp);
+            return part;
+        }
+
+        static MonsterPart Visible(PrimitiveType type, Monster m, HitZone zone, Transform bone, Vector3 worldPos, Quaternion worldRot, Vector3 worldScale, Color c, float hp = -1f)
+        {
+            var go = GameObject.CreatePrimitive(type);
+            go.name = zone.ToString();
+            go.transform.position = worldPos;
+            go.transform.rotation = worldRot;
+            go.transform.localScale = worldScale;
+            go.GetComponent<Renderer>().material.color = c;
+            go.transform.SetParent(bone, true);
+            var part = go.AddComponent<MonsterPart>();
+            part.Setup(m, zone, hp);
+            return part;
+        }
+
+        /// <summary>a→b 사이를 감싸는 상자 판정체 (팔·다리·몸통).</summary>
+        static MonsterPart Between(Monster m, HitZone zone, Transform bone, Vector3 a, Vector3 b, float width, float depth, Transform R, float hp = -1f)
+        {
+            Vector3 axis = b - a;
+            float len = axis.magnitude;
+            if (len < 0.001f) { axis = Vector3.up; len = 0.1f; }
+            Vector3 fwd = Vector3.ProjectOnPlane(R.forward, axis.normalized);
+            if (fwd.sqrMagnitude < 0.0001f) fwd = Vector3.ProjectOnPlane(R.right, axis.normalized);
+            var rot = Quaternion.LookRotation(fwd.normalized, axis.normalized);
+            return Volume(PrimitiveType.Cube, m, zone, bone, (a + b) * 0.5f, rot, new Vector3(width, len, depth), hp);
+        }
+
+        static void Cosmetic(PrimitiveType type, Transform parent, Vector3 worldPos, Quaternion worldRot, Vector3 worldScale, Color c, bool glow)
+        {
+            var go = GameObject.CreatePrimitive(type);
+            Object.DestroyImmediate(go.GetComponent<Collider>());
+            go.transform.position = worldPos;
+            go.transform.rotation = worldRot;
+            go.transform.localScale = worldScale;
+            var r = go.GetComponent<Renderer>();
+            if (glow) r.sharedMaterial = Hunt.Core.FX.UnlitMaterial(c);
+            else r.sharedMaterial = Hunt.Core.EnvMaterials.Plain(c, 0.45f);
+            go.transform.SetParent(parent, true);
         }
 
         static MonsterPart WeakPoint(Transform root, Monster m, WeakPointLocation loc, float size)
