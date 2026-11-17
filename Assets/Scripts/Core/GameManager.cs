@@ -250,6 +250,13 @@ namespace Hunt.Core
             MenuOpen = false;
         }
 
+        public void TogglePause()
+        {
+            if (State != GameState.Playing && State != GameState.Intermission) return;
+            Paused = !Paused;
+            Time.timeScale = Paused ? 0f : 1f;
+        }
+
         public void Restart()
         {
             Paused = false;
@@ -269,10 +276,7 @@ namespace Hunt.Core
             Cursor.visible = cursorFree;
 
             if ((State == GameState.Playing || State == GameState.Intermission) && Input.GetKeyDown(KeyCode.Escape))
-            {
-                Paused = !Paused;
-                Time.timeScale = Paused ? 0f : 1f;
-            }
+                TogglePause();
             if (Paused) return;
 
             switch (State)

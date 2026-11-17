@@ -16,6 +16,10 @@ namespace Hunt.UI
         static string tooltip;
         static Vector2 tooltipAt;
 
+        /// <summary>전역 투명도 (화면 페이드용). 모든 그리기에 곱해진다.</summary>
+        public static float Alpha = 1f;
+        static Color A(Color c) => new Color(c.r, c.g, c.b, c.a * Alpha);
+
         public static bool IsRepaint => Event.current.type == EventType.Repaint;
         static float Dt => IsRepaint ? Mathf.Min(Time.unscaledDeltaTime, 0.05f) : 0f;
         public static Vector2 Mouse => Event.current.mousePosition;
@@ -24,6 +28,7 @@ namespace Hunt.UI
         public static void BeginFrame()
         {
             tooltip = null;
+            Alpha = 1f;
             if (IsRepaint)
             {
                 hoveredLastFrame.Clear();
@@ -39,7 +44,7 @@ namespace Hunt.UI
         {
             if (!IsRepaint || tex == null) return;
             var old = GUI.color;
-            GUI.color = c;
+            GUI.color = A(c);
             GUI.DrawTexture(r, tex);
             GUI.color = old;
         }
@@ -48,7 +53,7 @@ namespace Hunt.UI
         {
             if (!IsRepaint) return;
             var old = GUI.color;
-            GUI.color = tint;
+            GUI.color = A(tint);
             UITheme.NineSlice(tex, border).Draw(r, false, false, false, false);
             GUI.color = old;
         }
@@ -61,10 +66,10 @@ namespace Hunt.UI
             var old = GUI.color;
             if (shadow)
             {
-                GUI.color = new Color(0f, 0f, 0f, c.a * 0.85f);
+                GUI.color = A(new Color(0f, 0f, 0f, c.a * 0.85f));
                 GUI.Label(new Rect(r.x + 1.5f, r.y + 2f, r.width, r.height), s, st);
             }
-            GUI.color = c;
+            GUI.color = A(c);
             GUI.Label(r, s, st);
             GUI.color = old;
         }
@@ -279,7 +284,7 @@ namespace Hunt.UI
             if (r.Contains(Mouse) && GUI.enabled)
             {
                 tooltip = text;
-                tooltipAt = Mouse;
+                tooltipAt = GUIUtility.GUIToScreenPoint(Mouse); // 스크롤/그룹 안에서도 올바른 위치
             }
         }
 
@@ -289,8 +294,9 @@ namespace Hunt.UI
             var st = UITheme.Text(17, TextAnchor.UpperLeft, false, false, true);
             float w = 380f;
             float h = st.CalcHeight(new GUIContent(tooltip), w - 32) + 28;
-            float x = tooltipAt.x + 22, y = tooltipAt.y + 18;
-            if (x + w > W - 10) x = tooltipAt.x - w - 12;
+            Vector2 at = GUIUtility.ScreenToGUIPoint(tooltipAt);
+            float x = at.x + 22, y = at.y + 18;
+            if (x + w > W - 10) x = at.x - w - 12;
             if (y + h > H - 10) y = H - h - 10;
             var r = new Rect(x, y, w, h);
             NineSlice(r, UITheme.Panel, 12, Color.white);
