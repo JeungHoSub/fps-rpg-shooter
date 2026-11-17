@@ -58,6 +58,51 @@ namespace Hunt.Core
             else if (delta < 0 && StartAllocation[i] > 0) StartAllocation[i]--;
         }
 
+        /// <summary>추천 각인 적용 (포인트 합이 시작 포인트를 넘으면 앞에서부터 잘린다).</summary>
+        public void ApplyStartPreset(int[] alloc)
+        {
+            System.Array.Clear(StartAllocation, 0, StartAllocation.Length);
+            int left = Character.startingStatPoints;
+            for (int i = 0; i < StartAllocation.Length && i < alloc.Length; i++)
+            {
+                int v = Mathf.Min(alloc[i], left);
+                StartAllocation[i] = v;
+                left -= v;
+            }
+        }
+
+        public void ResetStartAllocation() { System.Array.Clear(StartAllocation, 0, StartAllocation.Length); }
+
+        readonly List<GameObject> displayMonsters = new List<GameObject>();
+
+        /// <summary>시작 화면 배경: 빗속에 멈춰 선 망자들.</summary>
+        void SpawnDisplayMonsters()
+        {
+            displayMonsters.Clear();
+            var evo = new EvolutionProfile();
+            var spots = new[]
+            {
+                (MonsterArchetype.Runner, new Vector3(-4f, 0f, 6f), 160f),
+                (MonsterArchetype.Runner, new Vector3(3f, 0f, 9f), 200f),
+                (MonsterArchetype.Brute, new Vector3(0f, 0f, 14f), 180f),
+                (MonsterArchetype.Spitter, new Vector3(-9f, 0f, 12f), 140f),
+                (MonsterArchetype.Runner, new Vector3(8f, 0f, 4f), 230f),
+            };
+            foreach (var (type, pos, yaw) in spots)
+            {
+                var m = MonsterFactory.Create(DefaultContent.Monster(type), Navigation.Snap(pos), evo, 1f, null, world);
+                m.transform.rotation = Quaternion.Euler(0f, yaw, 0f);
+                displayMonsters.Add(m.gameObject);
+            }
+        }
+
+        void ClearDisplayMonsters()
+        {
+            foreach (var go in displayMonsters)
+                if (go != null) Destroy(go);
+            displayMonsters.Clear();
+        }
+
         /// <summary>시작 화면 미리보기용 스탯 (분배·특성 반영).</summary>
         public CharacterStats PreviewStats()
         {
@@ -74,6 +119,7 @@ namespace Hunt.Core
         {
             Instance = this;
             SFX.Init(gameObject);
+            GameSettings.Apply();
             SelectedPrimaries.Add(DefaultContent.Weapons[1]); // 돌격소총
             SelectedPrimaries.Add(DefaultContent.Weapons[3]); // 샷건
             BuildWorld();
@@ -99,12 +145,12 @@ namespace Hunt.Core
             DisableForeignCameras();
             var menuCam = new GameObject("MenuCamera");
             menuCam.transform.SetParent(world, false);
-            menuCam.transform.position = new Vector3(0f, 18f, -38f);
-            menuCam.transform.rotation = Quaternion.Euler(25f, 0f, 0f);
+            menuCam.AddComponent<MenuCameraOrbit>();
             ActiveCamera = menuCam.AddComponent<Camera>();
             ActiveCamera.backgroundColor = RenderSettings.fogColor;
             ActiveCamera.clearFlags = CameraClearFlags.SolidColor;
             menuCam.AddComponent<AudioListener>();
+            SpawnDisplayMonsters();
 
             State = GameState.CharacterSelect;
             MenuOpen = false;
@@ -125,6 +171,8 @@ namespace Hunt.Core
         public void StartGame()
         {
             if (ActiveCamera != null) Destroy(ActiveCamera.gameObject);
+            ClearDisplayMonsters();
+            SFX.Play(SFX.Gong, 0.9f, 0f);
 
             var go = new GameObject("Player");
             go.layer = 2; // Ignore Raycast: 자기 몸에 총알이 맞지 않도록

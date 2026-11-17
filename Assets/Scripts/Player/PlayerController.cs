@@ -10,7 +10,6 @@ namespace Hunt.Player
         public const float EyeHeight = 1.65f;
         public const float BaseFov = 75f;
 
-        public float mouseSensitivity = 2f;
         public float jumpSpeed = 5.5f;
 
         public bool IsMoving { get; private set; }
@@ -62,7 +61,7 @@ namespace Hunt.Player
             // ---- 시점 ----
             if (input)
             {
-                float sens = mouseSensitivity * LookMultiplier;
+                float sens = GameSettings.MouseSensitivity * LookMultiplier;
                 yaw += Input.GetAxis("Mouse X") * sens;
                 pitch -= Input.GetAxis("Mouse Y") * sens;
                 pitch = Mathf.Clamp(pitch, -85f, 85f);
