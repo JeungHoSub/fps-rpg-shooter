@@ -24,10 +24,22 @@ namespace Hunt.UI
             if (notes.Count > 6) notes.RemoveAt(0);
         }
 
-        readonly StartScreen start = new StartScreen();
-        readonly GameHud hud = new GameHud();
-        readonly CampMenu camp = new CampMenu();
-        readonly EndScreens ends = new EndScreens();
+        // 화면 객체는 Awake에서 만든다 (필드 초기화 시점에는 유니티 오브젝트 생성이 금지됨)
+        StartScreen start;
+        GameHud hud;
+        CampMenu camp;
+        EndScreens ends;
+
+        string uiError;
+        float uiErrorTime;
+
+        void Awake()
+        {
+            start = new StartScreen();
+            hud = new GameHud();
+            camp = new CampMenu();
+            ends = new EndScreens();
+        }
 
         GameState lastState = (GameState)(-1);
         bool lastMenuOpen;
@@ -49,12 +61,45 @@ namespace Hunt.UI
         {
             var gm = GameManager.Instance;
             if (gm == null) return;
-            UITheme.Ensure();
-            UIKit.BeginFrame();
+            if (start == null) Awake();
 
             float scale = Screen.height / RefHeight;
             GUI.matrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, new Vector3(scale, scale, 1f));
             float W = Screen.width / scale, H = RefHeight;
+
+            try
+            {
+                DrawScreens(gm, W, H, scale);
+            }
+            catch (ExitGUIException) { throw; }
+            catch (System.Exception ex)
+            {
+                // UI 오류가 나도 게임은 계속된다. 첫 오류만 콘솔에 자세히 남긴다.
+                if (uiError == null) Debug.LogException(ex);
+                uiError = ex.GetType().Name + ": " + ex.Message;
+                uiErrorTime = Time.unscaledTime;
+            }
+            DrawErrorFallback(gm, W);
+        }
+
+        void DrawErrorFallback(GameManager gm, float W)
+        {
+            if (uiError == null || Time.unscaledTime - uiErrorTime > 3f) return;
+            GUI.matrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, new Vector3(Screen.height / RefHeight, Screen.height / RefHeight, 1f));
+            GUI.color = Color.white;
+            GUI.Box(new Rect(20, 20, 760, 70), "");
+            GUI.Label(new Rect(32, 26, 740, 60), "<color=#ff8080><b>UI 오류</b></color> — 이 문구를 캡처해서 보내 주세요\n" + uiError, new GUIStyle(GUI.skin.label) { richText = true, fontSize = 16, wordWrap = true });
+            if (gm.State == GameState.CharacterSelect && GUI.Button(new Rect(W / 2 - 150, 980, 300, 60), "비상 출정 (기본 설정으로 시작)"))
+            {
+                gm.ApplyStartPreset(Hunt.UI.GameText.Presets[0].alloc);
+                gm.StartGame();
+            }
+        }
+
+        void DrawScreens(GameManager gm, float W, float H, float scale)
+        {
+            UITheme.Ensure();
+            UIKit.BeginFrame();
 
             // 화면 전환 감지
             if (gm.State != lastState)

@@ -9,23 +9,27 @@ namespace Hunt.UI
     public class RadarChart
     {
         const int N = 220;
-        readonly Texture2D tex;
+        Texture2D tex;
         readonly Color[] px = new Color[N * N];
         string lastKey;
 
-        public RadarChart()
+        // 텍스처는 처음 그릴 때 만든다 (MonoBehaviour 필드 초기화 중에는 Texture2D 생성이 금지됨)
+        void EnsureTexture()
         {
+            if (tex != null) return;
             tex = new Texture2D(N, N, TextureFormat.RGBA32, false)
             {
                 wrapMode = TextureWrapMode.Clamp,
                 filterMode = FilterMode.Bilinear,
                 hideFlags = HideFlags.HideAndDontSave,
             };
+            lastKey = null;
         }
 
         /// <summary>values/preview: 0~1 정규화된 6개 값.</summary>
         public void Draw(Rect r, float[] values, float[] preview, string[] labels)
         {
+            EnsureTexture();
             string key = Key(values) + "|" + (preview != null ? Key(preview) : "");
             if (key != lastKey)
             {
