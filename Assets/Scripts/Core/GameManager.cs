@@ -120,6 +120,7 @@ namespace Hunt.Core
             Instance = this;
             SFX.Init(gameObject);
             GameSettings.Apply();
+            QualityManager.Init();
             SelectedPrimaries.Add(DefaultContent.Weapons[1]); // 돌격소총
             SelectedPrimaries.Add(DefaultContent.Weapons[3]); // 샷건
             BuildWorld();
@@ -235,6 +236,7 @@ namespace Hunt.Core
             MenuOpen = true;
 
             Player.Weapons.RefillAmmo();
+            Resources.UnloadUnusedAssets(); // 죽은 망자들이 남긴 재질 정리 (메모리 누수 방지)
             Player.Heal(Player.Stats.MaxHp * 0.3f);
             Player.Infection.Antidotes = Mathf.Min(2, Player.Infection.Antidotes + 1);
             Player.AddGold(40 + 20 * Waves.Wave);
@@ -275,6 +277,7 @@ namespace Hunt.Core
 
         void Update()
         {
+            QualityManager.Tick(Time.unscaledDeltaTime);
             bool cursorFree = !AcceptsGameplayInput;
             Cursor.lockState = cursorFree ? CursorLockMode.None : CursorLockMode.Locked;
             Cursor.visible = cursorFree;

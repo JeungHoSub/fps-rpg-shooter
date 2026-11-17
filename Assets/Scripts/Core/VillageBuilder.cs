@@ -240,7 +240,9 @@ namespace Hunt.Core
                 l.color = new Color(1f, 0.65f, 0.35f);
                 l.range = 6f;
                 l.intensity = 1.2f;
-                lg.AddComponent<LampFlicker>().subtle = true;
+                var wf = lg.AddComponent<LampFlicker>();
+                wf.subtle = true;
+                wf.minLevel = GfxLevel.High;
             }
             return g;
         }
@@ -392,7 +394,7 @@ namespace Hunt.Core
                     l.color = new Color(0.75f, 0.95f, 0.8f);
                     l.range = 9f;
                     l.intensity = 0.9f;
-                    lg.AddComponent<LampFlicker>();
+                    lg.AddComponent<LampFlicker>().minLevel = GfxLevel.High;
                 }
             }
         }
@@ -451,7 +453,7 @@ namespace Hunt.Core
                 new Vector3(-3.6f, 0, -36f), new Vector3(-3.6f, 0, -18f), new Vector3(-3.6f, 0, 2f),
                 new Vector3(-3.6f, 0, 20f), new Vector3(-3.6f, 0, 36f), new Vector3(-30f, 0, 10.5f), new Vector3(14f, 0, 32f),
             };
-            for (int i = 0; i < lamps.Length; i++) StreetLamp(lamps[i], i == 1 || i == 5);
+            for (int i = 0; i < lamps.Length; i++) StreetLamp(lamps[i], i == 1 || i == 5, i % 2 == 0 ? GfxLevel.Low : GfxLevel.Medium);
         }
 
         static void Wire(Vector3 a, Vector3 b, Material mat)
@@ -472,7 +474,7 @@ namespace Hunt.Core
             }
         }
 
-        static void StreetLamp(Vector3 p, bool flicker)
+        static void StreetLamp(Vector3 p, bool flicker, GfxLevel minLevel)
         {
             var g = Group("가로등", p, 0f);
             var metal = EnvMaterials.Plain(new Color(0.35f, 0.36f, 0.36f), 0.6f, 0.6f);
@@ -491,6 +493,7 @@ namespace Hunt.Core
             l.intensity = 3.2f;
             var f = lg.AddComponent<LampFlicker>();
             f.broken = flicker;
+            f.minLevel = minLevel; // 저사양에서는 가로등 불빛을 절반만
         }
 
         // ================================================================ 소품
@@ -521,6 +524,7 @@ namespace Hunt.Core
             l.spotAngle = 55f;
             l.intensity = 3.5f;
             l.shadows = LightShadows.Hard;
+            hl.AddComponent<LampFlicker>().minLevel = GfxLevel.Medium;
 
             // 드럼통 · 장작더미 · 경운기 짐칸
             var rust = EnvMaterials.Plain(new Color(0.35f, 0.18f, 0.1f), 0.5f, 0.3f);

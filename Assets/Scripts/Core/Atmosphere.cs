@@ -46,7 +46,7 @@ namespace Hunt.Core
             moon.type = LightType.Directional;
             moon.color = new Color(0.55f, 0.65f, 0.85f);
             moon.intensity = baseMoon;
-            moon.shadows = LightShadows.Soft;
+            moon.shadows = LightShadows.Soft; // 실제 그림자 품질은 QualityManager가 전역으로 정한다
             moon.shadowStrength = 0.6f;
 
             RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
@@ -159,7 +159,7 @@ namespace Hunt.Core
                 rain.transform.position = new Vector3(c.x, c.y + 14f, c.z) + cam.transform.forward * 8f;
 
                 // 물튀김: 카메라 주변 지면에 무작위로
-                int count = Mathf.RoundToInt(120f * RainIntensity * dt * 10f);
+                int count = Mathf.RoundToInt(120f * RainIntensity * dt * 10f * QualityManager.SplashRate);
                 for (int i = 0; i < count; i++)
                 {
                     Vector2 off = Random.insideUnitCircle * 14f;
@@ -189,7 +189,7 @@ namespace Hunt.Core
             if (rain != null)
             {
                 var em = rain.emission;
-                em.rateOverTime = Mathf.Lerp(2000f, 7000f, RainIntensity);
+                em.rateOverTime = Mathf.Lerp(2000f, 7000f, RainIntensity) * QualityManager.RainRate;
             }
             if (rainAudio != null) rainAudio.volume = Mathf.Lerp(0.3f, 0.75f, RainIntensity);
 

@@ -24,7 +24,7 @@ namespace Hunt.Player
             spot.spotAngle = 52f;
             spot.innerSpotAngle = 24f;
             spot.intensity = 2.6f;
-            spot.shadows = LightShadows.Soft;
+            spot.shadows = LightShadows.Soft; // 하 품질에서는 전역 설정으로 그림자 꺼짐
             spot.shadowStrength = 0.85f;
             lagRot = camera.rotation;
         }

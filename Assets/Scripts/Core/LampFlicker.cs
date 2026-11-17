@@ -8,6 +8,8 @@ namespace Hunt.Core
         public bool broken;  // 가끔 꺼졌다 켜짐
         public bool subtle;  // 촛불처럼 살짝
         public bool pulse;   // 숨쉬듯 천천히
+        /// <summary>이 품질 이상일 때만 켠다 (저사양에서 조명 수 줄이기).</summary>
+        public GfxLevel minLevel = GfxLevel.Low;
 
         Light lt;
         float baseIntensity, seed, offUntil, nextGlitch;
@@ -23,6 +25,9 @@ namespace Hunt.Core
         void Update()
         {
             if (lt == null) return;
+            bool want = QualityManager.Level >= minLevel;
+            if (lt.enabled != want) lt.enabled = want;
+            if (!want) return;
             float t = Time.time;
             float k = 1f;
             if (pulse) k = 0.6f + 0.4f * Mathf.Sin(t * 1.3f + seed);

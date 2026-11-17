@@ -12,7 +12,6 @@ namespace Hunt.Waves
     public class WaveManager : MonoBehaviour
     {
         public const int BossEvery = 5;
-        const int MaxAlive = 28;
 
         public static WaveManager Instance { get; private set; }
 
@@ -69,7 +68,7 @@ namespace Hunt.Waves
             if (!Spawning || gm == null || !gm.IsWorldRunning) return;
 
             spawnTimer -= Time.deltaTime;
-            if (spawnTimer <= 0f && queue.Count > 0 && Monster.Alive.Count < MaxAlive)
+            if (spawnTimer <= 0f && queue.Count > 0 && Monster.Alive.Count < QualityManager.MaxAliveMonsters)
             {
                 Spawn(queue.Dequeue(), null);
                 spawnTimer = Mathf.Max(0.2f, 0.7f - Wave * 0.03f);
