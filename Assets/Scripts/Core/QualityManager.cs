@@ -18,11 +18,13 @@ namespace Hunt.Core
         public static event System.Action Changed;
 
         // ---- 단계별 수치 ----
-        public static float RainRate => Level == GfxLevel.Low ? 0.25f : Level == GfxLevel.Medium ? 0.55f : 1f;
-        public static float SplashRate => Level == GfxLevel.Low ? 0.15f : Level == GfxLevel.Medium ? 0.5f : 1f;
+        public static float RainRate => Level == GfxLevel.Low ? 0.15f : Level == GfxLevel.Medium ? 0.55f : 1f;
+        public static float SplashRate => Level == GfxLevel.Low ? 0.08f : Level == GfxLevel.Medium ? 0.5f : 1f;
         public static bool Shadows => Level != GfxLevel.Low;
         public static bool SoftShadows => Level == GfxLevel.High;
-        public static int MaxAliveMonsters => Level == GfxLevel.Low ? 16 : Level == GfxLevel.Medium ? 22 : 28;
+        public static int MaxAliveMonsters => Level == GfxLevel.Low ? 12 : Level == GfxLevel.Medium ? 22 : 28;
+        /// <summary>시야 거리 (안개가 가려주므로 저사양은 짧게).</summary>
+        public static float FarClip => Level == GfxLevel.Low ? 70f : Level == GfxLevel.Medium ? 140f : 400f;
         public static bool ExtraLights => Level == GfxLevel.High;   // 창문·비닐하우스 불빛
         public static bool AllLampLights => Level != GfxLevel.Low;  // 가로등 모두 켜기
         public static int GibLimit => Level == GfxLevel.Low ? 6 : 14;
@@ -62,7 +64,7 @@ namespace Hunt.Core
         {
             Application.targetFrameRate = 60;
             QualitySettings.vSyncCount = 0; // 프레임 제한은 targetFrameRate로 (에디터에서도 동작)
-            QualitySettings.pixelLightCount = Level == GfxLevel.Low ? 2 : Level == GfxLevel.Medium ? 4 : 8;
+            QualitySettings.pixelLightCount = Level == GfxLevel.Low ? 1 : Level == GfxLevel.Medium ? 4 : 8;
             QualitySettings.shadows = Level == GfxLevel.Low ? ShadowQuality.Disable : Level == GfxLevel.Medium ? ShadowQuality.HardOnly : ShadowQuality.All;
             QualitySettings.shadowDistance = Level == GfxLevel.Low ? 15f : Level == GfxLevel.Medium ? 30f : 50f;
             QualitySettings.shadowCascades = Level == GfxLevel.High ? 2 : 1;

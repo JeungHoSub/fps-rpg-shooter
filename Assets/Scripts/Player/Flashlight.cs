@@ -26,6 +26,7 @@ namespace Hunt.Player
             spot.intensity = 2.6f;
             spot.shadows = LightShadows.Soft; // 하 품질에서는 전역 설정으로 그림자 꺼짐
             spot.shadowStrength = 0.85f;
+            spot.renderMode = LightRenderMode.ForcePixel; // 조명 수를 줄여도 손전등은 항상 제대로
             lagRot = camera.rotation;
         }
 

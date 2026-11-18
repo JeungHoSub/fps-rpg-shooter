@@ -220,7 +220,11 @@ namespace Hunt.Core
                 RenderSettings.ambientLight = baseAmbient;
                 RenderSettings.fogColor = FogColor;
             }
-            if (cam != null) cam.backgroundColor = RenderSettings.fogColor;
+            if (cam != null)
+            {
+                cam.backgroundColor = RenderSettings.fogColor;
+                cam.farClipPlane = QualityManager.FarClip;
+            }
         }
     }
 }
