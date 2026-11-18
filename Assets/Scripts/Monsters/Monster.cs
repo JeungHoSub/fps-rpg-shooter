@@ -41,6 +41,26 @@ namespace Hunt.Monsters
         PlayerCharacter target;
         Transform head;
 
+        // 감지: 소리를 듣거나 가까이서 보면 쫓아오고, 아니면 소리 난 곳을 찾아 어슬렁거린다
+        const float SightRange = 9f;      // 이 거리 안이면 비가 와도 알아챈다
+        const float SmellAfter = 45f;     // 이만큼 지나면 냄새로 찾아온다 (밤이 끝나지 않는 일 방지)
+        float alertTime;                  // > 0 이면 플레이어를 쫓는 중
+        float age;
+        bool hasInvestigate;
+        Vector3 investigatePos, wanderGoal;
+        float wanderTimer;
+
+        public bool IsAlerted => alertTime > 0f || IsBoss || age > SmellAfter;
+
+        /// <summary>소리를 들었다. 플레이어가 낸 소리면 잠시 쫓아오고, 그 뒤엔 그 자리를 뒤진다.</summary>
+        public void HearNoise(Vector3 pos, bool fromPlayer)
+        {
+            if (IsDead) return;
+            investigatePos = pos;
+            hasInvestigate = true;
+            if (fromPlayer) alertTime = Mathf.Max(alertTime, 6f);
+        }
+
         // 길찾기
         readonly NavMeshPath navPath = new NavMeshPath();
         readonly Vector3[] corners = new Vector3[32];
@@ -98,20 +118,44 @@ namespace Hunt.Monsters
             to.y = 0f;
             float dist = to.magnitude;
             Vector3 dir = dist > 0.01f ? to / dist : transform.forward;
-            Vector3 pathDir = PathDirection(target.transform.position, dir, dt);
+
+            age += dt;
+            if (alertTime > 0f) alertTime -= dt;
+            if (dist < SightRange) alertTime = Mathf.Max(alertTime, 2f);
+            bool alerted = IsAlerted;
 
             float phaseSpeed = IsBoss ? 1f + BossPhase * 0.2f : 1f;
             float spd = speed * legSlow * (slowTime > 0f ? 0.55f : 1f) * phaseSpeed;
 
             Vector3 move = Vector3.zero;
-            if (Data.archetype == MonsterArchetype.Spitter)
+            if (!alerted)
             {
-                if (dist > 12f) move = pathDir;
+                // 모르는 채 어슬렁: 소리 난 곳 → 없으면 플레이어 근처 아무 데나 (천천히 모여든다)
+                spd *= 0.4f;
+                Vector3 goal = hasInvestigate ? investigatePos : wanderGoal;
+                wanderTimer -= dt;
+                Vector3 g = goal - transform.position;
+                g.y = 0f;
+                if (g.sqrMagnitude < 2f * 2f || (!hasInvestigate && wanderTimer <= 0f))
+                {
+                    hasInvestigate = false;
+                    Vector2 off = Random.insideUnitCircle * 14f;
+                    wanderGoal = target.transform.position + new Vector3(off.x, 0f, off.y);
+                    wanderTimer = Random.Range(6f, 9f);
+                    goal = wanderGoal;
+                    g = goal - transform.position;
+                    g.y = 0f;
+                }
+                move = PathDirection(goal, g.sqrMagnitude > 0.01f ? g.normalized : transform.forward, dt);
+            }
+            else if (Data.archetype == MonsterArchetype.Spitter)
+            {
+                if (dist > 12f) move = PathDirection(target.transform.position, dir, dt);
                 else if (dist < 7f) move = -dir;
             }
             else if (dist > Data.attackRange)
             {
-                move = pathDir;
+                move = PathDirection(target.transform.position, dir, dt);
             }
             if (stagger > 0f) { stagger -= dt; move = Vector3.zero; }
 
@@ -122,7 +166,7 @@ namespace Hunt.Monsters
                 transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(faceDir), dt * 8f);
 
             if (rig != null)
-                rig.SetLocomotion(move.sqrMagnitude > 0.01f ? spd : 0f, legSlow < 1f, Data.archetype == MonsterArchetype.Runner && dist > 3f);
+                rig.SetLocomotion(move.sqrMagnitude > 0.01f ? spd : 0f, legSlow < 1f, alerted && Data.archetype == MonsterArchetype.Runner && dist > 3f);
 
             // 무리 간 분리
             Vector3 sep = Vector3.zero;
@@ -145,7 +189,7 @@ namespace Hunt.Monsters
 
             // 공격
             attackTimer -= dt;
-            if (attackTimer <= 0f)
+            if (attackTimer <= 0f && alerted)
             {
                 if (Data.archetype == MonsterArchetype.Spitter)
                 {
@@ -228,6 +272,7 @@ namespace Hunt.Monsters
             }
 
             lastHitDir = info.direction;
+            alertTime = Mathf.Max(alertTime, 8f); // 맞으면 확실히 알아챈다
 
             // 저지력 → 넉백
             Vector3 kdir = info.direction;
@@ -257,6 +302,7 @@ namespace Hunt.Monsters
         {
             if (IsDead) return false;
             amount *= 1f - Mathf.Clamp(resist[(int)type], -1f, 0.9f);
+            alertTime = Mathf.Max(alertTime, 8f);
             if (showNumber) DamageNumbers.Spawn(transform.position + Vector3.up * 1.5f * Data.scale, amount, false, HitZone.Body, type);
             return TakeRawDamage(amount);
         }

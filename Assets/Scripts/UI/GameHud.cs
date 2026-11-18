@@ -96,6 +96,8 @@ namespace Hunt.UI
                 $"Lv.{p.Level}   ·   {p.Xp} / {p.XpToNext}" + (p.StatPoints > 0 || p.PendingTraitPicks > 0 ? $"   ·   <color=#{UIKit.Hex(UITheme.GoldBright)}>새 단련 {p.StatPoints}{(p.PendingTraitPicks > 0 ? " · 새 기질" : "")} — 서낭당에서</color>" : ""),
                 14, UITheme.BoneDim, TextAnchor.MiddleCenter);
 
+            DrawNoise(gm);
+
             // ---- 위쪽: 밤 표식 / 남은 망자 ----
             DrawNightPlaque(gm);
 
@@ -207,6 +209,19 @@ namespace Hunt.UI
                 UIKit.NineSlice(r, cur ? UITheme.PanelHeader : UITheme.Slot, 6, new Color(1, 1, 1, cur ? 1f : 0.75f));
                 UIKit.Text(r, $"{i + 1}  {wp.Slots[i].data.displayName}", 14, cur ? UITheme.GoldBright : UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true, bold: cur);
             }
+        }
+
+        /// <summary>내가 낸 소리 크기와 빗소리 가림. 소리가 크면 망자가 몰려온다.</summary>
+        void DrawNoise(GameManager gm)
+        {
+            if (gm.State == GameState.Intermission) return;
+            float loud = Noise.PlayerLoudness;
+            var r = new Rect(W / 2 - 110, H - 92, 220, 6);
+            Color c = Color.Lerp(UITheme.GoldDim, UITheme.BloodBright, Mathf.InverseLerp(0.5f, 1f, loud));
+            UIKit.Bar(r, loud, c);
+            float mask = Noise.RainMask;
+            string rain = mask < 0.75f ? "  ·  빗소리가 소리를 덮는다" : mask < 0.95f ? "  ·  빗소리" : "";
+            UIKit.Text(new Rect(r.x - 80, r.y - 22, r.width + 160, 20), "소 리" + rain, 13, UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true);
         }
 
         void DrawNightPlaque(GameManager gm)

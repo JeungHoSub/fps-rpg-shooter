@@ -36,7 +36,7 @@ namespace Hunt.Player
         }
 
         public bool IsSprinting { get; private set; }
-        float shake, sprintBlock;
+        float shake, sprintBlock, stepTimer;
         Vector2 punch, punchVel; // 사격 시 화면이 튀었다 돌아오는 반동 (조준점과 별개)
 
         /// <summary>시점 반동 (도). 스프링처럼 튀었다가 돌아온다.</summary>
@@ -114,6 +114,18 @@ namespace Hunt.Player
             cc.Move((wish * speed + Vector3.up * verticalVel) * dt);
 
             IsMoving = wish.sqrMagnitude > 0.01f || !cc.isGrounded;
+
+            // 발소리: 달리면 10m, 걸으면 4m (비가 오면 덜 들린다)
+            if (cc.isGrounded && wish.sqrMagnitude > 0.01f)
+            {
+                stepTimer -= dt;
+                if (stepTimer <= 0f)
+                {
+                    stepTimer = sprint ? 0.33f : 0.5f;
+                    Noise.Emit(transform.position, sprint ? 10f : 4f, true);
+                }
+            }
+            else stepTimer = 0f;
             StationaryTime = IsMoving ? 0f : StationaryTime + dt;
         }
     }

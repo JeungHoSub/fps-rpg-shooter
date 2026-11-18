@@ -206,6 +206,7 @@ namespace Hunt.Player
             // 연출: 총 모델 반동 / 총성 / 화면 흔들림
             viewModel.OnFire(w);
             SFX.Play(SFX.Shot(w.data.weaponClass), 0.85f);
+            Noise.Emit(player.transform.position, Noise.ShotRadius(w.data.weaponClass), true);
             float shake = w.data.weaponClass == WeaponClass.Shotgun || w.data.weaponClass == WeaponClass.Sniper ? 1.4f : 0.45f;
             player.Controller.AddShake(shake * Mathf.Lerp(1f, 0.5f, aim));
             player.Controller.AddPunch(Punch(w.data.weaponClass) * Mathf.Lerp(1f, 0.6f, aim), Random.Range(-0.35f, 0.35f) * Punch(w.data.weaponClass));
@@ -318,6 +319,7 @@ namespace Hunt.Player
         {
             Effects.Burst(point, 3f, CombatNames.ColorOf(type == DamageType.Physical ? DamageType.Fire : type));
             SFX.PlayAt(SFX.Shot(WeaponClass.Shotgun), point, 1f);
+            Noise.Emit(point, 35f, true);
             var hits = Physics.OverlapSphere(point, 3f, RaycastMask, QueryTriggerInteraction.Ignore);
             var done = new HashSet<Monster>();
             foreach (var h in hits)
