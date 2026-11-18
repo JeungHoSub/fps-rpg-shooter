@@ -22,7 +22,7 @@ namespace Hunt.Waves
         public bool IsBossWave => Wave > 0 && Wave % BossEvery == 0;
 
         readonly Queue<MonsterArchetype> queue = new Queue<MonsterArchetype>();
-        float spawnTimer;
+        float spawnTimer, stragglerTime;
         Transform root;
         PlayerCharacter player;
 
@@ -73,6 +73,29 @@ namespace Hunt.Waves
                 Spawn(queue.Dequeue(), null);
                 spawnTimer = Mathf.Max(0.2f, 0.7f - Wave * 0.03f);
             }
+
+            // 사라진(파괴된) 항목 정리 — 보이지 않는 '남은 망자' 방지
+            Monster.Alive.RemoveAll(m => m == null || m.IsDead);
+
+            // 마지막 몇 마리가 멀리서 헤매면: 위치를 표시하고 플레이어 근처로 끌어온다
+            if (queue.Count == 0 && Monster.Alive.Count > 0 && Monster.Alive.Count <= 3)
+            {
+                stragglerTime += Time.deltaTime;
+                if (stragglerTime > 12f && player != null)
+                {
+                    foreach (var m in Monster.Alive)
+                    {
+                        m.Revealed = true;
+                        if (Vector3.Distance(m.transform.position, player.transform.position) > 22f)
+                        {
+                            var off = Random.insideUnitCircle.normalized * 16f;
+                            m.Recall(Navigation.Snap(player.transform.position + new Vector3(off.x, 0f, off.y)));
+                        }
+                    }
+                    stragglerTime = 0f;
+                }
+            }
+            else stragglerTime = 0f;
 
             if (queue.Count == 0 && Monster.Alive.Count == 0)
             {

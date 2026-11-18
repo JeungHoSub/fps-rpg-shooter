@@ -19,6 +19,16 @@ namespace Hunt.Monsters
         public float Hp { get; private set; }
         public float MaxHp { get; private set; }
         public bool IsDead { get; private set; }
+        /// <summary>마지막 남은 망자: HUD에 위치 표시.</summary>
+        public bool Revealed { get; set; }
+
+        /// <summary>멀리서 헤매는 망자를 지정 위치로 옮긴다.</summary>
+        public void Recall(Vector3 pos)
+        {
+            transform.position = pos;
+            knockVel = Vector3.zero;
+            repathTimer = 0f;
+        }
         public bool IsBoss => Data != null && Data.archetype == MonsterArchetype.Boss;
         public int Generation { get; private set; }
         public int BossPhase { get; private set; }

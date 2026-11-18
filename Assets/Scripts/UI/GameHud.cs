@@ -106,6 +106,31 @@ namespace Hunt.UI
 
             DrawBoss(dt);
             DrawIntro(gm, dt);
+            DrawStragglers(cam, scale);
+        }
+
+        /// <summary>마지막 남은 망자 위치 표시 (화면 밖이면 가장자리에 화살표처럼).</summary>
+        void DrawStragglers(Camera cam, float scale)
+        {
+            if (cam == null) return;
+            foreach (var m in Monster.Alive)
+            {
+                if (m == null || !m.Revealed) continue;
+                Vector3 sp = cam.WorldToScreenPoint(m.transform.position + Vector3.up * 1.2f);
+                bool behind = sp.z < 0f;
+                float x = sp.x / scale, y = (Screen.height - sp.y) / scale;
+                if (behind) { x = W - x; y = H - 40f; }
+                bool off = behind || x < 30 || x > W - 30 || y < 30 || y > H - 30;
+                x = Mathf.Clamp(x, 40f, W - 40f);
+                y = Mathf.Clamp(y, 40f, H - 40f);
+                float pulse = 0.7f + 0.3f * Mathf.Sin(Time.unscaledTime * 5f);
+                UIKit.Emblem(new Rect(x - 22, y - 22, 44, 44), "망", UITheme.Blood, true);
+                if (!off)
+                {
+                    float d = Vector3.Distance(cam.transform.position, m.transform.position);
+                    UIKit.Text(new Rect(x - 40, y + 20, 80, 20), $"{d:0}m", 14, new Color(1f, 1f, 1f, pulse), TextAnchor.MiddleCenter);
+                }
+            }
         }
 
         /// <summary>첫째 밤: 목표와 조작 안내 (25초 뒤 사라짐).</summary>
