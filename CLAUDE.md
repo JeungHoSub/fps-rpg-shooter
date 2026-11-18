@@ -26,7 +26,10 @@ Unity 1인칭 싱글플레이 좀비 슈터 + RPG. **비 오는 밤의 한국 �
 - 완료: 마지막 남은 망자가 안 보이던 문제 → 남은 3마리 이하 12초 후 위치 표시 + 근처로 끌어옴
 - 다음 할 일: **Phase 1 나머지** — 빛 반응(손전등·총구 화염이 망자를 끌어들임 = 손전등 위험) + 기본 룰(기본→엘리트→보스, 보스 처치 시 클리어)
 - 이후: Phase 2~6 (SPEC_V04), 오행·밤낮 순환 (CONCEPT_KR_HORROR)
-- **그래픽(Phase 7)은 에셋 결정 필요:** 실사(구매/Mixamo) vs HD 630 사양 내 분위기형. 사용자에게 확인할 것.
+- **그래픽 결정됨 (2026-11-18): Mixamo 실사 망자 + 분위기형 배경.**
+  - 사용자가 Mixamo에서 좀비 캐릭터(With Skin)와 동작(Zombie Idle/Walk/Run/Attack/Death/Reaction, Without Skin, In Place)을 FBX로 받아
+    GitHub 웹 업로드로 `Assets/Resources/Mixamo/`에 올림 → 그걸 `ZombieRig`에 연결 (Mixamo 뼈 이름 `mixamorig:` 접두어는 이미 처리됨)
+  - 갓·도포·상투는 모델 위에 덧입힘(킹덤풍). 배경은 각진 도형을 둥글게·자연스럽게 다듬되 HD 630 '하' 품질 유지.
 
 ## 작업 습관
 - 요청은 작게, 수정 후 컴파일 확인 → 커밋 → main 푸시. 커밋 메시지는 한국어.
