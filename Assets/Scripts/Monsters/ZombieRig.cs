@@ -14,13 +14,42 @@ namespace Hunt.Monsters
     /// </summary>
     public class ZombieRig : MonoBehaviour
     {
-        public enum Anim { Idle, Walk, Run, Bite, Crawl }
-        const int AnimCount = 5;
-        const string ResPath = "Zombies/ZombieSmooth";
+        public enum Anim { Idle, Walk, Run, Bite, Crawl, Hit, Scream, Death }
+        const int AnimCount = 8;
+        const string ResPath = "Zombies/ZombieSmooth";       // Quaternius (대체용)
+        const string MixamoModel = "Mixamo/Romero";           // Mixamo 실사 망자
+        const string MixamoAnims = "Mixamo/Anims/Zombie_";
 
         static GameObject prefab;
         static AnimationClip[] clips;
         static bool loaded;
+        public static bool IsMixamo { get; private set; }
+
+        static AnimationClip FirstClip(string path)
+        {
+            foreach (var c in Resources.LoadAll<AnimationClip>(path))
+                if (c != null && !c.name.StartsWith("__preview__")) return c;
+            return null;
+        }
+
+        static void LoadMixamo()
+        {
+            var p = Resources.Load<GameObject>(MixamoModel);
+            if (p == null) return;
+            var cl = new AnimationClip[AnimCount];
+            cl[(int)Anim.Idle] = FirstClip(MixamoAnims + "Idle");
+            cl[(int)Anim.Walk] = FirstClip(MixamoAnims + "Walk");
+            cl[(int)Anim.Run] = FirstClip(MixamoAnims + "Run");
+            cl[(int)Anim.Bite] = FirstClip(MixamoAnims + "Attack");
+            cl[(int)Anim.Crawl] = FirstClip(MixamoAnims + "Crawl");
+            cl[(int)Anim.Hit] = FirstClip(MixamoAnims + "Hit");
+            cl[(int)Anim.Scream] = FirstClip(MixamoAnims + "Scream");
+            cl[(int)Anim.Death] = FirstClip(MixamoAnims + "Death");
+            if (cl[(int)Anim.Walk] == null) { Debug.LogWarning("[Hunt] Mixamo 동작을 찾지 못해 기본 좀비를 씁니다."); return; }
+            prefab = p;
+            clips = cl;
+            IsMixamo = true;
+        }
 
         public static bool Available
         {
@@ -29,6 +58,8 @@ namespace Hunt.Monsters
                 if (!loaded)
                 {
                     loaded = true;
+                    LoadMixamo();
+                    if (IsMixamo) return true;
                     prefab = Resources.Load<GameObject>(ResPath);
                     clips = new AnimationClip[AnimCount];
                     foreach (var c in Resources.LoadAll<AnimationClip>(ResPath))
@@ -62,6 +93,8 @@ namespace Hunt.Monsters
         Anim locomotion = Anim.Idle;
         float locomotionSpeed = 1f;
         bool biting;
+        Anim oneShot = Anim.Bite;
+        float oneShotSpeed = 1.3f;
         float flinch, flinchVel, headJerk;
         Vector3 flinchAxis = Vector3.right;
         float flashT;
@@ -141,8 +174,9 @@ namespace Hunt.Monsters
         {
             foreach (var t in Model.GetComponentsInChildren<Transform>())
             {
-                string n = t.name;
-                int bar = n.LastIndexOf(':'); // mixamorig: 접두어 대응
+                // Mixamo 접두어 제거: "mixamorig:Hips", "mixamorig5_Hips" → "Hips"
+                string n = System.Text.RegularExpressions.Regex.Replace(t.name, @"^.*mixamorig\d*[:_]", "");
+                int bar = n.LastIndexOf(':');
                 if (bar >= 0) n = n.Substring(bar + 1);
                 switch (n)
                 {
@@ -204,11 +238,27 @@ namespace Hunt.Monsters
             else { locomotion = Anim.Walk; locomotionSpeed = Mathf.Clamp(speed / (1.4f * Unit), 0.6f, 2.2f); }
         }
 
-        public void PlayBite()
+        public void PlayBite() { PlayOnce(Anim.Bite, 1.3f, true); }
+
+        /// <summary>강하게 맞았을 때 비틀거림.</summary>
+        public void PlayHit() { PlayOnce(Anim.Hit, 1.4f, false); }
+
+        /// <summary>처음 발견했을 때 비명. 재생 시간(초)을 돌려준다.</summary>
+        public float PlayScream()
         {
-            if (dead || clips[(int)Anim.Bite] == null) return;
+            if (!PlayOnce(Anim.Scream, 1.2f, false)) return 0f;
+            return clips[(int)Anim.Scream].length / 1.2f * 0.8f;
+        }
+
+        bool PlayOnce(Anim a, float speed, bool interrupt)
+        {
+            if (dead || clips[(int)a] == null) return false;
+            if (biting && !interrupt) return false; // 다른 단발 동작 중이면 무시
             biting = true;
-            players[(int)Anim.Bite].SetTime(0);
+            oneShot = a;
+            oneShotSpeed = speed;
+            players[(int)a].SetTime(0);
+            return true;
         }
 
         /// <summary>피격 반응: 상체가 맞은 방향으로 젖혀진다. strength 0~1.</summary>
@@ -232,7 +282,7 @@ namespace Hunt.Monsters
             if (anim != null) anim.enabled = false;
             Pivot.SetParent(parent, true);
             var corpse = Pivot.gameObject.AddComponent<ZombieCorpse>();
-            corpse.Begin(hitDir, Unit);
+            corpse.Begin(hitDir, Unit, clips[(int)Anim.Death], anim);
             Pivot = null;
         }
 
@@ -242,7 +292,7 @@ namespace Hunt.Monsters
             if (dead || !graph.IsValid()) return;
             float dt = Time.deltaTime;
 
-            Anim target = biting ? Anim.Bite : locomotion;
+            Anim target = biting ? oneShot : locomotion;
             for (int i = 0; i < AnimCount; i++)
             {
                 weights[i] = Mathf.MoveTowards(weights[i], i == (int)target ? 1f : 0f, dt * (biting ? 10f : 6f));
@@ -253,16 +303,16 @@ namespace Hunt.Monsters
             for (int i = 0; i < AnimCount; i++)
             {
                 var clip = clips[i] ?? clips[(int)Anim.Walk];
-                if (i == (int)Anim.Bite) continue;
+                if (i == (int)Anim.Bite || i == (int)Anim.Hit || i == (int)Anim.Scream || i == (int)Anim.Death) continue;
                 players[i].SetSpeed(i == (int)locomotion ? locomotionSpeed : 1f);
                 double t = players[i].GetTime();
                 if (t > clip.length) players[i].SetTime(t % clip.length);
             }
             if (biting)
             {
-                var bite = clips[(int)Anim.Bite];
-                players[(int)Anim.Bite].SetSpeed(1.3f);
-                if (players[(int)Anim.Bite].GetTime() >= bite.length * 0.95f) biting = false;
+                var c = clips[(int)oneShot];
+                players[(int)oneShot].SetSpeed(oneShotSpeed);
+                if (c == null || players[(int)oneShot].GetTime() >= c.length * 0.95f) biting = false;
             }
 
             if (flashT > 0f) { flashT -= dt; ApplyTint(Mathf.Clamp01(flashT / 0.07f)); }

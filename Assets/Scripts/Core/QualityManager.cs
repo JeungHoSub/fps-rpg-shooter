@@ -22,7 +22,7 @@ namespace Hunt.Core
         public static float SplashRate => Level == GfxLevel.Low ? 0.08f : Level == GfxLevel.Medium ? 0.5f : 1f;
         public static bool Shadows => Level != GfxLevel.Low;
         public static bool SoftShadows => Level == GfxLevel.High;
-        public static int MaxAliveMonsters => Level == GfxLevel.Low ? 12 : Level == GfxLevel.Medium ? 22 : 28;
+        public static int MaxAliveMonsters => Level == GfxLevel.Low ? 10 : Level == GfxLevel.Medium ? 18 : 26;
         /// <summary>시야 거리 (안개가 가려주므로 저사양은 짧게).</summary>
         public static float FarClip => Level == GfxLevel.Low ? 70f : Level == GfxLevel.Medium ? 140f : 400f;
         public static bool ExtraLights => Level == GfxLevel.High;   // 창문·비닐하우스 불빛
@@ -75,6 +75,7 @@ namespace Hunt.Core
             QualitySettings.masterTextureLimit = Level == GfxLevel.Low ? 1 : 0;
 #endif
             QualitySettings.softParticles = false;
+            QualitySettings.skinWeights = Level == GfxLevel.High ? SkinWeights.FourBones : SkinWeights.TwoBones; // 좀비 뼈 계산 간소화
             Changed?.Invoke();
         }
 

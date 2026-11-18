@@ -102,6 +102,7 @@ namespace Hunt.Monsters
         public void SetHead(Transform t) { head = t; }
 
         ZombieRig rig;
+        bool wasAlerted;
         public void SetRig(ZombieRig r) { rig = r; }
 
         public void SetBossWeakPoints(List<MonsterPart> wps)
@@ -133,6 +134,13 @@ namespace Hunt.Monsters
             if (alertTime > 0f) alertTime -= dt;
             if (dist < SightRange) alertTime = Mathf.Max(alertTime, 2f);
             bool alerted = IsAlerted;
+            // 처음 발견하면 멈춰 서서 비명을 지른 뒤 달려든다
+            if (alerted && !wasAlerted && rig != null && dist > 6f && !IsBoss)
+            {
+                float t = rig.PlayScream();
+                if (t > 0f) stagger = Mathf.Max(stagger, Mathf.Min(t, 1.6f));
+            }
+            wasAlerted = alerted;
 
             float phaseSpeed = IsBoss ? 1f + BossPhase * 0.2f : 1f;
             float spd = speed * legSlow * (slowTime > 0f ? 0.55f : 1f) * phaseSpeed;
@@ -293,7 +301,10 @@ namespace Hunt.Monsters
             if (knockVel.magnitude > 9f) knockVel = knockVel.normalized * 9f;
             if (kb > 1.2f) stagger = Mathf.Max(stagger, Mathf.Min(0.35f, 0.08f + kb * 0.05f));
             if (rig != null)
+            {
                 rig.Flinch(info.direction, Mathf.Clamp01(kb / 4f + (crit ? 0.3f : 0f) + (zone == HitZone.WeakPoint ? 0.2f : 0f)), zone == HitZone.Head);
+                if (kb > 2f || crit || zone == HitZone.Head) rig.PlayHit();
+            }
 
             ApplyStatus(info.type, hpDmg);
             if (EvolutionDirector.Instance != null)

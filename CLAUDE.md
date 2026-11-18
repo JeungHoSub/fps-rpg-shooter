@@ -27,8 +27,10 @@ Unity 1인칭 싱글플레이 좀비 슈터 + RPG. **비 오는 밤의 한국 �
 - 다음 할 일: **Phase 1 나머지** — 빛 반응(손전등·총구 화염이 망자를 끌어들임 = 손전등 위험) + 기본 룰(기본→엘리트→보스, 보스 처치 시 클리어)
 - 이후: Phase 2~6 (SPEC_V04), 오행·밤낮 순환 (CONCEPT_KR_HORROR)
 - **그래픽 결정됨 (2026-11-18): Mixamo 실사 망자 + 분위기형 배경.**
-  - 사용자가 Mixamo에서 좀비 캐릭터(With Skin)와 동작(Zombie Idle/Walk/Run/Attack/Death/Reaction, Without Skin, In Place)을 FBX로 받아
-    GitHub 웹 업로드로 `Assets/Resources/Mixamo/`에 올림 → 그걸 `ZombieRig`에 연결 (Mixamo 뼈 이름 `mixamorig:` 접두어는 이미 처리됨)
+  - **완료 (2026-11-18):** Mixamo API(사용자 토큰, 환경 네트워크 시크릿)로 `Romero` + 동작 8개를 Collada(DAE)로 받아 `Assets/Resources/Mixamo/`에 넣음.
+    FBX는 4K 텍스처 내장으로 110MB라 DAE로 받고 텍스처를 1K JPG로 줄임. 뼈 접두어 `mixamorig5_` (캐릭터마다 달라서 동작은 캐릭터별로 받아야 함).
+    `ZombieRig`: Mixamo 우선 로드 → 없으면 Quaternius. 비명(발견 시)·비틀거림(강타)·죽는 동작 재생. Romero 약 2.5만 정점 → '하'는 동시 10마리, 2본 스키닝.
+    받는 스크립트 예시: Mixamo API `/api/v1/animations/export` (X-Api-Key: mixamo2) → `/characters/{id}/monitor` 폴링 → job_result URL 다운로드.
   - 갓·도포·상투는 모델 위에 덧입힘(킹덤풍). 배경은 각진 도형을 둥글게·자연스럽게 다듬되 HD 630 '하' 품질 유지.
 
 ## 작업 습관

@@ -30,3 +30,9 @@ https://quaternius.com/packs/animatedzombie.html
 
 `Assets/Resources/Zombies/ZombieSmooth.fbx`, `ZombieTexture.png`
 애니메이션: Idle, Walk, Run, Crawl, Bite
+
+## 실사 망자 — Mixamo (Adobe, 무료 · 게임 내 사용 가능)
+https://www.mixamo.com — 사용자 계정으로 내려받음
+
+`Assets/Resources/Mixamo/Romero.dae` (텍스처 4K → 1K JPG로 축소)
+동작 (`Mixamo/Anims/`): Zombie Idle(Twitching) · Walking · Run · Attack(Swipe) · Death · Reaction Hit(Stumble Back) · Scream · Crawl
