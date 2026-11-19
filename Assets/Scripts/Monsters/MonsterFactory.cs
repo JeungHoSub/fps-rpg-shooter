@@ -237,15 +237,9 @@ namespace Hunt.Monsters
                 for (int i = 0; i < N; i++)
                 {
                     int a0 = ring * row + i, a1 = a0 + 1, b0 = a0 + row, b1 = b0 + 1;
-                    tri.AddRange(new[] { a0, a1, b0, a1, b1, b0 });   // 바깥
-                    tri.AddRange(new[] { a0, b0, a1, a1, b0, b1 });   // 안쪽 (양면)
+                    tri.AddRange(new[] { a0, b0, a1, a1, b0, b1 });   // 바깥 (안쪽은 DoubleSided가 만든다)
                 }
-            mesh = new Mesh { name = "Robe" };
-            mesh.SetVertices(v);
-            mesh.SetUVs(0, uv);
-            mesh.SetTriangles(tri, 0);
-            mesh.RecalculateNormals();
-            mesh.RecalculateBounds();
+            mesh = MeshUtil.DoubleSided("Robe", v, uv, tri);
             robeMeshes[key] = mesh;
             return mesh;
         }

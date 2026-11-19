@@ -201,25 +201,24 @@ namespace Hunt.Core
                 case Roof.Gable:
                 case Roof.Hip:
                 {
-                    float pitch = roof == Roof.Hip ? 30f : 24f;
-                    float half = (d / 2f + 0.7f) / Mathf.Cos(pitch * Mathf.Deg2Rad);
-                    float rise = Mathf.Sin(pitch * Mathf.Deg2Rad) * half / 2f;
-                    var mat = EnvMaterials.Get(roofKind, new Vector2(w + 1.2f, half), roofTint);
-                    Prim(PrimitiveType.Cube, new Vector3(0, h + rise, d / 4f + 0.2f), new Vector3(w + 1.2f, 0.12f, half), mat, g, Quaternion.Euler(pitch, 0, 0));
-                    Prim(PrimitiveType.Cube, new Vector3(0, h + rise, -d / 4f - 0.2f), new Vector3(w + 1.2f, 0.12f, half), mat, g, Quaternion.Euler(-pitch, 0, 0));
-                    // 용마루
-                    Prim(PrimitiveType.Cube, new Vector3(0, h + rise * 2f + 0.05f, 0), new Vector3(w + 1.3f, 0.22f, 0.32f), EnvMaterials.Plain(new Color(0.12f, 0.12f, 0.13f), 0.6f), g);
-                    // 박공 삼각벽 대신 막음판
-                    Box(new Vector3(w / 2f - 0.05f, h + rise * 0.8f, 0), new Vector3(0.1f, rise * 1.6f, d * 0.6f), wall, g);
-                    Box(new Vector3(-w / 2f + 0.05f, h + rise * 0.8f, 0), new Vector3(0.1f, rise * 1.6f, d * 0.6f), wall, g);
-                    if (roof == Roof.Hip)
+                    bool hanok = roof == Roof.Hip;
+                    float pitch = hanok ? 30f : 22f;
+                    float overhang = hanok ? 1.0f : 0.5f;
+                    float rise = Mathf.Tan(pitch * Mathf.Deg2Rad) * (d / 2f + overhang);
+                    var mat = EnvMaterials.Get(roofKind, new Vector2(w + 2f, d), roofTint);
+                    // 곡면 지붕: 기와집은 오목한 경사 + 들린 처마 귀, 농가는 곧은 함석
+                    CurvedRoof(g, w, d, h, rise, overhang, hanok ? 0.4f : 0f, hanok ? 0.55f : 0f, mat);
+                    // 박공 삼각벽
+                    GableWall(g, w, d, h, rise * d / 2f / (d / 2f + overhang), wall);
+                    // 용마루 (기와집은 양 끝이 솟는다)
+                    var ridgeMat = EnvMaterials.Plain(new Color(0.12f, 0.12f, 0.13f), 0.6f);
+                    Prim(PrimitiveType.Cube, new Vector3(0, h + rise + 0.08f, 0), new Vector3(w + 2f * overhang * 0.6f, 0.24f, 0.34f), ridgeMat, g, collider: false);
+                    if (hanok)
                     {
-                        // 기와집: 처마 끝이 살짝 들린 느낌 (모서리 추녀)
-                        var dark = EnvMaterials.Plain(new Color(0.1f, 0.1f, 0.11f), 0.6f);
                         foreach (var sx in new[] { -1f, 1f })
-                            foreach (var sz in new[] { -1f, 1f })
-                                Prim(PrimitiveType.Cube, new Vector3(sx * (w / 2f + 0.5f), h + 0.35f, sz * (d / 2f + 0.55f)), new Vector3(0.5f, 0.14f, 0.5f), dark, g,
-                                    Quaternion.Euler(sz * 18f, 0, -sx * 18f), collider: false);
+                            Prim(PrimitiveType.Cube, new Vector3(sx * (w / 2f + overhang * 0.55f), h + rise + 0.32f, 0), new Vector3(0.3f, 0.5f, 0.3f), ridgeMat, g,
+                                Quaternion.Euler(0, 0, -sx * 22f), collider: false);
+                        HanokFrame(g, w, d, h);
                     }
                     break;
                 }
@@ -253,6 +252,104 @@ namespace Hunt.Core
                 wf.minLevel = GfxLevel.High;
             }
             return g;
+        }
+
+        // ================================================================ 한국 지붕 (곡면)
+        /// <summary>
+        /// 맞배지붕을 곡면 메시로. concave = 경사가 오목하게 휘는 정도(처마 쪽이 완만), lift = 처마 귀가 들리는 높이(m).
+        /// 양면 메시 + 메시 충돌체 (총알이 지붕에 맞는다).
+        /// </summary>
+        static void CurvedRoof(Transform g, float w, float d, float h, float rise, float overhang, float concave, float lift, Material mat)
+        {
+            const int NX = 14, NT = 8;
+            float L = w + overhang * 2f;
+            float run = d / 2f + overhang;
+            float ridgeY = h + rise * (d / 2f) / run + 0.1f; // 벽 위에서 처마까지 덮이도록
+            var v = new List<Vector3>();
+            var uv = new List<Vector2>();
+            var tri = new List<int>();
+            foreach (float side in new[] { -1f, 1f })
+            {
+                int baseIdx = v.Count;
+                for (int it = 0; it <= NT; it++)
+                {
+                    float t = it / (float)NT;
+                    float shape = (1f - concave) * t + concave * (2f * t - t * t); // 오목한 경사
+                    for (int ix = 0; ix <= NX; ix++)
+                    {
+                        float sN = ix / (float)NX * 2f - 1f;
+                        float corner = sN * sN * sN * sN;
+                        float x = sN * L / 2f * (1f + 0.04f * t * corner);
+                        float z = side * (t * run + 0.25f * lift * t * corner);    // 귀가 바깥으로 살짝 뻗음 (안허리)
+                        float y = ridgeY - rise * shape + lift * t * t * corner;    // 귀가 들림 (앙곡)
+                        v.Add(new Vector3(x, y, z));
+                        uv.Add(new Vector2(x / 2.5f, t * run / 2.5f));
+                    }
+                }
+                int row = NX + 1;
+                for (int it = 0; it < NT; it++)
+                    for (int ix = 0; ix < NX; ix++)
+                    {
+                        int a0 = baseIdx + it * row + ix, a1 = a0 + 1, b0 = a0 + row, b1 = b0 + 1;
+                        // 바깥(위)을 보는 면만 넣고, 뒷면은 DoubleSided가 만든다
+                        if (side > 0) tri.AddRange(new[] { a0, b0, a1, a1, b0, b1 });
+                        else tri.AddRange(new[] { a0, a1, b0, a1, b1, b0 });
+                    }
+            }
+            var mesh = MeshUtil.DoubleSided("Roof", v, uv, tri);
+            var go = new GameObject("Roof");
+            go.transform.SetParent(g, false);
+            go.AddComponent<MeshFilter>().sharedMesh = mesh;
+            var r = go.AddComponent<MeshRenderer>();
+            r.sharedMaterial = mat;
+            go.AddComponent<MeshCollider>().sharedMesh = mesh;
+        }
+
+        /// <summary>양 옆 삼각 박공벽.</summary>
+        static void GableWall(Transform g, float w, float d, float h, float peak, K wall)
+        {
+            var mat = EnvMaterials.Get(wall, new Vector2(d, peak));
+            foreach (float sx in new[] { -1f, 1f })
+            {
+                float x = sx * (w / 2f - 0.02f);
+                var v = new List<Vector3> { new Vector3(x, h, -d / 2f), new Vector3(x, h, d / 2f), new Vector3(x, h + peak, 0f) };
+                var uv = new List<Vector2> { new Vector2(0, 0), new Vector2(d / 3f, 0), new Vector2(d / 6f, peak / 3f) };
+                var mesh = MeshUtil.DoubleSided("Gable", v, uv, new List<int> { 0, 1, 2 });
+                var go = new GameObject("GableWall");
+                go.transform.SetParent(g, false);
+                go.AddComponent<MeshFilter>().sharedMesh = mesh;
+                go.AddComponent<MeshRenderer>().sharedMaterial = mat;
+            }
+        }
+
+        /// <summary>한옥 뼈대: 둥근 기둥, 처마 밑 도리, 툇마루, 창호(문살) 문.</summary>
+        static void HanokFrame(Transform g, float w, float d, float h)
+        {
+            var wood = EnvMaterials.Get(K.WoodPlanks, new Vector2(1f, h), new Color(0.45f, 0.36f, 0.28f));
+            int cols = Mathf.Max(2, Mathf.RoundToInt(w / 2.5f));
+            for (int i = 0; i <= cols; i++)
+            {
+                float x = -w / 2f + w * i / cols;
+                foreach (float sz in new[] { -1f, 1f })
+                    Prim(PrimitiveType.Cylinder, new Vector3(x, h / 2f, sz * (d / 2f + 0.02f)), new Vector3(0.24f, h / 2f, 0.24f), wood, g);
+            }
+            // 처마 밑 도리
+            foreach (float sz in new[] { -1f, 1f })
+                Prim(PrimitiveType.Cube, new Vector3(0, h - 0.12f, sz * (d / 2f + 0.05f)), new Vector3(w + 0.4f, 0.22f, 0.22f), wood, g, collider: false);
+            // 툇마루 (앞쪽 나무 마루)
+            Prim(PrimitiveType.Cube, new Vector3(0, 0.45f, -d / 2f - 0.55f), new Vector3(w - 0.4f, 0.1f, 1.0f), EnvMaterials.Get(K.WoodPlanks, new Vector2(w, 1f), new Color(0.55f, 0.45f, 0.35f)), g);
+            // 창호: 한지 바른 문 + 띠살
+            var paper = EnvMaterials.Plain(new Color(0.75f, 0.7f, 0.58f), 0.1f);
+            var bar = EnvMaterials.Plain(new Color(0.22f, 0.16f, 0.11f), 0.3f);
+            for (int k = -1; k <= 1; k += 2)
+            {
+                var c = new Vector3(k * w * 0.18f, 1.25f, -d / 2f - 0.06f);
+                Prim(PrimitiveType.Cube, c, new Vector3(1.0f, 1.7f, 0.03f), paper, g, collider: false);
+                for (int i = 0; i < 5; i++)
+                    Prim(PrimitiveType.Cube, c + new Vector3(-0.4f + i * 0.2f, 0, -0.02f), new Vector3(0.03f, 1.7f, 0.02f), bar, g, collider: false);
+                for (int j = 0; j < 4; j++)
+                    Prim(PrimitiveType.Cube, c + new Vector3(0, -0.6f + j * 0.4f, -0.02f), new Vector3(1.0f, 0.03f, 0.02f), bar, g, collider: false);
+            }
         }
 
         static void Houses()

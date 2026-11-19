@@ -33,7 +33,9 @@ Unity 1인칭 싱글플레이 좀비 슈터 + RPG. **비 오는 밤의 한국 �
   - Phase 5: `CharacterStats.Soft` 수확 체감(16·28), `BalanceBonus`
   - Phase 6: `SFX.ShotFor`(무기별 총성), `HitFor`(계열별 타격음), 탄창식 장전(분리→삽입→빈 탄창이면 노리쇠), 산탄총 한 발씩 장전
   - 그래픽: Poly Haven 소품 모델 `Core/PropModels.cs` + `Resources/Props/`(장독대·LPG·드럼통·상자·바위·덤불·가로등 등), 망자 갓·상투·전립 `MonsterFactory.Headwear`, 무기 HUD 실루엣 `UI/WeaponIcon.cs`
-- 다음 할 일: 사용자 플레이 확인 → 밸런스 조정. 남은 그래픽: 건물(한옥·초가) 모델(무료 한국풍 모델 드묾), 망자 소복·도포 의상, 1인칭 총 모델 사실화
+- 완료 (2026-11-19 오후): 1인칭 실사 총(권총·저격총, `Weapons/RealGunModel.cs`, Poly Haven), 망자 소복·도포(`MonsterFactory.Robe`, 갓·상투 쓴 조선 망자만),
+  기와집 곡면 지붕(오목 경사·들린 처마 귀·용마루 끝)·박공벽·한옥 기둥/도리/툇마루/창호(`VillageBuilder.CurvedRoof`, `HanokFrame`). 양면 메시는 `Core/MeshUtil.DoubleSided`(노멀 상쇄 방지).
+- 다음 할 일: 사용자 플레이 확인 → 밸런스 조정. 남은 그래픽: 소총·기관단총·산탄총·경기관총 실사 모델(Quaternius Ultimate Gun 팩 — 구글 드라이브 다운로드 한도로 보류, 나중에 재시도), 초가집 사실화
 - 환경 '2번째'에 Poly Haven 호스트(api.polyhaven.com, dl.polyhaven.org) 허용됨. API는 User-Agent 필요.
 - **그래픽 결정됨 (2026-11-18): Mixamo 실사 망자 + 분위기형 배경.**
   - **완료 (2026-11-18):** Mixamo API(사용자 토큰, 환경 네트워크 시크릿)로 `Romero` + 동작 8개를 Collada(DAE)로 받아 `Assets/Resources/Mixamo/`에 넣음.
