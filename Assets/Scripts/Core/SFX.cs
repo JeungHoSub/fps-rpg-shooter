@@ -15,6 +15,10 @@ namespace Hunt.Core
         const int Voices = 10;
 
         static readonly AudioSource[] voices = new AudioSource[Voices];
+        // 총성 전용 음성 (연사해도 다른 소리를 밀어내지 않게)
+        const int GunVoices = 10;
+        static readonly AudioSource[] gunVoices = new AudioSource[GunVoices];
+        static int nextGun;
         static int nextVoice;
         static readonly Dictionary<string, AudioClip> cache = new Dictionary<string, AudioClip>();
         static float lastHurt;
@@ -29,7 +33,130 @@ namespace Hunt.Core
                 s.spatialBlend = 0f;
                 voices[i] = s;
             }
+            for (int i = 0; i < GunVoices; i++)
+            {
+                var s = host.AddComponent<AudioSource>();
+                s.playOnAwake = false;
+                s.spatialBlend = 0f;
+                s.priority = 0; // 총성은 가장 먼저
+                gunVoices[i] = s;
+            }
         }
+
+        // ------------------------------------------------------------------ 실제 녹음 총성
+        // Resources/Sounds/Guns/<이름>_1..3.ogg — The Free Firearm Sound Library (CC0, 실총 녹음)
+        // 무기 id → (녹음 이름, 음높이). 음높이를 낮추면 더 묵직한 총이 된다.
+        static readonly Dictionary<string, (string file, float pitch, float vol)> GunRec = new Dictionary<string, (string, float, float)>
+        {
+            { "pistol",      ("ppq", 1.0f, 0.8f) },
+            { "pistol2",     ("m1911", 1.0f, 0.85f) },
+            { "revolver",    ("sw642", 0.82f, 1f) },
+            { "ar",          ("ar15", 1.0f, 0.85f) },
+            { "k2c",         ("ak47", 1.04f, 0.85f) },
+            { "br762",       ("sks", 0.92f, 0.95f) },
+            { "smg",         ("m45", 1.06f, 0.75f) },
+            { "ump",         ("m45", 0.94f, 0.8f) },
+            { "vector",      ("ppsh", 1.08f, 0.75f) },
+            { "shotgun",     ("nova", 1.0f, 1f) },
+            { "autoshotgun", ("model12", 1.05f, 0.95f) },
+            { "doublebarrel",("cd", 0.9f, 1f) },
+            { "sniper",      ("tikka", 1.0f, 1f) },
+            { "dmr",         ("savage", 1.0f, 0.95f) },
+            { "antimat",     ("m1917", 0.72f, 1f) },
+            { "lmg",         ("ak47", 0.9f, 0.85f) },
+            { "k3",          ("ar15", 0.88f, 0.85f) },
+            { "hmg",         ("mosin", 0.85f, 0.8f) },
+        };
+        static readonly Dictionary<string, AudioClip[]> recCache = new Dictionary<string, AudioClip[]>();
+
+        static AudioClip[] LoadRecorded(string folder, string name, int max)
+        {
+            string key = folder + "/" + name;
+            if (recCache.TryGetValue(key, out var arr)) return arr;
+            var list = new List<AudioClip>();
+            for (int i = 1; i <= max; i++)
+            {
+                var c = Resources.Load<AudioClip>($"Sounds/{folder}/{name}_{i}");
+                if (c != null) list.Add(c);
+            }
+            if (list.Count == 0) { var single = Resources.Load<AudioClip>($"Sounds/{folder}/{name}"); if (single != null) list.Add(single); }
+            arr = list.ToArray();
+            recCache[key] = arr;
+            return arr;
+        }
+
+        static AudioClip Mech(string name, Func<AudioClip> fallback)
+        {
+            var a = LoadRecorded("Mech", name, 1);
+            return a.Length > 0 ? a[0] : Get(name, fallback);
+        }
+
+        /// <summary>
+        /// 총 한 발: 실총 녹음(있으면, 무작위 테이크) + 아주 낮은 '쿵' 층(가슴을 치는 저음) 으로 타격감을 더한다.
+        /// 녹음이 없으면 예전 합성음.
+        /// </summary>
+        public static void PlayShot(Hunt.Data.WeaponData d, float volume)
+        {
+            if (gunVoices[0] == null || d == null) return;
+            AudioClip clip = null;
+            float pitch = 1f, vol = volume;
+            if (GunRec.TryGetValue(d.id, out var rec))
+            {
+                var takes = LoadRecorded("Guns", rec.file, 3);
+                if (takes.Length > 0)
+                {
+                    clip = takes[UnityEngine.Random.Range(0, takes.Length)];
+                    pitch = rec.pitch;
+                    vol *= rec.vol;
+                }
+            }
+            if (clip == null) clip = ShotFor(d);
+            var s = gunVoices[nextGun];
+            nextGun = (nextGun + 1) % GunVoices;
+            s.pitch = pitch * (1f + UnityEngine.Random.Range(-0.035f, 0.035f));
+            s.volume = vol;
+            s.clip = clip;
+            s.Play();
+
+            // 저음 층: 무거운 총일수록 크게
+            float thump;
+            switch (d.weaponClass)
+            {
+                case WeaponClass.Shotgun: thump = 0.75f; break;
+                case WeaponClass.Sniper: thump = 0.8f; break;
+                case WeaponClass.LMG: thump = 0.45f; break;
+                case WeaponClass.Rifle: thump = 0.4f; break;
+                case WeaponClass.SMG: thump = 0.25f; break;
+                case WeaponClass.Pistol: thump = d.id == "revolver" ? 0.6f : 0.3f; break;
+                default: thump = 0f; break;
+            }
+            if (thump > 0f)
+            {
+                var t = gunVoices[nextGun];
+                nextGun = (nextGun + 1) % GunVoices;
+                t.pitch = (d.weaponClass == WeaponClass.Sniper || d.weaponClass == WeaponClass.Shotgun ? 0.85f : 1f) * (1f + UnityEngine.Random.Range(-0.05f, 0.05f));
+                t.volume = volume * thump;
+                t.clip = Thump;
+                t.Play();
+            }
+        }
+
+        /// <summary>가슴을 치는 저음 (55→38Hz로 떨어지는 짧은 사인 + 부드러운 클립).</summary>
+        static AudioClip Thump => Get("thump", () =>
+        {
+            int n = (int)(Rate * 0.22f);
+            var d = new float[n];
+            float ph = 0f;
+            for (int i = 0; i < n; i++)
+            {
+                float t = (float)i / Rate;
+                float hz = Mathf.Lerp(62f, 36f, Mathf.Clamp01(t / 0.18f));
+                ph += 2f * Mathf.PI * hz / Rate;
+                float env = (1f - Mathf.Exp(-t * 900f)) * Mathf.Exp(-t * 16f);
+                d[i] = SoftClip(Mathf.Sin(ph) * env * 1.8f);
+            }
+            return Clip("thump", d);
+        });
 
         /// <summary>가까이 다가온 망자의 그르렁 (낮고 길게).</summary>
         public static AudioClip Growl => Get("growl_near", () => MakeGrowl(0.9f, 38f, 0.25f));
@@ -114,8 +241,8 @@ namespace Hunt.Core
 
         /// <summary>탄피가 바닥에 떨어지는 소리.</summary>
         public static AudioClip Casing => Get("casing", () => MakeTone(0.06f, 4200f, 3800f, 0.12f));
-        public static AudioClip ShellIn => Get("shellin", () => MakeClick(0.08f, 1700f, 0.7f));
-        public static AudioClip Bolt => Get("bolt", () => MakeRack());
+        public static AudioClip ShellIn => Mech("shellin", () => MakeClick(0.08f, 1700f, 0.7f));
+        public static AudioClip Bolt => Mech("bolt", () => MakeRack());
 
         static AudioClip MakeFleshVariant(float len, float thumpHz, float body, float crack, int seed)
         {
@@ -187,9 +314,9 @@ namespace Hunt.Core
             return Clip("rocket", d);
         }
         public static AudioClip Empty => Get("empty", () => MakeClick(0.05f, 2600f, 0.5f));
-        public static AudioClip MagOut => Get("magout", () => MakeClick(0.09f, 900f, 0.8f));
-        public static AudioClip MagIn => Get("magin", () => MakeClick(0.12f, 1300f, 1f));
-        public static AudioClip Rack => Get("rack", () => MakeRack());
+        public static AudioClip MagOut => Mech("magout", () => MakeClick(0.09f, 900f, 0.8f));
+        public static AudioClip MagIn => Mech("magin", () => MakeClick(0.12f, 1300f, 1f));
+        public static AudioClip Rack => Mech("rack", () => MakeRack());
         public static AudioClip Swap => Get("swap", () => MakeClick(0.07f, 700f, 0.6f));
         public static AudioClip HitTick => Get("hit", () => MakeTone(0.045f, 1500f, 1500f, 0.5f));
         public static AudioClip WeakTick => Get("weak", () => MakeTone(0.06f, 2300f, 2600f, 0.6f));

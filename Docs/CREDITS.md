@@ -49,3 +49,10 @@ metal_trash_can · rusted_spade_01 · machete(근접 무기) · stick_grenade(�
 
 ## 글꼴 — 나눔고딕·나눔명조 (SIL Open Font License, Google Fonts)
 `Assets/Resources/Fonts/` — 휴대폰에서 한글이 깨지지 않도록 게임에 포함 (라이선스 전문: OFL-Nanum.txt)
+
+## 총소리 (실제 녹음, CC0)
+- **The Free Firearm Sound Library** — Ben Jaszczak, Brian Nelson, Kevin Heras, Matthew Nanney (Still North Media). CC0.
+  출처: https://opengameart.org/content/the-free-firearm-sound-library
+  → `Assets/Resources/Sounds/Guns/` (한 발씩 잘라 44.1kHz OGG로 변환, 무기마다 음높이 조정은 `Core/SFX.cs` `GunRec`)
+- 장전 소리 (CC0, OpenGameArt): gun-reload-sounds, gun-reload-sound-effects (singlebullet, clipload)
+  → `Assets/Resources/Sounds/Mech/` (magout·magin·bolt·rack·shellin)

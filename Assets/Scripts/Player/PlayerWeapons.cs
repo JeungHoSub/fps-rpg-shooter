@@ -509,7 +509,7 @@ namespace Hunt.Player
                 if (wc != WeaponClass.Shotgun && wc != WeaponClass.Sniper) FX.Casing(mz - ct.forward * 0.35f + ct.right * 0.03f, ct.right, ct.up, false);
                 FX.MuzzleSmoke(mz, ct.forward, wc == WeaponClass.Shotgun || wc == WeaponClass.Sniper ? 2.2f : 0.7f);
             }
-            SFX.Play(SFX.ShotFor(w.data), 0.85f);
+            SFX.PlayShot(w.data, 0.9f); // 실총 녹음 + 저음 층
             // 탄피 떨어지는 소리 (펌프·볼트식은 장전 동작 때)
             bool manual = (w.data.weaponClass == WeaponClass.Shotgun && !w.data.automatic) || (w.data.weaponClass == WeaponClass.Sniper && w.data.rpm < 100f);
             if (w.data.weaponClass != WeaponClass.Flamethrower && w.data.weaponClass != WeaponClass.Launcher && !manual)
