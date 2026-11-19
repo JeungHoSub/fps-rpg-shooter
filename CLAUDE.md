@@ -55,6 +55,17 @@ Unity 1인칭 싱글플레이 좀비 슈터 + RPG. **비 오는 밤의 한국 �
   - 그래픽: Poly Haven 소품 모델 `Core/PropModels.cs` + `Resources/Props/`(장독대·LPG·드럼통·상자·바위·덤불·가로등 등), 망자 갓·상투·전립 `MonsterFactory.Headwear`, 무기 HUD 실루엣 `UI/WeaponIcon.cs`
 - 완료 (2026-11-19 오후): 1인칭 실사 총(권총·저격총, `Weapons/RealGunModel.cs`, Poly Haven), 망자 소복·도포(`MonsterFactory.Robe`, 갓·상투 쓴 조선 망자만),
   기와집 곡면 지붕(오목 경사·들린 처마 귀·용마루 끝)·박공벽·한옥 기둥/도리/툇마루/창호(`VillageBuilder.CurvedRoof`, `HanokFrame`). 양면 메시는 `Core/MeshUtil.DoubleSided`(노멀 상쇄 방지).
+- 완료 (2026-11-19 저녁, 사용자 피드백 12항목 중):
+  - 보스 수정: 지킴(밤 절반 지나면)·소탕(엘리트 뒤)에도 보스, 엘리트 75초 강제 전환, 보스는 수 제한 무시·22~30m 근처·위치 표시 (`WaveManager`)
+  - 망자 유형 8종 `DefaultContent.ZombieKinds` (기본·단단·빠름·광폭·물어뜯기·철벽·거구·추적, 체력/피해/이동/공격간격 배율), 살빛 구분
+  - 처치 드롭 `Player/Pickup.cs` (키트·회복제·탄창, 자석 줍기), 앉기 Ctrl (`PlayerController.IsCrouching`, 탄퍼짐 ×0.6·반동 ×0.65)
+  - 능력치 [+1]/[전부] 버튼 + 칸 눈금 `UIKit.StatCells`/`SmallButton`
+  - 실총 녹음 총성 `Resources/Sounds/Guns` (Free Firearm Sound Library CC0) + `SFX.PlayShot`(녹음+저음층), 장전음 `Sounds/Mech`
+  - 총 모델 `Resources/Guns/<id>.txt` + `Weapons/PackGunModel.cs` (Quaternius 팩·M4A1·화염방사기, OpenGameArt CC0). 변환 = OBJ → 총 공간 텍스트
+- **자동 진행 (사용자 요청 2026-11-19): 사용자가 그만하라고 할 때까지 예약 작업으로 계속 업그레이드.** 남은 큐(순서대로):
+  1. 맵 구조 덜 딱딱하게·작게 (±48 → ±36 정도, 구불길·지형 높낮이·불규칙 배치) 2. 추가 능력(기질·능력 슬롯) UI 다듬기 3. HUD 앉기 표시·보급품 표시
+  4. 유탄·로켓발사기 CC0 모델 5. 망자 유형별 이름표/외형 차이 강화 6. 초가집 사실화 7. 밸런스 점검
+  - 매번: 컴파일 확인 → 커밋 → 푸시 → 바뀐 점 보고. 클라우드에선 게임 화면 캡처 불가 (유니티 실행 불가) — 모델/UI 미리보기 이미지만 가능.
 - 다음 할 일: 사용자 플레이 확인 → 밸런스 조정. 남은 그래픽: 소총·기관단총·산탄총·경기관총 실사 모델(Quaternius Ultimate Gun 팩 — 구글 드라이브 다운로드 한도로 보류, 나중에 재시도), 초가집 사실화
 - 환경 '2번째'에 Poly Haven 호스트(api.polyhaven.com, dl.polyhaven.org) 허용됨. API는 User-Agent 필요.
 - **그래픽 결정됨 (2026-11-18): Mixamo 실사 망자 + 분위기형 배경.**
