@@ -18,6 +18,18 @@ namespace Hunt.Core
             var go = new GameObject("HUNT_Game");
             go.AddComponent<GameManager>();
             go.AddComponent<HUD>();
+            go.AddComponent<MobileControls>();
+
+            if (Application.isMobilePlatform)
+            {
+                // 가로 화면 고정, 화면 꺼짐 방지
+                Screen.orientation = ScreenOrientation.AutoRotation;
+                Screen.autorotateToPortrait = false;
+                Screen.autorotateToPortraitUpsideDown = false;
+                Screen.autorotateToLandscapeLeft = true;
+                Screen.autorotateToLandscapeRight = true;
+                Screen.sleepTimeout = SleepTimeout.NeverSleep;
+            }
         }
     }
 }

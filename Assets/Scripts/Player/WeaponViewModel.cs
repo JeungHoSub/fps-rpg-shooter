@@ -110,8 +110,8 @@ namespace Hunt.Player
             bool input = gm.AcceptsGameplayInput;
 
             // 마우스 스웨이: 시점을 돌리면 총이 살짝 늦게 따라온다
-            float mx = input ? Input.GetAxis("Mouse X") : 0f;
-            float my = input ? Input.GetAxis("Mouse Y") : 0f;
+            float mx = input ? GameInput.LookX : 0f;
+            float my = input ? GameInput.LookY : 0f;
             float swayK = 1f - aim * 0.85f;
             var targetRot = new Vector2(Mathf.Clamp(my * 2f, -5f, 5f), Mathf.Clamp(-mx * 2f, -5f, 5f)) * swayK;
             swayRot = Vector2.Lerp(swayRot, targetRot, dt * 8f);

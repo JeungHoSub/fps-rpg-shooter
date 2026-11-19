@@ -73,9 +73,9 @@ namespace Hunt.Player
 
             if (gm.AcceptsGameplayInput)
             {
-                if (Input.GetKeyDown(KeyCode.Q)) TryRage();
-                if (Input.GetKeyDown(KeyCode.E)) TryRegen();
-                if (Input.GetKeyDown(KeyCode.H)) TryAntidote();
+                if (GameInput.RageDown) TryRage();
+                if (GameInput.RegenDown) TryRegen();
+                if (GameInput.AntidoteDown) TryAntidote();
             }
 
             if (frenzyTime > 0f)

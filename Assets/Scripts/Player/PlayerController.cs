@@ -1,4 +1,5 @@
 using Hunt.Core;
+using Hunt.Monsters;
 using UnityEngine;
 
 namespace Hunt.Player
@@ -66,6 +67,31 @@ namespace Hunt.Player
         /// <summary>시점 반동 (도). 스프링처럼 튀었다가 돌아온다.</summary>
         public void AddPunch(float pitchUp, float yaw) { punchVel += new Vector2(yaw, pitchUp) * 28f; }
 
+        /// <summary>조준점 근처(7° 안, 45m 안, 보이는) 가장 가까운 망자.</summary>
+        Monster FindAssistTarget(out Vector3 point)
+        {
+            point = Vector3.zero;
+            Monster best = null;
+            float bestAngle = player.Weapons.IsAiming ? 4f : 7f;
+            Vector3 eye = cam.transform.position, fwd = cam.transform.forward;
+            foreach (var m in Monster.Alive)
+            {
+                if (m == null || m.IsDead) continue;
+                Vector3 p = m.transform.position + Vector3.up * 1.25f * m.Data.scale;
+                Vector3 d = p - eye;
+                float dist = d.magnitude;
+                if (dist > 45f || dist < 0.5f) continue;
+                float ang = Vector3.Angle(fwd, d);
+                if (ang >= bestAngle) continue;
+                if (Physics.Raycast(eye, d / dist, out var hit, dist, ~((1 << 2) | (1 << 1)), QueryTriggerInteraction.Ignore)
+                    && hit.collider.GetComponent<MonsterPart>() == null && hit.distance < dist - 1f) continue; // 벽 뒤
+                bestAngle = ang;
+                best = m;
+                point = p;
+            }
+            return best;
+        }
+
         public void AddRecoil(Vector2 kick) { recoil += kick; }
 
         /// <summary>화면 흔들림 추가 (도 단위).</summary>
@@ -90,8 +116,20 @@ namespace Hunt.Player
             if (input)
             {
                 float sens = GameSettings.MouseSensitivity * LookMultiplier;
-                yaw += Input.GetAxis("Mouse X") * sens;
-                pitch -= Input.GetAxis("Mouse Y") * sens;
+                bool assist = GameInput.Mobile && GameSettings.AimAssist;
+                Vector3 aimPoint = Vector3.zero;
+                Monster assistTarget = assist ? FindAssistTarget(out aimPoint) : null;
+                if (assistTarget != null) sens *= 0.6f; // 망자 위에서는 시점이 '끈적'하게 (지나치기 어렵게)
+                yaw += GameInput.LookX * sens;
+                pitch -= GameInput.LookY * sens;
+                if (assistTarget != null)
+                {
+                    // 조준 보조: 조준점이 망자 가슴 쪽으로 살짝 끌린다 (쏘는 중엔 더 강하게)
+                    var look = Quaternion.LookRotation(aimPoint - cam.transform.position);
+                    float k = (GameInput.Fire ? 5f : 2.2f) * dt;
+                    yaw += Mathf.DeltaAngle(yaw, look.eulerAngles.y) * k;
+                    pitch += Mathf.DeltaAngle(pitch, look.eulerAngles.x) * k;
+                }
                 pitch = Mathf.Clamp(pitch, -85f, 85f);
             }
             float jitter = player.Infection.AimJitter;
@@ -116,12 +154,12 @@ namespace Hunt.Player
             Vector3 wish = Vector3.zero;
             if (input)
             {
-                wish = transform.right * Input.GetAxisRaw("Horizontal") + transform.forward * Input.GetAxisRaw("Vertical");
+                wish = transform.right * GameInput.MoveX + transform.forward * GameInput.MoveY;
                 if (wish.sqrMagnitude > 1f) wish.Normalize();
             }
             if (sprintBlock > 0f) sprintBlock -= dt;
-            bool forward = input && Input.GetAxisRaw("Vertical") > 0.1f;
-            bool sprint = forward && Input.GetKey(KeyCode.LeftShift) && !player.Weapons.IsAiming && sprintBlock <= 0f && !Exhausted && !player.IsUsingItem;
+            bool forward = input && GameInput.MoveY > 0.1f;
+            bool sprint = forward && GameInput.Sprint && !player.Weapons.IsAiming && sprintBlock <= 0f && !Exhausted && !player.IsUsingItem;
             if (BoostTime > 0f) BoostTime -= dt;
             if (sprint) UseStamina(16f * dt);
             else
@@ -137,7 +175,7 @@ namespace Hunt.Player
             if (cc.isGrounded)
             {
                 verticalVel = -1f;
-                if (input && Input.GetKeyDown(KeyCode.Space) && UseStamina(10f)) verticalVel = jumpSpeed;
+                if (input && GameInput.JumpDown && UseStamina(10f)) verticalVel = jumpSpeed;
             }
             else
             {

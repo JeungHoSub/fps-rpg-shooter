@@ -22,6 +22,31 @@ namespace Hunt.Core
             set { volume = Mathf.Clamp01(value); AudioListener.volume = volume.Value; Save(VolKey, volume.Value); }
         }
 
+        // ---- 모바일 ----
+        const string AutoFireKey = "hunt.autofire", AssistKey = "hunt.aimassist", PreviewKey = "hunt.mobilepreview";
+        static bool? autoFire, aimAssist, forceMobile;
+
+        /// <summary>자동 사격: 조준점에 망자가 오면 알아서 쏜다 (터치 조작 기본값 켜짐).</summary>
+        public static bool AutoFire
+        {
+            get { if (autoFire == null) autoFire = Load(AutoFireKey, 1f) > 0.5f; return autoFire.Value; }
+            set { autoFire = value; Save(AutoFireKey, value ? 1f : 0f); }
+        }
+
+        /// <summary>조준 보조: 망자 근처에서 조준이 살짝 끌린다 (터치 조작에서만).</summary>
+        public static bool AimAssist
+        {
+            get { if (aimAssist == null) aimAssist = Load(AssistKey, 1f) > 0.5f; return aimAssist.Value; }
+            set { aimAssist = value; Save(AssistKey, value ? 1f : 0f); }
+        }
+
+        /// <summary>에디터·PC에서 터치 조작 화면을 마우스로 미리 써 보기.</summary>
+        public static bool ForceMobileControls
+        {
+            get { if (forceMobile == null) forceMobile = Load(PreviewKey, 0f) > 0.5f; return forceMobile.Value; }
+            set { forceMobile = value; Save(PreviewKey, value ? 1f : 0f); }
+        }
+
         public static void Apply() { AudioListener.volume = Volume; }
 
         static float Load(string key, float def)

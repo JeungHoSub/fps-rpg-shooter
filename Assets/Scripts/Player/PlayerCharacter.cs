@@ -91,8 +91,8 @@ namespace Hunt.Player
                 }
             }
             if (!gm.AcceptsGameplayInput) return;
-            if (Input.GetKeyDown(KeyCode.X)) UseKit();
-            if (Input.GetKeyDown(KeyCode.C)) UseDrink();
+            if (GameInput.KitDown) UseKit();
+            if (GameInput.DrinkDown) UseDrink();
         }
 
         void UseKit()

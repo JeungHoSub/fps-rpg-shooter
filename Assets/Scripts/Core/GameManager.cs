@@ -7,6 +7,7 @@ using Hunt.Stats;
 using Hunt.UI;
 using Hunt.Waves;
 using Hunt.Weapons;
+using Hunt.Core;
 using UnityEngine;
 
 namespace Hunt.Core
@@ -293,11 +294,11 @@ namespace Hunt.Core
         void Update()
         {
             QualityManager.Tick(Time.unscaledDeltaTime);
-            bool cursorFree = !AcceptsGameplayInput;
+            bool cursorFree = !AcceptsGameplayInput || GameInput.Mobile; // 터치 조작(미리보기 포함)은 커서를 잠그지 않는다
             Cursor.lockState = cursorFree ? CursorLockMode.None : CursorLockMode.Locked;
             Cursor.visible = cursorFree;
 
-            if ((State == GameState.Playing || State == GameState.Intermission) && Input.GetKeyDown(KeyCode.Escape))
+            if ((State == GameState.Playing || State == GameState.Intermission) && GameInput.PauseDown)
                 TogglePause();
             if (Paused) return;
             Time.timeScale = Time.unscaledTime < hitStopUntil ? 0.06f : 1f;
@@ -306,12 +307,12 @@ namespace Hunt.Core
             {
                 case GameState.Intermission:
                     IntermissionTime -= Time.deltaTime;
-                    if (Input.GetKeyDown(KeyCode.Tab)) MenuOpen = !MenuOpen;
-                    if (IntermissionTime <= 0f || Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
+                    if (GameInput.MenuDown) MenuOpen = !MenuOpen;
+                    if (IntermissionTime <= 0f || GameInput.ConfirmDown)
                         StartNextWave();
                     break;
                 case GameState.GameOver:
-                    if (Input.GetKeyDown(KeyCode.R)) Restart();
+                    if (GameInput.RestartDown) Restart();
                     break;
             }
         }

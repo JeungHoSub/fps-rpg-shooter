@@ -91,6 +91,9 @@ namespace Hunt.Player
             if (gm == null || !gm.IsWorldRunning || player == null || player.IsDead || Current == null) return;
             float dt = Time.deltaTime;
             bool input = gm.AcceptsGameplayInput;
+            // 자동 사격 (터치 조작): 조준점에 망자가 있으면 방아쇠를 당긴 것으로 친다
+            GameInput.AutoTarget = input && GameInput.Mobile && GameSettings.AutoFire && Mode == Hand.Gun
+                                   && !player.IsUsingItem && AutoFireTarget();
             var w = Current;
             var stats = player.Stats;
             var ctrl = player.Controller;
@@ -101,23 +104,23 @@ namespace Hunt.Player
             // ---- 무기 교체 ----
             if (input && !player.IsUsingItem)
             {
-                if (Input.GetKeyDown(KeyCode.Alpha1)) SelectKey(0);
-                if (Input.GetKeyDown(KeyCode.Alpha2)) SelectKey(1);
-                if (Input.GetKeyDown(KeyCode.Alpha3)) SelectKey(2);
-                if (Input.GetKeyDown(KeyCode.Alpha4)) SelectKey(3);
-                if (Input.GetKeyDown(KeyCode.Alpha5)) SelectKey(4);
-                float scroll = Input.GetAxis("Mouse ScrollWheel");
+                if (GameInput.SlotDown(0)) SelectKey(0);
+                if (GameInput.SlotDown(1)) SelectKey(1);
+                if (GameInput.SlotDown(2)) SelectKey(2);
+                if (GameInput.SlotDown(3)) SelectKey(3);
+                if (GameInput.SlotDown(4)) SelectKey(4);
+                float scroll = GameInput.Scroll;
                 if (scroll > 0.01f) CycleKey(-1);
                 else if (scroll < -0.01f) CycleKey(1);
                 // V: 빠른 칼질, G: 빠른 수류탄
-                if (Input.GetKeyDown(KeyCode.V) && Mode != Hand.Melee && meleeCooldown <= 0f)
+                if (GameInput.MeleeDown && Mode != Hand.Melee && meleeCooldown <= 0f)
                 {
                     returnMode = Mode;
                     Mode = Hand.Melee;
                     quickMelee = true;
                     StartSwing();
                 }
-                if (Input.GetKeyDown(KeyCode.G)) QuickGrenade();
+                if (GameInput.GrenadeDown) QuickGrenade();
             }
             if (swapTime > 0f) swapTime -= dt;
             if (meleeCooldown > 0f) meleeCooldown -= dt;
@@ -131,7 +134,7 @@ namespace Hunt.Player
                 ctrl.LookMultiplier = 1f;
                 ctrl.MoveMultiplier = 1f;
                 CurrentSpread = 0f;
-                bool click = input && Input.GetMouseButtonDown(0) && swapTime <= 0f && !player.IsUsingItem;
+                bool click = input && GameInput.FireDown && swapTime <= 0f && !player.IsUsingItem;
                 if (click && Mode == Hand.Melee) StartSwing();
                 if (click && Mode == Hand.Gadget) UseGadget(Gadget);
                 return;
@@ -172,10 +175,10 @@ namespace Hunt.Player
                 if (reloadStage == 2 && reloadFromEmpty && p > 0.86f) { SFX.PlayPitched(SFX.Bolt, 0.85f, pitch); reloadStage = 3; }
                 if (reloadTime <= 0f) FinishReload(w);
             }
-            else if (input && Input.GetKeyDown(KeyCode.R)) StartReload(w);
+            else if (input && GameInput.ReloadDown) StartReload(w);
 
             // ---- 조준 (ADS): 조준 속도 = 무기 기본 × 제어 스탯 × 무게 페널티 ----
-            bool wantAim = input && Input.GetMouseButton(1) && !IsReloading && !ctrl.IsSprinting;
+            bool wantAim = input && GameInput.Aim && !IsReloading && !ctrl.IsSprinting;
             float adsSpeed = stats.AdsSpeedMult * ctrl.WeightPenalty / Mathf.Max(0.05f, w.data.adsTime);
             aim = Mathf.MoveTowards(aim, wantAim ? 1f : 0f, adsSpeed * dt);
             cam.fieldOfView = Mathf.Lerp(PlayerController.BaseFov, w.data.adsFov, aim);
@@ -186,7 +189,7 @@ namespace Hunt.Player
             CurrentSpread = ComputeSpread(w);
 
             // ---- 사격 ----
-            bool trigger = input && !player.IsUsingItem && (w.data.automatic ? Input.GetMouseButton(0) : Input.GetMouseButtonDown(0));
+            bool trigger = input && !player.IsUsingItem && (w.data.automatic ? GameInput.Fire : GameInput.FireDown);
             // 한 발씩 넣는 중이면 쏠 수 있다 (넣은 만큼만)
             if (trigger && shellReload && w.ammoInMag > 0) { shellReload = false; reloadTime = reloadTotal = 0f; }
             if (trigger && fireCooldown <= 0f && swapTime <= 0f && !IsReloading)
@@ -194,7 +197,7 @@ namespace Hunt.Player
                 if (ctrl.IsSprinting) ctrl.CancelSprint();
                 if (w.ammoInMag > 0) Fire(w);
                 else if (w.reserve > 0) StartReload(w);
-                else if (Input.GetMouseButtonDown(0)) SFX.Play(SFX.Empty, 0.8f);
+                else if (GameInput.FireDownRaw) SFX.Play(SFX.Empty, 0.8f);
             }
 
             // 사격을 멈추면 반동 회복, 반동 패턴 인덱스 리셋
@@ -389,6 +392,13 @@ namespace Hunt.Player
                     break;
             }
             if (Mode == Hand.Gadget && GadgetCount[(int)g] <= 0) NextGadget();
+        }
+
+        bool AutoFireTarget()
+        {
+            var t = cam.transform;
+            return Physics.Raycast(t.position, t.forward, out var hit, 60f, RaycastMask, QueryTriggerInteraction.Ignore)
+                   && hit.collider.GetComponent<MonsterPart>() != null;
         }
 
         void Swap(int index)

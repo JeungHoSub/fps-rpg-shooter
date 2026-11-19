@@ -44,7 +44,7 @@ namespace Hunt.Player
         {
             var gm = GameManager.Instance;
             if (spot == null || gm == null) return;
-            if (gm.AcceptsGameplayInput && Input.GetKeyDown(KeyCode.F))
+            if (gm.AcceptsGameplayInput && GameInput.FlashlightDown)
             {
                 if (Disabled && !spot.enabled) Hunt.UI.HUD.Notify("이번 밤은 손전등을 쓸 수 없다", new Color(1f, 0.6f, 0.4f));
                 else
