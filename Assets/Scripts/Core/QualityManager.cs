@@ -42,6 +42,9 @@ namespace Hunt.Core
         /// <summary>내장 그래픽이나 VRAM/RAM이 적으면 '하', 넉넉하면 '상'.</summary>
         static GfxLevel Detect()
         {
+            // 휴대폰: 기본 '하', 램 8GB 이상·8코어 고급 기기만 '중'
+            if (Application.isMobilePlatform)
+                return SystemInfo.systemMemorySize >= 7500 && SystemInfo.processorCount >= 8 ? GfxLevel.Medium : GfxLevel.Low;
             string gpu = (SystemInfo.graphicsDeviceName ?? "").ToLowerInvariant();
             int vram = SystemInfo.graphicsMemorySize;
             int ram = SystemInfo.systemMemorySize;
@@ -60,9 +63,22 @@ namespace Hunt.Core
             Apply();
         }
 
+        static int nativeW, nativeH;
+
         static void Apply()
         {
             Application.targetFrameRate = 60;
+            // 휴대폰: 렌더 해상도를 낮춰 발열·프레임을 잡는다 (UI도 같은 비율로 그려짐)
+            if (Application.isMobilePlatform && !Application.isEditor)
+            {
+                if (nativeW == 0)
+                {
+                    nativeW = Mathf.Max(Screen.width, Screen.height);
+                    nativeH = Mathf.Min(Screen.width, Screen.height);
+                }
+                float rs = Level == GfxLevel.Low ? 0.6f : Level == GfxLevel.Medium ? 0.75f : 0.9f;
+                Screen.SetResolution(Mathf.RoundToInt(nativeW * rs), Mathf.RoundToInt(nativeH * rs), true);
+            }
             QualitySettings.vSyncCount = 0; // 프레임 제한은 targetFrameRate로 (에디터에서도 동작)
             QualitySettings.pixelLightCount = Level == GfxLevel.Low ? 1 : Level == GfxLevel.Medium ? 4 : 8;
             QualitySettings.shadows = Level == GfxLevel.Low ? ShadowQuality.Disable : Level == GfxLevel.Medium ? ShadowQuality.HardOnly : ShadowQuality.All;

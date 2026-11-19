@@ -46,3 +46,6 @@ metal_trash_can · rusted_spade_01 · machete(근접 무기) · stick_grenade(�
 
 ## 1인칭 총 — Poly Haven (CC0)
 `Assets/Resources/Props/` service_pistol (권총), bolt_action_rifle_7_62 (저격총, 조준경·감개는 _acc 텍스처)
+
+## 글꼴 — 나눔고딕·나눔명조 (SIL Open Font License, Google Fonts)
+`Assets/Resources/Fonts/` — 휴대폰에서 한글이 깨지지 않도록 게임에 포함 (라이선스 전문: OFL-Nanum.txt)

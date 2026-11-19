@@ -15,7 +15,7 @@ namespace Hunt.UI
             UIKit.Fill(new Rect(0, 0, W, H), new Color(0.02f, 0.01f, 0.015f, 0.7f));
             UIKit.Vignette(W, H, new Color(0, 0, 0, 0.9f));
 
-            var r = new Rect(W / 2 - 320, H / 2 - 370, 640, 740);
+            var r = new Rect(W / 2 - 320, H / 2 - 450, 640, 900);
             UIKit.Panel(r, "숨  을  고 른 다");
 
             float y = r.y + 90;
@@ -52,7 +52,18 @@ namespace Hunt.UI
                 $"현재 <color=#{UIKit.Hex(fpsCol)}>{QualityManager.Fps:0} FPS</color>   ·   {(QualityManager.AutoDetected ? "사양에 맞춰 자동 선택됨" : "직접 고름")}", 14, UITheme.BoneDim);
             y += 22;
             UIKit.Text(new Rect(r.x + 60, y, r.width - 120, 22), QualityManager.DeviceSummary, 13, UITheme.Ash);
-            y += 40;
+            y += 36;
+
+            // 터치 조작 설정
+            float tw = (r.width - 120 - 12) / 3f;
+            if (UIKit.Button(new Rect(r.x + 60, y, tw, 52), "자동 사격", 16, GameSettings.AutoFire, true, GameSettings.AutoFire ? "켜짐" : "꺼짐"))
+                GameSettings.AutoFire = !GameSettings.AutoFire;
+            if (UIKit.Button(new Rect(r.x + 66 + tw, y, tw, 52), "조준 보조", 16, GameSettings.AimAssist, true, GameSettings.AimAssist ? "켜짐" : "꺼짐"))
+                GameSettings.AimAssist = !GameSettings.AimAssist;
+            if (!Application.isMobilePlatform &&
+                UIKit.Button(new Rect(r.x + 72 + tw * 2, y, tw, 52), "터치 미리보기", 16, GameSettings.ForceMobileControls, true, GameSettings.ForceMobileControls ? "켜짐" : "꺼짐"))
+                GameSettings.ForceMobileControls = !GameSettings.ForceMobileControls;
+            y += 70;
 
             UIKit.Divider(new Rect(r.x + 60, y, r.width - 120, 10));
             y += 28;

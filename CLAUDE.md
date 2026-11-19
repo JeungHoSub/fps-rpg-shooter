@@ -17,6 +17,15 @@ Unity 1인칭 싱글플레이 좀비 슈터 + RPG. **비 오는 밤의 한국 �
 - 여기(클라우드)에서는 유니티 실행 불가 → 변경 후 컴파일만 확인 가능:
   dotnet SDK + NuGet `UnityEngine.Modules 2021.3.33` 참조로 `Assets/Scripts/**/*.cs` 빌드 (2022+ API는 `#if UNITY_2022_2_OR_NEWER`).
 
+## 모바일 앱 (2026-11-19 방향 전환: PC보다 앱. 핵심 = 마구 쏘는 쾌감·타격감·긴장감, 기능 추가보다 잘 돌아가는 것)
+- 입력은 전부 `Core/GameInput` 경유 (Input.* 직접 호출 금지). PC=키보드·마우스, 휴대폰=`UI/MobileControls` 터치(실행 순서 -200).
+- 자동 사격(`GameInput.AutoTarget`, 조준점 레이캐스트) · 조준 보조(`PlayerController.FindAssistTarget`) · 설정은 `GameSettings`(Esc 메뉴에서 토글).
+- 에디터 시험: 메뉴 Hunt → 모바일 조작 미리보기 (마우스 = 손가락 하나). 터치 모드는 커서 잠금 안 함.
+- 휴대폰: 품질 기본 '하'(고급기 '중'), 렌더 해상도 60/75/90%, 가로 고정, 화면 꺼짐 방지, 글꼴은 `Resources/Fonts` 나눔(OFL).
+- 빌드: `Assets/Editor/HuntBuild.cs` 메뉴 Hunt → 안드로이드 APK 만들기 / USB로 바로 설치. 빈 씬 `Assets/Scenes/Main.unity` 자동 생성,
+  IL2CPP+ARM64, minSdk 24, Standard·Sprites 셰이더 항상 포함 + `Resources/ShaderKeep` 키워드 재질(런타임 재질 분홍색 방지).
+- 에디터 코드 컴파일 확인: NuGet `Unity3D.UnityEditor 2018.1.6-f1` 참조 추가 (`UnityEditor 2019.3.2.1` 패키지는 비어 있음).
+
 ## UI 톤 (한국풍)
 먹 바탕 + 한지색 글씨 + 붉은색은 낙관(도장)에만. 제목 궁서체. 한자·금색·마름모 쓰지 않음 (중국풍 피드백 있었음).
 

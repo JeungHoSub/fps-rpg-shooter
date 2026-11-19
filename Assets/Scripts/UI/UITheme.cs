@@ -46,8 +46,11 @@ namespace Hunt.UI
             styles.Clear();
 
             // 제목: 궁서체 (윈도우 기본 붓글씨체) → 없으면 바탕
-            Serif = TryFont(new[] { "Gungsuh", "궁서", "GungsuhChe", "궁서체", "Batang", "바탕", "Nanum Myeongjo", "Noto Serif KR", "Noto Serif CJK KR", "Malgun Gothic" }, 28);
-            Sans = TryFont(new[] { "Malgun Gothic", "맑은 고딕", "Noto Sans KR", "Noto Sans CJK KR", "Apple SD Gothic Neo", "Arial" }, 20);
+            // 휴대폰에는 한글 OS 글꼴이 보장되지 않으므로 게임에 넣은 나눔 글꼴을 먼저 쓴다 (OFL)
+            var bundledSerif = Resources.Load<Font>("Fonts/NanumMyeongjo-Bold");
+            var bundledSans = Resources.Load<Font>("Fonts/NanumGothic-Regular");
+            Serif = Application.isMobilePlatform && bundledSerif != null ? bundledSerif : TryFont(new[] { "Gungsuh", "궁서", "GungsuhChe", "궁서체", "Batang", "바탕", "Nanum Myeongjo", "Noto Serif KR", "Noto Serif CJK KR", "Malgun Gothic" }, 28);
+            Sans = Application.isMobilePlatform && bundledSans != null ? bundledSans : TryFont(new[] { "Malgun Gothic", "맑은 고딕", "Noto Sans KR", "Noto Sans CJK KR", "Apple SD Gothic Neo", "Arial" }, 20);
 
             Pixel = Make(2, 2, (x, y) => Color.white);
             var rnd = new System.Random(7);
