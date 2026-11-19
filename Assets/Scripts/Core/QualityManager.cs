@@ -18,11 +18,17 @@ namespace Hunt.Core
         public static event System.Action Changed;
 
         // ---- 단계별 수치 ----
-        public static float RainRate => Level == GfxLevel.Low ? 0.15f : Level == GfxLevel.Medium ? 0.55f : 1f;
+        /// <summary>
+        /// 비상 절약: '하'에서도 프레임이 24 아래로 계속 떨어지면 켜짐 (해상도·망자 수·비를 더 줄인다).
+        /// 아주 낮은 사양의 휴대폰에서도 '돌아가는 것'이 우선.
+        /// </summary>
+        public static bool Emergency { get; private set; }
+
+        public static float RainRate => Emergency ? 0.05f : Level == GfxLevel.Low ? 0.15f : Level == GfxLevel.Medium ? 0.55f : 1f;
         public static float SplashRate => Level == GfxLevel.Low ? 0.08f : Level == GfxLevel.Medium ? 0.5f : 1f;
         public static bool Shadows => Level != GfxLevel.Low;
         public static bool SoftShadows => Level == GfxLevel.High;
-        public static int MaxAliveMonsters => Level == GfxLevel.Low ? 10 : Level == GfxLevel.Medium ? 18 : 26;
+        public static int MaxAliveMonsters => Emergency ? 7 : Level == GfxLevel.Low ? 10 : Level == GfxLevel.Medium ? 18 : 26;
         /// <summary>시야 거리 (안개가 가려주므로 저사양은 짧게).</summary>
         public static float FarClip => Level == GfxLevel.Low ? 70f : Level == GfxLevel.Medium ? 140f : 400f;
         public static bool ExtraLights => Level == GfxLevel.High;   // 창문·비닐하우스 불빛
@@ -57,6 +63,7 @@ namespace Hunt.Core
 
         public static void Set(GfxLevel level, bool save = true)
         {
+            if (save) Emergency = false;
             Level = level;
             if (save) { try { PlayerPrefs.SetInt(Key, (int)level); } catch { } }
             AutoDetected = false;
@@ -76,7 +83,7 @@ namespace Hunt.Core
                     nativeW = Mathf.Max(Screen.width, Screen.height);
                     nativeH = Mathf.Min(Screen.width, Screen.height);
                 }
-                float rs = Level == GfxLevel.Low ? 0.6f : Level == GfxLevel.Medium ? 0.75f : 0.9f;
+                float rs = Emergency ? 0.5f : Level == GfxLevel.Low ? 0.6f : Level == GfxLevel.Medium ? 0.75f : 0.9f;
                 Screen.SetResolution(Mathf.RoundToInt(nativeW * rs), Mathf.RoundToInt(nativeH * rs), true);
             }
             QualitySettings.vSyncCount = 0; // 프레임 제한은 targetFrameRate로 (에디터에서도 동작)
@@ -113,6 +120,17 @@ namespace Hunt.Core
                     slowTime = 0f;
                     Set(Level - 1, save: true);
                     UI.HUD.Notify($"프레임이 낮아 그래픽을 '{Name(Level)}'(으)로 낮췄다 (Esc에서 변경)", new Color(1f, 0.7f, 0.4f));
+                }
+            }
+            else if (fpsAvg < 24f && Level == GfxLevel.Low && !Emergency)
+            {
+                slowTime += unscaledDt;
+                if (slowTime > 8f)
+                {
+                    slowTime = 0f;
+                    Emergency = true;
+                    Apply();
+                    UI.HUD.Notify("프레임이 낮아 절약 모드를 켰다 (해상도·망자 수 감소)", new Color(1f, 0.7f, 0.4f));
                 }
             }
             else slowTime = Mathf.Max(0f, slowTime - unscaledDt);

@@ -20,7 +20,7 @@ namespace Hunt.Core
         AudioSource rainAudio;
         float baseMoon = 0.22f;
         float nextThunder, flash, thunderDelay = -1f;
-        float rainTarget = 0.7f, nextRainShift;
+        float rainTarget = 0.7f, nextRainShift, nextDistant = 20f;
         Color baseAmbient;
 
         void Awake()
@@ -192,6 +192,18 @@ namespace Hunt.Core
                 em.rateOverTime = Mathf.Lerp(2000f, 7000f, RainIntensity) * QualityManager.RainRate;
             }
             if (rainAudio != null) rainAudio.volume = Mathf.Lerp(0.3f, 0.75f, RainIntensity);
+
+            // 멀리서 들려오는 소리: 어딘가의 그르렁, 개 짖는 듯한 울음, 징 — 위치가 들리는 3D (긴장감)
+            if (gm != null && gm.State == GameState.Playing && cam != null && Time.time > nextDistant)
+            {
+                nextDistant = Time.time + Random.Range(14f, 28f);
+                Vector2 r2 = Random.insideUnitCircle.normalized * Random.Range(25f, 40f);
+                Vector3 at = cam.transform.position + new Vector3(r2.x, 2f, r2.y);
+                float roll = Random.value;
+                if (roll < 0.55f) SFX.PlayAt(SFX.Growl, at, 0.9f);
+                else if (roll < 0.85f) SFX.PlayAt(SFX.MonsterDie, at, 0.7f);
+                else SFX.PlayAt(SFX.Gong, at, 0.35f);
+            }
 
             // 천둥·번개
             if (Time.time > nextThunder)

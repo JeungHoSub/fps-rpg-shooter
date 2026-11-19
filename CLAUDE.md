@@ -26,6 +26,9 @@ Unity 1인칭 싱글플레이 좀비 슈터 + RPG. **비 오는 밤의 한국 �
   IL2CPP+ARM64, minSdk 24, Standard·Sprites 셰이더 항상 포함 + `Resources/ShaderKeep` 키워드 재질(런타임 재질 분홍색 방지).
 - 에디터 코드 컴파일 확인: NuGet `Unity3D.UnityEditor 2018.1.6-f1` 참조 추가 (`UnityEditor 2019.3.2.1` 패키지는 비어 있음).
 
+- 긴장·타격 피드백 (2026-11-19): 피격 방향 표시(`PlayerCharacter.DamageFrom`, `GameHud.DrawDamageDirections`), 9m 안 망자 3D 그르렁, 저체력 심장 박동,
+  연속 처치 문구·높아지는 처치음, 휴대폰 진동, 탄피·총구 연기, 머리/급소 처치 폭발, 멀리서 들리는 공포음(`Atmosphere`), 비상 절약 모드(`QualityManager.Emergency`).
+
 ## 능력치 (2026-11-19 사용자 확정, 5개)
 힘(피해·무게·밀어내기) · 민첩(이동·장전·교체·스태미너) · 생명(체력·받는 피해·역병 저항 + 반동·탄퍼짐·조준 = 옛 '제어') · 집중(치명·약점) · 기술(벽 관통·수류탄/설치물·역병 능력).
 `StatType.CTL`은 코드에 남아 있지만 화면·포인트에서 제외 (`CharacterStats.Visible`), 제어 공식은 생명 값을 쓴다. 벽 관통: `PlayerWeapons` 총알 궤적 + `CharacterStats.WallPenetration`.
