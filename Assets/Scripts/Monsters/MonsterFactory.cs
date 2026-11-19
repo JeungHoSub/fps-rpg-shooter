@@ -141,9 +141,10 @@ namespace Hunt.Monsters
         /// 조선 역병 망자: 주민은 갓·상투(망건), 장군 망자는 붉은 상모 달린 전립, 대감은 큰 갓과 갓끈.
         /// 현대 주민 망자는 맨머리. 모델 위에 덧씌우는 저폴리 도형이라 '하' 품질에서도 가볍다.
         /// </summary>
-        static void Headwear(MonsterData d, ZombieRig rig, Transform root)
+        static bool Headwear(MonsterData d, ZombieRig rig, Transform root)
         {
-            if (rig.Head == null) return;
+            if (rig.Head == null) return false;
+            bool joseon = false;
             float u = rig.Unit; // 키(괴물 크기 포함) 기준 배율
             Vector3 top = rig.HeadTop != null ? rig.HeadTop.position : rig.Head.position + Vector3.up * 0.18f * u;
             Quaternion up = Quaternion.Euler(0f, root.eulerAngles.y, 0f);
@@ -178,12 +179,12 @@ namespace Hunt.Monsters
                 case MonsterArchetype.Runner:
                 {
                     float r = Random.value;
-                    if (r < 0.4f) Gat(1f);
-                    else if (r < 0.7f) Topknot();
+                    if (r < 0.4f) { Gat(1f); joseon = true; }
+                    else if (r < 0.7f) { Topknot(); joseon = true; }
                     break;
                 }
                 case MonsterArchetype.Spitter:
-                    if (Random.value < 0.6f) Topknot();
+                    if (Random.value < 0.6f) { Topknot(); joseon = true; }
                     break;
                 case MonsterArchetype.Brute:
                 {
@@ -198,8 +199,103 @@ namespace Hunt.Monsters
                 }
                 case MonsterArchetype.Boss:
                     Gat(1.35f);
+                    joseon = true;
                     break;
             }
+            return joseon;
+        }
+
+        // ================================================================ 소복·도포 (킹덤풍 의상)
+        static readonly Dictionary<int, Mesh> robeMeshes = new Dictionary<int, Mesh>();
+        static readonly Dictionary<Color, Material> robeMats = new Dictionary<Color, Material>();
+
+        /// <summary>
+        /// 위가 좁고 아래가 퍼지는 천 통(양면). 높이 1, 윗반지름 1, 아랫반지름 flare. 모양마다 한 번만 만든다.
+        /// </summary>
+        static Mesh RobeMesh(float flare)
+        {
+            int key = Mathf.RoundToInt(flare * 100f);
+            if (robeMeshes.TryGetValue(key, out var mesh) && mesh != null) return mesh;
+            const int N = 18;
+            var v = new List<Vector3>();
+            var uv = new List<Vector2>();
+            var tri = new List<int>();
+            for (int ring = 0; ring <= 3; ring++)
+            {
+                float t = ring / 3f;
+                float rad = Mathf.Lerp(1f, flare, t * t);         // 아래로 갈수록 퍼짐
+                for (int i = 0; i <= N; i++)
+                {
+                    float a = i / (float)N * Mathf.PI * 2f;
+                    float wob = 1f + 0.06f * Mathf.Sin(a * 5f + ring) * t; // 주름
+                    v.Add(new Vector3(Mathf.Cos(a) * rad * wob, -t, Mathf.Sin(a) * rad * wob));
+                    uv.Add(new Vector2(i / (float)N, 1f - t));
+                }
+            }
+            int row = N + 1;
+            for (int ring = 0; ring < 3; ring++)
+                for (int i = 0; i < N; i++)
+                {
+                    int a0 = ring * row + i, a1 = a0 + 1, b0 = a0 + row, b1 = b0 + 1;
+                    tri.AddRange(new[] { a0, a1, b0, a1, b1, b0 });   // 바깥
+                    tri.AddRange(new[] { a0, b0, a1, a1, b0, b1 });   // 안쪽 (양면)
+                }
+            mesh = new Mesh { name = "Robe" };
+            mesh.SetVertices(v);
+            mesh.SetUVs(0, uv);
+            mesh.SetTriangles(tri, 0);
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+            robeMeshes[key] = mesh;
+            return mesh;
+        }
+
+        static Material RobeMat(Color c)
+        {
+            if (robeMats.TryGetValue(c, out var m) && m != null) return m;
+            m = new Material(Shader.Find("Standard")) { name = "Robe", color = c };
+            m.SetFloat("_Glossiness", 0.12f); // 비에 젖은 무명
+            var tex = Resources.Load<Texture2D>("Env/clay_plaster_diff"); // 거친 천 결 대용
+            if (tex != null) { m.mainTexture = tex; m.mainTextureScale = new Vector2(2f, 1f); }
+            robeMats[c] = m;
+            return m;
+        }
+
+        static void RobePiece(Transform bone, Vector3 topWorld, Quaternion yaw, float topRadius, float height, float flare, Color c)
+        {
+            var go = new GameObject("Robe");
+            go.AddComponent<MeshFilter>().sharedMesh = RobeMesh(flare);
+            var r = go.AddComponent<MeshRenderer>();
+            r.sharedMaterial = RobeMat(c);
+            r.shadowCastingMode = QualityManager.Shadows ? UnityEngine.Rendering.ShadowCastingMode.On : UnityEngine.Rendering.ShadowCastingMode.Off;
+            go.transform.position = topWorld;
+            go.transform.rotation = yaw;
+            go.transform.localScale = new Vector3(topRadius, height, topRadius);
+            go.transform.SetParent(bone, true);
+        }
+
+        /// <summary>조선 망자에게 소복(흰 무명) 또는 도포(쪽빛)를 입힌다. 저고리는 가슴에, 아랫도리는 엉덩이에 붙어 몸을 따라 흔들린다.</summary>
+        static void Robe(MonsterData d, ZombieRig rig, Transform root)
+        {
+            if (rig.Hips == null || rig.Spine2 == null) return;
+            float u = rig.Unit;
+            var yaw = Quaternion.Euler(0f, root.eulerAngles.y, 0f);
+            float footY = Mathf.Min(rig.LeftFoot != null ? rig.LeftFoot.position.y : root.position.y,
+                                    rig.RightFoot != null ? rig.RightFoot.position.y : root.position.y);
+            bool boss = d.archetype == MonsterArchetype.Boss;
+            // 소복은 집마다 바랜 정도가 다르다 / 대감은 쪽빛 도포
+            float dirt = Random.Range(0f, 0.18f);
+            Color cloth = boss ? new Color(0.24f, 0.28f, 0.36f) : new Color(0.8f - dirt, 0.78f - dirt, 0.72f - dirt * 1.2f);
+
+            // 저고리(윗옷): 목 아래 → 허리
+            Vector3 neckBase = (rig.Neck != null ? rig.Neck.position : rig.Spine2.position + Vector3.up * 0.15f * u) - Vector3.up * 0.04f * u;
+            float torso = Mathf.Max(0.2f * u, neckBase.y - rig.Hips.position.y);
+            RobePiece(rig.Spine2, neckBase, yaw, 0.15f * u, torso + 0.06f * u, 1.15f, cloth); // 급소(가슴·등)가 천 밖으로 보이도록 몸에 붙게
+
+            // 치마·바지 / 도포 자락: 허리 → 발목 근처 (대감은 땅까지)
+            Vector3 waist = rig.Hips.position + Vector3.up * 0.06f * u;
+            float legLen = Mathf.Max(0.3f * u, waist.y - footY - (boss ? 0.04f : 0.18f) * u);
+            RobePiece(rig.Hips, waist, yaw, 0.2f * u, legLen, boss ? 1.9f : 1.6f, cloth * 0.96f);
         }
 
         static Monster CreateRigged(MonsterData d, Vector3 position, EvolutionProfile evo, float hpScale, PlayerCharacter target, Transform parent)
@@ -219,7 +315,7 @@ namespace Hunt.Monsters
             float u = rig.Unit;
             Vector3 up = Vector3.up;
             Transform neck = rig.Neck != null ? rig.Neck : rig.Spine2;
-            Headwear(d, rig, R);
+            if (Headwear(d, rig, R)) Robe(d, rig, R);
 
             // ---- 판정체 (보이지 않음): 머리 · 몸통 · 팔 · 다리 ----
             var headCenter = rig.HeadTop != null ? Vector3.Lerp(rig.Head.position, rig.HeadTop.position, 0.45f) : rig.Head.position + up * 0.1f * u;
