@@ -6,7 +6,7 @@ namespace Hunt.Combat
 
     public enum HitZone { Body, Head, WeakPoint, Armor, Leg }
 
-    public enum WeaponClass { Pistol, SMG, Rifle, Shotgun, Sniper, LMG }
+    public enum WeaponClass { Pistol, SMG, Rifle, Shotgun, Sniper, LMG, Melee, Explosive, Flamethrower, Launcher }
 
     public static class CombatNames
     {

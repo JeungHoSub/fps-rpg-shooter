@@ -95,6 +95,87 @@ namespace Hunt.Core
             return Clip("flesh", d);
         }
         public static AudioClip Thunder => Get("thunder", () => MakeThunder());
+        public static AudioClip Explosion => Get("explosion", () => MakeBoom());
+        /// <summary>칼 휘두르는 바람 소리.</summary>
+        public static AudioClip Swing => Get("swing", () => MakeWhoosh(0.28f, 0.5f));
+        /// <summary>칼이 살을 베는 소리.</summary>
+        public static AudioClip Slash => Get("slash", () => MakeSlash());
+        /// <summary>붕대를 감는 부스럭 소리.</summary>
+        public static AudioClip Bandage => Get("bandage", () => MakeWhoosh(0.9f, 0.25f, 9f));
+        public static AudioClip Drink => Get("drink", () => MakeDrink());
+
+        static AudioClip MakeBoom()
+        {
+            int n = (int)(Rate * 2.2f);
+            var d = new float[n];
+            var rnd = new System.Random(303);
+            float f1 = 0f, f2 = 0f;
+            for (int i = 0; i < n; i++)
+            {
+                float t = (float)i / Rate;
+                float noise = (float)(rnd.NextDouble() * 2.0 - 1.0);
+                f1 += 0.12f * (noise - f1);
+                f2 += 0.02f * (noise - f2);
+                float s = noise * Mathf.Exp(-t * 60f) * 0.9f
+                          + f1 * Mathf.Exp(-t * 5f) * 2.2f
+                          + Mathf.Sin(2f * Mathf.PI * 38f * t * (1f - t * 0.3f)) * Mathf.Exp(-t * 3.5f) * 1.2f
+                          + f2 * Mathf.Exp(-t * 1.4f) * 7f;
+                d[i] = SoftClip(s * 1.6f) * Mathf.Clamp01(t * 1500f);
+            }
+            return Clip("boom", d);
+        }
+
+        static AudioClip MakeWhoosh(float len, float amp, float rustle = 0f)
+        {
+            int n = (int)(Rate * len);
+            var d = new float[n];
+            var rnd = new System.Random(808 + (int)(len * 100));
+            float f = 0f;
+            for (int i = 0; i < n; i++)
+            {
+                float t = (float)i / Rate;
+                float u = t / len;
+                float noise = (float)(rnd.NextDouble() * 2.0 - 1.0);
+                float cut = Mathf.Lerp(0.05f, 0.5f, Mathf.Sin(u * Mathf.PI));
+                f += cut * (noise - f);
+                float env = Mathf.Sin(u * Mathf.PI);
+                if (rustle > 0f) env *= 0.5f + 0.5f * Mathf.Abs(Mathf.Sin(t * rustle * Mathf.PI));
+                d[i] = f * env * amp * 1.6f;
+            }
+            return Clip("whoosh", d);
+        }
+
+        static AudioClip MakeSlash()
+        {
+            int n = (int)(Rate * 0.22f);
+            var d = new float[n];
+            var rnd = new System.Random(919);
+            float f = 0f;
+            for (int i = 0; i < n; i++)
+            {
+                float t = (float)i / Rate;
+                float noise = (float)(rnd.NextDouble() * 2.0 - 1.0);
+                f += 0.25f * (noise - f);
+                float thump = Mathf.Sin(2f * Mathf.PI * (180f - t * 500f) * t) * Mathf.Exp(-t * 28f);
+                float wet = f * Mathf.Exp(-t * 18f) * 1.8f;
+                d[i] = SoftClip((thump + wet + noise * Mathf.Exp(-t * 200f) * 0.5f) * 1.3f);
+            }
+            return Clip("slash", d);
+        }
+
+        static AudioClip MakeDrink()
+        {
+            int n = (int)(Rate * 0.9f);
+            var d = new float[n];
+            for (int i = 0; i < n; i++)
+            {
+                float t = (float)i / Rate;
+                float k = Mathf.Repeat(t, 0.22f);
+                float hz = 260f + 180f * (k / 0.22f);
+                d[i] = Mathf.Sin(2f * Mathf.PI * hz * k) * Mathf.Exp(-k * 18f) * 0.5f;
+            }
+            return Clip("drink", d);
+        }
         public static AudioClip FlashlightClick => Get("flash", () => MakeClick(0.04f, 3000f, 0.35f));
 
         /// <summary>빗소리 루프 (6초, 이음매 없이 반복). 넓은 대역 쏴— 소리 + 지붕·웅덩이에 떨어지는 빗방울.</summary>

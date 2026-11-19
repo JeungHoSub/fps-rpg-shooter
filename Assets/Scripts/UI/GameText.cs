@@ -121,6 +121,10 @@ namespace Hunt.UI
                 case WeaponClass.Shotgun: return "산탄총";
                 case WeaponClass.Sniper: return "저격총";
                 case WeaponClass.LMG: return "경기관총";
+                case WeaponClass.Melee: return "근접";
+                case WeaponClass.Explosive: return "폭발물";
+                case WeaponClass.Flamethrower: return "화염방사기";
+                case WeaponClass.Launcher: return "유탄발사기";
                 default: return "돌격소총";
             }
         }

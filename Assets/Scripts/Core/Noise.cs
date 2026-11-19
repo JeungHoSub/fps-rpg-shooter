@@ -32,6 +32,8 @@ namespace Hunt.Core
                 case WeaponClass.Shotgun: return 40f;
                 case WeaponClass.Sniper: return 50f;
                 case WeaponClass.LMG: return 40f;
+                case WeaponClass.Flamethrower: return 12f;
+                case WeaponClass.Launcher: return 45f;
                 default: return 32f;
             }
         }

@@ -37,6 +37,30 @@ namespace Hunt.Player
 
         public bool IsSprinting { get; private set; }
         float shake, sprintBlock, stepTimer;
+
+        // ---- 스태미너: 달리기·점프·칼질에 쓰고, 쉬면 찬다. 바닥나면 25까지 회복해야 다시 달린다 ----
+        public float Stamina { get; private set; } = 100f;
+        public float MaxStamina => 100f + player.Stats.Agility * 1.5f + player.Armor.BonusStamina;
+        public bool Exhausted { get; private set; }
+        /// <summary>스태미너 회복제: 남은 시간 동안 소모 절반, 회복 두 배.</summary>
+        public float BoostTime { get; private set; }
+        float staminaRestTimer;
+
+        public bool UseStamina(float amount)
+        {
+            if (Stamina < amount * 0.5f) return false;
+            Stamina = Mathf.Max(0f, Stamina - amount * (BoostTime > 0f ? 0.5f : 1f));
+            staminaRestTimer = 0.8f;
+            if (Stamina <= 0.5f) Exhausted = true;
+            return true;
+        }
+
+        public void RestoreStamina(float boostSeconds)
+        {
+            Stamina = MaxStamina;
+            Exhausted = false;
+            BoostTime = Mathf.Max(BoostTime, boostSeconds);
+        }
         Vector2 punch, punchVel; // 사격 시 화면이 튀었다 돌아오는 반동 (조준점과 별개)
 
         /// <summary>시점 반동 (도). 스프링처럼 튀었다가 돌아온다.</summary>
@@ -97,14 +121,23 @@ namespace Hunt.Player
             }
             if (sprintBlock > 0f) sprintBlock -= dt;
             bool forward = input && Input.GetAxisRaw("Vertical") > 0.1f;
-            bool sprint = forward && Input.GetKey(KeyCode.LeftShift) && !player.Weapons.IsAiming && sprintBlock <= 0f;
+            bool sprint = forward && Input.GetKey(KeyCode.LeftShift) && !player.Weapons.IsAiming && sprintBlock <= 0f && !Exhausted && !player.IsUsingItem;
+            if (BoostTime > 0f) BoostTime -= dt;
+            if (sprint) UseStamina(16f * dt);
+            else
+            {
+                if (staminaRestTimer > 0f) staminaRestTimer -= dt;
+                else Stamina = Mathf.Min(MaxStamina, Stamina + (22f + player.Stats.Vitality * 0.4f) * (BoostTime > 0f ? 2f : 1f) * dt);
+            }
+            if (Exhausted && Stamina >= 25f) Exhausted = false;
             IsSprinting = sprint;
-            float speed = player.Stats.MoveSpeed * WeightPenalty * player.Infection.MoveMultiplier * MoveMultiplier * (sprint ? 1.45f : 1f);
+            float speed = player.Stats.MoveSpeed * WeightPenalty * player.Infection.MoveMultiplier * MoveMultiplier * (sprint ? 1.45f : 1f)
+                * player.Armor.MoveMult * (player.IsUsingItem ? 0.45f : 1f) * (Exhausted ? 0.85f : 1f) * GameRules.MoveMult;
 
             if (cc.isGrounded)
             {
                 verticalVel = -1f;
-                if (input && Input.GetKeyDown(KeyCode.Space)) verticalVel = jumpSpeed;
+                if (input && Input.GetKeyDown(KeyCode.Space) && UseStamina(10f)) verticalVel = jumpSpeed;
             }
             else
             {

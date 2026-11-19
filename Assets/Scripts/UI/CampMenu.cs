@@ -1,5 +1,6 @@
 using Hunt.Combat;
 using Hunt.Core;
+using Hunt.Data;
 using Hunt.Evolution;
 using Hunt.Player;
 using Hunt.Stats;
@@ -13,7 +14,7 @@ namespace Hunt.UI
     /// </summary>
     public class CampMenu
     {
-        enum Tab { Stats, Arms, Research }
+        enum Tab { Stats, Armory, Arms, Gear, Research }
         Tab tab = Tab.Stats;
         int weaponIdx;
         Vector2 invScroll, historyScroll;
@@ -47,19 +48,23 @@ namespace Hunt.UI
             string[] names =
             {
                 p.StatPoints > 0 || p.PendingTraitPicks > 0 ? "몸 · 기질  ●" : "몸 · 기질",
-                "무기 · 부품",
+                "무기고",
+                "부품",
+                "방어구 · 보급",
                 gm.LastEvolution.Count > 0 ? "역병 일지  ●" : "역병 일지",
             };
-            float tw = 260;
-            float tx = win.center.x - (tw * 3 + 20) / 2;
-            for (int i = 0; i < 3; i++)
+            float tw = Mathf.Min(240, (win.width - 80) / 5f - 10);
+            float tx = win.center.x - (tw * 5 + 40) / 2;
+            for (int i = 0; i < 5; i++)
                 if (UIKit.Button(new Rect(tx + i * (tw + 10), win.y + 104, tw, 48), names[i], 20, (int)tab == i)) tab = (Tab)i;
 
             var content = new Rect(win.x + 26, win.y + 168, win.width - 52, win.height - 260);
             switch (tab)
             {
                 case Tab.Stats: DrawStats(p, content); break;
+                case Tab.Armory: DrawArmory(gm, p, content); break;
                 case Tab.Arms: DrawArms(p, content); break;
+                case Tab.Gear: DrawGear(p, content); break;
                 default: DrawResearch(gm, content); break;
             }
 
@@ -231,17 +236,7 @@ namespace Hunt.UI
                 $"무게        {w.Weight:0.0}";
             UIKit.Text(new Rect(left.x + 28, y, left.width - 56, 190), info, 17, UITheme.Bone, TextAnchor.UpperLeft, wrap: true);
             y += 200;
-            bool canUp = w.upgradeLevel < WeaponInstance.MaxUpgrade && p.Gold >= w.UpgradeCost;
-            string upLabel = w.upgradeLevel >= WeaponInstance.MaxUpgrade ? "더는 벼릴 수 없다" : $"벼리기  +{w.upgradeLevel + 1}";
-            if (UIKit.Button(new Rect(left.x + 16, y, left.width - 32, 62), upLabel, 22, false, canUp,
-                    w.upgradeLevel >= WeaponInstance.MaxUpgrade ? null : $"엽전 {w.UpgradeCost}  ·  위력 +8%"))
-            {
-                if (p.SpendGold(w.UpgradeCost))
-                {
-                    w.upgradeLevel++;
-                    SFX.Play(SFX.Rack, 0.9f, 0f);
-                }
-            }
+            UIKit.Text(new Rect(left.x + 16, y, left.width - 32, 62), "강화와 등급은 '무기고'에서", 16, UITheme.Ash, TextAnchor.MiddleCenter, serif: true);
 
             // ---- 가운데: 부착 파츠 ----
             var mid = new Rect(left.xMax + 18, c.y, 400, c.height);
@@ -314,6 +309,197 @@ namespace Hunt.UI
                 }
             }
             GUI.EndScrollView();
+        }
+
+        // ------------------------------------------------------------------ 무기고: 계열 · 단계 · 등급 · 강화
+        WeaponData armorySel;
+        Vector2 armoryScroll;
+
+        static string GearLine(Grade g, int up) => $"<color=#{UIKit.Hex(Grades.Color(g))}>{Grades.Name(g)}</color>" + (up > 0 ? $" +{up}" : "");
+
+        void DrawArmory(GameManager gm, PlayerCharacter p, Rect c)
+        {
+            if (armorySel == null) armorySel = p.Weapons.Current != null ? p.Weapons.Current.data : DefaultContent.Catalog[0];
+            float lw = c.width * 0.58f;
+            var left = new Rect(c.x, c.y, lw, c.height);
+            var right = new Rect(c.x + lw + 20, c.y, c.width - lw - 20, c.height);
+            UIKit.NineSlice(left, UITheme.Slot, 10, Color.white);
+            UIKit.NineSlice(right, UITheme.Slot, 10, Color.white);
+
+            // 망자 방어도 안내
+            float def = gm.Waves != null ? gm.Waves.DefenseBonus(Data.MonsterArchetype.Runner) : 0f;
+            float defNext = 1.4f * Mathf.Max(0, (gm.Waves != null ? gm.Waves.Wave : 0));
+            UIKit.Text(new Rect(left.x + 20, left.y + 10, left.width - 40, 26),
+                $"다음 밤 망자 방어도  <color=#{UIKit.Hex(UITheme.BloodBright)}>{defNext:0}</color>  (엘리트 ×1.6, 보스 ×2.1)  ·  한 발마다 그만큼 깎인다 — 연사가 빠른 총은 점점 약해진다",
+                14, UITheme.BoneDim, TextAnchor.MiddleLeft, wrap: true);
+
+            var view = new Rect(left.x + 12, left.y + 44, left.width - 20, left.height - 56);
+            float rowH = 92f;
+            var inner = new Rect(0, 0, view.width - 18, DefaultContent.Families.Length * rowH);
+            armoryScroll = GUI.BeginScrollView(view, armoryScroll, inner, GUIStyle.none, GUI.skin.verticalScrollbar);
+            for (int f = 0; f < DefaultContent.Families.Length; f++)
+            {
+                var fam = DefaultContent.Families[f];
+                var list = DefaultContent.Family(fam);
+                var row = new Rect(0, f * rowH, inner.width, rowH - 8);
+                UIKit.Tex(new Rect(row.x, row.yMax + 2, row.width, 2), UITheme.LineFade, new Color(0.5f, 0.38f, 0.2f, 0.3f));
+                UIKit.Text(new Rect(row.x + 8, row.y, 120, row.height), GameText.WeaponClassName(fam), 20, UITheme.Gold, TextAnchor.MiddleLeft, serif: true, bold: true);
+                float cw = (row.width - 140) / 3f;
+                for (int t = 0; t < 3; t++)
+                {
+                    var cell = new Rect(row.x + 132 + t * cw, row.y + 4, cw - 8, row.height - 8);
+                    if (t >= list.Count) continue;
+                    var d = list[t];
+                    var own = p.Owned(d);
+                    bool equipped = own != null && p.Weapons.Slots.Contains(own);
+                    string sub = own != null ? (equipped ? "장착 중 · " : "보유 · ") + Grades.Name(own.grade) + (own.upgradeLevel > 0 ? $" +{own.upgradeLevel}" : "")
+                        : $"엽전 {d.price}";
+                    if (UIKit.Button(cell, $"{t + 1}단  {d.displayName}", 16, armorySel == d, true, sub)) armorySel = d;
+                }
+            }
+            GUI.EndScrollView();
+
+            // ---- 오른쪽: 고른 무기 ----
+            var sel = armorySel;
+            var inst = p.Owned(sel);
+            float y = right.y + 16;
+            UIKit.Text(new Rect(right.x + 20, y, right.width - 40, 34), sel.displayName, 26, inst != null ? Grades.Color(inst.grade) : UITheme.Bone, TextAnchor.MiddleLeft, serif: true, bold: true);
+            y += 36;
+            UIKit.Text(new Rect(right.x + 20, y, right.width - 40, 24),
+                $"{GameText.WeaponClassName(sel.weaponClass)} {sel.tier}단  ·  {GameText.ElementName(sel.damageType)}" + (inst != null ? "  ·  " + GearLine(inst.grade, inst.upgradeLevel) : ""), 16, UITheme.BoneDim);
+            y += 34;
+            float dmg = inst != null ? inst.Damage : sel.damage;
+            float rpm = sel.rpm;
+            float dps = dmg * Mathf.Max(1, sel.pellets) * rpm / 60f;
+            float effHit = Mathf.Max(dmg - defNext * (1f - Mathf.Clamp01(sel.penetration)), dmg * 0.1f);
+            if (sel.explosive || sel.weaponClass == WeaponClass.Flamethrower) effHit = dmg; // 폭발·화염은 방어도 무시
+            float effDps = effHit * Mathf.Max(1, sel.pellets) * rpm / 60f;
+            string stats =
+                $"한 발 위력     {dmg:0}{(sel.pellets > 1 ? " × " + sel.pellets : "")}\n" +
+                $"연사             {rpm:0} RPM      탄창  {sel.magazine}\n" +
+                $"관통             {sel.penetration * 100:0}%" + (sel.explosive ? $"      폭발 반경 {sel.blastRadius:0.0}m" : "") + (sel.maxRange < 100f ? $"      사거리 {sel.maxRange:0}m" : "") + "\n" +
+                $"초당 피해       {dps:0}\n" +
+                $"<color=#{UIKit.Hex(effDps < dps * 0.6f ? UITheme.BloodBright : UITheme.GoldBright)}>다음 밤 실제    {effDps:0}  (방어도 적용)</color>\n" +
+                $"무게             {sel.weight:0.0}";
+            UIKit.Text(new Rect(right.x + 24, y, right.width - 48, 170), stats, 17, UITheme.Bone, TextAnchor.UpperLeft, wrap: true);
+            y += 176;
+            string flavor = GameText.WeaponFlavor(sel);
+            if (!string.IsNullOrEmpty(flavor)) { UIKit.Text(new Rect(right.x + 24, y, right.width - 48, 24), flavor, 14, UITheme.Ash, serif: true); y += 28; }
+
+            float bw = right.width - 40;
+            if (inst == null)
+            {
+                bool can = p.Gold >= sel.price;
+                if (UIKit.Button(new Rect(right.x + 20, y, bw, 58), "사들인다", 22, false, can, $"엽전 {sel.price}"))
+                {
+                    if (p.SpendGold(sel.price))
+                    {
+                        var w = new WeaponInstance(sel);
+                        p.Arsenal.Add(w);
+                        SFX.Play(SFX.Rack, 0.9f, 0f);
+                        HUD.Notify($"{sel.displayName}을(를) 손에 넣었다", UITheme.GoldBright);
+                    }
+                }
+                return;
+            }
+
+            bool isPistol = sel.weaponClass == WeaponClass.Pistol;
+            bool equippedNow = p.Weapons.Slots.Contains(inst);
+            if (isPistol)
+            {
+                if (UIKit.Button(new Rect(right.x + 20, y, bw, 50), equippedNow ? "3번에 장착 중" : "3번(보조)에 장착", 19, equippedNow, !equippedNow))
+                    p.Weapons.EquipSlot(2, inst);
+                y += 58;
+            }
+            else
+            {
+                float hw = (bw - 10) / 2f;
+                for (int k = 0; k < 2; k++)
+                {
+                    bool here = p.Weapons.PrimaryCount > k && p.Weapons.Slots[k] == inst;
+                    if (UIKit.Button(new Rect(right.x + 20 + k * (hw + 10), y, hw, 50), here ? $"{k + 1}번에 장착 중" : $"{k + 1}번에 장착", 19, here, !here))
+                        p.Weapons.EquipSlot(k, inst);
+                }
+                y += 58;
+            }
+
+            bool maxUp = inst.upgradeLevel >= Grades.MaxUpgrade;
+            if (UIKit.Button(new Rect(right.x + 20, y, bw, 56), maxUp ? "더는 벼릴 수 없다" : $"강화  +{inst.upgradeLevel + 1}", 20, false, !maxUp && p.Gold >= inst.UpgradeCost,
+                    maxUp ? null : $"엽전 {inst.UpgradeCost}  ·  위력 +7%"))
+            {
+                if (p.SpendGold(inst.UpgradeCost)) { inst.upgradeLevel++; SFX.Play(SFX.Rack, 0.9f, 0f); }
+            }
+            y += 64;
+            bool maxG = (int)inst.grade >= Grades.Max;
+            bool needUp = inst.upgradeLevel < 5;
+            string gsub = maxG ? null : needUp ? "강화 +5 이상 필요" : $"엽전 {inst.GradeUpCost}  ·  {Grades.Name(inst.grade + 1)} (위력 ×{Grades.Mult(inst.grade + 1) / Grades.Mult(inst.grade):0.00}, 예비탄 +10%)";
+            if (UIKit.Button(new Rect(right.x + 20, y, bw, 56), maxG ? "전설 등급" : "등급 올리기", 20, false, !maxG && !needUp && p.Gold >= inst.GradeUpCost, gsub))
+            {
+                if (p.SpendGold(inst.GradeUpCost))
+                {
+                    inst.grade++;
+                    inst.upgradeLevel = Mathf.Max(0, inst.upgradeLevel - 5); // 등급을 올리면 강화 단계 일부를 소모
+                    SFX.Play(SFX.LevelUp, 0.8f, 0f);
+                    HUD.Notify($"{sel.displayName} — {Grades.Name(inst.grade)} 등급", Grades.Color(inst.grade));
+                }
+            }
+        }
+
+        // ------------------------------------------------------------------ 방어구 · 보급
+        void DrawGear(PlayerCharacter p, Rect c)
+        {
+            float lw = c.width * 0.58f;
+            var left = new Rect(c.x, c.y, lw, c.height);
+            var right = new Rect(c.x + lw + 20, c.y, c.width - lw - 20, c.height);
+            UIKit.NineSlice(left, UITheme.Slot, 10, Color.white);
+            UIKit.NineSlice(right, UITheme.Slot, 10, Color.white);
+
+            var set = p.Armor;
+            UIKit.Text(new Rect(left.x + 20, left.y + 12, left.width - 40, 30),
+                $"방어구  ·  총 방어도 {set.TotalDefense:0}  ·  받는 피해 -{(1f - set.DamageTakenMult) * 100f:0}%", 20, UITheme.Gold, serif: true, bold: true);
+            float rowH = (left.height - 60) / 5f;
+            for (int i = 0; i < 5; i++)
+            {
+                var piece = set.pieces[i];
+                var row = new Rect(left.x + 14, left.y + 52 + i * rowH, left.width - 28, rowH - 8);
+                UIKit.Tex(new Rect(row.x, row.yMax + 2, row.width, 2), UITheme.LineFade, new Color(0.5f, 0.38f, 0.2f, 0.3f));
+                UIKit.Text(new Rect(row.x + 8, row.y + 6, 260, 30), piece.Name, 21, Grades.Color(piece.grade), serif: true, bold: true);
+                UIKit.Text(new Rect(row.x + 8, row.y + 38, 300, 24), $"방어도 {piece.Defense:0.0}  ·  {piece.EffectText}", 15, UITheme.BoneDim);
+                int upCost = Grades.UpgradeCost(piece.grade, piece.upgrade);
+                int gCost = Grades.GradeUpCost(piece.grade);
+                bool maxUp = piece.upgrade >= Grades.MaxUpgrade;
+                bool maxG = (int)piece.grade >= Grades.Max;
+                var b1 = new Rect(row.xMax - 380, row.y + 8, 180, row.height - 16);
+                var b2 = new Rect(row.xMax - 190, row.y + 8, 180, row.height - 16);
+                if (UIKit.Button(b1, maxUp ? "강화 끝" : $"강화 +{piece.upgrade + 1}", 17, false, !maxUp && p.Gold >= upCost, maxUp ? null : $"엽전 {upCost}"))
+                    if (p.SpendGold(upCost)) { float r = p.Hp / p.MaxHp; piece.upgrade++; p.Heal(0f); SFX.Play(SFX.MagIn, 0.8f); }
+                bool needUp = piece.upgrade < 5;
+                if (UIKit.Button(b2, maxG ? "전설" : "등급 올리기", 17, false, !maxG && !needUp && p.Gold >= gCost, maxG ? null : needUp ? "강화 +5 필요" : $"엽전 {gCost}"))
+                    if (p.SpendGold(gCost)) { piece.grade++; piece.upgrade = Mathf.Max(0, piece.upgrade - 5); SFX.Play(SFX.LevelUp, 0.8f, 0f); }
+            }
+
+            // ---- 보급: 소비 아이템 · 특수 기기 ----
+            UIKit.Text(new Rect(right.x, right.y + 12, right.width, 30), "보급", 22, UITheme.Gold, TextAnchor.MiddleCenter, serif: true, bold: true);
+            float y = right.y + 54;
+            void Buy(string name, string desc, int have, int max, int price, System.Action give)
+            {
+                var r = new Rect(right.x + 16, y, right.width - 32, 66);
+                bool can = have < max && p.Gold >= price;
+                if (UIKit.Button(r, $"{name}   {have} / {max}", 18, false, can, have >= max ? "가득 찼다" : $"엽전 {price}  ·  {desc}"))
+                    if (p.SpendGold(price)) { give(); SFX.Play(SFX.MagIn, 0.8f); }
+                y += 74;
+            }
+            Buy("치료 키트 (X)", "2.5초 동안 감는다", p.Kits, PlayerCharacter.MaxKits, 60, () => p.Kits++);
+            Buy("스태미너 회복제 (C)", "기운 즉시 회복", p.Drinks, PlayerCharacter.MaxDrinks, 40, () => p.Drinks++);
+            var gc = p.Weapons.GadgetCount;
+            for (int i = 0; i < Gadgets.Count; i++)
+            {
+                var g = (GadgetType)i;
+                int price = g == GadgetType.Grenade ? 50 : g == GadgetType.Mine ? 70 : 160;
+                int idx = i;
+                Buy(Gadgets.Name(g) + (g == GadgetType.Grenade ? " (5 / G)" : " (5)"), Gadgets.Desc(g), gc[i], Gadgets.MaxCarry(g), price, () => gc[idx]++);
+            }
+            UIKit.Text(new Rect(right.x + 20, right.yMax - 60, right.width - 40, 50), "밤을 넘길 때마다 키트·회복제·특수 기기가 하나씩 보급된다.", 14, UITheme.Ash, TextAnchor.MiddleCenter, serif: true, wrap: true);
         }
 
         // ------------------------------------------------------------------ 역병 연구

@@ -4,6 +4,7 @@ using Hunt.Core;
 using Hunt.Data;
 using Hunt.Monsters;
 using Hunt.Stats;
+using Hunt.UI;
 using Hunt.Weapons;
 using UnityEngine;
 
@@ -47,6 +48,27 @@ namespace Hunt.Player
         Camera cam;
         WeaponViewModel viewModel;
 
+        // ---- 슬롯: 1·2 주무기, 3 권총, 4 근접(칼), 5 특수 기기 ----
+        public enum Hand { Gun, Melee, Gadget }
+        public Hand Mode { get; private set; } = Hand.Gun;
+        /// <summary>HUD용: 지금 손에 든 슬롯 번호 (0~4).</summary>
+        public int ActiveKey => Mode == Hand.Melee ? 3 : Mode == Hand.Gadget ? 4 : (CurrentIndex == Slots.Count - 1 ? 2 : CurrentIndex);
+        public int PrimaryCount => Mathf.Max(0, Slots.Count - 1);
+        public GadgetType Gadget { get; private set; }
+        public readonly int[] GadgetCount = { 3, 2, 1 };
+        /// <summary>칼 휘두름 진행도 0→1 (1 = 쉬는 중).</summary>
+        public float MeleeSwing => meleeT;
+        public const string MeleeName = "마체테";
+        float meleeCooldown, meleeT = 1f, gadgetCooldown;
+        bool meleePending;
+        Hand returnMode = Hand.Gun;
+        bool quickMelee;
+
+        public float MeleeDamage => (70f + player.Level * 4f) * (1f + player.Stats.Strength * 0.02f) * GameRules.DamageMult;
+        public float GrenadeDamage => (220f + player.Level * 25f) * (1f + player.Stats.Tech * 0.02f) * GameRules.DamageMult;
+        public float MineDamage => (300f + player.Level * 30f) * (1f + player.Stats.Tech * 0.02f) * GameRules.DamageMult;
+        public float TurretDamage => (14f + player.Level * 1.5f) * (1f + player.Stats.Tech * 0.02f) * GameRules.DamageMult;
+
         float fireCooldown, reloadTime, reloadTotal, swapTime, swapTotal, aim, lastShotTime = -10f;
         int shotIndex, postReloadShots, reloadStage;
 
@@ -77,15 +99,43 @@ namespace Hunt.Player
             if (HitMarker > 0f) HitMarker -= dt;
 
             // ---- 무기 교체 ----
-            if (input)
+            if (input && !player.IsUsingItem)
             {
-                for (int i = 0; i < Slots.Count && i < 9; i++)
-                    if (Input.GetKeyDown(KeyCode.Alpha1 + i)) Swap(i);
+                if (Input.GetKeyDown(KeyCode.Alpha1)) SelectKey(0);
+                if (Input.GetKeyDown(KeyCode.Alpha2)) SelectKey(1);
+                if (Input.GetKeyDown(KeyCode.Alpha3)) SelectKey(2);
+                if (Input.GetKeyDown(KeyCode.Alpha4)) SelectKey(3);
+                if (Input.GetKeyDown(KeyCode.Alpha5)) SelectKey(4);
                 float scroll = Input.GetAxis("Mouse ScrollWheel");
-                if (scroll > 0.01f) Swap((CurrentIndex + Slots.Count - 1) % Slots.Count);
-                else if (scroll < -0.01f) Swap((CurrentIndex + 1) % Slots.Count);
+                if (scroll > 0.01f) CycleKey(-1);
+                else if (scroll < -0.01f) CycleKey(1);
+                // V: 빠른 칼질, G: 빠른 수류탄
+                if (Input.GetKeyDown(KeyCode.V) && Mode != Hand.Melee && meleeCooldown <= 0f)
+                {
+                    returnMode = Mode;
+                    Mode = Hand.Melee;
+                    quickMelee = true;
+                    StartSwing();
+                }
+                if (Input.GetKeyDown(KeyCode.G)) QuickGrenade();
             }
             if (swapTime > 0f) swapTime -= dt;
+            if (meleeCooldown > 0f) meleeCooldown -= dt;
+            if (gadgetCooldown > 0f) gadgetCooldown -= dt;
+            UpdateMelee(dt);
+
+            if (Mode != Hand.Gun)
+            {
+                aim = Mathf.MoveTowards(aim, 0f, dt * 6f);
+                cam.fieldOfView = Mathf.Lerp(PlayerController.BaseFov, w.data.adsFov, aim);
+                ctrl.LookMultiplier = 1f;
+                ctrl.MoveMultiplier = 1f;
+                CurrentSpread = 0f;
+                bool click = input && Input.GetMouseButtonDown(0) && swapTime <= 0f && !player.IsUsingItem;
+                if (click && Mode == Hand.Melee) StartSwing();
+                if (click && Mode == Hand.Gadget) UseGadget(Gadget);
+                return;
+            }
 
             // ---- 재장전 (진행도에 맞춰 탄창 빼는/끼우는 소리) ----
             if (reloadTime > 0f)
@@ -110,7 +160,7 @@ namespace Hunt.Player
             CurrentSpread = ComputeSpread(w);
 
             // ---- 사격 ----
-            bool trigger = input && (w.data.automatic ? Input.GetMouseButton(0) : Input.GetMouseButtonDown(0));
+            bool trigger = input && !player.IsUsingItem && (w.data.automatic ? Input.GetMouseButton(0) : Input.GetMouseButtonDown(0));
             if (trigger && fireCooldown <= 0f && swapTime <= 0f && !IsReloading)
             {
                 if (ctrl.IsSprinting) ctrl.CancelSprint();
@@ -139,9 +189,185 @@ namespace Hunt.Player
             return s;
         }
 
+        void SelectKey(int key)
+        {
+            if (key <= 1)
+            {
+                if (key < PrimaryCount) Swap(key);
+            }
+            else if (key == 2) Swap(Slots.Count - 1);
+            else if (key == 3) SetMode(Hand.Melee);
+            else
+            {
+                // 5번을 다시 누르면 다음 기기로
+                if (Mode == Hand.Gadget) NextGadget();
+                else SetMode(Hand.Gadget);
+            }
+        }
+
+        void CycleKey(int dir)
+        {
+            int k = ActiveKey;
+            for (int i = 0; i < 5; i++)
+            {
+                k = (k + dir + 5) % 5;
+                if (k == 1 && PrimaryCount < 2) continue;
+                SelectKey(k);
+                return;
+            }
+        }
+
+        void SetMode(Hand m)
+        {
+            if (Mode == m) return;
+            Mode = m;
+            quickMelee = false;
+            reloadTime = reloadTotal = 0f;
+            swapTotal = swapTime = 0.4f / player.Stats.SwapSpeedMult;
+            SFX.Play(SFX.Swap, 0.6f);
+            if (m == Hand.Gadget && GadgetCount[(int)Gadget] <= 0) NextGadget();
+        }
+
+        void NextGadget()
+        {
+            for (int i = 1; i <= Gadgets.Count; i++)
+            {
+                var g = (GadgetType)(((int)Gadget + i) % Gadgets.Count);
+                if (GadgetCount[(int)g] > 0 || i == Gadgets.Count) { Gadget = g; break; }
+            }
+            SFX.Play(SFX.Swap, 0.4f);
+        }
+
+        /// <summary>서낭당에서 장착 교체. slot 0·1 = 주무기, 2 = 권총 자리.</summary>
+        public void EquipSlot(int slot, WeaponInstance w)
+        {
+            int existing = Slots.IndexOf(w);
+            if (slot < 2 && slot >= PrimaryCount)
+            {
+                if (existing >= 0) return;
+                Slots.Insert(PrimaryCount, w);
+            }
+            else
+            {
+                int idx = slot >= 2 ? Slots.Count - 1 : slot;
+                if (existing == idx) return;
+                if (existing >= 0) Slots[existing] = Slots[idx]; // 주무기 1·2 자리 바꿈
+                Slots[idx] = w;
+            }
+            w.ammoInMag = w.MagazineSize;
+            CurrentIndex = Mathf.Clamp(CurrentIndex, 0, Slots.Count - 1);
+            reloadTime = reloadTotal = 0f;
+        }
+
+        public void ResupplyGadgets()
+        {
+            for (int i = 0; i < Gadgets.Count; i++)
+                GadgetCount[i] = Mathf.Min(Gadgets.MaxCarry((GadgetType)i), GadgetCount[i] + 1);
+        }
+
+        // ---- 근접 ----
+        void StartSwing()
+        {
+            if (meleeCooldown > 0f) return;
+            if (!player.Controller.UseStamina(8f)) { SFX.Play(SFX.Empty, 0.5f); return; }
+            meleeCooldown = 0.55f / player.Stats.SwapSpeedMult;
+            meleeT = 0f;
+            meleePending = true;
+            player.InterruptItem();
+            SFX.Play(SFX.Swing, 0.7f, 0.1f);
+            Noise.Emit(player.transform.position, 2f, true); // 칼은 조용하다
+        }
+
+        void UpdateMelee(float dt)
+        {
+            if (meleeT >= 1f) return;
+            meleeT = Mathf.Min(1f, meleeT + dt / 0.42f);
+            if (meleePending && meleeT > 0.38f) { meleePending = false; MeleeHit(); }
+            if (meleeT >= 1f && quickMelee) { quickMelee = false; Mode = returnMode; swapTotal = swapTime = 0.2f; }
+        }
+
+        void MeleeHit()
+        {
+            Vector3 center = cam.transform.position + cam.transform.forward * 1.2f;
+            var hits = Physics.OverlapSphere(center, 1.1f, RaycastMask, QueryTriggerInteraction.Ignore);
+            var best = new Dictionary<Monster, MonsterPart>();
+            foreach (var h in hits)
+            {
+                var part = h.GetComponent<MonsterPart>();
+                if (part == null || part.owner == null || part.owner.IsDead) continue;
+                if (!best.TryGetValue(part.owner, out var cur) ||
+                    (h.ClosestPoint(center) - center).sqrMagnitude < (cur.GetComponent<Collider>().ClosestPoint(center) - center).sqrMagnitude)
+                    best[part.owner] = part;
+            }
+            int n = 0;
+            bool kill = false;
+            foreach (var kv in best)
+            {
+                if (n++ >= 2) break; // 한 번에 둘까지
+                var part = kv.Value;
+                Vector3 hp = part.GetComponent<Collider>().ClosestPoint(center);
+                var info = new DamageInfo
+                {
+                    baseDamage = MeleeDamage, type = DamageType.Physical, weaponClass = WeaponClass.Melee,
+                    critChance = player.Stats.CritChance, critMultiplier = player.Stats.CritMultiplier,
+                    weakPointBonus = player.Stats.WeakPointBonus, penetration = 0.5f, knockback = 3.5f * player.Stats.KnockbackMult,
+                    distance = 1f, falloffStart = 100f, falloffEnd = 200f, minFalloffMultiplier = 1f,
+                    hitPoint = hp, direction = cam.transform.forward,
+                };
+                var res = part.ReceiveHit(info);
+                if (!res.hit) continue;
+                kill |= res.killed;
+                HitMarker = 0.12f;
+                LastHitWeak = res.zone == HitZone.WeakPoint || res.zone == HitZone.Head;
+                LastHitKill = res.killed;
+                FX.ImpactFlesh(hp, cam.transform.forward, FleshColor(res.zone), 8);
+            }
+            if (best.Count > 0)
+            {
+                SFX.Play(SFX.Slash, 0.9f, 0.08f);
+                player.Controller.AddShake(0.6f);
+                Noise.Emit(player.transform.position, 4f, true);
+                if (kill) GameManager.Instance.HitStop(0.07f);
+            }
+        }
+
+        // ---- 특수 기기 ----
+        void QuickGrenade()
+        {
+            if (gadgetCooldown > 0f || GadgetCount[(int)GadgetType.Grenade] <= 0) return;
+            UseGadget(GadgetType.Grenade);
+        }
+
+        void UseGadget(GadgetType g)
+        {
+            if (gadgetCooldown > 0f) return;
+            if (GadgetCount[(int)g] <= 0) { HUD.Notify($"{Gadgets.Name(g)}이(가) 없다", new Color(1f, 0.6f, 0.4f)); return; }
+            GadgetCount[(int)g]--;
+            gadgetCooldown = 0.8f;
+            player.InterruptItem();
+            var t = cam.transform;
+            Vector3 flatFwd = Vector3.ProjectOnPlane(t.forward, Vector3.up).normalized;
+            switch (g)
+            {
+                case GadgetType.Grenade:
+                    ThrownGrenade.Throw(t.position + t.forward * 0.5f + t.right * 0.15f, t.forward * 15f + Vector3.up * 3.5f, player, GrenadeDamage);
+                    meleeT = 0f; // 던지는 팔 동작 재사용
+                    break;
+                case GadgetType.Mine:
+                    LandMine.Plant(player.transform.position + flatFwd * 1.1f, player, MineDamage);
+                    break;
+                case GadgetType.Turret:
+                    SentryTurret.Deploy(player.transform.position + flatFwd * 1.6f, t.eulerAngles.y, TurretDamage);
+                    break;
+            }
+            if (Mode == Hand.Gadget && GadgetCount[(int)g] <= 0) NextGadget();
+        }
+
         void Swap(int index)
         {
-            if (index == CurrentIndex || index < 0 || index >= Slots.Count) return;
+            if (index < 0 || index >= Slots.Count) return;
+            if (Mode != Hand.Gun) { Mode = Hand.Gun; quickMelee = false; if (index == CurrentIndex) { swapTotal = swapTime = 0.4f / player.Stats.SwapSpeedMult; SFX.Play(SFX.Swap, 0.6f); return; } }
+            if (index == CurrentIndex) return;
             CurrentIndex = index;
             reloadTime = 0f;
             reloadTotal = 0f;
@@ -154,7 +380,7 @@ namespace Hunt.Player
         {
             if (IsReloading || w.ammoInMag >= w.MagazineSize || w.reserve <= 0) return;
             float baseTime = w.ammoInMag == 0 ? w.data.emptyReloadTime : w.data.reloadTime;
-            reloadTotal = reloadTime = baseTime / (player.Stats.ReloadSpeedMult * w.ReloadSpeedMult);
+            reloadTotal = reloadTime = baseTime / (player.Stats.ReloadSpeedMult * w.ReloadSpeedMult * player.Armor.ReloadMult);
             reloadStage = 0;
             Noise.Emit(player.transform.position, 6f, true); // 탄창 소리
         }
@@ -176,6 +402,7 @@ namespace Hunt.Player
             var inf = player.Infection;
             fireCooldown = w.FireInterval;
             w.ammoInMag--;
+            player.InterruptItem();
             lastShotTime = Time.time;
 
             float burst = 1f;
@@ -191,7 +418,7 @@ namespace Hunt.Player
 
             var info = new DamageInfo
             {
-                baseDamage = w.Damage * inf.DamageMultiplier * burst,
+                baseDamage = w.Damage * inf.DamageMultiplier * burst * GameRules.DamageMult * stats.BalanceBonus,
                 type = w.DamageType,
                 weaponClass = w.data.weaponClass,
                 critChance = stats.CritChance + w.CritChanceBonus,
@@ -222,11 +449,21 @@ namespace Hunt.Player
             bool anyHit = false, anyWeak = false, anyKill = false;
             Vector3 killPos = Vector3.zero, hurtPos = Vector3.zero;
 
+            // 유탄·로켓: 날아가서 터지는 탄
+            if (w.data.explosive)
+            {
+                Vector3 d0 = SpreadDirection(cam.transform, CurrentSpread);
+                LauncherShell.Fire(muzzle, d0 * w.data.projectileSpeed, player, info.baseDamage, w.data.blastRadius, w.data.tier >= 3);
+                pellets = 0;
+            }
+            bool flame = w.data.weaponClass == WeaponClass.Flamethrower;
+            float range = Mathf.Min(300f, w.data.maxRange);
+
             for (int i = 0; i < pellets; i++)
             {
                 Vector3 dir = SpreadDirection(cam.transform, CurrentSpread);
-                Vector3 end = origin + dir * 150f;
-                if (Physics.Raycast(origin, dir, out RaycastHit hit, 300f, RaycastMask, QueryTriggerInteraction.Ignore))
+                Vector3 end = origin + dir * Mathf.Min(150f, range);
+                if (Physics.Raycast(origin, dir, out RaycastHit hit, range, RaycastMask, QueryTriggerInteraction.Ignore))
                 {
                     end = hit.point;
                     var part = hit.collider.GetComponent<MonsterPart>();
@@ -246,13 +483,14 @@ namespace Hunt.Player
                         }
                         OnHitResult(w, res, info, hit.point);
                     }
-                    else
+                    else if (!flame)
                     {
                         FX.ImpactWorld(hit.point, hit.normal);
                     }
                 }
-                // 산탄은 일부 펠릿만 예광탄 표시
-                if (pellets == 1 || i % 3 == 0) FX.Tracer(muzzle, end, tracer, tracerWidth);
+                // 화염: 굵고 짧은 불줄기 / 산탄은 일부 펠릿만 예광탄 표시
+                if (flame) { if (i == 0) FX.Tracer(muzzle, Vector3.Lerp(muzzle, end, Random.Range(0.6f, 1f)), new Color(1f, Random.Range(0.35f, 0.6f), 0.1f), Random.Range(0.12f, 0.22f)); }
+                else if (pellets == 1 || i % 3 == 0) FX.Tracer(muzzle, end, tracer, tracerWidth);
             }
 
             if (anyHit) SFX.Play(SFX.FleshHit, pellets > 1 ? 0.75f : 0.55f, 0.08f);
@@ -342,7 +580,7 @@ namespace Hunt.Player
         {
             foreach (var s in Slots)
             {
-                s.reserve = s.MaxReserve;
+                s.reserve = Mathf.RoundToInt(s.MaxReserve * GameRules.AmmoMult);
                 s.ammoInMag = s.MagazineSize;
             }
         }

@@ -120,6 +120,36 @@ namespace Hunt.Weapons
                     m.hipOffset = new Vector3(0.13f, -0.15f, 0.22f); m.adsZ = 0.18f; m.kickStrength = 0.45f;
                     break;
 
+                case WeaponClass.Flamethrower:
+                    // 연료통 두 개 + 굵은 관 + 점화구
+                    Box(t, Vector3.zero, new Vector3(0.07f, 0.08f, 0.3f), Metal);
+                    Cyl(t, new Vector3(0.05f, -0.07f, -0.02f), 0.045f, 0.3f, new Color(0.5f, 0.14f, 0.1f));
+                    Cyl(t, new Vector3(-0.05f, -0.07f, -0.02f), 0.045f, 0.3f, new Color(0.5f, 0.14f, 0.1f));
+                    barrel = Cyl(t, new Vector3(0, 0.01f, 0.32f), 0.022f, 0.36f, Metal);
+                    Cyl(t, new Vector3(0, 0.01f, 0.5f), 0.032f, 0.05f, MetalLight);
+                    Box(t, new Vector3(0, -0.07f, 0.12f), new Vector3(0.035f, 0.09f, 0.04f), furn, -15f);
+                    stock = Box(t, new Vector3(0, -0.01f, -0.26f), new Vector3(0.045f, 0.08f, 0.2f), furn);
+                    Box(t, new Vector3(0, 0.05f, 0.1f), new Vector3(0.01f, 0.025f, 0.01f), MetalLight);
+                    m.sightHeight = 0.06f;
+                    muzzleZ = 0.53f;
+                    m.hipOffset = new Vector3(0.13f, -0.15f, 0.22f); m.adsZ = 0.2f; m.kickStrength = 0.1f;
+                    break;
+
+                case WeaponClass.Launcher:
+                    // 굵고 짧은 발사관 + 나무 개머리 + 접이식 가늠자
+                    barrel = Cyl(t, new Vector3(0, 0.01f, 0.18f), 0.04f, 0.5f, new Color(0.18f, 0.2f, 0.15f));
+                    Cyl(t, new Vector3(0, 0.01f, 0.43f), 0.046f, 0.04f, Metal);
+                    Box(t, new Vector3(0, -0.02f, -0.05f), new Vector3(0.06f, 0.07f, 0.16f), Metal);
+                    Box(t, new Vector3(0, -0.08f, -0.03f), new Vector3(0.035f, 0.1f, 0.045f), furn, -15f);
+                    stock = Box(t, new Vector3(0, -0.03f, -0.27f), new Vector3(0.05f, 0.1f, 0.26f), furn, 4f);
+                    Box(t, new Vector3(0, 0.075f, 0.05f), new Vector3(0.03f, 0.04f, 0.006f), MetalLight);
+                    m.action = Box(t, new Vector3(0, 0.055f, -0.05f), new Vector3(0.02f, 0.012f, 0.05f), MetalLight).transform;
+                    m.actionTravel = 0.04f; m.pumpAction = true;
+                    m.sightHeight = 0.09f;
+                    muzzleZ = 0.45f;
+                    m.hipOffset = new Vector3(0.13f, -0.14f, 0.24f); m.adsZ = 0.2f; m.kickStrength = 1.8f;
+                    break;
+
                 default: // Rifle
                     Box(t, Vector3.zero, new Vector3(0.055f, 0.08f, 0.36f), Metal);
                     Box(t, new Vector3(0, 0f, 0.32f), new Vector3(0.06f, 0.065f, 0.26f), furn);

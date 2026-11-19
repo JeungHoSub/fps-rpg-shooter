@@ -15,6 +15,7 @@ namespace Hunt.Weapons
 
         public readonly WeaponData data;
         public int upgradeLevel;
+        public Hunt.Player.Grade grade;
         public readonly Dictionary<PartSlot, WeaponPart> parts = new Dictionary<PartSlot, WeaponPart>();
 
         public int ammoInMag;
@@ -53,7 +54,8 @@ namespace Hunt.Weapons
             return old;
         }
 
-        public float Damage => data.damage * (1f + 0.08f * upgradeLevel) * (1f + Sum(AffixType.DamagePct) / 100f);
+        /// <summary>등급(일반~전설) × 강화(+7%/단계) × 부품.</summary>
+        public float Damage => data.damage * Hunt.Player.Grades.Mult(grade) * Hunt.Player.Grades.UpgradeMult(upgradeLevel) * (1f + Sum(AffixType.DamagePct) / 100f);
         public float FireInterval => data.FireInterval / (1f + Sum(AffixType.FireRatePct) / 100f);
         public int MagazineSize => Mathf.Max(1, Mathf.RoundToInt(data.magazine * (1f + Sum(AffixType.MagazinePct) / 100f)));
         public float ReloadSpeedMult => 1f + Sum(AffixType.ReloadSpeedPct) / 100f;
@@ -63,7 +65,7 @@ namespace Hunt.Weapons
         public float CritChanceBonus => Sum(AffixType.CritChancePct) / 100f;
         public float WeakPointBonus => Sum(AffixType.WeakPointDamagePct) / 100f;
         public float Weight => data.weight * Mathf.Max(0.4f, 1f - Sum(AffixType.WeightReductionPct) / 100f);
-        public int MaxReserve => data.reserveAmmo;
+        public int MaxReserve => Mathf.RoundToInt(data.reserveAmmo * (1f + 0.1f * (int)grade));
 
         public DamageType DamageType
         {
@@ -77,9 +79,10 @@ namespace Hunt.Weapons
             }
         }
 
-        public int UpgradeCost => 80 + 60 * upgradeLevel;
+        public int UpgradeCost => Hunt.Player.Grades.UpgradeCost(grade, upgradeLevel) + 20 * data.tier;
+        public int GradeUpCost => Hunt.Player.Grades.GradeUpCost(grade) + 60 * data.tier;
 
-        public string DisplayName => upgradeLevel > 0 ? $"{data.displayName} +{upgradeLevel}" : data.displayName;
+        public string DisplayName => (grade > 0 ? Hunt.Player.Grades.Name(grade) + " " : "") + (upgradeLevel > 0 ? $"{data.displayName} +{upgradeLevel}" : data.displayName);
     }
 
     /// <summary>

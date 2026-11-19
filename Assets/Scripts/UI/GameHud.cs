@@ -36,7 +36,7 @@ namespace Hunt.UI
             DrawDamageNumbers(cam, scale);
 
             // ---- 화면 효과 ----
-            float hpRatio = p.Hp / p.Stats.MaxHp;
+            float hpRatio = p.Hp / p.MaxHp;
             if (hpRatio < 0.35f)
             {
                 float pulse = 0.5f + 0.5f * Mathf.Sin(Time.time * (hpRatio < 0.15f ? 7f : 4f));
@@ -61,7 +61,7 @@ namespace Hunt.UI
             UIKit.Orb(hpOrb, hpTrail, new Color(1f, 0.75f, 0.55f), UITheme.BloodBright);
             DrawOrbFill(hpOrb, hpRatio, new Color(0.8f, 0.07f, 0.08f));
             UIKit.Text(new Rect(hpOrb.x, hpOrb.center.y - 22, hpOrb.width, 30), $"{p.Hp:0}", 30, UITheme.Bone, TextAnchor.MiddleCenter, serif: true, bold: true);
-            UIKit.Text(new Rect(hpOrb.x, hpOrb.center.y + 6, hpOrb.width, 22), $"/ {p.Stats.MaxHp:0}", 16, UITheme.BoneDim, TextAnchor.MiddleCenter);
+            UIKit.Text(new Rect(hpOrb.x, hpOrb.center.y + 6, hpOrb.width, 22), $"/ {p.MaxHp:0}", 16, UITheme.BoneDim, TextAnchor.MiddleCenter);
             UIKit.Text(new Rect(hpOrb.x, hpOrb.y - 34, hpOrb.width, 28), "생  명", 18, UITheme.Gold, TextAnchor.MiddleCenter, serif: true, bold: true);
             // 레벨 문장
             UIKit.Emblem(new Rect(hpOrb.xMax - 46, hpOrb.y - 14, 60, 60), p.Level.ToString(), UITheme.GoldBright, true);

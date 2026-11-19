@@ -46,7 +46,7 @@ namespace Hunt.Player
         public void AddInfection(float amount)
         {
             if (IsFrenzy) return;
-            Gauge = Mathf.Min(Max, Gauge + amount * player.Stats.InfectionResistMult);
+            Gauge = Mathf.Min(Max, Gauge + amount * player.Stats.InfectionResistMult * player.Armor.InfectionMult);
             sinceHit = 0f;
             if (Gauge >= Max) StartFrenzy();
         }

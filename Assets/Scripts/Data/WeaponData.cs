@@ -48,6 +48,17 @@ namespace Hunt.Data
         public float adsFov = 55f;
         public Color viewColor = Color.gray;
 
+        [Header("계열 · 단계")]
+        [Tooltip("같은 계열에서 1~3단계. 높을수록 강하고 비싸다.")]
+        public int tier = 1;
+        public int price = 0;
+        [Tooltip("이 거리 밖은 맞지 않는다 (화염방사기 등)")]
+        public float maxRange = 300f;
+        [Header("폭발탄 (유탄·로켓)")]
+        public bool explosive;
+        public float blastRadius = 4f;
+        public float projectileSpeed = 40f;
+
         public float FireInterval => 60f / Mathf.Max(1f, rpm);
     }
 }

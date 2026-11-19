@@ -69,6 +69,10 @@ namespace Hunt.Monsters
 
         public void Alert(float seconds) { alertTime = Mathf.Max(alertTime, seconds); }
 
+        /// <summary>라운드가 오를수록 단단해진다: 한 발마다 깎는 방어도.</summary>
+        public float Defense => defense;
+        public void AddDefense(float d) { defense += d; }
+
         /// <summary>보스가 쓰러질 때 함께 무너진다.</summary>
         public void Collapse() { Die(); }
 

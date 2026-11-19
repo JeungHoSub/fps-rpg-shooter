@@ -55,6 +55,50 @@ namespace Hunt.Core
         }
 
         /// <summary>
+        /// 손에 드는 모델: 가장 긴 축을 앞(+Z)으로 돌리고 length(m)에 맞춘다. 중심이 원점. 그림자·충돌 없음.
+        /// </summary>
+        public static GameObject PlaceHeld(string id, Transform parent, float length, int layer, Color? tint = null, float gloss = 0.6f)
+        {
+            var src = Model(id);
+            if (src == null) return null;
+            var holder = new GameObject(id);
+            holder.transform.SetParent(parent, false);
+            var inst = Object.Instantiate(src);
+            inst.transform.position = Vector3.zero;
+            inst.transform.rotation = Quaternion.identity;
+            var rends = inst.GetComponentsInChildren<Renderer>(true);
+            if (rends.Length == 0) { Object.Destroy(inst); return holder; }
+            var mat = Material(id, tint ?? Color.white, gloss, false);
+            Bounds b = rends[0].bounds;
+            foreach (var r in rends)
+            {
+                b.Encapsulate(r.bounds);
+                var arr = r.sharedMaterials;
+                for (int i = 0; i < arr.Length; i++) arr[i] = mat;
+                r.sharedMaterials = arr;
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                r.receiveShadows = false;
+            }
+            foreach (var c in inst.GetComponentsInChildren<Camera>(true)) Object.Destroy(c.gameObject);
+            foreach (var l in inst.GetComponentsInChildren<Light>(true)) Object.Destroy(l);
+
+            Vector3 sz = b.size;
+            float longest = Mathf.Max(sz.x, Mathf.Max(sz.y, sz.z));
+            float s = longest > 0.0001f ? length / longest : 1f;
+            // 가장 긴 축 → +Z
+            Quaternion align = sz.x >= sz.y && sz.x >= sz.z ? Quaternion.Euler(0f, -90f, 0f)
+                : sz.y >= sz.z ? Quaternion.Euler(90f, 0f, 0f) : Quaternion.identity;
+            var pivot = new GameObject("pivot").transform;
+            pivot.SetParent(holder.transform, false);
+            pivot.localRotation = align;
+            inst.transform.SetParent(pivot, false);
+            inst.transform.localScale *= s;
+            inst.transform.localPosition = -b.center * s;
+            foreach (var t in holder.GetComponentsInChildren<Transform>(true)) t.gameObject.layer = layer;
+            return holder;
+        }
+
+        /// <summary>
         /// 모델을 놓는다. height = 바닥부터 꼭대기까지 높이(m). 반환: 기준 오브젝트(바닥 중심이 pos).
         /// </summary>
         public static GameObject Place(string id, Transform parent, Vector3 localPos, float yaw, float height,

@@ -57,12 +57,43 @@ namespace Hunt.Stats
         public float Get(StatType t) =>
             data.baseStats.Get(t) + Mathf.Floor(data.growthPerLevel.Get(t) * (Level - 1)) + allocated[(int)t];
 
-        float STR => Get(StatType.STR);
-        float AGI => Get(StatType.AGI);
-        float CTL => Get(StatType.CTL);
-        float VIT => Get(StatType.VIT);
-        float FOC => Get(StatType.FOC);
-        float TEC => Get(StatType.TEC);
+        // ---- 몰빵 방지: 수확 체감 ----
+        // 16까지는 1점 = 1, 16~28은 1점 = 0.5, 그 위는 1점 = 0.25.
+        // 한 능력치에 몰아 넣을수록 손해이고, 고르게 올리면 '균형' 보너스를 받는다.
+        public const float SoftCap1 = 16f, SoftCap2 = 28f;
+
+        public static float Soft(float v)
+        {
+            if (v <= SoftCap1) return v;
+            if (v <= SoftCap2) return SoftCap1 + (v - SoftCap1) * 0.5f;
+            return SoftCap1 + (SoftCap2 - SoftCap1) * 0.5f + (v - SoftCap2) * 0.25f;
+        }
+
+        /// <summary>수확 체감이 적용된 실제 효과 값.</summary>
+        public float Effective(StatType t) => Soft(Get(t));
+
+        float STR => Effective(StatType.STR);
+        float AGI => Effective(StatType.AGI);
+        float CTL => Effective(StatType.CTL);
+        float VIT => Effective(StatType.VIT);
+        float FOC => Effective(StatType.FOC);
+        float TEC => Effective(StatType.TEC);
+
+        public float Strength => STR;
+        public float Agility => AGI;
+        public float Vitality => VIT;
+        public float Tech => TEC;
+
+        /// <summary>가장 낮은 능력치 기준 '균형' 보너스: 기본(8)보다 1 높을 때마다 모든 피해 +1.5%.</summary>
+        public float BalanceBonus
+        {
+            get
+            {
+                float min = float.MaxValue;
+                foreach (var t in All) min = Mathf.Min(min, Get(t));
+                return 1f + Mathf.Max(0f, min - 8f) * 0.015f;
+            }
+        }
 
         // ---- 힘 ----
         public float CarryCapacity => (10f + STR * 1.5f) * (Has(Trait.Heavyweight) ? 1.4f : 1f);

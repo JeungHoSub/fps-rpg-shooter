@@ -37,7 +37,7 @@ namespace Hunt.Evolution
 
         readonly float[] byType = new float[5];
         readonly float[] byZone = new float[5];
-        readonly float[] byClass = new float[6];
+        readonly float[] byClass = new float[System.Enum.GetValues(typeof(WeaponClass)).Length];
         float total;
 
         // 이번 웨이브 통계 (UI 표시용)

@@ -92,6 +92,14 @@ namespace Hunt.Player
             if (player == null || player.Weapons == null || player.Weapons.Current == null) return;
             var gm = GameManager.Instance;
             if (gm == null || gm.Paused) return;
+            if (player.Weapons.Mode != PlayerWeapons.Hand.Gun)
+            {
+                if (model != null) model.gameObject.SetActive(false);
+                if (flash != null) flash.SetActive(false);
+                DrawHeld(Time.deltaTime);
+                return;
+            }
+            ShowHeld(null);
             EnsureModel();
             if (model == null) return;
 
@@ -172,6 +180,129 @@ namespace Hunt.Player
 
             flashTime -= dt;
             if (flash != null) flash.SetActive(flashTime > 0f);
+        }
+
+        // ---------------------------------------------------------------- 칼 · 특수 기기
+        GameObject machete, grenade, mine, turretKit;
+        float heldBob;
+
+        static Material Mat(Color c, float gloss, float metal) => EnvMaterials.Plain(c, gloss, metal);
+
+        static GameObject Piece(Transform parent, PrimitiveType t, Vector3 pos, Vector3 scale, Material m, Quaternion? rot = null)
+        {
+            var g = GameObject.CreatePrimitive(t);
+            Destroy(g.GetComponent<Collider>());
+            g.transform.SetParent(parent, false);
+            g.transform.localPosition = pos;
+            g.transform.localScale = scale;
+            g.transform.localRotation = rot ?? Quaternion.identity;
+            var r = g.GetComponent<Renderer>();
+            r.sharedMaterial = m;
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            g.layer = GunModelBuilder.ViewLayer;
+            return g;
+        }
+
+        GameObject Root(string name)
+        {
+            var g = new GameObject(name);
+            g.layer = GunModelBuilder.ViewLayer;
+            g.transform.SetParent(transform, false);
+            return g;
+        }
+
+        void BuildHeld()
+        {
+            if (machete != null) return;
+            // 마체테: 손잡이(검은 고무) + 넓적한 칼날(녹슨 쇠) — 칼끝이 앞(+Z)
+            machete = Root("Machete");
+            var steel = Mat(new Color(0.55f, 0.55f, 0.53f), 0.8f, 0.85f);
+            var edge = Mat(new Color(0.75f, 0.75f, 0.74f), 0.9f, 0.9f);
+            var grip = Mat(new Color(0.06f, 0.06f, 0.06f), 0.3f, 0f);
+            Piece(machete.transform, PrimitiveType.Cylinder, new Vector3(0f, 0f, 0.06f), new Vector3(0.032f, 0.07f, 0.032f), grip, Quaternion.Euler(90f, 0f, 0f));
+            Piece(machete.transform, PrimitiveType.Cube, new Vector3(0f, 0.012f, 0.14f), new Vector3(0.012f, 0.05f, 0.02f), steel);
+            Piece(machete.transform, PrimitiveType.Cube, new Vector3(0f, 0.012f, 0.36f), new Vector3(0.006f, 0.055f, 0.42f), steel);
+            Piece(machete.transform, PrimitiveType.Cube, new Vector3(0f, -0.016f, 0.37f), new Vector3(0.004f, 0.012f, 0.4f), edge);
+            Piece(machete.transform, PrimitiveType.Cube, new Vector3(0f, 0.0f, 0.585f), new Vector3(0.006f, 0.04f, 0.05f), steel, Quaternion.Euler(-30f, 0f, 0f));
+
+            grenade = Root("GrenadeHeld");
+            if (PropModels.PlaceHeld("stick_grenade", grenade.transform, 0.36f, GunModelBuilder.ViewLayer, new Color(0.7f, 0.7f, 0.65f)) == null)
+                Piece(grenade.transform, PrimitiveType.Sphere, Vector3.zero, Vector3.one * 0.08f, Gadgets.Dark);
+
+            mine = Root("MineHeld");
+            Piece(mine.transform, PrimitiveType.Cylinder, Vector3.zero, new Vector3(0.26f, 0.03f, 0.26f), Mat(new Color(0.2f, 0.24f, 0.16f), 0.4f, 0.3f));
+            Piece(mine.transform, PrimitiveType.Sphere, new Vector3(0.08f, 0.035f, 0f), Vector3.one * 0.02f, FX.UnlitMaterial(new Color(1f, 0.15f, 0.1f)));
+
+            turretKit = Root("TurretHeld");
+            Piece(turretKit.transform, PrimitiveType.Cube, Vector3.zero, new Vector3(0.14f, 0.14f, 0.42f), Mat(new Color(0.22f, 0.24f, 0.2f), 0.55f, 0.6f));
+            Piece(turretKit.transform, PrimitiveType.Cylinder, new Vector3(0f, 0.02f, 0.3f), new Vector3(0.045f, 0.12f, 0.045f), Gadgets.Dark, Quaternion.Euler(90f, 0f, 0f));
+            ShowHeld(null);
+        }
+
+        void ShowHeld(GameObject which)
+        {
+            if (machete == null) return;
+            machete.SetActive(which == machete);
+            grenade.SetActive(which == grenade);
+            mine.SetActive(which == mine);
+            turretKit.SetActive(which == turretKit);
+        }
+
+        void DrawHeld(float dt)
+        {
+            BuildHeld();
+            var wp = player.Weapons;
+            var ctrl = player.Controller;
+            GameObject show;
+            if (wp.Mode == PlayerWeapons.Hand.Melee) show = machete;
+            else show = wp.Gadget == GadgetType.Grenade ? grenade : wp.Gadget == GadgetType.Mine ? mine : turretKit;
+            if (wp.Mode == PlayerWeapons.Hand.Gadget && wp.GadgetCount[(int)wp.Gadget] <= 0) show = null;
+            ShowHeld(show);
+
+            bool moving = ctrl.IsMoving && ctrl.IsGrounded;
+            if (moving) heldBob += dt * (ctrl.IsSprinting ? 13f : 9f);
+            Vector3 bob = moving ? new Vector3(Mathf.Sin(heldBob) * 0.012f, -Mathf.Abs(Mathf.Cos(heldBob)) * 0.01f, 0f) : Vector3.zero;
+            Vector3 pos = new Vector3(0.2f, -0.2f, 0.32f) + bob;
+            Vector3 rot = new Vector3(-10f, -8f, -25f);
+
+            float t = wp.MeleeSwing;
+            if (t < 1f)
+            {
+                if (wp.Mode == PlayerWeapons.Hand.Melee)
+                {
+                    // 들어 올렸다가(0~0.3) 오른쪽 위에서 왼쪽 아래로 벤다(0.3~0.55), 돌아온다
+                    if (t < 0.3f)
+                    {
+                        float k = t / 0.3f;
+                        pos += new Vector3(0.06f, 0.12f, -0.05f) * k;
+                        rot += new Vector3(-55f, 20f, -20f) * k;
+                    }
+                    else if (t < 0.55f)
+                    {
+                        float k = (t - 0.3f) / 0.25f;
+                        pos += Vector3.Lerp(new Vector3(0.06f, 0.12f, -0.05f), new Vector3(-0.32f, -0.12f, 0.12f), k);
+                        rot += Vector3.Lerp(new Vector3(-55f, 20f, -20f), new Vector3(50f, -60f, -60f), k);
+                    }
+                    else
+                    {
+                        float k = 1f - (t - 0.55f) / 0.45f;
+                        pos += new Vector3(-0.32f, -0.12f, 0.12f) * k;
+                        rot += new Vector3(50f, -60f, -60f) * k;
+                    }
+                }
+                else
+                {
+                    // 던지기: 뒤로 젖혔다가 앞으로
+                    float k = Mathf.Sin(t * Mathf.PI);
+                    pos += new Vector3(0.05f, 0.15f, t < 0.4f ? -0.15f : 0.2f) * k;
+                    rot += new Vector3(t < 0.4f ? -40f : 30f, 0f, 0f) * k;
+                }
+            }
+            float sw = wp.SwapProgress;
+            pos += Vector3.down * 0.25f * sw;
+            rot.x += 40f * sw;
+            transform.localPosition = pos;
+            transform.localRotation = Quaternion.Euler(rot);
         }
 
         public bool IsScoped => model != null && model.hideWhenScoped && player.Weapons.Aim > 0.92f;

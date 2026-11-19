@@ -218,8 +218,19 @@ namespace Hunt.Waves
             var evo = EvolutionDirector.Instance != null ? EvolutionDirector.Instance.Profile : new EvolutionProfile();
             Vector3 pos = Navigation.Snap(at ?? SpawnPoint());
             var m = MonsterFactory.Create(data, pos, evo, hpScale, player, root);
+            if (m != null) m.AddDefense(DefenseBonus(a));
             if (m != null && !placed && a != MonsterArchetype.Runner) m.Alert(4f); // 엘리트·보스는 찾아서 온다
             return m;
+        }
+
+        /// <summary>
+        /// 밤마다 오르는 방어도 (한 발 피해에서 그대로 빠진다).
+        /// 셋째 밤쯤부터 연사가 빠른 총은 효율이 떨어지고, 한 방이 센 총·관통·폭발·화염이 필요해진다.
+        /// </summary>
+        public float DefenseBonus(MonsterArchetype a)
+        {
+            float k = a == MonsterArchetype.Runner ? 1.4f : a == MonsterArchetype.Boss ? 3f : 2.2f;
+            return Mathf.Max(0, Wave - 1) * k;
         }
 
         /// <summary>마을 안 아무 곳 (플레이어와 20m 이상 떨어진 곳).</summary>
