@@ -265,6 +265,56 @@ namespace Hunt.UI
             }
         }
 
+        /// <summary>
+        /// 능력치 눈금: 세로로 긴 네모 칸. 기본치는 바랜 한지, 투자분은 새 한지, 미리보기는 테두리만.
+        /// 칸 수가 많아도 한 줄에 들어가도록 폭을 맞춘다.
+        /// </summary>
+        public static void StatCells(Rect r, int max, int baseCount, int extra, int preview = 0)
+        {
+            float gap = 3f;
+            float w = Mathf.Max(3f, (r.width - gap * (max - 1)) / max);
+            for (int i = 0; i < max; i++)
+            {
+                var c = new Rect(r.x + i * (w + gap), r.y, w, r.height);
+                if (i < baseCount) Fill(c, new Color(0.62f, 0.58f, 0.5f, 0.75f));
+                else if (i < baseCount + extra)
+                {
+                    Tex(new Rect(c.x - 3, c.y - 3, c.width + 6, c.height + 6), UITheme.Glow, new Color(1f, 0.92f, 0.75f, 0.25f));
+                    Fill(c, UITheme.GoldBright);
+                }
+                else if (i < baseCount + extra + preview)
+                {
+                    float pulse = 0.55f + 0.45f * Mathf.Sin(Time.unscaledTime * 6f);
+                    Fill(c, new Color(0.97f, 0.94f, 0.86f, 0.25f * pulse));
+                    Outline(c, new Color(0.97f, 0.94f, 0.86f, pulse));
+                }
+                else
+                {
+                    Fill(c, new Color(0f, 0f, 0f, 0.45f));
+                    Outline(c, new Color(0.45f, 0.42f, 0.37f, 0.35f));
+                }
+            }
+        }
+
+        public static void Outline(Rect r, Color c, float t = 1f)
+        {
+            Fill(new Rect(r.x, r.y, r.width, t), c);
+            Fill(new Rect(r.x, r.yMax - t, r.width, t), c);
+            Fill(new Rect(r.x, r.y, t, r.height), c);
+            Fill(new Rect(r.xMax - t, r.y, t, r.height), c);
+        }
+
+        /// <summary>글자 버튼 (작은 크기용). 사용 불가면 흐리게.</summary>
+        public static bool SmallButton(Rect r, string label, bool enabled, int size = 16)
+        {
+            float h = Hover(r, "sb" + label + r.x + r.y, enabled);
+            Fill(r, enabled ? new Color(0.09f, 0.085f, 0.08f, 0.95f) : new Color(0.05f, 0.05f, 0.05f, 0.6f));
+            Outline(r, enabled ? Color.Lerp(new Color(0.6f, 0.56f, 0.48f), UITheme.GoldBright, h) : new Color(0.3f, 0.3f, 0.3f, 0.5f));
+            if (enabled && h > 0.01f) Fill(new Rect(r.x + 1, r.y + 1, r.width - 2, r.height - 2), new Color(1f, 0.95f, 0.85f, 0.08f * h));
+            Text(r, label, size, enabled ? Color.Lerp(UITheme.Gold, UITheme.GoldBright, h) : UITheme.Ash, TextAnchor.MiddleCenter, bold: true);
+            return Clicked(r, enabled);
+        }
+
         /// <summary>테두리 있는 게이지. trail ≥ 0이면 최근 잃은 양을 밝게 표시.</summary>
         public static void Bar(Rect r, float t, Color c, string label = null, float trail = -1f, int fontSize = 0)
         {

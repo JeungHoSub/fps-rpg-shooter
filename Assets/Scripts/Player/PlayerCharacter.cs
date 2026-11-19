@@ -212,6 +212,9 @@ namespace Hunt.Player
 
             if (Stats.Has(Trait.Bloodlust)) Heal(4f);
 
+            // 보급품 드롭: 치료 키트 · 스태미너 회복제 · 탄창
+            Pickup.RollDrops(m);
+
             // D: 파츠 드랍. 진화 세대가 높을수록 희귀 파츠 확률 증가.
             float luck = evo != null ? evo.PartLuck : 0f;
             if (Random.value < m.Data.partDropChance * (1f + luck) * (scavenger ? 1.4f : 1f))
@@ -268,6 +271,12 @@ namespace Hunt.Player
             PendingTraitPicks--;
             TraitOffer.Clear();
             HUD.Notify($"새 기질 — {Traits.Name(t)}", new Color(0.5f, 0.9f, 1f));
+        }
+
+        /// <summary>남은 단련을 한 능력치에 전부 넣는다.</summary>
+        public void SpendAllStatPoints(StatType t)
+        {
+            while (StatPoints > 0) SpendStatPoint(t);
         }
 
         public void SpendStatPoint(StatType t)

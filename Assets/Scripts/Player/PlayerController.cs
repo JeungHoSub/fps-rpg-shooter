@@ -37,6 +37,16 @@ namespace Hunt.Player
         }
 
         public bool IsSprinting { get; private set; }
+
+        // ---- 앉기 (Ctrl): 눈높이가 낮아지고 느려지지만, 탄이 모이고 반동이 줄고, 발소리·모습이 덜 드러난다 ----
+        public const float CrouchEyeHeight = 1.05f;
+        public bool IsCrouching { get; private set; }
+        /// <summary>0 = 섬, 1 = 완전히 앉음 (부드럽게 바뀐다).</summary>
+        public float CrouchBlend { get; private set; }
+        /// <summary>앉아서 쏠 때 탄퍼짐 배율.</summary>
+        public float CrouchSpreadMult => Mathf.Lerp(1f, 0.6f, CrouchBlend);
+        /// <summary>앉아서 쏠 때 반동 배율.</summary>
+        public float CrouchRecoilMult => Mathf.Lerp(1f, 0.65f, CrouchBlend);
         float shake, sprintBlock, stepTimer;
 
         // ---- 스태미너: 달리기·점프·칼질에 쓰고, 쉬면 찬다. 바닥나면 25까지 회복해야 다시 달린다 ----
@@ -159,7 +169,19 @@ namespace Hunt.Player
             }
             if (sprintBlock > 0f) sprintBlock -= dt;
             bool forward = input && GameInput.MoveY > 0.1f;
-            bool sprint = forward && GameInput.Sprint && !player.Weapons.IsAiming && sprintBlock <= 0f && !Exhausted && !player.IsUsingItem;
+            // 앉기: 머리 위가 막혀 있으면 일어서지 못한다. 달리면 일어선다.
+            bool wantCrouch = input && GameInput.Crouch && !(forward && GameInput.Sprint && !Exhausted);
+            if (wantCrouch) IsCrouching = true;
+            else if (IsCrouching && !Physics.SphereCast(transform.position + Vector3.up * 0.6f, cc.radius * 0.9f, Vector3.up, out _, 1.15f, ~((1 << 2) | (1 << 1)), QueryTriggerInteraction.Ignore))
+                IsCrouching = false;
+            CrouchBlend = Mathf.MoveTowards(CrouchBlend, IsCrouching ? 1f : 0f, dt * 6f);
+            float h = Mathf.Lerp(1.8f, 1.2f, CrouchBlend);
+            cc.height = h;
+            cc.center = new Vector3(0f, h * 0.5f, 0f);
+            var cp = cam.transform.localPosition;
+            cam.transform.localPosition = new Vector3(cp.x, Mathf.Lerp(EyeHeight, CrouchEyeHeight, CrouchBlend), cp.z);
+
+            bool sprint = forward && GameInput.Sprint && !IsCrouching && !player.Weapons.IsAiming && sprintBlock <= 0f && !Exhausted && !player.IsUsingItem;
             if (BoostTime > 0f) BoostTime -= dt;
             if (sprint) UseStamina(16f * dt);
             else
@@ -170,12 +192,12 @@ namespace Hunt.Player
             if (Exhausted && Stamina >= 25f) Exhausted = false;
             IsSprinting = sprint;
             float speed = player.Stats.MoveSpeed * WeightPenalty * player.Infection.MoveMultiplier * MoveMultiplier * (sprint ? 1.45f : 1f)
-                * player.Armor.MoveMult * (player.IsUsingItem ? 0.45f : 1f) * (Exhausted ? 0.85f : 1f) * GameRules.MoveMult;
+                * player.Armor.MoveMult * (player.IsUsingItem ? 0.45f : 1f) * (Exhausted ? 0.85f : 1f) * GameRules.MoveMult * Mathf.Lerp(1f, 0.5f, CrouchBlend);
 
             if (cc.isGrounded)
             {
                 verticalVel = -1f;
-                if (input && GameInput.JumpDown && UseStamina(10f)) verticalVel = jumpSpeed;
+                if (input && GameInput.JumpDown && !IsCrouching && UseStamina(10f)) verticalVel = jumpSpeed;
             }
             else
             {
@@ -192,8 +214,8 @@ namespace Hunt.Player
                 stepTimer -= dt;
                 if (stepTimer <= 0f)
                 {
-                    stepTimer = sprint ? 0.33f : 0.5f;
-                    Noise.Emit(transform.position, sprint ? 10f : 4f, true);
+                    stepTimer = sprint ? 0.33f : IsCrouching ? 0.7f : 0.5f;
+                    Noise.Emit(transform.position, sprint ? 10f : IsCrouching ? 1.5f : 4f, true); // 앉아 걸으면 거의 안 들린다
                 }
             }
             else stepTimer = 0f;

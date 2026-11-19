@@ -228,6 +228,75 @@ namespace Hunt.Data
             monsters[boss.archetype] = boss;
         }
 
+        // ------------------------------------------------------------------ 망자 유형 (기본 망자 변형)
+        /// <summary>망자 유형: 체력·피해·이동 속도·공격 속도 배율.</summary>
+        public struct ZombieKind
+        {
+            public string id, name, desc;
+            public float hp, dmg, speed, atkInterval, scale;
+            public Color tint;
+            public int fromWave;   // 이 밤부터 나온다
+            public float weight;
+        }
+
+        /// <summary>
+        /// 기본형 · 단단한형 · 빠른형 + 네 능력치를 섞은 변형들.
+        /// atkInterval은 '공격 간격' 배율 (작을수록 공격이 빠르다).
+        /// </summary>
+        public static readonly ZombieKind[] ZombieKinds =
+        {
+            new ZombieKind { id = "basic",  name = "역병 주민",   desc = "기본형 — 고르게 평범하다",                hp = 1f,   dmg = 1f,   speed = 1f,    atkInterval = 1f,   scale = 1f,    tint = new Color(0.55f, 0.6f, 0.5f),  fromWave = 1, weight = 50 },
+            new ZombieKind { id = "tank",   name = "부은 망자",   desc = "단단한형 — 체력·피해 높음, 느리고 공격 느림", hp = 2.4f, dmg = 1.8f, speed = 0.62f, atkInterval = 1.6f, scale = 1.2f,  tint = new Color(0.5f, 0.45f, 0.38f), fromWave = 1, weight = 16 },
+            new ZombieKind { id = "fast",   name = "날랜 망자",   desc = "빠른형 — 체력·피해 낮음, 빠르고 공격 빠름",   hp = 0.5f, dmg = 0.6f, speed = 1.5f,  atkInterval = 0.6f, scale = 0.88f, tint = new Color(0.62f, 0.62f, 0.66f), fromWave = 1, weight = 24 },
+            new ZombieKind { id = "frenzy", name = "미친 망자",   desc = "광폭형 — 빠르고 아프지만 잘 죽는다",        hp = 0.75f,dmg = 1.6f, speed = 1.3f,  atkInterval = 0.8f, scale = 0.96f, tint = new Color(0.68f, 0.42f, 0.4f),  fromWave = 2, weight = 12 },
+            new ZombieKind { id = "gnaw",   name = "굶주린 망자", desc = "물어뜯는형 — 약하지만 쉬지 않고 문다",       hp = 0.8f, dmg = 0.55f,speed = 1.1f,  atkInterval = 0.35f,scale = 0.92f, tint = new Color(0.5f, 0.55f, 0.42f),  fromWave = 2, weight = 12 },
+            new ZombieKind { id = "wall",   name = "돌덩이 망자", desc = "철벽형 — 엄청 단단하지만 약하고 아주 느리다",  hp = 3.6f, dmg = 0.8f, speed = 0.5f,  atkInterval = 1.3f, scale = 1.28f, tint = new Color(0.42f, 0.42f, 0.44f), fromWave = 3, weight = 8 },
+            new ZombieKind { id = "butcher",name = "백정 망자",   desc = "거구형 — 한 방이 무섭고, 걸음은 보통",       hp = 1.8f, dmg = 2.6f, speed = 0.85f, atkInterval = 1.9f, scale = 1.15f, tint = new Color(0.55f, 0.3f, 0.28f),  fromWave = 3, weight = 8 },
+            new ZombieKind { id = "stalker",name = "그림자 망자", desc = "추적형 — 체력 보통, 아주 빠르게 쫓아온다",    hp = 1f,   dmg = 0.9f, speed = 1.7f,  atkInterval = 1.1f, scale = 0.95f, tint = new Color(0.3f, 0.32f, 0.36f),  fromWave = 4, weight = 6 },
+        };
+
+        static readonly Dictionary<string, MonsterData> kindCache = new Dictionary<string, MonsterData>();
+
+        /// <summary>기본 망자 하나를 밤에 맞는 유형으로 골라 준다.</summary>
+        public static MonsterData RandomZombie(int wave)
+        {
+            float total = 0f;
+            foreach (var k in ZombieKinds) if (wave >= k.fromWave) total += Weight(k, wave);
+            float r = Random.value * total;
+            foreach (var k in ZombieKinds)
+            {
+                if (wave < k.fromWave) continue;
+                r -= Weight(k, wave);
+                if (r <= 0f) return Zombie(k);
+            }
+            return Zombie(ZombieKinds[0]);
+        }
+
+        // 밤이 깊을수록 기본형 비중이 줄고 변형이 늘어난다
+        static float Weight(ZombieKind k, int wave) => k.id == "basic" ? Mathf.Max(15f, k.weight - wave * 4f) : k.weight * (1f + wave * 0.08f);
+
+        public static MonsterData Zombie(ZombieKind k)
+        {
+            if (kindCache.TryGetValue(k.id, out var d) && d != null) return d;
+            var b = Monster(MonsterArchetype.Runner);
+            d = Object.Instantiate(b);
+            d.id = "z_" + k.id; d.name = d.id; d.displayName = k.name;
+            d.maxHp = b.maxHp * k.hp;
+            d.attackDamage = b.attackDamage * k.dmg;
+            d.moveSpeed = b.moveSpeed * k.speed;
+            d.attackInterval = b.attackInterval * k.atkInterval;
+            d.scale = k.scale;
+            d.color = k.tint;
+            d.knockbackResist = Mathf.Clamp01((k.hp - 1f) * 0.18f);
+            d.infectionPerHit = b.infectionPerHit * Mathf.Lerp(1f, k.dmg, 0.5f);
+            // 보상: 잡기 힘들수록 많이
+            float worth = Mathf.Max(0.6f, (k.hp + k.dmg + k.speed + 1f / k.atkInterval) / 4f);
+            d.xp = Mathf.RoundToInt(b.xp * worth);
+            d.gold = Mathf.RoundToInt(b.gold * worth);
+            kindCache[k.id] = d;
+            return d;
+        }
+
         static MonsterData MonsterDef(string id, string name, MonsterArchetype a, Color color)
         {
             var m = ScriptableObject.CreateInstance<MonsterData>();

@@ -215,7 +215,7 @@ namespace Hunt.Player
             bool runGun = stats.Has(Trait.RunAndGun);
             if (player.Controller.IsMoving && !runGun) s += w.data.spreadMovePenalty;
             s += Mathf.Min(shotIndex, 10) * 0.08f * (1f - aim * 0.7f); // 연사 블룸
-            s *= stats.SpreadMult * w.SpreadMult;
+            s *= stats.SpreadMult * w.SpreadMult * player.Controller.CrouchSpreadMult; // 앉으면 탄이 모인다
             s += player.Infection.IsFrenzy ? 3f : 0f;
             return s;
         }
@@ -520,7 +520,7 @@ namespace Hunt.Player
                 : w.data.weaponClass == WeaponClass.Flamethrower ? 0.1f : 0.45f;
             shake *= 1f + (w.data.tier - 1) * 0.25f; // 큰 구경일수록 더 흔들린다
             player.Controller.AddShake(shake * Mathf.Lerp(1f, 0.5f, aim));
-            player.Controller.AddPunch(Punch(w.data.weaponClass) * Mathf.Lerp(1f, 0.6f, aim), Random.Range(-0.35f, 0.35f) * Punch(w.data.weaponClass));
+            player.Controller.AddPunch(Punch(w.data.weaponClass) * Mathf.Lerp(1f, 0.6f, aim) * player.Controller.CrouchRecoilMult, Random.Range(-0.35f, 0.35f) * Punch(w.data.weaponClass));
 
             Vector3 origin = cam.transform.position;
             Vector3 muzzle = viewModel.MuzzlePosition;
@@ -632,7 +632,7 @@ namespace Hunt.Player
             Vector2 pattern = RecoilPattern.Kick(w.data, shotIndex);
             float aimDamp = Mathf.Lerp(1f, 0.75f, aim);
             Vector2 noise = Random.insideUnitCircle * pattern.magnitude * 0.6f * stats.RecoilNoise;
-            player.Controller.AddRecoil((pattern * stats.RecoilPatternScale + noise) * w.RecoilMult * aimDamp);
+            player.Controller.AddRecoil((pattern * stats.RecoilPatternScale + noise) * w.RecoilMult * aimDamp * player.Controller.CrouchRecoilMult); // 앉으면 반동 감소
             shotIndex++;
 
             if (w.ammoInMag == 0 && w.reserve > 0) StartReload(w);

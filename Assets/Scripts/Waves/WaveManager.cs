@@ -93,7 +93,8 @@ namespace Hunt.Waves
         public bool Rushing => Monster.GlobalRush;
 
         readonly Queue<MonsterArchetype> queue = new Queue<MonsterArchetype>();
-        float spawnTimer, stragglerTime, rushTimer;
+        float spawnTimer, stragglerTime, rushTimer, stageClock;
+        bool defenseBossSent;
         Transform root;
         PlayerCharacter player;
 
@@ -125,12 +126,13 @@ namespace Hunt.Waves
         }
 
         /// <summary>몰려오기까지의 시간: 밤이 깊어질수록 짧아진다.</summary>
-        float RushDelay => Mathf.Max(45f, 100f - Wave * 5f);
+        float RushDelay => Mathf.Max(30f, 60f - Wave * 4f);
 
         public void StartWave(int n)
         {
             Wave = n;
             Boss = null;
+            defenseBossSent = false;
             Failed = false;
             Monster.GlobalRush = false;
             Monster.DefendTarget = null;
@@ -281,6 +283,7 @@ namespace Hunt.Waves
             }
             spawnTimer = 1f;
             stragglerTime = 0f;
+            stageClock = 0f;
             rushTimer = Rule == RoundRule.Mission ? 20f : RushDelay;
             Monster.GlobalRush = false;
         }
@@ -303,11 +306,18 @@ namespace Hunt.Waves
             }
 
             spawnTimer -= dt;
-            if (spawnTimer <= 0f && queue.Count > 0 && Monster.Alive.Count < QualityManager.MaxAliveMonsters)
+            // 보스는 망자 수 제한과 상관없이 바로 나온다 (예전엔 남은 망자가 많으면 안 나올 수 있었다)
+            bool bossNext = queue.Count > 0 && queue.Peek() == MonsterArchetype.Boss;
+            if (spawnTimer <= 0f && queue.Count > 0 && (bossNext || Monster.Alive.Count < QualityManager.MaxAliveMonsters))
             {
                 var a = queue.Dequeue();
-                var m = Spawn(a, null, placed: false);
-                if (a == MonsterArchetype.Boss) Boss = m;
+                var m = Spawn(a, a == MonsterArchetype.Boss ? BossPoint() : (Vector3?)null, placed: false);
+                if (a == MonsterArchetype.Boss && m != null)
+                {
+                    Boss = m;
+                    m.Revealed = true; // 보스 위치는 항상 화면에 표시
+                    m.Alert(999f);
+                }
                 spawnTimer = Mathf.Max(0.3f, 1.2f - Wave * 0.05f);
             }
 
@@ -315,10 +325,10 @@ namespace Hunt.Waves
             Monster.Alive.RemoveAll(m => m == null || m.IsDead);
 
             // 마지막 몇 마리가 멀리서 헤매면: 위치를 표시하고 플레이어 근처로 끌어온다
-            if (queue.Count == 0 && Monster.Alive.Count > 0 && Monster.Alive.Count <= 3)
+            if (queue.Count == 0 && Monster.Alive.Count > 0 && Monster.Alive.Count <= 5)
             {
                 stragglerTime += dt;
-                if (stragglerTime > 12f && player != null)
+                if (stragglerTime > 8f && player != null)
                 {
                     foreach (var m in Monster.Alive)
                     {
@@ -348,8 +358,23 @@ namespace Hunt.Waves
             }
 
             // 디펜스: 끝날 때까지 계속 밀려온다 / 미션: 정해진 수를 모두 잡으면 클리어
+            stageClock += dt;
             if (Rule == RoundRule.Defense)
             {
+                // 밤이 절반쯤 지나면 보스가 돌무더기를 노리고 온다. 쓰러뜨리면 바로 클리어
+                if (!defenseBossSent && TimeLeft < TimeLimit * 0.55f)
+                {
+                    defenseBossSent = true;
+                    Stage = RoundStage.Boss;
+                    var rest = queue.ToArray();
+                    queue.Clear();
+                    queue.Enqueue(MonsterArchetype.Boss);
+                    foreach (var r in rest) queue.Enqueue(r);
+                    spawnTimer = 0f;
+                    HUD.Notify("보스 망자가 돌무더기를 노린다 — 쓰러뜨리면 밤이 끝난다", new Color(1f, 0.35f, 0.35f));
+                    SFX.Play(SFX.Gong, 0.9f, 0f);
+                }
+                if (Stage == RoundStage.Boss && Boss != null && Boss.IsDead) { ClearRound(gm); return; }
                 if (queue.Count == 0 && Monster.Alive.Count < QualityManager.MaxAliveMonsters - 2)
                     queue.Enqueue(Random.value < 0.15f + Wave * 0.02f ? (Random.value < 0.6f ? MonsterArchetype.Brute : MonsterArchetype.Spitter) : MonsterArchetype.Runner);
                 Monster.GlobalRush = true;
@@ -357,8 +382,11 @@ namespace Hunt.Waves
             }
             if (Rule == RoundRule.Mission)
             {
+                // 소탕: 기본 → 엘리트 → 보스, 보스까지 모두 잡으면 클리어
                 if (Stage == RoundStage.Normal && queue.Count == 0 && Monster.Alive.Count <= 2) BeginStage(RoundStage.Elite);
-                else if (Stage == RoundStage.Elite && queue.Count == 0 && Monster.Alive.Count == 0) ClearRound(gm);
+                else if (Stage == RoundStage.Elite && queue.Count == 0 && (Monster.Alive.Count == 0 || stageClock > 75f)) BeginStage(RoundStage.Boss);
+                else if (Stage == RoundStage.Boss && Boss != null && Boss.IsDead) ClearRound(gm);
+                else if (Stage == RoundStage.Boss && queue.Count == 0 && Boss == null && stageClock > 5f) ClearRound(gm);
                 return;
             }
 
@@ -369,11 +397,12 @@ namespace Hunt.Waves
                     if (queue.Count == 0 && Monster.Alive.Count <= 2) BeginStage(RoundStage.Elite);
                     break;
                 case RoundStage.Elite:
-                    if (queue.Count == 0 && CountElites() == 0) BeginStage(RoundStage.Boss);
+                    // 엘리트를 다 잡거나, 75초가 지나면 (어딘가 끼인 엘리트가 있어도) 보스가 나온다
+                    if (queue.Count == 0 && (CountElites() == 0 || stageClock > 75f)) BeginStage(RoundStage.Boss);
                     break;
                 case RoundStage.Boss:
                     if (Boss != null && Boss.IsDead) ClearRound(gm);
-                    else if (queue.Count == 0 && Boss == null) ClearRound(gm); // 안전장치
+                    else if (queue.Count == 0 && Boss == null && stageClock > 5f) ClearRound(gm); // 안전장치 (보스 생성 실패)
                     break;
             }
         }
@@ -407,7 +436,8 @@ namespace Hunt.Waves
 
         Monster Spawn(MonsterArchetype a, Vector3? at, bool placed)
         {
-            var data = DefaultContent.Monster(a);
+            // 기본 망자는 유형(기본·단단·빠름·광폭…)을 섞는다
+            var data = a == MonsterArchetype.Runner ? DefaultContent.RandomZombie(Wave) : DefaultContent.Monster(a);
             float hpScale = 1f + 0.12f * (Wave - 1);
             // 매 밤 보스가 나온다: 평소엔 약한 보스, 대감의 밤엔 온전한 대감
             if (a == MonsterArchetype.Boss)
@@ -430,14 +460,29 @@ namespace Hunt.Waves
             return Mathf.Max(0, Wave - 1) * k;
         }
 
-        /// <summary>마을 안 아무 곳 (플레이어와 20m 이상 떨어진 곳).</summary>
+        /// <summary>보스: 플레이어에서 22~30m 떨어진 곳 (너무 멀어 찾아 헤매지 않게).</summary>
+        Vector3 BossPoint()
+        {
+            Vector3 c = player != null ? player.transform.position : Vector3.zero;
+            for (int i = 0; i < 10; i++)
+            {
+                Vector2 r = Random.insideUnitCircle.normalized * Random.Range(22f, 30f);
+                Vector3 p = c + new Vector3(r.x, 0f, r.y);
+                if (Mathf.Abs(p.x) < 44f && Mathf.Abs(p.z) < 44f) return p;
+            }
+            return Vector3.zero;
+        }
+
+        /// <summary>마을 안 아무 곳 (플레이어와 18~38m 사이 — 너무 멀리 흩어지지 않게).</summary>
         Vector3 ScatterPoint()
         {
             Vector3 p = Vector3.zero;
             for (int i = 0; i < 16; i++)
             {
-                p = new Vector3(Random.Range(-42f, 42f), 0f, Random.Range(-42f, 42f));
-                if (player == null || Vector3.Distance(p, player.transform.position) > 20f) break;
+                p = new Vector3(Random.Range(-40f, 40f), 0f, Random.Range(-40f, 40f));
+                if (player == null) break;
+                float d = Vector3.Distance(p, player.transform.position);
+                if (d > 18f && d < 38f) break;
             }
             return p;
         }

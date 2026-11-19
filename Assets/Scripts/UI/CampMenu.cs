@@ -93,17 +93,36 @@ namespace Hunt.UI
             foreach (var t in CharacterStats.Visible)
             {
                 var row = new Rect(left.x + 14, y, left.width - 28, rowH - 6);
-                UIKit.Tex(new Rect(row.x, row.yMax, row.width, 2), UITheme.LineFade, new Color(0.5f, 0.38f, 0.2f, 0.35f));
-                UIKit.Emblem(new Rect(row.x + 8, row.center.y - 24, 48, 48), GameText.StatGlyph(t), UITheme.Gold, s.Allocated(t) > 0);
-                UIKit.Text(new Rect(row.x + 70, row.y + 4, 150, 30), GameText.StatName(t), 22, UITheme.Bone, serif: true, bold: true);
-                UIKit.Text(new Rect(row.x + 70, row.y + 34, row.width - 200, 22), GameText.StatEffects(t, s), 14, UITheme.BoneDim);
+                float hv = UIKit.Hover(row, "cstat" + t, true, false);
+                UIKit.Fill(row, new Color(1f, 0.95f, 0.85f, 0.02f + hv * 0.04f));
+                UIKit.Tex(new Rect(row.x, row.yMax, row.width, 1), UITheme.LineFade, new Color(0.6f, 0.56f, 0.48f, 0.35f));
+                // 투자한 능력치는 왼쪽에 세로 먹줄
+                if (s.Allocated(t) > 0) UIKit.Fill(new Rect(row.x, row.y + 6, 3, row.height - 12), UITheme.GoldBright);
 
-                var plus = new Rect(row.xMax - 52, row.center.y - 20, 40, 40);
-                if (UIKit.IconButton(plus, "+", p.StatPoints > 0)) p.SpendStatPoint(t);
-                if (plus.Contains(UIKit.Mouse) && p.StatPoints > 0) hoverStat = t;
+                UIKit.Text(new Rect(row.x + 16, row.y + 4, 120, 34), GameText.StatName(t), 24, UITheme.Bone, serif: true, bold: true);
+                UIKit.Text(new Rect(row.x + 16, row.y + 36, 150, 22), GameText.StatShort(t), 13, UITheme.Ash);
 
-                UIKit.Text(new Rect(row.xMax - 140, row.y, 76, row.height), s.Get(t).ToString("0"), 32, s.Allocated(t) > 0 ? UITheme.GoldBright : UITheme.Bone, TextAnchor.MiddleRight, serif: true, bold: true);
-                UIKit.TooltipIf(new Rect(row.x, row.y, 260, row.height), GameText.StatTooltip(t));
+                // 버튼: +1 · 전부
+                bool can = p.StatPoints > 0;
+                var all = new Rect(row.xMax - 66, row.center.y - 18, 58, 36);
+                var plus = new Rect(all.x - 50, row.center.y - 18, 44, 36);
+                if (UIKit.SmallButton(plus, "+1", can, 18)) p.SpendStatPoint(t);
+                if (UIKit.SmallButton(all, "전부", can, 16)) p.SpendAllStatPoints(t);
+                int preview = 0;
+                if (can && plus.Contains(UIKit.Mouse)) { hoverStat = t; preview = 1; }
+                if (can && all.Contains(UIKit.Mouse)) { hoverStat = t; preview = p.StatPoints; }
+                UIKit.TooltipIf(all, $"남은 단련 {p.StatPoints}점을 모두 {GameText.StatName(t)}에 넣는다");
+
+                // 눈금 + 효과
+                float gx = row.x + 170, gw = plus.x - 80 - gx;
+                int val = Mathf.RoundToInt(s.Get(t)), alloc = s.Allocated(t);
+                int cells = Mathf.Max(24, val + preview);
+                UIKit.StatCells(new Rect(gx, row.y + 12, gw, 16), cells, val - alloc, alloc, preview);
+                UIKit.Text(new Rect(gx, row.y + 34, gw + 70, 24), GameText.StatEffects(t, s), 14, UITheme.BoneDim);
+
+                UIKit.Text(new Rect(plus.x - 74, row.y, 64, row.height), val.ToString("0") + (preview > 0 ? $"<size=16><color=#{UIKit.Hex(UITheme.Good)}> +{preview}</color></size>" : ""),
+                    30, alloc > 0 ? UITheme.GoldBright : UITheme.Bone, TextAnchor.MiddleRight, serif: true, bold: true);
+                UIKit.TooltipIf(new Rect(row.x, row.y, 170, row.height), GameText.StatTooltip(t));
                 y += rowH;
             }
 

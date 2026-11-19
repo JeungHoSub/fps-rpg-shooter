@@ -40,6 +40,9 @@ namespace Hunt.Core
         public static float LookY => Mobile ? touchLook.y : Input.GetAxis("Mouse Y");
         public static bool Sprint => Mobile ? touchSprint : Input.GetKey(KeyCode.LeftShift);
         public static bool JumpDown => Mobile ? touchJump : Input.GetKeyDown(KeyCode.Space);
+        /// <summary>앉기 (누르고 있는 동안). 휴대폰은 앉기 버튼 토글.</summary>
+        public static bool Crouch => Mobile ? touchCrouch : (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl));
+        internal static bool touchCrouch;
 
         // ---- 사격 ----
         public static bool Fire => (Mobile ? touchFire : Input.GetMouseButton(0)) || AutoTarget;

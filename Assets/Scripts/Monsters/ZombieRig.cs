@@ -238,7 +238,7 @@ namespace Hunt.Monsters
             else { locomotion = Anim.Walk; locomotionSpeed = Mathf.Clamp(speed / (1.4f * Unit), 0.6f, 2.2f); }
         }
 
-        public void PlayBite() { PlayOnce(Anim.Bite, 1.3f, true); }
+        public void PlayBite(float speed = 1.3f) { PlayOnce(Anim.Bite, speed, true); }
 
         /// <summary>강하게 맞았을 때 비틀거림.</summary>
         public void PlayHit() { PlayOnce(Anim.Hit, 1.4f, false); }

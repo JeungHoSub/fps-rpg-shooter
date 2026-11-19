@@ -233,7 +233,7 @@ namespace Hunt.Monsters
                 transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(faceDir), dt * 8f);
 
             if (rig != null)
-                rig.SetLocomotion(move.sqrMagnitude > 0.01f ? spd : 0f, legSlow < 1f, alerted && Data.archetype == MonsterArchetype.Runner && dist > 3f);
+                rig.SetLocomotion(move.sqrMagnitude > 0.01f ? spd : 0f, legSlow < 1f, alerted && Data.archetype == MonsterArchetype.Runner && Data.moveSpeed > 4f && dist > 3f);
 
             // 무리 간 분리
             Vector3 sep = Vector3.zero;
@@ -282,7 +282,7 @@ namespace Hunt.Monsters
                 else if (dist <= Data.attackRange + 0.4f)
                 {
                     target.TakeDamage(Data.attackDamage, Data.infectionPerHit, transform.position);
-                    if (rig != null) rig.PlayBite();
+                    if (rig != null) rig.PlayBite(1.3f * Mathf.Clamp(0.9f / Mathf.Max(0.1f, Data.attackInterval), 0.7f, 2.4f)); // 공격이 빠른 유형은 동작도 빠르게
                     attackTimer = Data.attackInterval;
                 }
             }
@@ -303,7 +303,9 @@ namespace Hunt.Monsters
         void Sense(float dist)
         {
             bool lit = Flashlight.Active;
-            if (dist < (lit ? SightLit : SightDark)) { Alert(3f); return; }
+            // 앉아 있으면 어둠 속에서 덜 눈에 띈다
+            bool low = target != null && target.Controller != null && target.Controller.IsCrouching;
+            if (dist < (lit ? SightLit : SightDark) * (low ? 0.7f : 1f)) { Alert(3f); return; }
             if (IsAlerted && alertTime > 1f) return;
 
             var eye = Flashlight.Eye;

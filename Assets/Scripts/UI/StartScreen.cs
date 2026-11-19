@@ -262,27 +262,31 @@ namespace Hunt.UI
                 UIKit.Fill(row, new Color(1f, 0.8f, 0.5f, 0.03f + hv * 0.05f));
                 UIKit.Tex(new Rect(row.x, row.yMax - 2, row.width, 2), UITheme.LineFade, new Color(0.5f, 0.38f, 0.2f, 0.4f));
 
-                UIKit.Emblem(new Rect(row.x + 10, row.y + 12, 56, 56), GameText.StatGlyph(t), UITheme.Gold, gm.StartAllocation[(int)t] > 0);
-                UIKit.Text(new Rect(row.x + 84, row.y + 8, 180, 34), GameText.StatName(t), 26, UITheme.Bone, serif: true, bold: true);
-                UIKit.Text(new Rect(row.x + 84, row.y + 44, 260, 24), GameText.StatShort(t), 15, UITheme.BoneDim);
+                if (gm.StartAllocation[(int)t] > 0) UIKit.Fill(new Rect(row.x, row.y + 8, 3, row.height - 16), UITheme.GoldBright);
+                UIKit.Text(new Rect(row.x + 18, row.y + 8, 180, 34), GameText.StatName(t), 26, UITheme.Bone, serif: true, bold: true);
+                UIKit.Text(new Rect(row.x + 18, row.y + 44, 300, 24), GameText.StatShort(t), 15, UITheme.BoneDim);
 
                 int baseVal = Mathf.RoundToInt(gm.Character.baseStats.Get(t));
                 int alloc = gm.StartAllocation[(int)t];
-                bool previewing = false;
+                int preview = 0;
 
-                // +/- 버튼 (먼저 처리해서 미리보기 표시)
-                var minus = new Rect(row.xMax - 104, row.y + 22, 40, 40);
-                var plus = new Rect(row.xMax - 54, row.y + 22, 40, 40);
-                if (UIKit.IconButton(minus, "−", alloc > 0)) gm.AdjustStartStat(t, -1);
-                if (UIKit.IconButton(plus, "+", left > 0)) gm.AdjustStartStat(t, +1);
-                if (plus.Contains(UIKit.Mouse) && left > 0) { hoverStat = t; previewing = true; }
+                // − · +1 · 전부 (먼저 처리해서 미리보기 표시)
+                var all = new Rect(row.xMax - 70, row.y + 22, 62, 38);
+                var plus = new Rect(all.x - 52, row.y + 22, 46, 38);
+                var minus = new Rect(plus.x - 52, row.y + 22, 46, 38);
+                if (UIKit.SmallButton(minus, "−", alloc > 0, 20)) gm.AdjustStartStat(t, -1);
+                if (UIKit.SmallButton(plus, "+1", left > 0, 18)) gm.AdjustStartStat(t, +1);
+                if (UIKit.SmallButton(all, "전부", left > 0, 16)) { int n = gm.StartPointsLeft; for (int k = 0; k < n; k++) gm.AdjustStartStat(t, +1); }
+                if (plus.Contains(UIKit.Mouse) && left > 0) { hoverStat = t; preview = 1; }
+                if (all.Contains(UIKit.Mouse) && left > 0) { hoverStat = t; preview = left; }
 
-                float pipsX = row.x + 360;
-                UIKit.Pips(new Rect(pipsX, row.y + 16, 16 * 21, 22), 16, baseVal, alloc, previewing ? 1 : 0, 17f);
-                UIKit.Text(new Rect(pipsX, row.y + 44, row.xMax - 120 - pipsX, 24), GameText.StatEffects(t, s), 15, UITheme.BoneDim);
+                float pipsX = row.x + 330, pipsW = minus.x - 100 - pipsX;
+                UIKit.StatCells(new Rect(pipsX, row.y + 18, pipsW, 18), 20, baseVal, alloc, preview);
+                UIKit.Text(new Rect(pipsX, row.y + 44, pipsW + 90, 24), GameText.StatEffects(t, s), 15, UITheme.BoneDim);
 
                 float v = s.Get(t);
-                UIKit.Text(new Rect(row.xMax - 190, row.y + 10, 70, 60), v.ToString("0"), 38, alloc > 0 ? UITheme.GoldBright : UITheme.Bone, TextAnchor.MiddleRight, serif: true, bold: true);
+                UIKit.Text(new Rect(minus.x - 92, row.y + 10, 80, 60), v.ToString("0") + (preview > 0 ? $"<size=18><color=#{UIKit.Hex(UITheme.Good)}> +{preview}</color></size>" : ""),
+                    38, alloc > 0 ? UITheme.GoldBright : UITheme.Bone, TextAnchor.MiddleRight, serif: true, bold: true);
 
                 UIKit.TooltipIf(new Rect(row.x, row.y, 340, row.height), GameText.StatTooltip(t));
                 y += rowH;

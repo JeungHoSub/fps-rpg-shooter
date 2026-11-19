@@ -109,7 +109,11 @@ namespace Hunt.Monsters
                 case MonsterArchetype.Brute: c = new Color(0.72f, 0.6f, 0.55f); break;
                 case MonsterArchetype.Spitter: c = new Color(0.62f, 0.8f, 0.5f); break;
                 case MonsterArchetype.Boss: c = new Color(0.62f, 0.48f, 0.62f); break;
-                default: c = VillagerTints[Random.Range(0, VillagerTints.Length)]; break;
+                default:
+                    c = VillagerTints[Random.Range(0, VillagerTints.Length)];
+                    // 망자 유형마다 살빛이 달라 한눈에 구별된다 (단단한형 누렇게, 빠른형 창백하게, 광폭형 붉게…)
+                    if (d.id != null && d.id.StartsWith("z_") && d.id != "z_basic") c = Color.Lerp(c, d.color * 1.35f, 0.6f);
+                    break;
             }
             // 진화할수록 핏기 없이 보랏빛으로
             return Color.Lerp(c, new Color(0.55f, 0.4f, 0.65f), Mathf.Min(0.45f, evo.generation * 0.07f));
