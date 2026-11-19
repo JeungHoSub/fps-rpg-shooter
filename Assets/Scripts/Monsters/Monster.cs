@@ -19,6 +19,8 @@ namespace Hunt.Monsters
         public float Hp { get; private set; }
         public float MaxHp { get; private set; }
         public bool IsDead { get; private set; }
+        float stuckClock;
+        Vector3 stuckCheckPos;
         /// <summary>마지막 남은 망자: HUD에 위치 표시.</summary>
         public bool Revealed { get; set; }
 
@@ -238,6 +240,23 @@ namespace Hunt.Monsters
             pos.z = Mathf.Clamp(pos.z, -47f, 47f);
             pos.y = 0f;
             transform.position = Navigation.Constrain(transform.position, pos);
+
+            // 끼임 탈출: 움직이려는데 3초 동안 거의 못 갔거나, 벽·물체 속에 있으면 가까운 빈 곳으로
+            stuckClock += dt;
+            if (stuckClock >= 3f)
+            {
+                bool wantsToMove = move.sqrMagnitude > 0.01f && stagger <= 0f;
+                float moved = Vector3.Distance(transform.position, stuckCheckPos);
+                if ((wantsToMove && moved < 0.4f) || Navigation.IsBlocked(transform.position))
+                {
+                    Vector3 toward = target != null ? (target.transform.position - transform.position).normalized * 2.5f : Vector3.zero;
+                    transform.position = Navigation.GroundPoint(transform.position + toward, 10f);
+                    knockVel = Vector3.zero;
+                    repathTimer = 0f;
+                }
+                stuckCheckPos = transform.position;
+                stuckClock = 0f;
+            }
             knockVel *= Mathf.Exp(-6f * dt);
 
             // 공격

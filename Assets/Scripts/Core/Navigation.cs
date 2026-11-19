@@ -47,12 +47,43 @@ namespace Hunt.Core
         }
 
         /// <summary>가장 가까운 NavMesh 위 지점으로 보정 (y=0 지면 기준).</summary>
-        public static Vector3 Snap(Vector3 p, float maxDistance = 4f)
+        public static Vector3 Snap(Vector3 p, float maxDistance = 4f) => GroundPoint(p, Mathf.Max(maxDistance, 12f));
+
+        /// <summary>
+        /// p 근처에서 '바닥 높이(지붕·둔덕 위가 아닌)이고 몸이 끼지 않는' 걸을 수 있는 점을 찾는다.
+        /// 지붕 위 걸을 수 있는 면을 집어 높이만 0으로 내리면 망자가 벽 속에 박히던 문제 방지.
+        /// </summary>
+        public static Vector3 GroundPoint(Vector3 p, float searchRadius = 12f)
         {
-            if (Ready && NavMesh.SamplePosition(p, out var hit, maxDistance, NavMesh.AllAreas))
-                p = hit.position;
             p.y = 0f;
+            if (!Ready) return p;
+            float[] radii = { 0f, 1.5f, 3f, 5f, 8f, 12f, 16f };
+            foreach (float r in radii)
+            {
+                if (r > searchRadius) break;
+                int n = r <= 0f ? 1 : 10;
+                for (int k = 0; k < n; k++)
+                {
+                    float a = (k / (float)n + r * 0.13f) * Mathf.PI * 2f;
+                    var q = p + new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * r;
+                    if (!NavMesh.SamplePosition(q, out var hit, 1.2f, NavMesh.AllAreas)) continue;
+                    if (Mathf.Abs(hit.position.y) > 0.6f) continue; // 지붕·둔덕 위
+                    var g = new Vector3(hit.position.x, 0f, hit.position.z);
+                    if (IsBlocked(g)) continue;
+                    return g;
+                }
+            }
             return p;
+        }
+
+        /// <summary>그 자리에 서면 벽·물체와 겹치는가 (플레이어·무기·망자 판정은 무시).</summary>
+        public static bool IsBlocked(Vector3 groundPos)
+        {
+            int mask = ~((1 << 2) | (1 << 1));
+            var cols = Physics.OverlapCapsule(groundPos + Vector3.up * 0.75f, groundPos + Vector3.up * 1.6f, 0.3f, mask, QueryTriggerInteraction.Ignore);
+            foreach (var c in cols)
+                if (c.GetComponentInParent<Hunt.Monsters.Monster>() == null) return true;
+            return false;
         }
 
         /// <returns>코너 개수 (0이면 경로 없음)</returns>

@@ -404,8 +404,12 @@ namespace Hunt.Monsters
         {
             var go = GameObject.CreatePrimitive(type);
             go.name = zone + "_Hit";
-            Object.DestroyImmediate(go.GetComponent<MeshRenderer>());
-            Object.DestroyImmediate(go.GetComponent<MeshFilter>());
+            // 평소엔 안 보이고, F9(판정 보기)일 때만 반투명 빨강으로 보인다
+            var dr = go.GetComponent<MeshRenderer>();
+            dr.sharedMaterial = Hunt.Core.FX.UnlitMaterial(new Color(1f, 0.1f, 0.1f, 0.35f));
+            dr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            dr.enabled = false;
+            go.AddComponent<HitboxDebug>();
             go.transform.position = worldPos;
             go.transform.rotation = worldRot;
             go.transform.localScale = worldScale;

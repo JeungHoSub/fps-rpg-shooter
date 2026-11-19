@@ -43,7 +43,8 @@ namespace Hunt.Core
         /// <summary>에디터·PC에서 터치 조작 화면을 마우스로 미리 써 보기.</summary>
         public static bool ForceMobileControls
         {
-            get { if (forceMobile == null) forceMobile = Load(PreviewKey, 0f) > 0.5f; return forceMobile.Value; }
+            // 앱이 목표라 유니티 에디터에서는 기본으로 터치 화면을 보여준다 (Esc 메뉴에서 끌 수 있음)
+            get { if (forceMobile == null) forceMobile = Load(PreviewKey, Application.isEditor ? 1f : 0f) > 0.5f; return forceMobile.Value; }
             set { forceMobile = value; Save(PreviewKey, value ? 1f : 0f); }
         }
 

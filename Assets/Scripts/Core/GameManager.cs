@@ -295,6 +295,11 @@ namespace Hunt.Core
         {
             QualityManager.Tick(Time.unscaledDeltaTime);
             bool cursorFree = !AcceptsGameplayInput || GameInput.Mobile; // 터치 조작(미리보기 포함)은 커서를 잠그지 않는다
+            if (Input.GetKeyDown(KeyCode.F9))
+            {
+                Hunt.Monsters.HitboxDebug.Show = !Hunt.Monsters.HitboxDebug.Show;
+                HUD.Notify(Hunt.Monsters.HitboxDebug.Show ? "판정 보기: 켜짐 (F9)" : "판정 보기: 꺼짐", Color.white);
+            }
             Cursor.lockState = cursorFree ? CursorLockMode.None : CursorLockMode.Locked;
             Cursor.visible = cursorFree;
 
