@@ -101,6 +101,23 @@ namespace Hunt.Core
         }
 
         /// <summary>괴물 명중: 체액 튀김. 약점은 주황색 진액, 장갑은 뼛조각.</summary>
+        /// <summary>탄피: 총 오른쪽 위로 튀어나가 떨어지는 놋쇠 조각.</summary>
+        public static void Casing(Vector3 pos, Vector3 right, Vector3 up, bool shell)
+        {
+            Vector3 v = right * Random.Range(1.6f, 2.6f) + up * Random.Range(1.2f, 2.2f) + Random.insideUnitSphere * 0.4f;
+            Color c = shell ? new Color(0.75f, 0.12f, 0.08f) : new Color(0.85f, 0.65f, 0.28f);
+            Emit(debris, pos, v, shell ? 0.045f : 0.028f, Random.Range(0.6f, 0.9f), c);
+        }
+
+        /// <summary>총구 연기: 쏘고 나서 피어오르는 희미한 연기.</summary>
+        public static void MuzzleSmoke(Vector3 pos, Vector3 fwd, float amount)
+        {
+            int n = Mathf.Max(1, Mathf.RoundToInt(2f * amount));
+            for (int i = 0; i < n; i++)
+                Emit(debris, pos + fwd * 0.05f, fwd * Random.Range(0.3f, 0.8f) + Vector3.up * Random.Range(0.4f, 0.9f) + Random.insideUnitSphere * 0.2f,
+                    Random.Range(0.12f, 0.24f) * amount, Random.Range(0.5f, 0.9f), new Color(0.55f, 0.55f, 0.55f, 0.22f));
+        }
+
         public static void ImpactFlesh(Vector3 point, Vector3 shotDir, Color color, int amount)
         {
             for (int i = 0; i < amount; i++)

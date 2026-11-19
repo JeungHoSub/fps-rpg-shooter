@@ -500,6 +500,15 @@ namespace Hunt.Player
 
             // 연출: 총 모델 반동 / 총성 / 화면 흔들림
             viewModel.OnFire(w);
+            // 탄피·총구 연기 (화염방사기·발사기 제외)
+            var wc = w.data.weaponClass;
+            if (wc != WeaponClass.Flamethrower && wc != WeaponClass.Launcher && wc != WeaponClass.Melee)
+            {
+                var ct = cam.transform;
+                Vector3 mz = viewModel.MuzzlePosition;
+                if (wc != WeaponClass.Shotgun && wc != WeaponClass.Sniper) FX.Casing(mz - ct.forward * 0.35f + ct.right * 0.03f, ct.right, ct.up, false);
+                FX.MuzzleSmoke(mz, ct.forward, wc == WeaponClass.Shotgun || wc == WeaponClass.Sniper ? 2.2f : 0.7f);
+            }
             SFX.Play(SFX.ShotFor(w.data), 0.85f);
             // 탄피 떨어지는 소리 (펌프·볼트식은 장전 동작 때)
             bool manual = (w.data.weaponClass == WeaponClass.Shotgun && !w.data.automatic) || (w.data.weaponClass == WeaponClass.Sniper && w.data.rpm < 100f);
@@ -566,7 +575,14 @@ namespace Hunt.Player
                             anyHit = true;
                             hurtPos = hit.point;
                             anyWeak |= res.zone == HitZone.WeakPoint || res.zone == HitZone.Head;
-                            if (res.killed) { anyKill = true; killPos = hit.point; }
+                            if (res.killed)
+                            {
+                                anyKill = true;
+                                killPos = hit.point;
+                                // 머리·급소로 끝내면 크게 터진다
+                                if (res.zone == HitZone.Head || res.zone == HitZone.WeakPoint)
+                                    FX.BloodBurst(hit.point, res.zone == HitZone.WeakPoint ? new Color(1f, 0.55f, 0.1f) : new Color(0.45f, 0.04f, 0.06f), 0.7f);
+                            }
                             FX.ImpactFlesh(hit.point, dir, FleshColor(res.zone), res.crit ? 10 : 5);
                         }
                         OnHitResult(w, res, info, hit.point);
