@@ -11,6 +11,17 @@ namespace Hunt.Waves
 {
     public enum RoundStage { Normal, Elite, Boss, Cleared }
 
+    /// <summary>밤마다 바뀌는 룰.</summary>
+    public enum RoundRule
+    {
+        Hunt,     // 기본: 기본 → 엘리트 → 보스, 보스 처치 시 클리어
+        Defense,  // 디펜스: 제한 시간 동안 지킴터(서낭당 돌무더기)를 지킨다
+        Mission,  // 미션: 제한 시간 안에 모든 망자 처치
+    }
+
+    /// <summary>난이도 변형 (셋째 밤부터 무작위, 밤이 깊을수록 여러 개).</summary>
+    public enum Modifier { LowAmmo, WeakDamage, LowHp, ShortTime, Slow, Dark }
+
     /// <summary>
     /// 라운드(밤) 기본 룰: 기본 망자 → 엘리트 망자 → 보스 망자. <b>보스를 잡으면 클리어.</b>
     /// 기본 망자는 시작 때 마을 곳곳에 흩어져 서성이고, 소리·빛에 반응해 달려든다.
@@ -32,6 +43,51 @@ namespace Hunt.Waves
         public bool IsBossWave => Wave > 0 && Wave % BossEvery == 0;
         public Monster Boss { get; private set; }
 
+        public RoundRule Rule { get; private set; }
+        public readonly List<Modifier> Modifiers = new List<Modifier>();
+        /// <summary>디펜스·미션 남은 시간.</summary>
+        public float TimeLeft { get; private set; }
+        public float TimeLimit { get; private set; }
+        public bool Timed => Rule != RoundRule.Hunt;
+        public float DefendHp { get; private set; }
+        public const float DefendMaxHp = 300f;
+        public Vector3 DefendPos => new Vector3(2.5f, 0f, -3f);
+        /// <summary>이번 밤 실패 (보상 없음).</summary>
+        public bool Failed { get; private set; }
+        GameObject defendMarker;
+
+        public static string RuleName(RoundRule r)
+        {
+            switch (r)
+            {
+                case RoundRule.Defense: return "지킴";
+                case RoundRule.Mission: return "소탕";
+                default: return "사냥";
+            }
+        }
+
+        public static string RuleGoal(RoundRule r)
+        {
+            switch (r)
+            {
+                case RoundRule.Defense: return "날이 밝을 때까지 서낭당 돌무더기를 지켜라";
+                case RoundRule.Mission: return "시간 안에 망자를 모두 쓰러뜨려라";
+                default: return "기본 망자 → 엘리트 → 보스, 보스를 쓰러뜨려라";
+            }
+        }
+
+        public static string ModifierName(Modifier m)
+        {
+            switch (m)
+            {
+                case Modifier.LowAmmo: return "탄약 부족 (예비탄 -40%)";
+                case Modifier.WeakDamage: return "녹슨 총 (피해 -20%)";
+                case Modifier.LowHp: return "병든 몸 (최대 생명 -25%)";
+                case Modifier.ShortTime: return "짧은 밤 (제한 시간 -25%)";
+                case Modifier.Slow: return "진흙탕 (이동 -15%)";
+                default: return "칠흑 (손전등 금지)";
+            }
+        }
         /// <summary>몰려오기까지 남은 시간 (0이면 이미 전부 몰려옴).</summary>
         public float RushIn => Mathf.Max(0f, rushTimer);
         public bool Rushing => Monster.GlobalRush;
@@ -42,7 +98,14 @@ namespace Hunt.Waves
         PlayerCharacter player;
 
         void Awake() { Instance = this; }
-        void OnDestroy() { if (Instance == this) Instance = null; Monster.GlobalRush = false; }
+        void OnDestroy()
+        {
+            if (Instance == this) Instance = null;
+            Monster.GlobalRush = false;
+            Monster.DefendTarget = null;
+            GameRules.Reset();
+            Flashlight.Disabled = false;
+        }
 
         public void Setup(Transform worldRoot, PlayerCharacter p)
         {
@@ -68,13 +131,118 @@ namespace Hunt.Waves
         {
             Wave = n;
             Boss = null;
+            Failed = false;
             Monster.GlobalRush = false;
+            Monster.DefendTarget = null;
+            ChooseRule();
             BeginStage(RoundStage.Normal);
             Spawning = true;
+            if (Rule == RoundRule.Defense) SetupDefense();
+            if (Timed) TimeLeft = TimeLimit = (Rule == RoundRule.Defense ? 120f : 150f + n * 4f) * GameRules.TimeMult;
 
             // 기본 망자 절반은 처음부터 마을 곳곳에 서성이고 있다
             int scatter = Mathf.Min(queue.Count, Mathf.Max(3, QualityManager.MaxAliveMonsters - 2));
             for (int i = 0; i < scatter; i++) Spawn(queue.Dequeue(), ScatterPoint(), placed: true);
+        }
+
+        /// <summary>룰과 난이도 변형을 고른다. 첫째 밤과 5번째 밤(대감)은 사냥.</summary>
+        void ChooseRule()
+        {
+            int n = Wave;
+            if (n == 1 || IsBossWave) Rule = RoundRule.Hunt;
+            else Rule = n % 3 == 2 ? RoundRule.Defense : n % 3 == 0 ? RoundRule.Mission : RoundRule.Hunt;
+
+            Modifiers.Clear();
+            GameRules.Reset();
+            Flashlight.Disabled = false;
+            int count = n < 3 ? 0 : n < 6 ? 1 : n < 10 ? 2 : 3;
+            var pool = new List<Modifier>((Modifier[])System.Enum.GetValues(typeof(Modifier)));
+            if (Rule == RoundRule.Hunt) pool.Remove(Modifier.ShortTime);
+            for (int i = 0; i < count && pool.Count > 0; i++)
+            {
+                var m = pool[Random.Range(0, pool.Count)];
+                pool.Remove(m);
+                Modifiers.Add(m);
+                switch (m)
+                {
+                    case Modifier.LowAmmo: GameRules.AmmoMult = 0.6f; break;
+                    case Modifier.WeakDamage: GameRules.DamageMult = 0.8f; break;
+                    case Modifier.LowHp: GameRules.HpMult = 0.75f; break;
+                    case Modifier.ShortTime: GameRules.TimeMult = 0.75f; break;
+                    case Modifier.Slow: GameRules.MoveMult = 0.85f; break;
+                    case Modifier.Dark: Flashlight.Disabled = true; break;
+                }
+            }
+            if (player != null)
+            {
+                foreach (var w in player.Arsenal) w.reserve = Mathf.Min(w.reserve, Mathf.RoundToInt(w.MaxReserve * GameRules.AmmoMult));
+                player.Heal(0f); // 최대 생명 변화 반영
+            }
+            HUD.Notify($"오늘 밤 — {RuleName(Rule)}: {RuleGoal(Rule)}", new Color(1f, 0.8f, 0.55f));
+            foreach (var m in Modifiers) HUD.Notify("변고 — " + ModifierName(m), new Color(1f, 0.5f, 0.4f));
+        }
+
+        /// <summary>보상 배율: 변고 하나마다 +25%.</summary>
+        public float RewardMult => 1f + 0.25f * Modifiers.Count;
+
+        void SetupDefense()
+        {
+            DefendHp = DefendMaxHp;
+            Monster.DefendTarget = DefendPos;
+            if (defendMarker != null) Destroy(defendMarker);
+            defendMarker = new GameObject("지킴터");
+            defendMarker.transform.SetParent(root, false);
+            defendMarker.transform.position = DefendPos;
+            // 서낭당 돌무더기 + 금줄 + 등불
+            for (int i = 0; i < 6; i++)
+            {
+                float a = i * 60f * Mathf.Deg2Rad;
+                Vector3 p = new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * (i < 5 ? 0.55f : 0f) + Vector3.up * (i < 5 ? 0f : 0.5f);
+                if (PropModels.Place("moon_rock_02", defendMarker.transform, p, i * 70f, i < 5 ? 0.55f : 0.5f, false, new Color(0.6f, 0.6f, 0.58f)) == null)
+                {
+                    var g = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                    Destroy(g.GetComponent<Collider>());
+                    g.transform.SetParent(defendMarker.transform, false);
+                    g.transform.localPosition = p + Vector3.up * 0.25f;
+                    g.transform.localScale = Vector3.one * 0.55f;
+                    g.GetComponent<Renderer>().sharedMaterial = EnvMaterials.Get(EnvMaterials.Kind.Rock, Vector2.one);
+                }
+            }
+            var pole = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            Destroy(pole.GetComponent<Collider>());
+            pole.transform.SetParent(defendMarker.transform, false);
+            pole.transform.localPosition = new Vector3(0f, 1.3f, 0f);
+            pole.transform.localScale = new Vector3(0.08f, 0.6f, 0.08f);
+            pole.GetComponent<Renderer>().sharedMaterial = EnvMaterials.Get(EnvMaterials.Kind.WoodPlanks, Vector2.one);
+            var rope = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            Destroy(rope.GetComponent<Collider>());
+            rope.transform.SetParent(defendMarker.transform, false);
+            rope.transform.localPosition = new Vector3(0f, 0.75f, 0f);
+            rope.transform.localScale = new Vector3(1.5f, 0.02f, 1.5f);
+            rope.GetComponent<Renderer>().sharedMaterial = EnvMaterials.Plain(new Color(0.75f, 0.68f, 0.5f), 0.2f);
+            var lg = new GameObject("등불");
+            lg.transform.SetParent(defendMarker.transform, false);
+            lg.transform.localPosition = new Vector3(0f, 2.2f, 0f);
+            var l = lg.AddComponent<Light>();
+            l.type = LightType.Point;
+            l.color = new Color(1f, 0.55f, 0.3f);
+            l.range = 9f;
+            l.intensity = 2.2f;
+        }
+
+        public void DamageDefendPoint(float dmg)
+        {
+            if (Rule != RoundRule.Defense || Stage == RoundStage.Cleared) return;
+            DefendHp = Mathf.Max(0f, DefendHp - dmg);
+            SFX.PlayAt(SFX.FleshHit, DefendPos, 0.5f);
+            if (DefendHp <= 0f) FailRound("서낭당 돌무더기가 무너졌다");
+        }
+
+        void FailRound(string why)
+        {
+            Failed = true;
+            HUD.Notify($"{why} — 이번 밤은 실패. 보상이 없다", new Color(1f, 0.35f, 0.35f));
+            ClearRound(GameManager.Instance);
         }
 
         void BeginStage(RoundStage s)
@@ -113,7 +281,7 @@ namespace Hunt.Waves
             }
             spawnTimer = 1f;
             stragglerTime = 0f;
-            rushTimer = RushDelay;
+            rushTimer = Rule == RoundRule.Mission ? 20f : RushDelay;
             Monster.GlobalRush = false;
         }
 
@@ -167,6 +335,33 @@ namespace Hunt.Waves
             }
             else stragglerTime = 0f;
 
+            // 디펜스·미션: 시간
+            if (Timed && Stage != RoundStage.Cleared)
+            {
+                TimeLeft -= dt;
+                if (TimeLeft <= 0f)
+                {
+                    if (Rule == RoundRule.Defense) { HUD.Notify("날이 밝았다 — 끝까지 지켜냈다", new Color(0.5f, 1f, 0.6f)); ClearRound(gm); }
+                    else FailRound("시간이 다 됐다");
+                    return;
+                }
+            }
+
+            // 디펜스: 끝날 때까지 계속 밀려온다 / 미션: 정해진 수를 모두 잡으면 클리어
+            if (Rule == RoundRule.Defense)
+            {
+                if (queue.Count == 0 && Monster.Alive.Count < QualityManager.MaxAliveMonsters - 2)
+                    queue.Enqueue(Random.value < 0.15f + Wave * 0.02f ? (Random.value < 0.6f ? MonsterArchetype.Brute : MonsterArchetype.Spitter) : MonsterArchetype.Runner);
+                Monster.GlobalRush = true;
+                return;
+            }
+            if (Rule == RoundRule.Mission)
+            {
+                if (Stage == RoundStage.Normal && queue.Count == 0 && Monster.Alive.Count <= 2) BeginStage(RoundStage.Elite);
+                else if (Stage == RoundStage.Elite && queue.Count == 0 && Monster.Alive.Count == 0) ClearRound(gm);
+                return;
+            }
+
             switch (Stage)
             {
                 case RoundStage.Normal:
@@ -198,6 +393,8 @@ namespace Hunt.Waves
             Spawning = false;
             queue.Clear();
             Monster.GlobalRush = false;
+            Monster.DefendTarget = null;
+            if (defendMarker != null) Destroy(defendMarker);
             var rest = new List<Monster>(Monster.Alive);
             foreach (var m in rest)
                 if (m != null && !m.IsDead) m.Collapse();

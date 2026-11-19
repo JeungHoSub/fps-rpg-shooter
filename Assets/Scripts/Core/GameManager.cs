@@ -235,15 +235,19 @@ namespace Hunt.Core
             IntermissionTime = IntermissionDuration;
             MenuOpen = true;
 
+            bool failed = Waves.Failed;
+            float reward = failed ? 0f : Waves.RewardMult;
+            GameRules.Reset();
+            Flashlight.Disabled = false;
             Player.Weapons.RefillAmmo();
             foreach (var w in Player.Arsenal) { w.reserve = Mathf.RoundToInt(w.MaxReserve * GameRules.AmmoMult); w.ammoInMag = w.MagazineSize; }
-            Player.Resupply();
+            if (!failed) Player.Resupply();
             Resources.UnloadUnusedAssets(); // 죽은 망자들이 남긴 재질 정리 (메모리 누수 방지)
             Player.Heal(Player.MaxHp * 0.3f);
             Player.Infection.Antidotes = Mathf.Min(2, Player.Infection.Antidotes + 1);
-            Player.AddGold(40 + 20 * Waves.Wave);
+            Player.AddGold(Mathf.RoundToInt((40 + 20 * Waves.Wave) * reward));
 
-            HUD.Notify($"{GameHud.NightName(Waves.Wave)}을 버텼다 — 날이 밝는다", new Color(0.5f, 1f, 0.6f));
+            if (!failed) HUD.Notify($"{GameHud.NightName(Waves.Wave)}을 버텼다 — 날이 밝는다" + (reward > 1f ? $"  (변고 보상 ×{reward:0.00})" : ""), new Color(0.5f, 1f, 0.6f));
             if (LastEvolution.Count > 0) HUD.Notify("망자들이 당신의 사냥법을 배웠다… (서낭당 · 역병 일지)", new Color(0.85f, 0.4f, 1f));
         }
 

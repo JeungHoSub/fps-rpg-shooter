@@ -87,6 +87,25 @@ namespace Hunt.UI
             AbilitySlot(new Rect(sx + (ss + 14) * 2, sy, ss, ss), "H", "약", "청심환", false, 0f, inf.Antidotes > 0, $"×{inf.Antidotes}",
                 "<b>청심환</b>\n폭주를 즉시 멈추거나 역병 기운을 40 낮춘다.\n밤을 넘길 때마다 하나씩 얻는다 (최대 2).");
 
+            AbilitySlot(new Rect(sx + (ss + 14) * 3 + 14, sy, ss, ss), "X", "치", "치료 키트", p.IsUsingItem, p.KitProgress, p.Kits > 0, $"×{p.Kits}",
+                $"<b>치료 키트</b>\n2.5초 동안 상처를 감아 생명 {p.KitHeal:0} 회복.\n감는 동안 느려지고, 맞거나 쏘면 끊긴다.");
+            AbilitySlot(new Rect(sx + (ss + 14) * 4 + 14, sy, ss, ss), "C", "기", "회복제", p.Controller.BoostTime > 0f, p.Controller.BoostTime / 15f, p.Drinks > 0, $"×{p.Drinks}",
+                "<b>스태미너 회복제</b>\n기운을 다 채우고 15초 동안 덜 지친다.");
+
+            // ---- 스태미너 (생명 구슬 아래) ----
+            var ctl = p.Controller;
+            Color stc = ctl.Exhausted ? UITheme.BloodBright : new Color(0.55f, 0.75f, 0.45f);
+            UIKit.Bar(new Rect(hpOrb.x + 10, hpOrb.yMax + 14, hpOrb.width - 20, 8), ctl.Stamina / ctl.MaxStamina, stc);
+            UIKit.Text(new Rect(hpOrb.x, hpOrb.yMax + 22, hpOrb.width, 16), ctl.Exhausted ? "지쳤다" : "기 운", 12, ctl.Exhausted ? UITheme.BloodBright : UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true);
+
+            // ---- 치료 중 ----
+            if (p.IsUsingItem)
+            {
+                var kr = new Rect(W / 2 - 150, H / 2 + 70, 300, 10);
+                UIKit.Bar(kr, p.KitProgress, new Color(0.6f, 0.9f, 0.55f));
+                UIKit.Text(new Rect(kr.x, kr.y + 12, kr.width, 22), "상처를 감는 중…", 15, UITheme.Bone, TextAnchor.MiddleCenter, serif: true);
+            }
+
             // ---- 탄약 / 무기 ----
             DrawWeapon(p);
 
@@ -114,6 +133,18 @@ namespace Hunt.UI
         void DrawStragglers(Camera cam, float scale)
         {
             if (cam == null) return;
+            // 디펜스: 지킴터 위치
+            var wv = GameManager.Instance != null ? GameManager.Instance.Waves : null;
+            if (wv != null && wv.Rule == RoundRule.Defense && wv.Stage != RoundStage.Cleared)
+            {
+                Vector3 dp = cam.WorldToScreenPoint(wv.DefendPos + Vector3.up * 2.5f);
+                float dx = dp.x / scale, dy = (Screen.height - dp.y) / scale;
+                if (dp.z < 0f) { dx = W - dx; dy = H - 60f; }
+                dx = Mathf.Clamp(dx, 50f, W - 50f);
+                dy = Mathf.Clamp(dy, 50f, H - 50f);
+                UIKit.Emblem(new Rect(dx - 24, dy - 24, 48, 48), "지", UITheme.Gold, false);
+                UIKit.Text(new Rect(dx - 50, dy + 24, 100, 20), $"{wv.DefendHp / WaveManager.DefendMaxHp * 100f:0}%", 14, UITheme.Bone, TextAnchor.MiddleCenter);
+            }
             foreach (var m in Monster.Alive)
             {
                 if (m == null || !m.Revealed) continue;
@@ -143,7 +174,7 @@ namespace Hunt.UI
             float a = Mathf.Clamp01(introTime * 1.5f) * Mathf.Clamp01((26f - introTime) / 2f);
             if (a <= 0f) return;
             UIKit.Alpha = a;
-            var r = new Rect(30, 300, 400, 330);
+            var r = new Rect(30, 270, 430, 400);
             UIKit.Panel(r, "첫 째  밤");
             UIKit.Text(new Rect(r.x + 24, r.y + 66, r.width - 48, 60),
                 "기본 망자 → 엘리트 망자 → <color=#" + UIKit.Hex(UITheme.BloodBright) + ">보스 망자</color>.\n보스를 쓰러뜨리면 밤이 끝난다.", 17, UITheme.Bone, TextAnchor.UpperLeft, serif: true, wrap: true);
@@ -151,11 +182,13 @@ namespace Hunt.UI
                 "<b>F</b>   손전등 (켜면 망자가 빛을 보고 온다)\n" +
                 "총성·달리기·장전 소리에 망자가 모인다\n" +
                 "<b>우클릭</b>   조준  ·  <b>R</b> 재장전\n" +
-                "<b>Shift</b>   달리기  ·  <b>1 2 3</b> 무기\n" +
+                "<b>Shift</b>   달리기 (기운 소모)  ·  <b>1 2</b> 주무기  <b>3</b> 권총\n" +
+                "<b>4</b> 마체테 (<b>V</b> 빠른 칼질)  ·  <b>5</b> 특수 기기 (<b>G</b> 수류탄)\n" +
+                "<b>X</b>   치료 키트  ·  <b>C</b> 스태미너 회복제\n" +
                 "<b>Q / E</b>   역병의 힘 (맞으면 차오른다)\n" +
                 "<b>H</b>   청심환 (폭주 해제)\n" +
                 "주황빛 <color=#" + UIKit.Hex(new Color(1f, 0.6f, 0.1f)) + ">급소</color>를 노려라 — 피해 3배";
-            UIKit.Text(new Rect(r.x + 24, r.y + 136, r.width - 48, 180), keys, 16, UITheme.BoneDim, TextAnchor.UpperLeft, wrap: true);
+            UIKit.Text(new Rect(r.x + 24, r.y + 136, r.width - 48, 250), keys, 16, UITheme.BoneDim, TextAnchor.UpperLeft, wrap: true);
             UIKit.Alpha = 1f;
         }
 
@@ -202,40 +235,93 @@ namespace Hunt.UI
             var wp = p.Weapons;
             var w = wp.Current;
             float right = W - 262;
+            var card = new Rect(right - 440, H - 214, 440, 166);
+            UIKit.NineSlice(card, UITheme.Slot, 10, new Color(1, 1, 1, 0.85f));
+            var icon = new Rect(card.x + 14, card.y + 12, 190, 74);
 
-            Color elem = CombatNames.ColorOf(w.DamageType);
-            UIKit.Text(new Rect(right - 420, H - 190, 420, 34), w.DisplayName, 26, UITheme.Bone, TextAnchor.MiddleRight, serif: true, bold: true);
-            UIKit.Text(new Rect(right - 420, H - 160, 420, 24),
-                $"{GameText.WeaponClassName(w.data.weaponClass)}  ·  <color=#{UIKit.Hex(elem)}>{GameText.ElementName(w.DamageType)}</color>" +
-                (p.Controller.WeightPenalty < 1f ? $"  ·  <color=#{UIKit.Hex(UITheme.Warn)}>과적 −{Mathf.RoundToInt((1 - p.Controller.WeightPenalty) * 100)}%</color>" : ""),
-                15, UITheme.BoneDim, TextAnchor.MiddleRight);
-
-            bool low = w.ammoInMag <= w.MagazineSize * 0.25f;
-            Color ac = w.ammoInMag == 0 ? UITheme.BloodBright : low ? UITheme.Warn : UITheme.Bone;
-            string reload = wp.IsReloading ? $"<size=20><color=#{UIKit.Hex(UITheme.Gold)}>장전 중</color></size>   " : "";
-            UIKit.Text(new Rect(right - 420, H - 136, 420, 70),
-                $"{reload}<size=60><b>{w.ammoInMag}</b></size><size=24><color=#{UIKit.Hex(UITheme.BoneDim)}>  /  {w.reserve}</color></size>", 60, ac, TextAnchor.MiddleRight, serif: true);
-
-            // 탄창 눈금 (최대 40칸)
-            int mag = w.MagazineSize;
-            int ticks = Mathf.Min(mag, 40);
-            float tw = 7f, tg = 3f;
-            float tx = right - ticks * (tw + tg);
-            for (int i = 0; i < ticks; i++)
+            if (wp.Mode == PlayerWeapons.Hand.Melee)
             {
-                bool full = i < Mathf.CeilToInt(w.ammoInMag * ticks / (float)mag);
-                UIKit.Fill(new Rect(tx + i * (tw + tg), H - 62, tw, 12), full ? new Color(ac.r, ac.g, ac.b, 0.9f) : new Color(1, 1, 1, 0.12f));
+                WeaponIcon.Draw(icon, WeaponClass.Melee, UITheme.Bone);
+                UIKit.Text(new Rect(card.x + 210, card.y + 10, card.width - 224, 34), PlayerWeapons.MeleeName, 26, UITheme.Bone, TextAnchor.MiddleRight, serif: true, bold: true);
+                UIKit.Text(new Rect(card.x + 210, card.y + 44, card.width - 224, 22), $"근접  ·  위력 {wp.MeleeDamage:0}  ·  소리 거의 없음", 14, UITheme.BoneDim, TextAnchor.MiddleRight);
+                UIKit.Text(new Rect(card.x + 14, card.y + 96, card.width - 28, 30), "좌클릭 베기  ·  한 번에 둘까지  ·  스태미너 8", 16, UITheme.BoneDim, TextAnchor.MiddleRight, serif: true);
+                StaminaHint(p, card);
+            }
+            else if (wp.Mode == PlayerWeapons.Hand.Gadget)
+            {
+                var g = wp.Gadget;
+                int n = wp.GadgetCount[(int)g];
+                WeaponIcon.DrawGadget(icon, g, n > 0 ? UITheme.Bone : UITheme.Ash);
+                UIKit.Text(new Rect(card.x + 210, card.y + 10, card.width - 224, 34), Gadgets.Name(g), 24, UITheme.Bone, TextAnchor.MiddleRight, serif: true, bold: true);
+                UIKit.Text(new Rect(card.x + 210, card.y + 44, card.width - 224, 22), "5번을 다시 누르면 다음 기기", 14, UITheme.BoneDim, TextAnchor.MiddleRight);
+                UIKit.Text(new Rect(card.x + 14, card.y + 74, card.width - 28, 60), $"<size=52><b>{n}</b></size><size=22><color=#{UIKit.Hex(UITheme.BoneDim)}>  /  {Gadgets.MaxCarry(g)}</color></size>", 52, n > 0 ? UITheme.Bone : UITheme.BloodBright, TextAnchor.MiddleRight, serif: true);
+                UIKit.Text(new Rect(card.x + 14, card.yMax - 30, card.width - 28, 22), Gadgets.Desc(g), 13, UITheme.Ash, TextAnchor.MiddleRight);
+            }
+            else
+            {
+                Color gc = Grades.Color(w.grade);
+                WeaponIcon.Draw(icon, w.data.weaponClass, Color.Lerp(UITheme.Bone, gc, 0.55f));
+                Color elem = CombatNames.ColorOf(w.DamageType);
+                UIKit.Text(new Rect(card.x + 210, card.y + 8, card.width - 224, 34), w.data.displayName + (w.upgradeLevel > 0 ? $" +{w.upgradeLevel}" : ""), 24, UITheme.Bone, TextAnchor.MiddleRight, serif: true, bold: true);
+                UIKit.Text(new Rect(card.x + 210, card.y + 40, card.width - 224, 22),
+                    $"<color=#{UIKit.Hex(gc)}>{Grades.Name(w.grade)}</color>  ·  {GameText.WeaponClassName(w.data.weaponClass)} {w.data.tier}단  ·  <color=#{UIKit.Hex(elem)}>{GameText.ElementName(w.DamageType)}</color>" +
+                    (p.Controller.WeightPenalty < 1f ? $"  ·  <color=#{UIKit.Hex(UITheme.Warn)}>과적</color>" : ""),
+                    14, UITheme.BoneDim, TextAnchor.MiddleRight);
+
+                bool low = w.ammoInMag <= w.MagazineSize * 0.25f;
+                Color ac = w.ammoInMag == 0 ? UITheme.BloodBright : low ? UITheme.Warn : UITheme.Bone;
+                string reload = wp.IsReloading ? $"<size=18><color=#{UIKit.Hex(UITheme.Gold)}>{(w.ammoInMag == 0 ? "빈 탄창 교체" : "탄창 교체")}</color></size>   " : "";
+                UIKit.Text(new Rect(card.x + 14, card.y + 66, card.width - 28, 62),
+                    $"{reload}<size=54><b>{w.ammoInMag}</b></size><size=22><color=#{UIKit.Hex(UITheme.BoneDim)}>  /  {w.reserve}</color></size>", 54, ac, TextAnchor.MiddleRight, serif: true);
+                if (wp.IsReloading) UIKit.Bar(new Rect(card.x + 20, card.y + 96, 170, 6), wp.ReloadProgress, UITheme.Gold);
+
+                // 탄알: 탄피 + 탄두 모양 (최대 40발 표시)
+                int mag = w.MagazineSize;
+                int ticks = Mathf.Min(mag, 40);
+                float tw = Mathf.Min(8f, (card.width - 40) / ticks - 2f), tg = 2f;
+                float tx = card.xMax - 16 - ticks * (tw + tg);
+                int full = Mathf.CeilToInt(w.ammoInMag * ticks / (float)mag);
+                for (int i = 0; i < ticks; i++)
+                {
+                    bool f = i < full;
+                    var br = new Rect(tx + i * (tw + tg), card.yMax - 30, tw, 16);
+                    Color bc = f ? new Color(0.78f, 0.62f, 0.32f, 0.95f) : new Color(1, 1, 1, 0.1f);
+                    UIKit.Fill(new Rect(br.x, br.y + 5, br.width, br.height - 5), bc);                       // 탄피
+                    UIKit.Fill(new Rect(br.x + br.width * 0.15f, br.y, br.width * 0.7f, 6), f ? new Color(0.55f, 0.42f, 0.3f, 0.95f) : bc); // 탄두
+                }
             }
 
-            // 무기 슬롯
-            float slotW = 132, gx = right - wp.Slots.Count * (slotW + 6) + 6;
-            for (int i = 0; i < wp.Slots.Count; i++)
+            // ---- 슬롯 5칸: 1·2 주무기  3 권총  4 칼  5 기기 ----
+            float sw = 84, sh = 40, gap = 6;
+            float sx0 = right - 5 * (sw + gap) + gap;
+            for (int k = 0; k < 5; k++)
             {
-                var r = new Rect(gx + i * (slotW + 6), H - 42, slotW, 28);
-                bool cur = i == wp.CurrentIndex;
-                UIKit.NineSlice(r, cur ? UITheme.PanelHeader : UITheme.Slot, 6, new Color(1, 1, 1, cur ? 1f : 0.75f));
-                UIKit.Text(r, $"{i + 1}  {wp.Slots[i].data.displayName}", 14, cur ? UITheme.GoldBright : UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true, bold: cur);
+                var r = new Rect(sx0 + k * (sw + gap), H - 44, sw, sh);
+                bool cur = wp.ActiveKey == k;
+                bool exists = k != 1 || wp.PrimaryCount >= 2;
+                UIKit.NineSlice(r, cur ? UITheme.PanelHeader : UITheme.Slot, 6, new Color(1, 1, 1, exists ? (cur ? 1f : 0.75f) : 0.3f));
+                Color ic = cur ? UITheme.GoldBright : UITheme.BoneDim;
+                var ir = new Rect(r.x + 18, r.y + 4, r.width - 22, r.height - 8);
+                if (k <= 2 && exists)
+                {
+                    var sl = wp.Slots[k == 2 ? wp.Slots.Count - 1 : k];
+                    WeaponIcon.Draw(ir, sl.data.weaponClass, ic);
+                }
+                else if (k == 3) WeaponIcon.Draw(ir, WeaponClass.Melee, ic);
+                else if (k == 4)
+                {
+                    WeaponIcon.DrawGadget(ir, wp.Gadget, ic);
+                    int total = 0; foreach (var c in wp.GadgetCount) total += c;
+                    UIKit.Text(new Rect(r.x, r.y, r.width - 4, r.height), total.ToString(), 12, UITheme.BoneDim, TextAnchor.LowerRight);
+                }
+                UIKit.Text(new Rect(r.x + 4, r.y + 2, 16, 16), (k + 1).ToString(), 12, cur ? UITheme.GoldBright : UITheme.Ash, TextAnchor.UpperLeft, bold: true);
             }
+        }
+
+        void StaminaHint(PlayerCharacter p, Rect card)
+        {
+            var c = p.Controller;
+            UIKit.Bar(new Rect(card.x + 20, card.yMax - 24, card.width - 40, 6), c.Stamina / c.MaxStamina, new Color(0.55f, 0.75f, 0.45f));
         }
 
         /// <summary>내가 낸 소리 크기와 빗소리 가림. 소리가 크면 망자가 몰려온다.</summary>
@@ -276,9 +362,23 @@ namespace Hunt.UI
                     if (st == waves.Stage) return $"<color=#{UIKit.Hex(st == RoundStage.Boss ? UITheme.BloodBright : UITheme.GoldBright)}>{n}</color>";
                     return st < waves.Stage ? $"<color=#{UIKit.Hex(UITheme.Ash)}>{n}</color>" : n;
                 }
-                string sub = $"{Step(RoundStage.Normal)}  ›  {Step(RoundStage.Elite)}  ›  {Step(RoundStage.Boss)}    ·    남은 {waves.AliveCount + waves.RemainingToSpawn}";
+                string sub;
+                if (waves.Rule == RoundRule.Defense)
+                    sub = $"<color=#{UIKit.Hex(UITheme.GoldBright)}>지킴</color>  ·  날이 밝기까지 {waves.TimeLeft:0}초  ·  돌무더기 {waves.DefendHp / WaveManager.DefendMaxHp * 100f:0}%";
+                else if (waves.Rule == RoundRule.Mission)
+                    sub = $"<color=#{UIKit.Hex(UITheme.GoldBright)}>소탕</color>  ·  남은 시간 <color=#{UIKit.Hex(waves.TimeLeft < 30f ? UITheme.BloodBright : UITheme.Bone)}>{waves.TimeLeft:0}초</color>  ·  남은 망자 {waves.AliveCount + waves.RemainingToSpawn}";
+                else
+                    sub = $"{Step(RoundStage.Normal)}  ›  {Step(RoundStage.Elite)}  ›  {Step(RoundStage.Boss)}    ·    남은 {waves.AliveCount + waves.RemainingToSpawn}";
                 UIKit.Text(new Rect(r.x, r.y + 38, r.width, 24), sub, 15, UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true);
                 // 몰려오기까지 남은 시간
+                if (waves.Modifiers.Count > 0)
+                {
+                    string mods = "변고: ";
+                    for (int i = 0; i < waves.Modifiers.Count; i++) mods += (i > 0 ? " · " : "") + WaveManager.ModifierName(waves.Modifiers[i]);
+                    UIKit.Text(new Rect(r.x - 100, r.yMax + 44, r.width + 200, 20), mods, 13, UITheme.BloodBright, TextAnchor.MiddleCenter, serif: true);
+                }
+                if (waves.Rule == RoundRule.Defense)
+                    UIKit.Bar(new Rect(r.x + 60, r.yMax - 8, r.width - 120, 5), waves.DefendHp / WaveManager.DefendMaxHp, UITheme.Gold);
                 string rush = waves.Rushing ? $"<color=#{UIKit.Hex(UITheme.BloodBright)}>망자들이 모두 몰려온다</color>" : $"망자들이 냄새를 맡기까지  {waves.RushIn:0}초";
                 UIKit.Text(new Rect(r.x, r.yMax + 24, r.width, 20), rush, 14, UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true);
             }

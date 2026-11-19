@@ -58,6 +58,8 @@ namespace Hunt.Monsters
         const float FlashRange = 26f;                  // 총구 화염 (비가 와도 보인다)
         /// <summary>라운드 제한 시간이 지나 모두 몰려오는 중 (WaveManager가 설정).</summary>
         public static bool GlobalRush;
+        /// <summary>디펜스 룰: 지켜야 할 곳. 설정되면 플레이어가 멀리 있을 때 이곳으로 몰려가 부순다.</summary>
+        public static Vector3? DefendTarget;
         float alertTime;                  // > 0 이면 플레이어를 쫓는 중
         float senseTimer;
         Vector3 home;
@@ -189,6 +191,20 @@ namespace Hunt.Monsters
             {
                 if (dist > 12f) move = PathDirection(target.transform.position, dir, dt);
                 else if (dist < 7f) move = -dir;
+            }
+            else if (DefendTarget.HasValue && dist > 9f)
+            {
+                // 디펜스: 지킴터로 간다
+                Vector3 tp = DefendTarget.Value - transform.position;
+                tp.y = 0f;
+                if (tp.magnitude > 2.2f) move = PathDirection(DefendTarget.Value, tp.normalized, dt);
+                else if (attackTimer <= 0f)
+                {
+                    if (WaveManager.Instance != null) WaveManager.Instance.DamageDefendPoint(Data.attackDamage * (IsBoss ? 3f : 1f));
+                    if (rig != null) rig.PlayBite();
+                    attackTimer = Data.attackInterval;
+                }
+                dir = tp.sqrMagnitude > 0.01f ? tp.normalized : dir;
             }
             else if (dist > Data.attackRange)
             {
