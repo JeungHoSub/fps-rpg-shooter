@@ -12,6 +12,10 @@ namespace Hunt.Core
     {
         static float level, levelTime;
 
+        /// <summary>마지막 총구 화염 시각 (빛 감지용).</summary>
+        public static float LastFlashTime = -10f;
+        public static void MuzzleFlash() { LastFlashTime = Time.time; }
+
         /// <summary>비가 소리를 가리는 배율 (1 = 그대로, 0.55 = 폭우).</summary>
         public static float RainMask =>
             Atmosphere.Instance != null ? Mathf.Lerp(1f, 0.55f, Mathf.InverseLerp(0.4f, 1f, Atmosphere.Instance.RainIntensity)) : 1f;

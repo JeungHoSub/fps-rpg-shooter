@@ -156,6 +156,7 @@ namespace Hunt.Player
             float baseTime = w.ammoInMag == 0 ? w.data.emptyReloadTime : w.data.reloadTime;
             reloadTotal = reloadTime = baseTime / (player.Stats.ReloadSpeedMult * w.ReloadSpeedMult);
             reloadStage = 0;
+            Noise.Emit(player.transform.position, 6f, true); // 탄창 소리
         }
 
         void FinishReload(WeaponInstance w)
@@ -207,6 +208,7 @@ namespace Hunt.Player
             viewModel.OnFire(w);
             SFX.Play(SFX.Shot(w.data.weaponClass), 0.85f);
             Noise.Emit(player.transform.position, Noise.ShotRadius(w.data.weaponClass), true);
+            Noise.MuzzleFlash();
             float shake = w.data.weaponClass == WeaponClass.Shotgun || w.data.weaponClass == WeaponClass.Sniper ? 1.4f : 0.45f;
             player.Controller.AddShake(shake * Mathf.Lerp(1f, 0.5f, aim));
             player.Controller.AddPunch(Punch(w.data.weaponClass) * Mathf.Lerp(1f, 0.6f, aim), Random.Range(-0.35f, 0.35f) * Punch(w.data.weaponClass));

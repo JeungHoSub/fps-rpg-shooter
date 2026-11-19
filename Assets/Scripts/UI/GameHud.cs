@@ -2,6 +2,7 @@ using Hunt.Combat;
 using Hunt.Core;
 using Hunt.Monsters;
 using Hunt.Player;
+using Hunt.Waves;
 using Hunt.Weapons;
 using UnityEngine;
 
@@ -145,9 +146,10 @@ namespace Hunt.UI
             var r = new Rect(30, 300, 400, 330);
             UIKit.Panel(r, "첫 째  밤");
             UIKit.Text(new Rect(r.x + 24, r.y + 66, r.width - 48, 60),
-                "아침까지 살아남아라.\n망자는 <color=#" + UIKit.Hex(UITheme.BloodBright) + ">무덤</color>과 논, 마을 어귀에서 온다.", 17, UITheme.Bone, TextAnchor.UpperLeft, serif: true, wrap: true);
+                "기본 망자 → 엘리트 망자 → <color=#" + UIKit.Hex(UITheme.BloodBright) + ">보스 망자</color>.\n보스를 쓰러뜨리면 밤이 끝난다.", 17, UITheme.Bone, TextAnchor.UpperLeft, serif: true, wrap: true);
             string keys =
-                "<b>F</b>   손전등\n" +
+                "<b>F</b>   손전등 (켜면 망자가 빛을 보고 온다)\n" +
+                "총성·달리기·장전 소리에 망자가 모인다\n" +
                 "<b>우클릭</b>   조준  ·  <b>R</b> 재장전\n" +
                 "<b>Shift</b>   달리기  ·  <b>1 2 3</b> 무기\n" +
                 "<b>Q / E</b>   역병의 힘 (맞으면 차오른다)\n" +
@@ -246,7 +248,8 @@ namespace Hunt.UI
             UIKit.Bar(r, loud, c);
             float mask = Noise.RainMask;
             string rain = mask < 0.75f ? "  ·  빗소리가 소리를 덮는다" : mask < 0.95f ? "  ·  빗소리" : "";
-            UIKit.Text(new Rect(r.x - 80, r.y - 22, r.width + 160, 20), "소 리" + rain, 13, UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true);
+            string light = Flashlight.Disabled ? "  ·  손전등 금지" : Flashlight.Active ? $"  ·  <color=#{UIKit.Hex(UITheme.GoldBright)}>손전등 켜짐 — 망자가 빛을 본다</color>" : "  ·  손전등 꺼짐 (F)";
+            UIKit.Text(new Rect(r.x - 160, r.y - 22, r.width + 320, 20), "소 리" + rain + light, 13, UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true);
         }
 
         void DrawNightPlaque(GameManager gm)
@@ -266,7 +269,18 @@ namespace Hunt.UI
             {
                 string night = NightName(waves.Wave) + (waves.IsBossWave ? "  —  대감의 밤" : "");
                 UIKit.Text(new Rect(r.x, r.y + 6, r.width, 34), night, 24, waves.IsBossWave ? UITheme.BloodBright : UITheme.Bone, TextAnchor.MiddleCenter, serif: true, bold: true);
-                UIKit.Text(new Rect(r.x, r.y + 38, r.width, 24), $"남은 망자  {waves.AliveCount + waves.RemainingToSpawn}", 16, UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true);
+                // 단계: 기본 → 엘리트 → 보스 (현재 단계만 밝게)
+                string Step(RoundStage st)
+                {
+                    string n = WaveManager.StageName(st);
+                    if (st == waves.Stage) return $"<color=#{UIKit.Hex(st == RoundStage.Boss ? UITheme.BloodBright : UITheme.GoldBright)}>{n}</color>";
+                    return st < waves.Stage ? $"<color=#{UIKit.Hex(UITheme.Ash)}>{n}</color>" : n;
+                }
+                string sub = $"{Step(RoundStage.Normal)}  ›  {Step(RoundStage.Elite)}  ›  {Step(RoundStage.Boss)}    ·    남은 {waves.AliveCount + waves.RemainingToSpawn}";
+                UIKit.Text(new Rect(r.x, r.y + 38, r.width, 24), sub, 15, UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true);
+                // 몰려오기까지 남은 시간
+                string rush = waves.Rushing ? $"<color=#{UIKit.Hex(UITheme.BloodBright)}>망자들이 모두 몰려온다</color>" : $"망자들이 냄새를 맡기까지  {waves.RushIn:0}초";
+                UIKit.Text(new Rect(r.x, r.yMax + 24, r.width, 20), rush, 14, UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true);
             }
             var evo = gm.Evolution.Profile;
             if (evo.generation > 0)

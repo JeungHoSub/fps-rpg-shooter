@@ -65,7 +65,6 @@ namespace Hunt.Monsters
                 if (t > sinkAt + 2f) Destroy(gameObject);
                 return;
             }
-            t += Time.deltaTime;
             // 0~0.45초: 넘어짐 (가속) → 살짝 튕김
             float fall = Mathf.Clamp01(t / 0.45f);
             float ang = Mathf.Lerp(0f, 88f, fall * fall);

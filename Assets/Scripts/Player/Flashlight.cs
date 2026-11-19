@@ -11,6 +11,14 @@ namespace Hunt.Player
         Quaternion lagRot;
         public bool IsOn => spot != null && spot.enabled;
 
+        /// <summary>망자 감지용: 손전등이 켜져 있는지, 빛이 나가는 눈 위치.</summary>
+        public static bool Active { get; private set; }
+        public static Transform Eye { get; private set; }
+        /// <summary>난이도 변형 '시야 감소': 손전등을 쓸 수 없음.</summary>
+        public static bool Disabled;
+
+        void OnDestroy() { if (Eye == cam) { Eye = null; Active = false; } }
+
         public void Init(Transform camera)
         {
             cam = camera;
@@ -28,6 +36,8 @@ namespace Hunt.Player
             spot.shadowStrength = 0.85f;
             spot.renderMode = LightRenderMode.ForcePixel; // 조명 수를 줄여도 손전등은 항상 제대로
             lagRot = camera.rotation;
+            Eye = camera;
+            Active = spot.enabled;
         }
 
         void Update()
@@ -36,9 +46,16 @@ namespace Hunt.Player
             if (spot == null || gm == null) return;
             if (gm.AcceptsGameplayInput && Input.GetKeyDown(KeyCode.F))
             {
-                spot.enabled = !spot.enabled;
-                SFX.Play(SFX.FlashlightClick, 0.6f);
+                if (Disabled && !spot.enabled) Hunt.UI.HUD.Notify("이번 밤은 손전등을 쓸 수 없다", new Color(1f, 0.6f, 0.4f));
+                else
+                {
+                    spot.enabled = !spot.enabled;
+                    SFX.Play(SFX.FlashlightClick, 0.6f);
+                    Noise.Emit(cam.position, 3f, true);
+                }
             }
+            if (Disabled && spot.enabled) spot.enabled = false;
+            Active = spot.enabled;
             // 빛줄기가 시점을 살짝 늦게 따라온다
             lagRot = Quaternion.Slerp(lagRot, cam.rotation, Time.deltaTime * 14f);
             spot.transform.rotation = lagRot;

@@ -52,15 +52,25 @@ namespace Hunt.Monsters
         Transform head;
 
         // 감지: 소리를 듣거나 가까이서 보면 쫓아오고, 아니면 소리 난 곳을 찾아 어슬렁거린다
-        const float SightRange = 9f;      // 이 거리 안이면 비가 와도 알아챈다
-        const float SmellAfter = 45f;     // 이만큼 지나면 냄새로 찾아온다 (밤이 끝나지 않는 일 방지)
+        // 어두우면 가까이 와야 알아챈다. 손전등을 켜면 내 모습이 드러난다.
+        const float SightDark = 7f, SightLit = 12f;
+        const float BeamRange = 32f, BeamCos = 0.87f;  // 손전등 빛줄기 안 (약 30도)
+        const float FlashRange = 26f;                  // 총구 화염 (비가 와도 보인다)
+        /// <summary>라운드 제한 시간이 지나 모두 몰려오는 중 (WaveManager가 설정).</summary>
+        public static bool GlobalRush;
         float alertTime;                  // > 0 이면 플레이어를 쫓는 중
-        float age;
+        float senseTimer;
+        Vector3 home;
         bool hasInvestigate;
         Vector3 investigatePos, wanderGoal;
         float wanderTimer;
 
-        public bool IsAlerted => alertTime > 0f || IsBoss || age > SmellAfter;
+        public bool IsAlerted => alertTime > 0f || IsBoss || GlobalRush;
+
+        public void Alert(float seconds) { alertTime = Mathf.Max(alertTime, seconds); }
+
+        /// <summary>보스가 쓰러질 때 함께 무너진다.</summary>
+        public void Collapse() { Die(); }
 
         /// <summary>소리를 들었다. 플레이어가 낸 소리면 잠시 쫓아오고, 그 뒤엔 그 자리를 뒤진다.</summary>
         public void HearNoise(Vector3 pos, bool fromPlayer)
@@ -96,6 +106,9 @@ namespace Hunt.Monsters
             this.target = target;
             attackTimer = Random.Range(0.2f, d.attackInterval);
             spitTimer = 3f;
+            home = transform.position;
+            wanderGoal = home;
+            senseTimer = Random.value * 0.25f;
             Alive.Add(this);
         }
 
@@ -130,9 +143,9 @@ namespace Hunt.Monsters
             float dist = to.magnitude;
             Vector3 dir = dist > 0.01f ? to / dist : transform.forward;
 
-            age += dt;
             if (alertTime > 0f) alertTime -= dt;
-            if (dist < SightRange) alertTime = Mathf.Max(alertTime, 2f);
+            senseTimer -= dt;
+            if (senseTimer <= 0f) { senseTimer = 0.25f; Sense(dist); }
             bool alerted = IsAlerted;
             // 처음 발견하면 멈춰 서서 비명을 지른 뒤 달려든다
             if (alerted && !wasAlerted && rig != null && dist > 6f && !IsBoss)
@@ -148,8 +161,8 @@ namespace Hunt.Monsters
             Vector3 move = Vector3.zero;
             if (!alerted)
             {
-                // 모르는 채 어슬렁: 소리 난 곳 → 없으면 플레이어 근처 아무 데나 (천천히 모여든다)
-                spd *= 0.4f;
+                // 모르는 채 서성임: 소리 난 곳을 뒤지거나, 제자리 근처를 어슬렁
+                spd *= hasInvestigate ? 0.55f : 0.3f;
                 Vector3 goal = hasInvestigate ? investigatePos : wanderGoal;
                 wanderTimer -= dt;
                 Vector3 g = goal - transform.position;
@@ -157,9 +170,11 @@ namespace Hunt.Monsters
                 if (g.sqrMagnitude < 2f * 2f || (!hasInvestigate && wanderTimer <= 0f))
                 {
                     hasInvestigate = false;
-                    Vector2 off = Random.insideUnitCircle * 14f;
-                    wanderGoal = target.transform.position + new Vector3(off.x, 0f, off.y);
-                    wanderTimer = Random.Range(6f, 9f);
+                    // 소리를 뒤진 자리를 새 거처로 삼는다
+                    if (g.sqrMagnitude < 2f * 2f && goal == investigatePos) home = investigatePos;
+                    Vector2 off = Random.insideUnitCircle * 5f;
+                    wanderGoal = home + new Vector3(off.x, 0f, off.y);
+                    wanderTimer = Random.Range(5f, 10f);
                     goal = wanderGoal;
                     g = goal - transform.position;
                     g.y = 0f;
@@ -231,6 +246,35 @@ namespace Hunt.Monsters
                     spitTimer = 1.6f;
                 }
             }
+        }
+
+        /// <summary>시야·빛 감지 (0.25초마다). 소리는 Noise가 따로 알려준다.</summary>
+        void Sense(float dist)
+        {
+            bool lit = Flashlight.Active;
+            if (dist < (lit ? SightLit : SightDark)) { Alert(3f); return; }
+            if (IsAlerted && alertTime > 1f) return;
+
+            var eye = Flashlight.Eye;
+            if (eye == null) return;
+            Vector3 me = transform.position + Vector3.up * 1.5f * Data.scale;
+
+            // 손전등 빛줄기에 비치면 빛을 따라 온다
+            if (lit && dist < BeamRange)
+            {
+                Vector3 toMe = (me - eye.position).normalized;
+                if (Vector3.Dot(eye.forward, toMe) > BeamCos && CanSee(eye.position, me)) { Alert(6f); return; }
+            }
+            // 손전등이 켜져 있으면 멀리서도 불빛이 보인다 (빛줄기 밖이어도 절반 거리)
+            if (lit && dist < BeamRange * 0.5f && CanSee(eye.position, me)) { Alert(5f); return; }
+            // 총구 화염
+            if (Time.time - Noise.LastFlashTime < 0.3f && dist < FlashRange && CanSee(eye.position, me)) Alert(6f);
+        }
+
+        static bool CanSee(Vector3 from, Vector3 to)
+        {
+            if (!Physics.Linecast(from, to, out RaycastHit hit, ~(1 << 2), QueryTriggerInteraction.Ignore)) return true;
+            return hit.collider.GetComponent<MonsterPart>() != null; // 망자 몸에 막힌 건 시야로 친다
         }
 
         /// <summary>NavMesh 경로의 다음 코너 방향. 경로가 없거나 끝에 도달하면 직선 방향을 쓴다.</summary>

@@ -224,7 +224,7 @@ namespace Hunt.Core
             State = GameState.Playing;
             MenuOpen = false;
             Waves.StartWave(Waves.Wave + 1);
-            HUD.Notify(Waves.IsBossWave ? $"{GameHud.NightName(Waves.Wave)} — 역병 대감이 깨어났다" : $"{GameHud.NightName(Waves.Wave)}이 왔다", new Color(1f, 0.45f, 0.4f));
+            HUD.Notify(Waves.IsBossWave ? $"{GameHud.NightName(Waves.Wave)} — 대감의 밤. 망자들이 마을에 흩어져 있다" : $"{GameHud.NightName(Waves.Wave)}이 왔다 — 망자들이 마을에 흩어져 있다", new Color(1f, 0.45f, 0.4f));
             if (Waves.Wave > 1) SFX.Play(SFX.Gong, 0.8f, 0f);
         }
 
