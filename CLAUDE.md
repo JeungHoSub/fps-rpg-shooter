@@ -26,8 +26,15 @@ Unity 1인칭 싱글플레이 좀비 슈터 + RPG. **비 오는 밤의 한국 �
 - 완료: 마지막 남은 망자가 안 보이던 문제 → 남은 3마리 이하 12초 후 위치 표시 + 근처로 끌어옴
 - 완료 (2026-11-19): **Phase 1** — 빛 감지(`Monster.Sense`: 어둠 7m/손전등 12m, 빛줄기 32m·30°, 총구 화염 26m, 시야선 검사), 손전등 F(켜고 끌 때 HUD 표시, `Flashlight.Disabled`=시야 감소 변형용),
   라운드 기본 룰(`WaveManager.RoundStage` 기본→엘리트→보스, **보스 처치 시 클리어**·남은 망자 붕괴, 매 밤 보스·5번째 밤은 대감), 기본 망자 마을 곳곳 배치·제자리 배회, 단계마다 45~95초 뒤 전원 돌진(`Monster.GlobalRush`)
-- 다음 할 일: **Phase 2** — 슬롯 5개(1·2 주무기, 3 권총, 4 근접, 5 특수 기기) + 근접 + 투척/설치물 + 키트·스태미너
-- 이후: Phase 2~6 (SPEC_V04), 오행·밤낮 순환 (CONCEPT_KR_HORROR)
+- 완료 (2026-11-19, 여러 Phase 묶음 — 사용자 요청 "여러 단계 묶어서"):
+  - Phase 2: 슬롯 5개(`PlayerWeapons.Hand` Gun/Melee/Gadget, 1·2·3·4·5, V 칼질, G 수류탄), `Player/Gadgets.cs`(수류탄·지뢰·설치형 기관총·유탄), X 키트/C 회복제(`PlayerCharacter`), 스태미너(`PlayerController`)
+  - Phase 3: `DefaultContent.Catalog` 8계열×3단계(화염방사기·유탄·로켓 추가), `Gear/Grade.cs` 등급·강화, `Gear/Armor.cs` 방어구 5부위, 망자 방어도 `WaveManager.DefenseBonus`, 서낭당 '무기고'·'방어구·보급' 탭
+  - Phase 4: `RoundRule` 사냥/지킴/소탕, `Modifier` 변고 6종 → `Core/GameRules.cs` 배율
+  - Phase 5: `CharacterStats.Soft` 수확 체감(16·28), `BalanceBonus`
+  - Phase 6: `SFX.ShotFor`(무기별 총성), `HitFor`(계열별 타격음), 탄창식 장전(분리→삽입→빈 탄창이면 노리쇠), 산탄총 한 발씩 장전
+  - 그래픽: Poly Haven 소품 모델 `Core/PropModels.cs` + `Resources/Props/`(장독대·LPG·드럼통·상자·바위·덤불·가로등 등), 망자 갓·상투·전립 `MonsterFactory.Headwear`, 무기 HUD 실루엣 `UI/WeaponIcon.cs`
+- 다음 할 일: 사용자 플레이 확인 → 밸런스 조정. 남은 그래픽: 건물(한옥·초가) 모델(무료 한국풍 모델 드묾), 망자 소복·도포 의상, 1인칭 총 모델 사실화
+- 환경 '2번째'에 Poly Haven 호스트(api.polyhaven.com, dl.polyhaven.org) 허용됨. API는 User-Agent 필요.
 - **그래픽 결정됨 (2026-11-18): Mixamo 실사 망자 + 분위기형 배경.**
   - **완료 (2026-11-18):** Mixamo API(사용자 토큰, 환경 네트워크 시크릿)로 `Romero` + 동작 8개를 Collada(DAE)로 받아 `Assets/Resources/Mixamo/`에 넣음.
     FBX는 4K 텍스처 내장으로 110MB라 DAE로 받고 텍스처를 1K JPG로 줄임. 뼈 접두어 `mixamorig5_` (캐릭터마다 달라서 동작은 캐릭터별로 받아야 함).

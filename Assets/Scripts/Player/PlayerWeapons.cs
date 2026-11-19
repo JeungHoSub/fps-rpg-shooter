@@ -138,12 +138,38 @@ namespace Hunt.Player
             }
 
             // ---- 재장전 (진행도에 맞춰 탄창 빼는/끼우는 소리) ----
-            if (reloadTime > 0f)
+            if (reloadTime > 0f && shellReload)
             {
+                // 산탄총: 한 발씩 밀어 넣는다 (쏘면 그 자리에서 멈춘다)
+                reloadTime -= dt;
+                shellTimer -= dt;
+                if (shellTimer <= 0f)
+                {
+                    if (w.ammoInMag < w.MagazineSize && w.reserve > 0)
+                    {
+                        w.ammoInMag++;
+                        w.reserve--;
+                        SFX.PlayPitched(SFX.ShellIn, 0.75f, 0.9f);
+                        shellTimer = shellInterval;
+                    }
+                    if (w.ammoInMag >= w.MagazineSize || w.reserve <= 0)
+                    {
+                        if (reloadFromEmpty) SFX.Play(SFX.Rack, 0.85f); // 펌프를 당겨 약실에 넣는다
+                        reloadTime = reloadTotal = 0f;
+                        shellReload = false;
+                    }
+                }
+            }
+            else if (reloadTime > 0f)
+            {
+                // 탄창식: 탄창 분리 → 새 탄창 삽입 → (빈 탄창이었으면) 노리쇠/슬라이드 당김
                 reloadTime -= dt;
                 float p = ReloadProgress;
-                if (reloadStage == 0 && p > 0.3f) { SFX.Play(SFX.MagOut, 0.7f); reloadStage = 1; }
-                if (reloadStage == 1 && p > 0.72f) { SFX.Play(SFX.MagIn, 0.8f); reloadStage = 2; }
+                float pitch = ReloadPitch(w.data.weaponClass);
+                float inAt = reloadFromEmpty ? 0.62f : 0.72f;
+                if (reloadStage == 0 && p > 0.25f) { SFX.PlayPitched(SFX.MagOut, 0.7f, pitch); reloadStage = 1; }
+                if (reloadStage == 1 && p > inAt) { SFX.PlayPitched(SFX.MagIn, 0.85f, pitch); reloadStage = 2; }
+                if (reloadStage == 2 && reloadFromEmpty && p > 0.86f) { SFX.PlayPitched(SFX.Bolt, 0.85f, pitch); reloadStage = 3; }
                 if (reloadTime <= 0f) FinishReload(w);
             }
             else if (input && Input.GetKeyDown(KeyCode.R)) StartReload(w);
@@ -161,6 +187,8 @@ namespace Hunt.Player
 
             // ---- 사격 ----
             bool trigger = input && !player.IsUsingItem && (w.data.automatic ? Input.GetMouseButton(0) : Input.GetMouseButtonDown(0));
+            // 한 발씩 넣는 중이면 쏠 수 있다 (넣은 만큼만)
+            if (trigger && shellReload && w.ammoInMag > 0) { shellReload = false; reloadTime = reloadTotal = 0f; }
             if (trigger && fireCooldown <= 0f && swapTime <= 0f && !IsReloading)
             {
                 if (ctrl.IsSprinting) ctrl.CancelSprint();
@@ -376,11 +404,41 @@ namespace Hunt.Player
             SFX.Play(SFX.Swap, 0.6f);
         }
 
+        bool shellReload, reloadFromEmpty;
+        float shellTimer, shellInterval;
+
+        static float ReloadPitch(WeaponClass c)
+        {
+            switch (c)
+            {
+                case WeaponClass.Pistol: return 1.25f;
+                case WeaponClass.SMG: return 1.12f;
+                case WeaponClass.Sniper: return 0.9f;
+                case WeaponClass.LMG: return 0.78f;
+                case WeaponClass.Launcher: return 0.72f;
+                case WeaponClass.Flamethrower: return 0.65f;
+                default: return 1f;
+            }
+        }
+
         void StartReload(WeaponInstance w)
         {
             if (IsReloading || w.ammoInMag >= w.MagazineSize || w.reserve <= 0) return;
-            float baseTime = w.ammoInMag == 0 ? w.data.emptyReloadTime : w.data.reloadTime;
-            reloadTotal = reloadTime = baseTime / (player.Stats.ReloadSpeedMult * w.ReloadSpeedMult * player.Armor.ReloadMult);
+            float speed = player.Stats.ReloadSpeedMult * w.ReloadSpeedMult * player.Armor.ReloadMult;
+            reloadFromEmpty = w.ammoInMag == 0;
+            shellReload = w.data.weaponClass == WeaponClass.Shotgun && w.data.magazine > 2;
+            if (shellReload)
+            {
+                int need = Mathf.Min(w.MagazineSize - w.ammoInMag, w.reserve);
+                shellInterval = w.data.reloadTime / 6f / speed;
+                shellTimer = 0.35f / speed; // 총을 기울이는 시간
+                reloadTotal = reloadTime = shellTimer + shellInterval * need + (reloadFromEmpty ? 0.4f : 0f) + 0.05f;
+            }
+            else
+            {
+                float baseTime = reloadFromEmpty ? w.data.emptyReloadTime : w.data.reloadTime;
+                reloadTotal = reloadTime = baseTime / speed;
+            }
             reloadStage = 0;
             Noise.Emit(player.transform.position, 6f, true); // 탄창 소리
         }
@@ -392,7 +450,6 @@ namespace Hunt.Player
             w.ammoInMag += take;
             w.reserve -= take;
             reloadTime = reloadTotal = 0f;
-            SFX.Play(SFX.Rack, 0.8f);
             if (w.Has(AffixType.PostReloadBurst)) postReloadShots = 3;
         }
 
@@ -433,10 +490,16 @@ namespace Hunt.Player
 
             // 연출: 총 모델 반동 / 총성 / 화면 흔들림
             viewModel.OnFire(w);
-            SFX.Play(SFX.Shot(w.data.weaponClass), 0.85f);
+            SFX.Play(SFX.ShotFor(w.data), 0.85f);
+            // 탄피 떨어지는 소리 (펌프·볼트식은 장전 동작 때)
+            bool manual = (w.data.weaponClass == WeaponClass.Shotgun && !w.data.automatic) || (w.data.weaponClass == WeaponClass.Sniper && w.data.rpm < 100f);
+            if (w.data.weaponClass != WeaponClass.Flamethrower && w.data.weaponClass != WeaponClass.Launcher && !manual)
+                SFX.Play(SFX.Casing, 0.18f, 0.2f);
             Noise.Emit(player.transform.position, Noise.ShotRadius(w.data.weaponClass), true);
             Noise.MuzzleFlash();
-            float shake = w.data.weaponClass == WeaponClass.Shotgun || w.data.weaponClass == WeaponClass.Sniper ? 1.4f : 0.45f;
+            float shake = w.data.weaponClass == WeaponClass.Shotgun || w.data.weaponClass == WeaponClass.Sniper || w.data.weaponClass == WeaponClass.Launcher ? 1.4f
+                : w.data.weaponClass == WeaponClass.Flamethrower ? 0.1f : 0.45f;
+            shake *= 1f + (w.data.tier - 1) * 0.25f; // 큰 구경일수록 더 흔들린다
             player.Controller.AddShake(shake * Mathf.Lerp(1f, 0.5f, aim));
             player.Controller.AddPunch(Punch(w.data.weaponClass) * Mathf.Lerp(1f, 0.6f, aim), Random.Range(-0.35f, 0.35f) * Punch(w.data.weaponClass));
 
@@ -493,7 +556,7 @@ namespace Hunt.Player
                 else if (pellets == 1 || i % 3 == 0) FX.Tracer(muzzle, end, tracer, tracerWidth);
             }
 
-            if (anyHit) SFX.Play(SFX.FleshHit, pellets > 1 ? 0.75f : 0.55f, 0.08f);
+            if (anyHit) SFX.Play(SFX.HitFor(w.data.weaponClass), pellets > 1 ? 0.8f : 0.6f, 0.08f);
             if (anyKill)
             {
                 SFX.Play(SFX.KillTick, 0.6f, 0f);
@@ -527,6 +590,8 @@ namespace Hunt.Player
                 case WeaponClass.Shotgun: return 3.4f;
                 case WeaponClass.Sniper: return 4.2f;
                 case WeaponClass.LMG: return 0.75f;
+                case WeaponClass.Flamethrower: return 0.08f;
+                case WeaponClass.Launcher: return 3.6f;
                 default: return 0.9f;
             }
         }

@@ -1,3 +1,4 @@
+using Hunt.Core;
 using System.Collections.Generic;
 using Hunt.Combat;
 using Hunt.Data;
@@ -114,6 +115,93 @@ namespace Hunt.Monsters
             return Color.Lerp(c, new Color(0.55f, 0.4f, 0.65f), Mathf.Min(0.45f, evo.generation * 0.07f));
         }
 
+        // ---------------------------------------------------------------- 킹덤풍 머리 장식
+        static Material hatBlack, hatRed, hatNavy, hatCord;
+
+        static Material HatMat(ref Material m, Color c, float gloss)
+        {
+            if (m == null) m = EnvMaterials.Plain(c, gloss, 0f);
+            return m;
+        }
+
+        static void HatPiece(Transform head, PrimitiveType t, Vector3 worldPos, Quaternion rot, Vector3 scale, Material mat)
+        {
+            var g = GameObject.CreatePrimitive(t);
+            Object.Destroy(g.GetComponent<Collider>());
+            g.name = "Hat";
+            g.layer = 2;
+            g.transform.position = worldPos;
+            g.transform.rotation = rot;
+            g.transform.localScale = scale;
+            g.GetComponent<Renderer>().sharedMaterial = mat;
+            g.transform.SetParent(head, true); // 머리뼈를 따라 움직인다
+        }
+
+        /// <summary>
+        /// 조선 역병 망자: 주민은 갓·상투(망건), 장군 망자는 붉은 상모 달린 전립, 대감은 큰 갓과 갓끈.
+        /// 현대 주민 망자는 맨머리. 모델 위에 덧씌우는 저폴리 도형이라 '하' 품질에서도 가볍다.
+        /// </summary>
+        static void Headwear(MonsterData d, ZombieRig rig, Transform root)
+        {
+            if (rig.Head == null) return;
+            float u = rig.Unit; // 키(괴물 크기 포함) 기준 배율
+            Vector3 top = rig.HeadTop != null ? rig.HeadTop.position : rig.Head.position + Vector3.up * 0.18f * u;
+            Quaternion up = Quaternion.Euler(0f, root.eulerAngles.y, 0f);
+            Vector3 fwd = up * Vector3.forward;
+            var black = HatMat(ref hatBlack, new Color(0.03f, 0.03f, 0.035f), 0.55f);
+            var cord = HatMat(ref hatCord, new Color(0.55f, 0.32f, 0.12f), 0.6f);
+
+            void Gat(float size)
+            {
+                // 테(양태) + 대우(모자 꼭대기), 살짝 앞으로 기울여 쓴다
+                Quaternion tilt = up * Quaternion.Euler(-6f, 0f, 0f);
+                Vector3 brim = top - Vector3.up * 0.03f * u;
+                HatPiece(rig.Head, PrimitiveType.Cylinder, brim, tilt, new Vector3(0.62f, 0.006f, 0.62f) * u * size, black);
+                HatPiece(rig.Head, PrimitiveType.Cylinder, brim + tilt * Vector3.up * 0.085f * u * size, tilt, new Vector3(0.19f, 0.085f, 0.19f) * u * size, black);
+                // 갓끈: 양 옆으로 늘어진 구슬끈
+                foreach (float side in new[] { -1f, 1f })
+                {
+                    Vector3 sideDir = up * Vector3.right * side;
+                    HatPiece(rig.Head, PrimitiveType.Cylinder, top + sideDir * 0.085f * u - Vector3.up * 0.16f * u, up, new Vector3(0.012f, 0.12f, 0.012f) * u * size, cord);
+                }
+            }
+
+            void Topknot()
+            {
+                // 상투 + 망건(이마 띠)
+                HatPiece(rig.Head, PrimitiveType.Sphere, top + Vector3.up * 0.02f * u, up, new Vector3(0.07f, 0.09f, 0.07f) * u, black);
+                HatPiece(rig.Head, PrimitiveType.Cylinder, top - Vector3.up * 0.07f * u, up, new Vector3(0.215f, 0.022f, 0.235f) * u, black);
+            }
+
+            switch (d.archetype)
+            {
+                case MonsterArchetype.Runner:
+                {
+                    float r = Random.value;
+                    if (r < 0.4f) Gat(1f);
+                    else if (r < 0.7f) Topknot();
+                    break;
+                }
+                case MonsterArchetype.Spitter:
+                    if (Random.value < 0.6f) Topknot();
+                    break;
+                case MonsterArchetype.Brute:
+                {
+                    // 전립: 검은 둥근 모자 + 넓은 테 + 붉은 상모 + 공작깃 대신 붉은 술
+                    var navy = HatMat(ref hatNavy, new Color(0.05f, 0.06f, 0.09f), 0.45f);
+                    var red = HatMat(ref hatRed, new Color(0.55f, 0.08f, 0.06f), 0.4f);
+                    HatPiece(rig.Head, PrimitiveType.Sphere, top + Vector3.up * 0.02f * u, up, new Vector3(0.25f, 0.17f, 0.25f) * u, navy);
+                    HatPiece(rig.Head, PrimitiveType.Cylinder, top - Vector3.up * 0.04f * u, up, new Vector3(0.45f, 0.008f, 0.45f) * u, navy);
+                    HatPiece(rig.Head, PrimitiveType.Sphere, top + Vector3.up * 0.12f * u, up, new Vector3(0.07f, 0.1f, 0.07f) * u, red);
+                    HatPiece(rig.Head, PrimitiveType.Cylinder, top + Vector3.up * 0.03f * u, up, new Vector3(0.255f, 0.02f, 0.255f) * u, red);
+                    break;
+                }
+                case MonsterArchetype.Boss:
+                    Gat(1.35f);
+                    break;
+            }
+        }
+
         static Monster CreateRigged(MonsterData d, Vector3 position, EvolutionProfile evo, float hpScale, PlayerCharacter target, Transform parent)
         {
             var root = new GameObject($"{d.displayName}");
@@ -131,6 +219,7 @@ namespace Hunt.Monsters
             float u = rig.Unit;
             Vector3 up = Vector3.up;
             Transform neck = rig.Neck != null ? rig.Neck : rig.Spine2;
+            Headwear(d, rig, R);
 
             // ---- 판정체 (보이지 않음): 머리 · 몸통 · 팔 · 다리 ----
             var headCenter = rig.HeadTop != null ? Vector3.Lerp(rig.Head.position, rig.HeadTop.position, 0.45f) : rig.Head.position + up * 0.1f * u;

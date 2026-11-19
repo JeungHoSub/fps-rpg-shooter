@@ -42,6 +42,18 @@ namespace Hunt.Core
             s.Play();
         }
 
+        /// <summary>음높이를 정해서 재생 (같은 소리를 무기마다 다르게).</summary>
+        public static void PlayPitched(AudioClip clip, float volume, float pitch)
+        {
+            if (clip == null || voices[0] == null) return;
+            var s = voices[nextVoice];
+            nextVoice = (nextVoice + 1) % Voices;
+            s.pitch = pitch * (1f + UnityEngine.Random.Range(-0.03f, 0.03f));
+            s.volume = volume;
+            s.clip = clip;
+            s.Play();
+        }
+
         public static void PlayAt(AudioClip clip, Vector3 pos, float volume = 1f)
         {
             if (clip != null) AudioSource.PlayClipAtPoint(clip, pos, volume);
@@ -56,7 +68,105 @@ namespace Hunt.Core
         }
 
         // ------------------------------------------------------------------ 클립
-        public static AudioClip Shot(WeaponClass c) => Get("shot_" + c, () => MakeShot(c));
+        public static AudioClip Shot(WeaponClass c) => Get("shot_" + c, () => MakeShot(c, 0, 1));
+
+        /// <summary>무기마다 고유한 총성: 계열 기본음 + 단계(구경)·이름에 따른 변주.</summary>
+        public static AudioClip ShotFor(Hunt.Data.WeaponData d)
+        {
+            if (d.weaponClass == WeaponClass.Flamethrower) return Get("shot_flame", () => MakeFlame());
+            if (d.weaponClass == WeaponClass.Launcher) return d.tier >= 3 ? Get("shot_rocket", () => MakeRocket()) : Get("shot_tube", () => MakeTube());
+            return Get("shot_" + d.id, () => MakeShot(d.weaponClass, Mathf.Abs(d.id.GetHashCode()) % 997, d.tier));
+        }
+
+        /// <summary>계열마다 다른 타격음 (산탄 = 둔탁하고 큼, 저격 = 날카로운 관통음, 기관단총 = 가볍게).</summary>
+        public static AudioClip HitFor(WeaponClass c)
+        {
+            switch (c)
+            {
+                case WeaponClass.Shotgun: return Get("hit_sg", () => MakeFleshVariant(0.22f, 95f, 2.8f, 0.25f, 66));
+                case WeaponClass.Sniper: return Get("hit_sn", () => MakeFleshVariant(0.2f, 170f, 1.6f, 0.9f, 67));
+                case WeaponClass.SMG: return Get("hit_smg", () => MakeFleshVariant(0.1f, 210f, 1.6f, 0.35f, 68));
+                case WeaponClass.LMG: return Get("hit_lmg", () => MakeFleshVariant(0.15f, 120f, 2.2f, 0.4f, 69));
+                case WeaponClass.Pistol: return Get("hit_p", () => MakeFleshVariant(0.13f, 150f, 1.9f, 0.4f, 70));
+                case WeaponClass.Flamethrower: return Get("hit_fl", () => MakeWhoosh(0.18f, 0.35f));
+                default: return FleshHit;
+            }
+        }
+
+        /// <summary>탄피가 바닥에 떨어지는 소리.</summary>
+        public static AudioClip Casing => Get("casing", () => MakeTone(0.06f, 4200f, 3800f, 0.12f));
+        public static AudioClip ShellIn => Get("shellin", () => MakeClick(0.08f, 1700f, 0.7f));
+        public static AudioClip Bolt => Get("bolt", () => MakeRack());
+
+        static AudioClip MakeFleshVariant(float len, float thumpHz, float body, float crack, int seed)
+        {
+            int n = (int)(Rate * len);
+            var d = new float[n];
+            var rnd = new System.Random(seed);
+            float f = 0f;
+            for (int i = 0; i < n; i++)
+            {
+                float t = (float)i / Rate;
+                float noise = (float)(rnd.NextDouble() * 2.0 - 1.0);
+                f += 0.18f * (noise - f);
+                float thump = Mathf.Sin(2f * Mathf.PI * (thumpHz - t * 400f) * t) * Mathf.Exp(-t * 30f);
+                d[i] = SoftClip((thump * 1.1f + f * body * Mathf.Exp(-t * 45f) + noise * Mathf.Exp(-t * 300f) * crack) * 1.3f);
+            }
+            return Clip("fleshv", d);
+        }
+
+        static AudioClip MakeFlame()
+        {
+            int n = (int)(Rate * 0.3f);
+            var d = new float[n];
+            var rnd = new System.Random(4242);
+            float f = 0f, g = 0f;
+            for (int i = 0; i < n; i++)
+            {
+                float t = (float)i / Rate;
+                float noise = (float)(rnd.NextDouble() * 2.0 - 1.0);
+                f += 0.08f * (noise - f);
+                g += 0.4f * (noise - g);
+                float env = Mathf.Clamp01(t * 60f) * Mathf.Clamp01((0.3f - t) * 12f);
+                d[i] = SoftClip((f * 2.4f + g * 0.25f * Mathf.PerlinNoise(t * 80f, 0f)) * env);
+            }
+            return Clip("flame", d);
+        }
+
+        static AudioClip MakeTube()
+        {
+            int n = (int)(Rate * 0.5f);
+            var d = new float[n];
+            var rnd = new System.Random(5151);
+            float f = 0f;
+            for (int i = 0; i < n; i++)
+            {
+                float t = (float)i / Rate;
+                float noise = (float)(rnd.NextDouble() * 2.0 - 1.0);
+                f += 0.1f * (noise - f);
+                float pop = Mathf.Sin(2f * Mathf.PI * 70f * t) * Mathf.Exp(-t * 12f) * 1.3f;
+                d[i] = SoftClip((pop + f * Mathf.Exp(-t * 20f) * 1.5f + noise * Mathf.Exp(-t * 200f) * 0.4f) * 1.2f);
+            }
+            return Clip("tube", d);
+        }
+
+        static AudioClip MakeRocket()
+        {
+            int n = (int)(Rate * 1.2f);
+            var d = new float[n];
+            var rnd = new System.Random(6161);
+            float f = 0f;
+            for (int i = 0; i < n; i++)
+            {
+                float t = (float)i / Rate;
+                float noise = (float)(rnd.NextDouble() * 2.0 - 1.0);
+                f += 0.2f * (noise - f);
+                float launch = Mathf.Sin(2f * Mathf.PI * 55f * t) * Mathf.Exp(-t * 8f);
+                float hiss = f * Mathf.Exp(-t * 2.2f) * 1.6f;
+                d[i] = SoftClip((launch + hiss + noise * Mathf.Exp(-t * 90f) * 0.8f) * 1.3f);
+            }
+            return Clip("rocket", d);
+        }
         public static AudioClip Empty => Get("empty", () => MakeClick(0.05f, 2600f, 0.5f));
         public static AudioClip MagOut => Get("magout", () => MakeClick(0.09f, 900f, 0.8f));
         public static AudioClip MagIn => Get("magin", () => MakeClick(0.12f, 1300f, 1f));
@@ -306,7 +416,7 @@ namespace Hunt.Core
         static float SoftClip(float x) => x / (1f + Mathf.Abs(x));
 
         /// <summary>총성 = 초반 날카로운 파열음 + 저역 필터 노이즈 몸통 + 저음 쿵 + 잔향 꼬리.</summary>
-        static AudioClip MakeShot(WeaponClass c)
+        static AudioClip MakeShot(WeaponClass c, int variant, int tier)
         {
             float len, decay, thumpHz, thumpDecay, lp, crack, tail;
             switch (c)
@@ -318,9 +428,22 @@ namespace Hunt.Core
                 case WeaponClass.LMG: len = 0.35f; decay = 19f; thumpHz = 85f; thumpDecay = 15f; lp = 0.33f; crack = 0.8f; tail = 0.12f; break;
                 default: len = 0.4f; decay = 17f; thumpHz = 95f; thumpDecay = 14f; lp = 0.38f; crack = 0.85f; tail = 0.14f; break;
             }
+            // 변주: 단계가 높을수록 구경이 커서 저음·여운이 깊다, 이름마다 음색이 조금씩 다르다
+            if (variant != 0 || tier > 1)
+            {
+                float v = (variant % 100) / 100f;
+                float big = 1f + (tier - 1) * 0.22f;
+                thumpHz *= Mathf.Lerp(0.85f, 1.15f, v) / big;
+                thumpDecay /= big;
+                decay *= Mathf.Lerp(0.85f, 1.2f, 1f - v) / Mathf.Sqrt(big);
+                crack *= Mathf.Lerp(0.85f, 1.15f, v) * big;
+                tail *= big;
+                lp *= Mathf.Lerp(0.85f, 1.2f, v);
+                len *= Mathf.Sqrt(big);
+            }
             int n = (int)(Rate * len);
             var d = new float[n];
-            var rnd = new System.Random(1000 + (int)c);
+            var rnd = new System.Random(1000 + (int)c + variant);
             float f1 = 0f, f2 = 0f;
             for (int i = 0; i < n; i++)
             {
