@@ -192,6 +192,8 @@ namespace Hunt.Weapons
                     m.hipOffset = new Vector3(0.12f, -0.13f, 0.22f); m.adsZ = 0.1f; m.kickStrength = 1.6f; m.hideWhenScoped = true; break;
                 case WeaponClass.LMG:
                     m.hipOffset = new Vector3(0.13f, -0.15f, 0.22f); m.adsZ = 0.18f; m.kickStrength = 0.45f; break;
+                case WeaponClass.Launcher:
+                    m.hipOffset = new Vector3(0.13f, -0.14f, 0.2f); m.adsZ = 0.16f; m.kickStrength = 1.3f; break;
                 case WeaponClass.Flamethrower:
                     m.hipOffset = new Vector3(0.14f, -0.16f, 0.2f); m.adsZ = 0.2f; m.kickStrength = 0.1f; break;
                 default:
