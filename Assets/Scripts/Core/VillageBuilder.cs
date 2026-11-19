@@ -16,7 +16,7 @@ namespace Hunt.Core
     /// </summary>
     public static class VillageBuilder
     {
-        public const float Half = 48f;
+        public const float Half = 44f; // 예전 48 → 좁혀서 망자와 더 자주 마주친다
 
         /// <summary>망자가 걸어 나오는 곳 (무덤, 논 끝, 마을 어귀, 산자락).</summary>
         public static readonly List<Vector3> SpawnAnchors = new List<Vector3>();
@@ -48,10 +48,10 @@ namespace Hunt.Core
 
             SpawnAnchors.AddRange(new[]
             {
-                new Vector3(18f, 0f, 40f), new Vector3(-8f, 0f, 44f), new Vector3(34f, 0f, 44f),   // 무덤
-                new Vector3(45f, 0f, 12f), new Vector3(45f, 0f, -8f),                              // 논 끝
-                new Vector3(0f, 0f, -46f), new Vector3(-20f, 0f, -45f),                            // 마을 어귀
-                new Vector3(-45f, 0f, 34f), new Vector3(-45f, 0f, 2f), new Vector3(-44f, 0f, -30f), // 서쪽 산자락
+                new Vector3(16f, 0f, 33f), new Vector3(-8f, 0f, 40f), new Vector3(32f, 0f, 40f),   // 무덤
+                new Vector3(41f, 0f, 12f), new Vector3(41f, 0f, -8f),                              // 논 끝
+                new Vector3(0f, 0f, -42f), new Vector3(-20f, 0f, -41f),                            // 마을 어귀
+                new Vector3(-41f, 0f, 30f), new Vector3(-41f, 0f, 2f), new Vector3(-40f, 0f, -30f), // 서쪽 산자락
             });
             return root;
         }
@@ -160,7 +160,7 @@ namespace Hunt.Core
                     float roadD = Mathf.Abs(x - RoadX(z));
                     bump *= Mathf.Clamp01((roadD - 3.5f) / 3f);              // 길은 평평
                     // 경계 너머: 둥근 사각 거리로 언덕 (울퉁불퉁한 능선)
-                    float edge = Mathf.Max(Mathf.Abs(x), Mathf.Abs(z)) - (Half - 2f) + (Mathf.PerlinNoise(x * 0.05f, z * 0.05f) - 0.5f) * 8f;
+                    float edge = Mathf.Max(Mathf.Abs(x), Mathf.Abs(z)) - (Half + 0.5f) + (Mathf.PerlinNoise(x * 0.05f, z * 0.05f) - 0.5f) * 4f;
                     float hill = edge > 0f ? Mathf.Pow(edge, 1.5f) * 0.28f * (0.7f + Mathf.PerlinNoise(x * 0.07f + 3f, z * 0.07f) * 0.6f) : 0f;
                     v[iz * n + ix] = new Vector3(x, Mathf.Max(-0.02f, bump) + hill - 0.01f, z);
                     uv[iz * n + ix] = new Vector2(x / 100f, z / 100f);
@@ -255,8 +255,8 @@ namespace Hunt.Core
             // 북쪽 묘지로 가는 흙길 (구불구불)
             Ribbon("묘지길", new[]
             {
-                new Vector3(RoadX(22f) + 2.5f, 0f, 22f), new Vector3(7f, 0f, 26f), new Vector3(10.5f, 0f, 30f), new Vector3(12f, 0f, 34f),
-                new Vector3(15.5f, 0f, 37f), new Vector3(19f, 0f, 38.5f),
+                new Vector3(RoadX(22f) + 2.5f, 0f, 22f), new Vector3(7f, 0f, 26f), new Vector3(10.5f, 0f, 28.5f), new Vector3(12.5f, 0f, 30f),
+                new Vector3(15.5f, 0f, 30.5f), new Vector3(19f, 0f, 30.8f),
             }, 2.6f, K.FarmSoil, 0.03f);
             // 논두렁 사이 흙길
             Ribbon("논길", new[]
@@ -268,7 +268,7 @@ namespace Hunt.Core
             var rnd = new System.Random(9);
             for (int i = 0; i < 14; i++)
             {
-                float z = (float)(rnd.NextDouble() * 90 - 45);
+                float z = (float)(rnd.NextDouble() * 84 - 42);
                 float x = RoadX(z) + (float)(rnd.NextDouble() * 4 - 2);
                 Prim(PrimitiveType.Cylinder, new Vector3(x, 0.062f, z), new Vector3((float)(rnd.NextDouble() * 2 + 1.2f), 0.002f, (float)(rnd.NextDouble() * 1.5 + 0.8f)),
                     puddle, collider: false, shadows: false, rot: Quaternion.Euler(0f, (float)(rnd.NextDouble() * 180), 0f));
@@ -284,7 +284,7 @@ namespace Hunt.Core
                 for (int iz = 0; iz < 3; iz++)
                 {
                     // 논 한 배미씩 조금씩 틀어지고 크기도 다르다 (반듯한 바둑판 대신)
-                    var c = new Vector3(15f + ix * 11.5f + (float)(rnd.NextDouble() - 0.5) * 0.8f, 0f, -12f + iz * 12f + (float)(rnd.NextDouble() - 0.5) * 0.8f);
+                    var c = new Vector3(15f + ix * 11f + (float)(rnd.NextDouble() - 0.5) * 0.8f, 0f, -12f + iz * 12f + (float)(rnd.NextDouble() - 0.5) * 0.8f);
                     var pg = Group("논", c, (float)(rnd.NextDouble() * 6 - 3));
                     float pw = 10.2f + (float)rnd.NextDouble() * 0.6f, pd = 10.4f + (float)rnd.NextDouble() * 0.8f;
                     // 물 댄 논바닥
@@ -305,7 +305,7 @@ namespace Hunt.Core
                 }
             // 곤포 사일리지 (논가의 하얀 비닐 볏짚 뭉치)
             var bale = EnvMaterials.Plain(new Color(0.85f, 0.86f, 0.84f), 0.75f);
-            Vector3[] bales = { new Vector3(10f, 0.7f, 22f), new Vector3(12f, 0.7f, 23.5f), new Vector3(11f, 0.7f, 25.5f), new Vector3(44f, 0.7f, -22f), new Vector3(41.5f, 0.7f, -23f) };
+            Vector3[] bales = { new Vector3(10f, 0.7f, 22f), new Vector3(12f, 0.7f, 23.5f), new Vector3(11f, 0.7f, 25.5f), new Vector3(39.5f, 0.7f, -23f), new Vector3(39f, 0.7f, -26f) };
             foreach (var b in bales)
                 Prim(PrimitiveType.Cylinder, b, new Vector3(1.5f, 0.7f, 1.5f), bale, rot: Quaternion.Euler(0f, 0f, 90f));
         }
@@ -496,7 +496,7 @@ namespace Hunt.Core
             Box(new Vector3(-28f, 0.6f, 30f), new Vector3(16f, 1.2f, 0.6f), K.StoneWall);
 
             // 창고 (함석)
-            var shed = Group("창고", new Vector3(-42f, 0f, 36f), 0f);
+            var shed = Group("창고", new Vector3(-37f, 0f, 35f), 0f);
             Box(new Vector3(0, 1.6f, 0), new Vector3(6f, 3.2f, 5f), K.MetalSheet, shed, tint: new Color(0.45f, 0.42f, 0.38f));
             Box(new Vector3(0, 3.3f, 0), new Vector3(6.6f, 0.15f, 5.6f), K.MetalSheet, shed, Quaternion.Euler(6f, 0, 0), tint: new Color(0.5f, 0.3f, 0.2f));
         }
@@ -524,8 +524,9 @@ namespace Hunt.Core
             var rnd = new System.Random(13);
             for (int i = 0; i < 11; i++)
             {
-                var p = new Vector3(-12f + i * 5.2f + (float)(rnd.NextDouble() * 2 - 1), 0f, 38f + (float)(rnd.NextDouble() * 7));
-                if (Mathf.Abs(p.x - 22f) < 7f) continue; // 고분 자리
+                var p = new Vector3(-12f + i * 5.2f + (float)(rnd.NextDouble() * 2 - 1), 0f, 33f + (float)(rnd.NextDouble() * 6));
+                if (p.x > 38f || Mathf.Abs(p.x - RoadX(p.z)) < 5f) continue; // 경계·큰길 피함
+                if (Mathf.Abs(p.x - 22f) < 7.5f) continue; // 고분 자리
                 var g = Group("무덤", p, (float)(rnd.NextDouble() * 30 - 15));
                 Prim(PrimitiveType.Sphere, new Vector3(0, 0f, 0), new Vector3(3.6f, 1.7f, 4f), grass, g);
                 Box(new Vector3(0, 0.45f, -2.6f), new Vector3(0.5f, 0.9f, 0.14f), K.Rock, g, tint: new Color(0.55f, 0.55f, 0.52f)); // 비석
@@ -533,7 +534,7 @@ namespace Hunt.Core
             }
 
             // 무너져 열린 조선 고분 — 붉은 빛이 새어 나온다
-            var tomb = Group("열린고분", new Vector3(22f, 0f, 41f), 180f);
+            var tomb = Group("열린고분", new Vector3(22f, 0f, 36.5f), 180f);
             Prim(PrimitiveType.Sphere, Vector3.zero, new Vector3(10f, 4.4f, 10f), grass, tomb);
             Box(new Vector3(0, 0.9f, 4.4f), new Vector3(2.4f, 1.8f, 1.6f), K.Rock, tomb, tint: new Color(0.12f, 0.1f, 0.1f));
             Prim(PrimitiveType.Cube, new Vector3(0, 0.85f, 5.15f), new Vector3(1.8f, 1.5f, 0.05f), EnvMaterials.Plain(Color.black, 0f), tomb, collider: false);
@@ -566,8 +567,8 @@ namespace Hunt.Core
         static void Entrance()
         {
             // 장승 한 쌍
-            Jangseung(new Vector3(-4.4f, 0f, -40f), "천\n하\n대\n장\n군", true);
-            Jangseung(new Vector3(4.4f, 0f, -40f), "지\n하\n여\n장\n군", false);
+            Jangseung(new Vector3(-4.4f, 0f, -38f), "천\n하\n대\n장\n군", true);
+            Jangseung(new Vector3(4.4f, 0f, -38f), "지\n하\n여\n장\n군", false);
 
             // 버스정류장
             var bus = Group("버스정류장", new Vector3(7.5f, 0f, -28f), -90f);
@@ -605,7 +606,7 @@ namespace Hunt.Core
             var film = EnvMaterials.Transparent(new Color(0.75f, 0.8f, 0.85f, 0.28f), 0.85f);
             for (int i = 0; i < 3; i++)
             {
-                var g = Group("비닐하우스", new Vector3(18f + i * 8f, 0f, -33f), 0f);
+                var g = Group("비닐하우스", new Vector3(18f + i * 8f, 0f, -31f), 0f);
                 Prim(PrimitiveType.Cylinder, new Vector3(0, 0f, 0), new Vector3(5.5f, 9f, 5.5f), film, g, Quaternion.Euler(90f, 0, 0), shadows: false);
                 // 철골: 용마루 파이프 + 양쪽 끝 기둥
                 var steel = EnvMaterials.Plain(new Color(0.55f, 0.55f, 0.55f), 0.6f, 0.6f);
@@ -666,6 +667,7 @@ namespace Hunt.Core
             for (int i = 0; i < 7; i++)
             {
                 float z = -45f + i * 15f;
+                if (Mathf.Abs(z) > Half - 2f) { prevTop = null; continue; } // 경계 밖 전봇대 생략
                 var p = new Vector3(RoadX(z) + 4.6f, 0f, z); // 굽은 길을 따라
                 Prim(PrimitiveType.Cylinder, p + new Vector3(0, 4.5f, 0), new Vector3(0.32f, 4.5f, 0.32f), poleMat);
                 Prim(PrimitiveType.Cube, p + new Vector3(0, 8.4f, 0), new Vector3(1.8f, 0.12f, 0.12f), EnvMaterials.Plain(new Color(0.3f, 0.3f, 0.3f), 0.5f, 0.6f), collider: false);
@@ -792,13 +794,13 @@ namespace Hunt.Core
                     Prim(PrimitiveType.Cylinder, d, new Vector3(0.6f, 0.5f, 0.6f), rust);
             }
             Box(new Vector3(-33f, 0.5f, -10f), new Vector3(2.4f, 1f, 1.2f), K.WoodPlanks, tint: new Color(0.55f, 0.45f, 0.35f));
-            Box(new Vector3(-44f, 0.6f, 30f), new Vector3(1.6f, 0.7f, 2.4f), K.MetalSheet, tint: new Color(0.3f, 0.45f, 0.3f));
+            Box(new Vector3(-40.5f, 0.6f, 28f), new Vector3(1.6f, 0.7f, 2.4f), K.MetalSheet, tint: new Color(0.3f, 0.45f, 0.3f));
 
             // 이끼 낀 바위
             var rnd = new System.Random(17);
             for (int i = 0; i < 10; i++)
             {
-                var p = new Vector3((float)(rnd.NextDouble() * 90 - 45), 0.2f, (float)(rnd.NextDouble() * 90 - 45));
+                var p = new Vector3((float)(rnd.NextDouble() * 82 - 41), 0.2f, (float)(rnd.NextDouble() * 82 - 41));
                 if (Mathf.Abs(p.x) < 6f) continue;
                 float s = 0.7f + (float)rnd.NextDouble() * 1.4f;
                 string rock = i % 2 == 0 ? "rock_09" : "moon_rock_02";
@@ -841,12 +843,12 @@ namespace Hunt.Core
             }
             Crates(new Vector3(11.5f, 0f, -24f), 0f, 6);   // 비닐하우스 앞
             Crates(new Vector3(-17.5f, 0f, 19f), 90f, 4); // 농가 마당
-            Crates(new Vector3(-40f, 0f, 32.5f), 0f, 5);  // 창고 앞
+            Crates(new Vector3(-36f, 0f, 31.3f), 0f, 5);  // 창고 앞
 
             // 창고 앞 나무 상자 · 삽, 마을회관 쓰레기통, 평상 옆 의자, 초가집 화덕
-            Model("old_military_crate", new Vector3(-44.5f, 0f, 32.8f), 10f, 0.55f);
-            Model("old_military_crate", new Vector3(-44.3f, 0.55f, 32.9f), -5f, 0.55f);
-            Model("rusted_spade_01", new Vector3(-39.2f, 0f, 33.2f), 30f, 1.1f, collider: false);
+            Model("old_military_crate", new Vector3(-40.2f, 0f, 31.5f), 10f, 0.55f);
+            Model("old_military_crate", new Vector3(-40f, 0.55f, 31.6f), -5f, 0.55f);
+            Model("rusted_spade_01", new Vector3(-33.2f, 0f, 31.8f), 30f, 1.1f, collider: false);
             Model("metal_trash_can", new Vector3(-6.8f, 0f, 2.8f), 0f, 0.95f, gloss: 0.6f);
             Model("metal_trash_can", new Vector3(-6.9f, 0f, 3.7f), 40f, 0.95f, gloss: 0.6f);
             Model("painted_wooden_bench", new Vector3(13.5f, 0f, 1.5f), 90f, 0.85f, tint: new Color(0.6f, 0.55f, 0.5f));

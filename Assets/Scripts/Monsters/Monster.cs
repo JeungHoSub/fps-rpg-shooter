@@ -248,8 +248,9 @@ namespace Hunt.Monsters
             }
 
             Vector3 pos = transform.position + (move * spd + sep * 4f + knockVel) * dt;
-            pos.x = Mathf.Clamp(pos.x, -47f, 47f);
-            pos.z = Mathf.Clamp(pos.z, -47f, 47f);
+            float lim = VillageBuilder.Half - 1f;
+            pos.x = Mathf.Clamp(pos.x, -lim, lim);
+            pos.z = Mathf.Clamp(pos.z, -lim, lim);
             pos.y = 0f;
             transform.position = Navigation.Constrain(transform.position, pos);
 

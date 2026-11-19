@@ -468,7 +468,7 @@ namespace Hunt.Waves
             {
                 Vector2 r = Random.insideUnitCircle.normalized * Random.Range(22f, 30f);
                 Vector3 p = c + new Vector3(r.x, 0f, r.y);
-                if (Mathf.Abs(p.x) < 44f && Mathf.Abs(p.z) < 44f) return p;
+                if (Mathf.Abs(p.x) < VillageBuilder.Half - 4f && Mathf.Abs(p.z) < VillageBuilder.Half - 4f) return p;
             }
             return Vector3.zero;
         }
@@ -479,7 +479,7 @@ namespace Hunt.Waves
             Vector3 p = Vector3.zero;
             for (int i = 0; i < 16; i++)
             {
-                p = new Vector3(Random.Range(-40f, 40f), 0f, Random.Range(-40f, 40f));
+                p = new Vector3(Random.Range(-38f, 38f), 0f, Random.Range(-38f, 38f));
                 if (player == null) break;
                 float d = Vector3.Distance(p, player.transform.position);
                 if (d > 18f && d < 38f) break;
@@ -503,7 +503,7 @@ namespace Hunt.Waves
                 else
                 {
                     float ang = Random.Range(0f, Mathf.PI * 2f);
-                    p = new Vector3(Mathf.Cos(ang), 0f, Mathf.Sin(ang)) * Random.Range(38f, 45f);
+                    p = new Vector3(Mathf.Cos(ang), 0f, Mathf.Sin(ang)) * Random.Range(34f, 41f);
                 }
                 if (player == null || Vector3.Distance(p, player.transform.position) > 20f) break;
             }
