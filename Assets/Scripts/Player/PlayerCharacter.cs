@@ -133,7 +133,7 @@ namespace Hunt.Player
         public void TakeDamage(float dmg, float infection)
         {
             if (IsDead) return;
-            Hp -= dmg * Infection.DamageTakenMultiplier * Armor.DamageTakenMult;
+            Hp -= dmg * Infection.DamageTakenMultiplier * Armor.DamageTakenMult * Stats.DamageTakenMult;
             if (dmg > 3f) InterruptItem();
             HurtFlash = 0.25f;
             SFX.Play(SFX.PlayerHurt, 0.8f);

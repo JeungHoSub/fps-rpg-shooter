@@ -39,6 +39,7 @@ namespace Hunt.Player
         /// <summary>폭발: 반경 안 망자에게 거리 비례 피해, 너무 가까우면 나도 다친다.</summary>
         public static void Explode(Vector3 point, float radius, float damage, PlayerCharacter owner)
         {
+            if (owner != null) damage *= owner.Stats.GadgetDamageMult; // 기술
             Effects.Burst(point, radius * 0.6f, new Color(1f, 0.55f, 0.2f));
             FX.ImpactWorld(point, Vector3.up);
             SFX.PlayAt(SFX.Explosion, point, 1f);

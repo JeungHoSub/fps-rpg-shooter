@@ -95,7 +95,11 @@ namespace Hunt.Stats
             }
         }
 
-        // ---- 힘 ----
+        // ---- 힘: 공격력 ----
+        /// <summary>총 피해 배율: 기본(8)보다 1 높을 때마다 +2.5% (수확 체감은 Effective에서).</summary>
+        public float DamageMult => Mathf.Max(0.85f, 1f + (STR - 8f) * 0.025f);
+        /// <summary>칼(근접) 피해 배율: 힘의 영향이 두 배.</summary>
+        public float MeleeDamageMult => Mathf.Max(0.8f, 1f + (STR - 8f) * 0.05f) * (Has(Trait.Heavyweight) ? 1.25f : 1f);
         public float CarryCapacity => (10f + STR * 1.5f) * (Has(Trait.Heavyweight) ? 1.4f : 1f);
         public float KnockbackMult => (1f + STR * 0.01f) * (Has(Trait.Bloodlust) ? 1.3f : 1f);
 
@@ -117,6 +121,8 @@ namespace Hunt.Stats
         // ---- 체력 ----
         public float MaxHp => (100f + VIT * 10f) * (Has(Trait.ThickSkin) ? 1.2f : 1f);
         public float InfectionResistMult => 1f / (1f + VIT * 0.02f) * (Has(Trait.ThickSkin) ? 0.85f : 1f);
+        /// <summary>받는 피해: 기본보다 1 높을 때마다 약 1.2% 감소.</summary>
+        public float DamageTakenMult => 1f / (1f + Mathf.Max(0f, VIT - 8f) * 0.012f);
 
         // ---- 집중 ----
         public float CritChance => 0.05f + FOC * 0.005f;
@@ -125,6 +131,10 @@ namespace Hunt.Stats
 
         // ---- 기술 (변이 능력 효율) ----
         public float AbilityCostMult => 1f / (1f + TEC * 0.02f) * (Has(Trait.MutantAffinity) ? 0.75f : 1f);
+        /// <summary>벽 관통 깊이(m): 총의 관통력 × 기술. 저격총(0.8)+기본 기술이면 약 0.7m (돌담 0.6m를 뚫음).</summary>
+        public float WallPenetration(float weaponPenetration) => (0.1f + weaponPenetration * 0.75f) * Mathf.Max(0.7f, 1f + (TEC - 8f) * 0.03f);
+        /// <summary>수류탄·지뢰·설치물 피해: 기본보다 1 높을 때마다 +3%.</summary>
+        public float GadgetDamageMult => Mathf.Max(0.8f, 1f + (TEC - 8f) * 0.03f);
         public float AbilityDurationMult => (1f + TEC * 0.01f) * (Has(Trait.MutantAffinity) ? 1.25f : 1f);
 
         /// <summary>총 장비 무게가 허용치를 넘으면 0.5까지 감소하는 배율.</summary>

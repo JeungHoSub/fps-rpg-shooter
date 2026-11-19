@@ -51,7 +51,7 @@ namespace Hunt.Stats
                 case Trait.MutantAffinity: return "변이 능력 비용 -25%, 지속시간 +25%";
                 case Trait.Scavenger: return "골드 +30%, 파츠 드랍 확률 +40%";
                 case Trait.QuickHands: return "재장전·무기 교체 속도 +25%";
-                default: return "소지 무게 한도 +40%";
+                default: return "소지 무게 한도 +40%, 칼 피해 +25%";
             }
         }
 

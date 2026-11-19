@@ -64,7 +64,7 @@ namespace Hunt.Player
         Hand returnMode = Hand.Gun;
         bool quickMelee;
 
-        public float MeleeDamage => (70f + player.Level * 4f) * (1f + player.Stats.Strength * 0.02f) * GameRules.DamageMult;
+        public float MeleeDamage => (70f + player.Level * 4f) * player.Stats.MeleeDamageMult * GameRules.DamageMult;
         public float GrenadeDamage => (220f + player.Level * 25f) * (1f + player.Stats.Tech * 0.02f) * GameRules.DamageMult;
         public float MineDamage => (300f + player.Level * 30f) * (1f + player.Stats.Tech * 0.02f) * GameRules.DamageMult;
         public float TurretDamage => (14f + player.Level * 1.5f) * (1f + player.Stats.Tech * 0.02f) * GameRules.DamageMult;
@@ -485,7 +485,7 @@ namespace Hunt.Player
 
             var info = new DamageInfo
             {
-                baseDamage = w.Damage * inf.DamageMultiplier * burst * GameRules.DamageMult * stats.BalanceBonus,
+                baseDamage = w.Damage * inf.DamageMultiplier * burst * GameRules.DamageMult * stats.BalanceBonus * stats.DamageMult,
                 type = w.DamageType,
                 weaponClass = w.data.weaponClass,
                 critChance = stats.CritChance + w.CritChanceBonus,
@@ -536,13 +536,28 @@ namespace Hunt.Player
             {
                 Vector3 dir = SpreadDirection(cam.transform, CurrentSpread);
                 Vector3 end = origin + dir * Mathf.Min(150f, range);
-                if (Physics.Raycast(origin, dir, out RaycastHit hit, range, RaycastMask, QueryTriggerInteraction.Ignore))
+                // 총알 궤적: 벽은 두께를 재서 관통력 안이면 뚫고(피해 감소), 관통력 높은 총은 망자도 뚫고 다음 망자까지
+                Vector3 rayFrom = origin;
+                float left = range, dmgScale = 1f;
+                float wallPower = flame ? 0f : stats.WallPenetration(w.data.penetration);
+                float pelletBase = info.baseDamage;
+                int monstersHit = 0;
+                Monster lastMonster = null;
+                for (int seg = 0; seg < 8 && left > 0.1f; seg++)
                 {
+                    if (!Physics.Raycast(rayFrom, dir, out RaycastHit hit, left, RaycastMask, QueryTriggerInteraction.Ignore))
+                    {
+                        end = rayFrom + dir * Mathf.Min(left, 150f);
+                        break;
+                    }
                     end = hit.point;
+                    left -= hit.distance;
                     var part = hit.collider.GetComponent<MonsterPart>();
                     if (part != null)
                     {
-                        info.distance = hit.distance;
+                        if (part.owner == lastMonster) { rayFrom = hit.point + dir * 0.05f; left -= 0.05f; continue; } // 같은 망자의 다른 판정체
+                        info.baseDamage = pelletBase * dmgScale;
+                        info.distance = range - left;
                         info.hitPoint = hit.point;
                         info.direction = dir;
                         var res = part.ReceiveHit(info);
@@ -555,12 +570,29 @@ namespace Hunt.Player
                             FX.ImpactFlesh(hit.point, dir, FleshColor(res.zone), res.crit ? 10 : 5);
                         }
                         OnHitResult(w, res, info, hit.point);
+                        lastMonster = part.owner;
+                        monstersHit++;
+                        if (monstersHit >= 2 || w.data.penetration < 0.6f) break;
+                        dmgScale *= 0.55f;
+                        rayFrom = hit.point + dir * 0.05f;
+                        left -= 0.05f;
+                        continue;
                     }
-                    else if (!flame)
-                    {
-                        FX.ImpactWorld(hit.point, hit.normal);
-                    }
+
+                    if (!flame) FX.ImpactWorld(hit.point, hit.normal);
+                    if (flame || wallPower <= 0.02f) break;
+                    // 벽 두께: 관통 깊이만큼 앞에서 거꾸로 쏴서 빠져나오는 면을 찾는다 (없으면 너무 두꺼움)
+                    float probe = wallPower + 0.05f;
+                    if (!hit.collider.Raycast(new Ray(hit.point + dir * probe, -dir), out RaycastHit exit, probe)) break;
+                    float thick = Mathf.Max(0.01f, probe - exit.distance);
+                    if (thick > wallPower) break;
+                    wallPower -= thick;
+                    dmgScale *= Mathf.Clamp(1f - thick * 1.4f, 0.3f, 0.9f);
+                    FX.ImpactWorld(exit.point, exit.normal); // 뒷면 탄흔
+                    rayFrom = exit.point + dir * 0.02f;
+                    left -= thick + 0.02f;
                 }
+                info.baseDamage = pelletBase;
                 // 화염: 굵고 짧은 불줄기 / 산탄은 일부 펠릿만 예광탄 표시
                 if (flame) { if (i == 0) FX.Tracer(muzzle, Vector3.Lerp(muzzle, end, Random.Range(0.6f, 1f)), new Color(1f, Random.Range(0.35f, 0.6f), 0.1f), Random.Range(0.12f, 0.22f)); }
                 else if (pellets == 1 || i % 3 == 0) FX.Tracer(muzzle, end, tracer, tracerWidth);
