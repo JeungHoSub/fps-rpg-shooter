@@ -47,7 +47,7 @@ namespace Hunt.UI
                 case StatType.STR: return "총과 칼이 더 아프게 박힌다";
                 case StatType.AGI: return "빨리 달리고, 빨리 장전한다";
                 case StatType.CTL: return "반동을 길들이고, 조준을 다잡는다";
-                case StatType.VIT: return "더 오래 버티고, 덜 다치고, 역병에 덜 물든다";
+                case StatType.VIT: return "버티는 몸, 흔들리지 않는 손";
                 case StatType.FOC: return "급소를 꿰뚫는 눈";
                 default: return "벽을 뚫는 탄, 터지는 도구, 역병의 힘을 다룬다";
             }
@@ -61,7 +61,7 @@ namespace Hunt.UI
                 case StatType.STR: return $"총 피해 ×{s.DamageMult:0.00}  ·  칼 ×{s.MeleeDamageMult:0.00}  ·  무게 한도 {s.CarryCapacity:0.0}";
                 case StatType.AGI: return $"이동 {s.MoveSpeed:0.00}m/s  ·  재장전 ×{s.ReloadSpeedMult:0.00}  ·  교체 ×{s.SwapSpeedMult:0.00}";
                 case StatType.CTL: return $"반동 무작위성 ×{s.RecoilNoise:0.00}  ·  회복 {s.RecoilRecovery:0.0}°/s  ·  탄퍼짐 ×{s.SpreadMult:0.00}";
-                case StatType.VIT: return $"최대 생명 {s.MaxHp:0}  ·  받는 피해 ×{s.DamageTakenMult:0.00}  ·  역병 저항 ×{s.InfectionResistMult:0.00}";
+                case StatType.VIT: return $"생명 {s.MaxHp:0}  ·  받는 피해 ×{s.DamageTakenMult:0.00}  ·  반동 흔들림 ×{s.RecoilNoise:0.00}  ·  탄퍼짐 ×{s.SpreadMult:0.00}";
                 case StatType.FOC: return $"치명 {s.CritChance * 100:0.0}% ×{s.CritMultiplier:0.00}  ·  약점 +{s.WeakPointBonus * 100:0}%";
                 default: return $"벽 관통 ×{s.WallPenetration(1f) / 0.85f:0.00}  ·  수류탄·설치물 ×{s.GadgetDamageMult:0.00}  ·  역병 능력 비용 ×{s.AbilityCostMult:0.00}";
             }
@@ -74,7 +74,7 @@ namespace Hunt.UI
                 case StatType.STR: return "<b>힘 — 공격력</b>\n\n• 총 피해 +2.5% / 포인트\n• 칼 피해 +5% / 포인트\n• 소지 무게 한도 +1.5, 저지력(넉백) +1% / 포인트\n\n높이 올릴수록 효율이 줄어든다 (16·28 이상).";
                 case StatType.AGI: return "<b>민첩</b>\n\n• 이동 속도 +1% / 포인트\n• 재장전 속도 +1.5% / 포인트\n• 무기 교체 속도 +2% / 포인트";
                 case StatType.CTL: return "<b>제어</b>\n\n• 반동의 무작위 흔들림 감소 (반동 모양은 유지 → 외울 수 있다)\n• 반동 회복 속도 +3% / 포인트\n• 탄퍼짐 감소, 조준 속도 증가";
-                case StatType.VIT: return "<b>생명 — 버티기</b>\n\n• 최대 생명 +10 / 포인트\n• 받는 피해 약 1.2% 감소 / 포인트\n• 역병 기운 축적 감소";
+                case StatType.VIT: return "<b>생명 — 버티는 몸, 흔들리지 않는 손</b>\n\n• 최대 생명 +10 / 포인트\n• 받는 피해 약 1.2% 감소 / 포인트\n• 역병 기운 축적 감소\n• 반동의 무작위 흔들림 감소 (반동 모양은 유지 → 외울 수 있다)\n• 반동 회복·조준 속도 증가, 탄퍼짐 감소";
                 case StatType.FOC: return "<b>집중</b>\n\n• 치명타 확률 +0.5% / 포인트\n• 치명타 배율 +1% / 포인트\n• 약점 피해 +2% / 포인트";
                 default: return "<b>기술 — 장비 다루기</b>\n\n• 벽 관통 깊이 +3% / 포인트 (총알이 더 두꺼운 벽을 뚫는다)\n• 수류탄·지뢰·설치형 기관총 피해 +3% / 포인트\n• 역병 능력(광폭화·재생) 비용 감소·지속 증가";
             }
@@ -154,9 +154,9 @@ namespace Hunt.UI
 
         public static readonly Preset[] Presets =
         {
-            new Preset { name = "균형", desc = "모든 능력을 고르게", alloc = new[] { 1, 1, 1, 1, 1, 1 } },
-            new Preset { name = "도살자", desc = "근력·생명 — 버티며 밀어낸다", alloc = new[] { 3, 0, 0, 3, 0, 0 } },
-            new Preset { name = "사냥꾼", desc = "제어·집중 — 급소를 노린다", alloc = new[] { 0, 0, 3, 0, 3, 0 } },
+            new Preset { name = "균형", desc = "모든 능력을 고르게", alloc = new[] { 1, 1, 0, 2, 1, 1 } },
+            new Preset { name = "도살자", desc = "힘·생명 — 버티며 밀어낸다", alloc = new[] { 3, 0, 0, 3, 0, 0 } },
+            new Preset { name = "사냥꾼", desc = "생명·집중 — 흔들림 없이 급소를 노린다", alloc = new[] { 0, 0, 0, 3, 3, 0 } },
             new Preset { name = "그림자", desc = "민첩·집중 — 치고 빠진다", alloc = new[] { 0, 4, 0, 0, 2, 0 } },
             new Preset { name = "역병체", desc = "기술·생명 — 역병의 힘을 쓴다", alloc = new[] { 0, 0, 0, 3, 0, 3 } },
         };

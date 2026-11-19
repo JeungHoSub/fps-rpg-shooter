@@ -40,6 +40,8 @@ namespace Hunt.Stats
     public class CharacterStats
     {
         public static readonly StatType[] All = (StatType[])Enum.GetValues(typeof(StatType));
+        /// <summary>화면에 보이고 포인트를 쓰는 능력치 (제어는 생명에 통합되어 빠짐).</summary>
+        public static readonly StatType[] Visible = { StatType.STR, StatType.AGI, StatType.VIT, StatType.FOC, StatType.TEC };
 
         public readonly CharacterData data;
         public int Level { get; private set; } = 1;
@@ -74,7 +76,7 @@ namespace Hunt.Stats
 
         float STR => Effective(StatType.STR);
         float AGI => Effective(StatType.AGI);
-        float CTL => Effective(StatType.CTL);
+        float CTL => Effective(StatType.VIT); // 제어는 없어지고 반동·탄퍼짐·조준 효과는 생명이 맡는다
         float VIT => Effective(StatType.VIT);
         float FOC => Effective(StatType.FOC);
         float TEC => Effective(StatType.TEC);
@@ -90,7 +92,7 @@ namespace Hunt.Stats
             get
             {
                 float min = float.MaxValue;
-                foreach (var t in All) min = Mathf.Min(min, Get(t));
+                foreach (var t in Visible) min = Mathf.Min(min, Get(t));
                 return 1f + Mathf.Max(0f, min - 8f) * 0.015f;
             }
         }

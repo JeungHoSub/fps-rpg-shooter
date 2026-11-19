@@ -89,8 +89,8 @@ namespace Hunt.UI
             UIKit.Text(new Rect(left.xMax - 300, left.y + 12, 276, 34), $"남은 단련  <color=#{UIKit.Hex(p.StatPoints > 0 ? UITheme.GoldBright : UITheme.Ash)}>{p.StatPoints}</color>", 22, UITheme.BoneDim, TextAnchor.MiddleRight, serif: true);
 
             float y = left.y + 58;
-            float rowH = (left.height - 70) / 6f;
-            foreach (var t in CharacterStats.All)
+            float rowH = (left.height - 70) / CharacterStats.Visible.Length;
+            foreach (var t in CharacterStats.Visible)
             {
                 var row = new Rect(left.x + 14, y, left.width - 28, rowH - 6);
                 UIKit.Tex(new Rect(row.x, row.yMax, row.width, 2), UITheme.LineFade, new Color(0.5f, 0.38f, 0.2f, 0.35f));
@@ -109,14 +109,15 @@ namespace Hunt.UI
 
             // 오른쪽: 차트 + 계약
             UIKit.NineSlice(right, UITheme.Slot, 10, Color.white);
-            var vals = new float[6];
-            float[] prev = hoverStat.HasValue ? new float[6] : null;
-            var labels = new string[6];
+            var vis = CharacterStats.Visible;
+            var vals = new float[vis.Length];
+            float[] prev = hoverStat.HasValue ? new float[vis.Length] : null;
+            var labels = new string[vis.Length];
             float maxV = 12f;
-            foreach (var t in CharacterStats.All) maxV = Mathf.Max(maxV, s.Get(t) + 2f);
-            for (int i = 0; i < 6; i++)
+            foreach (var t in vis) maxV = Mathf.Max(maxV, s.Get(t) + 2f);
+            for (int i = 0; i < vis.Length; i++)
             {
-                var t = (StatType)i;
+                var t = vis[i];
                 vals[i] = s.Get(t) / maxV;
                 if (prev != null) prev[i] = (s.Get(t) + (hoverStat.Value == t ? 1 : 0)) / maxV;
                 labels[i] = GameText.StatGlyph(t);

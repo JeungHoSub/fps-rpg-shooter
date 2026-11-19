@@ -165,12 +165,13 @@ namespace Hunt.UI
             y += 34;
 
             // 6각형 차트
-            var vals = new float[6];
-            float[] prev = p != null ? new float[6] : null;
-            var labels = new string[6];
-            for (int i = 0; i < 6; i++)
+            var vis = CharacterStats.Visible;
+            var vals = new float[vis.Length];
+            float[] prev = p != null ? new float[vis.Length] : null;
+            var labels = new string[vis.Length];
+            for (int i = 0; i < vis.Length; i++)
             {
-                var t = (StatType)i;
+                var t = vis[i];
                 vals[i] = s.Get(t) / 16f;
                 if (p != null) prev[i] = p.Get(t) / 16f;
                 labels[i] = GameText.StatGlyph(t);
@@ -254,7 +255,7 @@ namespace Hunt.UI
 
             var s = gm.PreviewStats();
             float rowH = 88;
-            foreach (var t in CharacterStats.All)
+            foreach (var t in CharacterStats.Visible)
             {
                 var row = new Rect(c.x + 20, y, c.width - 40, rowH - 8);
                 float hv = UIKit.Hover(row, "statrow" + t, true, false);
@@ -412,7 +413,7 @@ namespace Hunt.UI
 
             var s = gm.PreviewStats();
             string stats = "";
-            foreach (var t in CharacterStats.All)
+            foreach (var t in CharacterStats.Visible)
             {
                 int a = gm.StartAllocation[(int)t];
                 stats += $"{GameText.StatName(t)} <color=#{UIKit.Hex(a > 0 ? UITheme.GoldBright : UITheme.Bone)}>{s.Get(t):0}</color>     ";

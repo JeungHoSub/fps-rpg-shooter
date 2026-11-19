@@ -3,7 +3,7 @@ using UnityEngine;
 namespace Hunt.UI
 {
     /// <summary>
-    /// 6각형 능력치 차트. CPU로 텍스처에 그려서 값이 바뀔 때만 다시 그린다.
+    /// 능력치 다각형 차트 (능력치 수만큼 꼭짓점). CPU로 텍스처에 그려서 값이 바뀔 때만 다시 그린다.
     /// 진홍 = 현재 값, 초록 테두리 = 미리보기(투자 후) 값.
     /// </summary>
     public class RadarChart
@@ -30,6 +30,7 @@ namespace Hunt.UI
         public void Draw(Rect r, float[] values, float[] preview, string[] labels)
         {
             EnsureTexture();
+            if (values.Length != count) { count = values.Length; lastKey = null; }
             string key = Key(values) + "|" + (preview != null ? Key(preview) : "");
             if (key != lastKey)
             {
@@ -40,7 +41,7 @@ namespace Hunt.UI
 
             // 축 라벨
             float rad = r.width * 0.5f;
-            for (int i = 0; i < 6; i++)
+            for (int i = 0; i < count; i++)
             {
                 Vector2 d = Dir(i);
                 var c = new Vector2(r.center.x + d.x * (rad + 18), r.center.y - d.y * (rad + 14));
@@ -55,19 +56,21 @@ namespace Hunt.UI
             return sb.ToString();
         }
 
-        static Vector2 Dir(int i)
+        int count = 6;
+
+        Vector2 Dir(int i)
         {
-            float a = Mathf.PI / 2f - i * Mathf.PI * 2f / 6f; // 위에서 시작, 시계 방향
+            float a = Mathf.PI / 2f - i * Mathf.PI * 2f / count; // 위에서 시작, 시계 방향
             return new Vector2(Mathf.Cos(a), Mathf.Sin(a));
         }
 
         void Render(float[] values, float[] preview)
         {
             float c = (N - 1) * 0.5f, R = N * 0.46f;
-            var poly = new Vector2[6];
-            var prev = new Vector2[6];
-            var outer = new Vector2[6];
-            for (int i = 0; i < 6; i++)
+            var poly = new Vector2[count];
+            var prev = new Vector2[count];
+            var outer = new Vector2[count];
+            for (int i = 0; i < count; i++)
             {
                 outer[i] = new Vector2(c, c) + Dir(i) * R;
                 poly[i] = new Vector2(c, c) + Dir(i) * R * Mathf.Clamp(values[i], 0.04f, 1f);
@@ -93,27 +96,27 @@ namespace Hunt.UI
                     for (int ring = 1; ring <= 3; ring++)
                     {
                         float s = ring / 3f;
-                        for (int i = 0; i < 6; i++)
+                        for (int i = 0; i < count; i++)
                         {
                             var a = new Vector2(c, c) + (outer[i] - new Vector2(c, c)) * s;
-                            var b = new Vector2(c, c) + (outer[(i + 1) % 6] - new Vector2(c, c)) * s;
+                            var b = new Vector2(c, c) + (outer[(i + 1) % count] - new Vector2(c, c)) * s;
                             web = Mathf.Min(web, SegDist(p, a, b));
                         }
                     }
-                    for (int i = 0; i < 6; i++) web = Mathf.Min(web, SegDist(p, new Vector2(c, c), outer[i]));
+                    for (int i = 0; i < count; i++) web = Mathf.Min(web, SegDist(p, new Vector2(c, c), outer[i]));
                     col = Over(col, webCol, Mathf.Clamp01(1.2f - web));
 
                     // 현재 값
                     if (Inside(p, poly)) col = Over(col, fillCol, 1f);
                     float edge = 99f;
-                    for (int i = 0; i < 6; i++) edge = Mathf.Min(edge, SegDist(p, poly[i], poly[(i + 1) % 6]));
+                    for (int i = 0; i < count; i++) edge = Mathf.Min(edge, SegDist(p, poly[i], poly[(i + 1) % count]));
                     col = Over(col, edgeCol, Mathf.Clamp01(1.8f - edge));
 
                     // 미리보기
                     if (preview != null)
                     {
                         float pe = 99f;
-                        for (int i = 0; i < 6; i++) pe = Mathf.Min(pe, SegDist(p, prev[i], prev[(i + 1) % 6]));
+                        for (int i = 0; i < count; i++) pe = Mathf.Min(pe, SegDist(p, prev[i], prev[(i + 1) % count]));
                         col = Over(col, prevCol, Mathf.Clamp01(1.6f - pe));
                     }
 
