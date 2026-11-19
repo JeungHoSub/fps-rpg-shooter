@@ -122,6 +122,9 @@ namespace Hunt.Core
             // 플레이 영역 (진흙땅)
             var g = Prim(PrimitiveType.Plane, Vector3.zero, new Vector3(12f, 1f, 12f), EnvMaterials.Get(K.Mud, new Vector2(120f, 120f)));
             g.name = "Ground";
+            // 판정은 평평한 바닥 그대로, 보이는 땅은 살짝 울퉁불퉁 + 가장자리는 언덕으로 솟는다 (네모난 경계가 안 보이게)
+            g.GetComponent<Renderer>().enabled = false;
+            RollingGround();
             // 바깥 들판 (판정 없음, 안개에 묻힘)
             Prim(PrimitiveType.Plane, new Vector3(0f, -0.03f, 0f), new Vector3(60f, 1f, 60f), EnvMaterials.Get(K.Grass, new Vector2(600f, 600f), new Color(0.3f, 0.32f, 0.26f)), collider: false);
             // 마른 풀밭 조각
@@ -135,21 +138,138 @@ namespace Hunt.Core
             }
         }
 
+        /// <summary>큰길이 굽이치는 정도: z 위치에서 길 가운데의 x.</summary>
+        public static float RoadX(float z) => Mathf.Sin(z * 0.045f) * 1.3f + Mathf.Sin(z * 0.11f + 1.3f) * 0.4f;
+
+        /// <summary>
+        /// 보이는 땅: 1.5m 격자, 놀이 영역 안은 ±8cm 안팎의 굴곡(길 근처는 평평), 경계 너머는 언덕으로 솟는다.
+        /// 판정은 평평한 Plane이 맡는다 (망자·플레이어 높이 계산이 단순하도록).
+        /// </summary>
+        static void RollingGround()
+        {
+            const float ext = 66f, step = 1.5f;
+            int n = Mathf.RoundToInt(ext * 2f / step) + 1;
+            var v = new Vector3[n * n];
+            var uv = new Vector2[n * n];
+            for (int iz = 0; iz < n; iz++)
+                for (int ix = 0; ix < n; ix++)
+                {
+                    float x = -ext + ix * step, z = -ext + iz * step;
+                    float bump = (Mathf.PerlinNoise(x * 0.09f + 13f, z * 0.09f + 7f) - 0.5f) * 0.16f
+                               + (Mathf.PerlinNoise(x * 0.35f, z * 0.35f) - 0.5f) * 0.05f;
+                    float roadD = Mathf.Abs(x - RoadX(z));
+                    bump *= Mathf.Clamp01((roadD - 3.5f) / 3f);              // 길은 평평
+                    // 경계 너머: 둥근 사각 거리로 언덕 (울퉁불퉁한 능선)
+                    float edge = Mathf.Max(Mathf.Abs(x), Mathf.Abs(z)) - (Half - 2f) + (Mathf.PerlinNoise(x * 0.05f, z * 0.05f) - 0.5f) * 8f;
+                    float hill = edge > 0f ? Mathf.Pow(edge, 1.5f) * 0.28f * (0.7f + Mathf.PerlinNoise(x * 0.07f + 3f, z * 0.07f) * 0.6f) : 0f;
+                    v[iz * n + ix] = new Vector3(x, Mathf.Max(-0.02f, bump) + hill - 0.01f, z);
+                    uv[iz * n + ix] = new Vector2(x / 100f, z / 100f);
+                }
+            var tris = new int[(n - 1) * (n - 1) * 6];
+            int t = 0;
+            for (int iz = 0; iz < n - 1; iz++)
+                for (int ix = 0; ix < n - 1; ix++)
+                {
+                    int a = iz * n + ix;
+                    tris[t++] = a; tris[t++] = a + n; tris[t++] = a + 1;
+                    tris[t++] = a + 1; tris[t++] = a + n; tris[t++] = a + n + 1;
+                }
+            var mesh = new Mesh { name = "RollingGround", vertices = v, uv = uv, triangles = tris };
+            mesh.RecalculateNormals();
+            mesh.RecalculateTangents();
+            mesh.RecalculateBounds();
+            var go = new GameObject("GroundVisual");
+            go.transform.SetParent(root, false);
+            go.AddComponent<MeshFilter>().sharedMesh = mesh;
+            var r = go.AddComponent<MeshRenderer>();
+            r.sharedMaterial = EnvMaterials.Get(K.Mud, new Vector2(100f, 100f));
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        }
+
+        /// <summary>굽은 띠 모양 길 (점들을 부드럽게 이은 리본). 판정 없음 — 바닥 위에 얹힌 겉모습.</summary>
+        static void Ribbon(string name, Vector3[] pts, float width, K kind, float y, Color? tint = null)
+        {
+            var path = new List<Vector3>();
+            for (int i = 0; i < pts.Length - 1; i++)
+            {
+                Vector3 p0 = pts[Mathf.Max(0, i - 1)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Mathf.Min(pts.Length - 1, i + 2)];
+                int seg = Mathf.Max(2, Mathf.CeilToInt(Vector3.Distance(p1, p2) / 1.5f));
+                for (int k = 0; k < seg; k++)
+                {
+                    float u = k / (float)seg, u2 = u * u, u3 = u2 * u;
+                    path.Add(0.5f * (2f * p1 + (-p0 + p2) * u + (2f * p0 - 5f * p1 + 4f * p2 - p3) * u2 + (-p0 + 3f * p1 - 3f * p2 + p3) * u3));
+                }
+            }
+            path.Add(pts[pts.Length - 1]);
+            var v = new List<Vector3>();
+            var uv = new List<Vector2>();
+            var tri = new List<int>();
+            float dist = 0f;
+            var rnd = new System.Random(name.GetHashCode());
+            for (int i = 0; i < path.Count; i++)
+            {
+                Vector3 fwd = (path[Mathf.Min(path.Count - 1, i + 1)] - path[Mathf.Max(0, i - 1)]);
+                fwd.y = 0f;
+                fwd.Normalize();
+                Vector3 side = new Vector3(fwd.z, 0f, -fwd.x);
+                if (i > 0) dist += Vector3.Distance(path[i], path[i - 1]);
+                // 길가가 조금씩 들쭉날쭉
+                float wl = width * 0.5f * (0.92f + (float)rnd.NextDouble() * 0.16f), wr = width * 0.5f * (0.92f + (float)rnd.NextDouble() * 0.16f);
+                Vector3 c = new Vector3(path[i].x, y, path[i].z);
+                v.Add(c - side * wl); v.Add(c + side * wr);
+                uv.Add(new Vector2(-wl / 100f, dist / 100f)); uv.Add(new Vector2(wr / 100f, dist / 100f));
+                if (i > 0)
+                {
+                    int a = v.Count - 4;
+                    tri.Add(a); tri.Add(a + 2); tri.Add(a + 1);
+                    tri.Add(a + 1); tri.Add(a + 2); tri.Add(a + 3);
+                }
+            }
+            var mesh = new Mesh { name = name };
+            mesh.SetVertices(v);
+            mesh.SetUVs(0, uv);
+            mesh.SetTriangles(tri, 0);
+            mesh.RecalculateNormals();
+            mesh.RecalculateTangents();
+            mesh.RecalculateBounds();
+            var go = new GameObject(name);
+            go.transform.SetParent(root, false);
+            go.AddComponent<MeshFilter>().sharedMesh = mesh;
+            var r = go.AddComponent<MeshRenderer>();
+            r.sharedMaterial = EnvMaterials.Get(kind, new Vector2(100f, 100f), tint);
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        }
+
         static void Roads()
         {
-            // 남북 큰길 (금 간 콘크리트)
-            Box(new Vector3(0f, 0.03f, 0f), new Vector3(6f, 0.06f, 100f), K.Road);
-            // 서쪽 갈림길
-            Box(new Vector3(-24f, 0.03f, 8f), new Vector3(48f, 0.06f, 4f), K.Road);
-            // 북쪽 묘지로 가는 흙길
-            Box(new Vector3(12f, 0.025f, 32f), new Vector3(3f, 0.05f, 16f), K.FarmSoil, rot: Quaternion.Euler(0f, 30f, 0f));
+            // 남북 큰길 (금 간 콘크리트) — 곧은 띠가 아니라 살짝 굽이친다
+            var main = new List<Vector3>();
+            for (float z = -66f; z <= 66f; z += 6f) main.Add(new Vector3(RoadX(z), 0f, z));
+            Ribbon("큰길", main.ToArray(), 6f, K.Road, 0.04f);
+            // 서쪽 갈림길: 집들 사이로 휘어 들어간다
+            Ribbon("서쪽길", new[]
+            {
+                new Vector3(RoadX(8f), 0f, 8f), new Vector3(-8f, 0f, 9.2f), new Vector3(-16f, 0f, 8.4f), new Vector3(-24f, 0f, 7f),
+                new Vector3(-31f, 0f, 8.6f), new Vector3(-38f, 0f, 10.5f), new Vector3(-46f, 0f, 9.5f), new Vector3(-58f, 0f, 8f),
+            }, 4f, K.Road, 0.035f);
+            // 북쪽 묘지로 가는 흙길 (구불구불)
+            Ribbon("묘지길", new[]
+            {
+                new Vector3(RoadX(22f) + 2.5f, 0f, 22f), new Vector3(7f, 0f, 26f), new Vector3(10.5f, 0f, 30f), new Vector3(12f, 0f, 34f),
+                new Vector3(15.5f, 0f, 37f), new Vector3(19f, 0f, 38.5f),
+            }, 2.6f, K.FarmSoil, 0.03f);
+            // 논두렁 사이 흙길
+            Ribbon("논길", new[]
+            {
+                new Vector3(RoadX(-20f) + 2.5f, 0f, -19.5f), new Vector3(14f, 0f, -19f), new Vector3(26f, 0f, -20.2f), new Vector3(38f, 0f, -19.4f), new Vector3(50f, 0f, -18f),
+            }, 2f, K.FarmSoil, 0.03f);
             // 웅덩이 (가로등 빛이 비친다)
             var puddle = EnvMaterials.Plain(new Color(0.02f, 0.025f, 0.03f), 0.97f);
             var rnd = new System.Random(9);
             for (int i = 0; i < 14; i++)
             {
                 float z = (float)(rnd.NextDouble() * 90 - 45);
-                float x = (float)(rnd.NextDouble() * 4 - 2);
+                float x = RoadX(z) + (float)(rnd.NextDouble() * 4 - 2);
                 Prim(PrimitiveType.Cylinder, new Vector3(x, 0.062f, z), new Vector3((float)(rnd.NextDouble() * 2 + 1.2f), 0.002f, (float)(rnd.NextDouble() * 1.5 + 0.8f)),
                     puddle, collider: false, shadows: false, rot: Quaternion.Euler(0f, (float)(rnd.NextDouble() * 180), 0f));
             }
@@ -163,14 +283,18 @@ namespace Hunt.Core
             for (int ix = 0; ix < 3; ix++)
                 for (int iz = 0; iz < 3; iz++)
                 {
-                    var c = new Vector3(15f + ix * 11.5f, 0f, -12f + iz * 12f);
+                    // 논 한 배미씩 조금씩 틀어지고 크기도 다르다 (반듯한 바둑판 대신)
+                    var c = new Vector3(15f + ix * 11.5f + (float)(rnd.NextDouble() - 0.5) * 0.8f, 0f, -12f + iz * 12f + (float)(rnd.NextDouble() - 0.5) * 0.8f);
+                    var pg = Group("논", c, (float)(rnd.NextDouble() * 6 - 3));
+                    float pw = 10.2f + (float)rnd.NextDouble() * 0.6f, pd = 10.4f + (float)rnd.NextDouble() * 0.8f;
                     // 물 댄 논바닥
-                    Prim(PrimitiveType.Cube, c + new Vector3(0, 0.03f, 0), new Vector3(10.6f, 0.06f, 11f), water);
-                    // 논두렁 (사방)
-                    Box(c + new Vector3(0, 0.15f, 5.75f), new Vector3(11.5f, 0.3f, 0.6f), K.Grass);
-                    Box(c + new Vector3(0, 0.15f, -5.75f), new Vector3(11.5f, 0.3f, 0.6f), K.Grass);
-                    Box(c + new Vector3(5.6f, 0.15f, 0), new Vector3(0.6f, 0.3f, 11f), K.Grass);
-                    Box(c + new Vector3(-5.6f, 0.15f, 0), new Vector3(0.6f, 0.3f, 11f), K.Grass);
+                    Prim(PrimitiveType.Cube, new Vector3(0, 0.03f, 0), new Vector3(pw, 0.06f, pd), water, pg);
+                    // 논두렁 (사방, 높이가 조금씩 다르다)
+                    float bh = 0.26f + (float)rnd.NextDouble() * 0.1f;
+                    Box(new Vector3(0, bh * 0.5f, pd * 0.5f + 0.3f), new Vector3(pw + 0.9f, bh, 0.6f), K.Grass, pg);
+                    Box(new Vector3(0, bh * 0.5f, -pd * 0.5f - 0.3f), new Vector3(pw + 0.9f, bh, 0.6f), K.Grass, pg);
+                    Box(new Vector3(pw * 0.5f + 0.3f, bh * 0.5f, 0), new Vector3(0.6f, bh, pd), K.Grass, pg);
+                    Box(new Vector3(-pw * 0.5f - 0.3f, bh * 0.5f, 0), new Vector3(0.6f, bh, pd), K.Grass, pg);
                     // 벼 그루터기
                     for (int k = 0; k < 26; k++)
                     {
@@ -542,7 +666,7 @@ namespace Hunt.Core
             for (int i = 0; i < 7; i++)
             {
                 float z = -45f + i * 15f;
-                var p = new Vector3(4.6f, 0f, z);
+                var p = new Vector3(RoadX(z) + 4.6f, 0f, z); // 굽은 길을 따라
                 Prim(PrimitiveType.Cylinder, p + new Vector3(0, 4.5f, 0), new Vector3(0.32f, 4.5f, 0.32f), poleMat);
                 Prim(PrimitiveType.Cube, p + new Vector3(0, 8.4f, 0), new Vector3(1.8f, 0.12f, 0.12f), EnvMaterials.Plain(new Color(0.3f, 0.3f, 0.3f), 0.5f, 0.6f), collider: false);
                 var top = p + new Vector3(0.8f, 8.5f, 0);
@@ -561,8 +685,9 @@ namespace Hunt.Core
             Vector3[] lamps =
             {
                 new Vector3(-3.6f, 0, -36f), new Vector3(-3.6f, 0, -18f), new Vector3(-3.6f, 0, 2f),
-                new Vector3(-3.6f, 0, 20f), new Vector3(-3.6f, 0, 36f), new Vector3(-30f, 0, 10.5f), new Vector3(14f, 0, 32f),
+                new Vector3(-3.6f, 0, 20f), new Vector3(-3.6f, 0, 36f), new Vector3(-30f, 0, 11.4f), new Vector3(14f, 0, 32f),
             };
+            for (int i = 0; i < lamps.Length; i++) if (i < 5) lamps[i].x += RoadX(lamps[i].z);
             for (int i = 0; i < lamps.Length; i++) StreetLamp(lamps[i], i == 1 || i == 5, i % 2 == 0 ? GfxLevel.Low : GfxLevel.Medium);
         }
 
@@ -758,6 +883,23 @@ namespace Hunt.Core
                 float r = 110f + (float)rnd.NextDouble() * 50f;
                 float w = 70f + (float)rnd.NextDouble() * 50f, h = 35f + (float)rnd.NextDouble() * 35f;
                 Prim(PrimitiveType.Sphere, new Vector3(Mathf.Cos(a) * r, -h * 0.25f, Mathf.Sin(a) * r), new Vector3(w, h, w * 0.8f), mat, collider: false, shadows: false);
+            }
+            // 경계를 따라 들쭉날쭉한 수풀 (네모난 보이지 않는 벽 대신 자연스러운 끝)
+            if (PropModels.Has("shrub_03"))
+            {
+                int count = QualityManager.Level == GfxLevel.Low ? 26 : 44;
+                for (int i = 0; i < count; i++)
+                {
+                    float a = i / (float)count * Mathf.PI * 2f + (float)rnd.NextDouble() * 0.12f;
+                    // 둥근 사각형 둘레 (경계 바로 안쪽)
+                    Vector3 dir = new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a));
+                    float k = Half / Mathf.Max(Mathf.Abs(dir.x), Mathf.Abs(dir.z));
+                    Vector3 p = dir * Mathf.Min(k, Half * 1.25f) * (0.97f + (float)rnd.NextDouble() * 0.06f);
+                    if (Mathf.Abs(p.x - RoadX(p.z)) < 5f) continue;                 // 큰길 끝은 열어 둔다
+                    if (p.x < -40f && Mathf.Abs(p.z - 9f) < 4f) continue;            // 서쪽길 끝
+                    Model("shrub_03", p, (float)rnd.NextDouble() * 360f, 1.6f + (float)rnd.NextDouble() * 1.4f,
+                        collider: false, tint: new Color(0.3f, 0.36f, 0.28f), gloss: 0.3f, cutout: true);
+                }
             }
             // 경계 근처 대숲/덤불 실루엣
             var bush = EnvMaterials.Plain(new Color(0.04f, 0.06f, 0.035f), 0.3f);
