@@ -124,6 +124,7 @@ namespace Hunt.Monsters
 
         ZombieRig rig;
         bool wasAlerted;
+        float growlTimer = 1f;
         public void SetRig(ZombieRig r) { rig = r; }
 
         public void SetBossWeakPoints(List<MonsterPart> wps)
@@ -162,6 +163,17 @@ namespace Hunt.Monsters
                 if (t > 0f) stagger = Mathf.Max(stagger, Mathf.Min(t, 1.6f));
             }
             wasAlerted = alerted;
+
+            // 가까이 다가온 망자는 그르렁거린다 (위치가 들리는 3D 소리 → 뒤에서 오는 것도 알 수 있음)
+            if (alerted && dist < 9f)
+            {
+                growlTimer -= dt;
+                if (growlTimer <= 0f)
+                {
+                    SFX.PlayAt(SFX.Growl, transform.position + Vector3.up * 1.5f, Mathf.Lerp(0.9f, 0.45f, dist / 9f));
+                    growlTimer = Random.Range(2.2f, 4.2f);
+                }
+            }
 
             float phaseSpeed = IsBoss ? 1f + BossPhase * 0.2f : 1f;
             float spd = speed * legSlow * (slowTime > 0f ? 0.55f : 1f) * phaseSpeed;
@@ -269,7 +281,7 @@ namespace Hunt.Monsters
                 }
                 else if (dist <= Data.attackRange + 0.4f)
                 {
-                    target.TakeDamage(Data.attackDamage, Data.infectionPerHit);
+                    target.TakeDamage(Data.attackDamage, Data.infectionPerHit, transform.position);
                     if (rig != null) rig.PlayBite();
                     attackTimer = Data.attackInterval;
                 }

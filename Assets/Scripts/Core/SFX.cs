@@ -31,6 +31,25 @@ namespace Hunt.Core
             }
         }
 
+        /// <summary>가까이 다가온 망자의 그르렁 (낮고 길게).</summary>
+        public static AudioClip Growl => Get("growl_near", () => MakeGrowl(0.9f, 38f, 0.25f));
+
+        /// <summary>심장 박동 한 번 (쿵-쿵).</summary>
+        public static AudioClip Heartbeat => Get("heart", () =>
+        {
+            int n = (int)(Rate * 0.45f);
+            var d = new float[n];
+            for (int i = 0; i < n; i++)
+            {
+                float t = (float)i / Rate;
+                float b1 = Mathf.Sin(2f * Mathf.PI * 55f * t) * Mathf.Exp(-t * 28f);
+                float t2 = t - 0.16f;
+                float b2 = t2 > 0f ? Mathf.Sin(2f * Mathf.PI * 48f * t2) * Mathf.Exp(-t2 * 32f) * 0.7f : 0f;
+                d[i] = SoftClip((b1 + b2) * 1.6f);
+            }
+            return Clip("heart", d);
+        });
+
         public static void Play(AudioClip clip, float volume = 1f, float pitchJitter = 0.04f)
         {
             if (clip == null || voices[0] == null) return;

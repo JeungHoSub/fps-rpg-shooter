@@ -77,6 +77,7 @@ namespace Hunt.Player
 
         void Update()
         {
+            TickFeedback(Time.deltaTime);
             if (HurtFlash > 0f) HurtFlash -= Time.deltaTime;
             var gm = GameManager.Instance;
             if (gm == null || !gm.IsWorldRunning || IsDead) return;
@@ -130,6 +131,23 @@ namespace Hunt.Player
             Weapons.ResupplyGadgets();
         }
 
+        /// <summary>최근 맞은 방향 (월드 위치, 남은 표시 시간) — HUD 피격 방향 표시용.</summary>
+        public readonly System.Collections.Generic.List<(Vector3 from, float time)> DamageFrom = new System.Collections.Generic.List<(Vector3, float)>();
+        public int KillStreak { get; private set; }
+        public float StreakTime { get; private set; }
+        float streakWindow;
+
+        public void TakeDamage(float dmg, float infection, Vector3 from)
+        {
+            if (IsDead) return;
+            DamageFrom.Add((from, 1.2f));
+            if (DamageFrom.Count > 6) DamageFrom.RemoveAt(0);
+#if UNITY_ANDROID || UNITY_IOS
+            if (dmg >= 12f && Application.isMobilePlatform) Handheld.Vibrate(); // 세게 맞으면 진동
+#endif
+            TakeDamage(dmg, infection);
+        }
+
         public void TakeDamage(float dmg, float infection)
         {
             if (IsDead) return;
@@ -153,8 +171,38 @@ namespace Hunt.Player
             Hp = Mathf.Min(MaxHp, Hp + amount);
         }
 
+        float heartTimer;
+
+        void TickFeedback(float dt)
+        {
+            if (streakWindow > 0f) { streakWindow -= dt; if (streakWindow <= 0f) KillStreak = 0; }
+            StreakTime += dt;
+            for (int i = DamageFrom.Count - 1; i >= 0; i--)
+            {
+                var d = DamageFrom[i];
+                d.time -= dt;
+                if (d.time <= 0f) DamageFrom.RemoveAt(i); else DamageFrom[i] = d;
+            }
+            // 체력이 35% 아래면 심장 박동 (낮을수록 빠르게)
+            float ratio = Stats != null && Stats.MaxHp > 0f ? Hp / Stats.MaxHp : 1f;
+            if (!IsDead && ratio < 0.35f)
+            {
+                heartTimer -= dt;
+                if (heartTimer <= 0f)
+                {
+                    SFX.Play(SFX.Heartbeat, Mathf.Lerp(0.9f, 0.45f, ratio / 0.35f), 0f);
+                    heartTimer = Mathf.Lerp(0.55f, 1.1f, ratio / 0.35f);
+                }
+            }
+        }
+
         public void OnKill(Monster m)
         {
+            // 연속 처치: 2.5초 안에 다음 처치가 이어지면 콤보
+            KillStreak = streakWindow > 0f ? KillStreak + 1 : 1;
+            streakWindow = 2.5f;
+            StreakTime = 0f;
+            if (KillStreak >= 2) SFX.PlayPitched(SFX.KillTick, 0.7f, 1f + Mathf.Min(KillStreak - 1, 8) * 0.08f);
             Kills++;
             var evo = EvolutionDirector.Instance != null ? EvolutionDirector.Instance.Profile : null;
             float reward = evo != null ? evo.RewardMultiplier : 1f;

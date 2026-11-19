@@ -46,7 +46,7 @@ namespace Hunt.Monsters
                 Vector3 center = target.transform.position + Vector3.up * 1f;
                 if ((transform.position - center).sqrMagnitude < 0.8f * 0.8f)
                 {
-                    target.TakeDamage(damage, infection);
+                    target.TakeDamage(damage, infection, transform.position - velocity.normalized * 3f);
                     Destroy(gameObject);
                     return;
                 }

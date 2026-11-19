@@ -126,7 +126,39 @@ namespace Hunt.UI
 
             DrawBoss(dt);
             DrawIntro(gm, dt);
+            DrawDamageDirections(p, cam);
+            DrawStreak(p);
             DrawStragglers(cam, scale);
+        }
+
+        /// <summary>맞은 방향을 화면 가장자리에 붉게 (휴대폰에서 뒤에서 맞아도 알 수 있게).</summary>
+        void DrawDamageDirections(PlayerCharacter p, Camera cam)
+        {
+            if (cam == null || p.DamageFrom.Count == 0) return;
+            Vector3 fwd = cam.transform.forward; fwd.y = 0f;
+            if (fwd.sqrMagnitude < 0.0001f) return;
+            foreach (var (from, time) in p.DamageFrom)
+            {
+                Vector3 d = from - p.transform.position; d.y = 0f;
+                if (d.sqrMagnitude < 0.01f) continue;
+                float a = Vector3.SignedAngle(fwd, d, Vector3.up) * Mathf.Deg2Rad;
+                var pos = new Vector2(W / 2f + Mathf.Sin(a) * W * 0.36f, H / 2f - Mathf.Cos(a) * H * 0.36f);
+                float alpha = Mathf.Clamp01(time / 1.2f);
+                UIKit.Tex(new Rect(pos.x - 130, pos.y - 130, 260, 260), UITheme.Glow, new Color(0.9f, 0.05f, 0.03f, 0.75f * alpha));
+                UIKit.Tex(new Rect(pos.x - 16, pos.y - 16, 32, 32), UITheme.Diamond, new Color(1f, 0.25f, 0.2f, alpha));
+            }
+        }
+
+        /// <summary>연속 처치: "3연속!" 이 튀어나왔다 사라진다.</summary>
+        void DrawStreak(PlayerCharacter p)
+        {
+            if (p.KillStreak < 2 || p.StreakTime > 1.4f) return;
+            float t = p.StreakTime;
+            float pop = 1f + Mathf.Max(0f, 0.12f - t) * 4f;
+            float alpha = Mathf.Clamp01((1.4f - t) / 0.5f);
+            int size = Mathf.RoundToInt(Mathf.Min(44f + p.KillStreak * 4f, 76f) * pop);
+            Color c = p.KillStreak >= 5 ? new Color(1f, 0.35f, 0.25f, alpha) : new Color(0.97f, 0.94f, 0.86f, alpha);
+            UIKit.Text(new Rect(0, H * 0.27f - size, W, size * 2f), $"{p.KillStreak}연속!", size, c, TextAnchor.MiddleCenter, serif: true, bold: true);
         }
 
         /// <summary>마지막 남은 망자 위치 표시 (화면 밖이면 가장자리에 화살표처럼).</summary>
