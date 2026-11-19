@@ -38,6 +38,10 @@ namespace Hunt.Weapons
             var m = root.AddComponent<GunModel>();
             var t = root.transform;
 
+            // 무기별 모델 (Quaternius 총 팩 · 실사 M4A1 · 화염방사기). 기본 권총·저격총은 아래 실사 모델 우선
+            bool phFirst = (w.data.id == "pistol" || w.data.id == "sniper") && RealGunModel.Has(w.data.weaponClass);
+            if (!phFirst && PackGunModel.Has(w.data.id) && PackGunModel.Build(t, w.data, m)) return m;
+
             // 실사 모델이 있는 계열 (권총·저격총)은 그것으로
             if (RealGunModel.Has(w.data.weaponClass) && RealGunModel.Build(t, w.data.weaponClass, m))
             {

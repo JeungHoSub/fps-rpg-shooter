@@ -56,3 +56,9 @@ metal_trash_can · rusted_spade_01 · machete(근접 무기) · stick_grenade(�
   → `Assets/Resources/Sounds/Guns/` (한 발씩 잘라 44.1kHz OGG로 변환, 무기마다 음높이 조정은 `Core/SFX.cs` `GunRec`)
 - 장전 소리 (CC0, OpenGameArt): gun-reload-sounds, gun-reload-sound-effects (singlebullet, clipload)
   → `Assets/Resources/Sounds/Mech/` (magout·magin·bolt·rack·shellin)
+
+## 총 모델 (CC0)
+- **Ultimate Gun Pack — Quaternius** (CC0), OpenGameArt 사본: https://opengameart.org/content/low-poly-guns-pack
+- **M4A1 Assault Rifle** (CC0): https://opengameart.org/content/m4a1-assault-rifle
+- **Flamethrower PBR** (CC0): https://opengameart.org/content/flamethrower-pbrunity-cc0
+  → `Assets/Resources/Guns/<무기id>.txt` (OBJ를 총 공간으로 미리 변환한 텍스트, `Weapons/PackGunModel.cs`가 읽음)
