@@ -23,7 +23,8 @@ namespace Hunt.Core
         }
 
         // ---- 모바일 ----
-        const string AutoFireKey = "hunt.autofire", AssistKey = "hunt.aimassist", PreviewKey = "hunt.mobilepreview";
+        // PreviewKey2: 예전 키에 '켜짐'이 저장돼 있어도 PC 기본(꺼짐)으로 시작하도록 새 키 사용
+        const string AutoFireKey = "hunt.autofire", AssistKey = "hunt.aimassist", PreviewKey2 = "hunt.mobilepreview2";
         static bool? autoFire, aimAssist, forceMobile;
 
         /// <summary>자동 사격: 조준점에 망자가 오면 알아서 쏜다 (터치 조작 기본값 켜짐).</summary>
@@ -43,9 +44,9 @@ namespace Hunt.Core
         /// <summary>에디터·PC에서 터치 조작 화면을 마우스로 미리 써 보기.</summary>
         public static bool ForceMobileControls
         {
-            // 앱이 목표라 유니티 에디터에서는 기본으로 터치 화면을 보여준다 (Esc 메뉴에서 끌 수 있음)
-            get { if (forceMobile == null) forceMobile = Load(PreviewKey, Application.isEditor ? 1f : 0f) > 0.5f; return forceMobile.Value; }
-            set { forceMobile = value; Save(PreviewKey, value ? 1f : 0f); }
+            // 지금은 PC 방식으로 완성하는 단계 → 기본은 키보드·마우스 (Esc 메뉴 '터치 미리보기'로 켤 수 있음)
+            get { if (forceMobile == null) forceMobile = Load(PreviewKey2, 0f) > 0.5f; return forceMobile.Value; }
+            set { forceMobile = value; Save(PreviewKey2, value ? 1f : 0f); }
         }
 
         public static void Apply() { AudioListener.volume = Volume; }
