@@ -43,3 +43,6 @@ https://polyhaven.com/models — FBX 1K + diffuse/normal 1K (잎사귀는 알파
 `Assets/Resources/Props/`: ceramic_pot(장독대 옹기) · small_lpg_tank · barrel_03 · plastic_crate_02 · old_military_crate ·
 rock_09 · moon_rock_02 · shrub_03 · shrub_sorrel_01 · street_lamp_02 · painted_wooden_bench · stone_fire_pit ·
 metal_trash_can · rusted_spade_01 · machete(근접 무기) · stick_grenade(수류탄)
+
+## 1인칭 총 — Poly Haven (CC0)
+`Assets/Resources/Props/` service_pistol (권총), bolt_action_rifle_7_62 (저격총, 조준경·감개는 _acc 텍스처)

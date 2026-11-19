@@ -37,6 +37,22 @@ namespace Hunt.Weapons
             root.transform.SetParent(parent, false);
             var m = root.AddComponent<GunModel>();
             var t = root.transform;
+
+            // 실사 모델이 있는 계열 (권총·저격총)은 그것으로
+            if (RealGunModel.Has(w.data.weaponClass) && RealGunModel.Build(t, w.data.weaponClass, m))
+            {
+                if (w.data.weaponClass == WeaponClass.Pistol)
+                {
+                    m.hipOffset = new Vector3(0.11f, -0.11f, 0.28f); m.adsZ = 0.3f; m.kickStrength = 0.6f; m.actionTravel = 0.03f;
+                }
+                else
+                {
+                    m.hipOffset = new Vector3(0.12f, -0.12f, 0.2f); m.adsZ = 0.1f; m.kickStrength = 1.6f;
+                    m.hideWhenScoped = true; m.pumpAction = true; m.actionTravel = 0.06f;
+                }
+                return m;
+            }
+
             Color furn = w.data.viewColor;
             float muzzleZ = 0.5f, muzzleY = 0.01f;
             Renderer stock = null, barrel = null;
