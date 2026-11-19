@@ -80,16 +80,16 @@ namespace Hunt.UI
 
             // ---- 역병 능력 슬롯 ----
             float sx = 262, sy = H - 112, ss = 76;
-            AbilitySlot(new Rect(sx, sy, ss, ss), "Q", "광", "광폭화", inf.IsRage, inf.RageTime / 6f, inf.Gauge >= inf.RageCostFinal && !inf.IsFrenzy, $"{inf.RageCostFinal:0}",
+            AbilitySlot(new Rect(sx, sy, ss, ss), "Q", HudIcons.Icon.Flame, new Color(1f, 0.45f, 0.3f), "광폭화", inf.IsRage, inf.RageTime / 6f, inf.Gauge >= inf.RageCostFinal && !inf.IsFrenzy, $"{inf.RageCostFinal:0}",
                 "<b>광폭화</b>\n역병 기운을 태워 6초간\n• 피해 +30%  • 이동 +20%  • 저지력 +50%");
-            AbilitySlot(new Rect(sx + ss + 14, sy, ss, ss), "E", "생", "재생", inf.IsRegen, inf.IsRegen ? 1f : 0f, inf.Gauge >= inf.RegenCostFinal && !inf.IsFrenzy, $"{inf.RegenCostFinal:0}",
+            AbilitySlot(new Rect(sx + ss + 14, sy, ss, ss), "E", HudIcons.Icon.Heart, new Color(0.6f, 0.9f, 0.55f), "재생", inf.IsRegen, inf.IsRegen ? 1f : 0f, inf.Gauge >= inf.RegenCostFinal && !inf.IsFrenzy, $"{inf.RegenCostFinal:0}",
                 "<b>재생</b>\n역병 기운으로 4초간 생명 50 회복");
-            AbilitySlot(new Rect(sx + (ss + 14) * 2, sy, ss, ss), "H", "약", "청심환", false, 0f, inf.Antidotes > 0, $"×{inf.Antidotes}",
+            AbilitySlot(new Rect(sx + (ss + 14) * 2, sy, ss, ss), "H", HudIcons.Icon.Pill, new Color(0.95f, 0.85f, 0.55f), "청심환", false, 0f, inf.Antidotes > 0, $"×{inf.Antidotes}",
                 "<b>청심환</b>\n폭주를 즉시 멈추거나 역병 기운을 40 낮춘다.\n밤을 넘길 때마다 하나씩 얻는다 (최대 2).");
 
-            AbilitySlot(new Rect(sx + (ss + 14) * 3 + 14, sy, ss, ss), "X", "치", "치료 키트", p.IsUsingItem, p.KitProgress, p.Kits > 0, $"×{p.Kits}",
+            AbilitySlot(new Rect(sx + (ss + 14) * 3 + 14, sy, ss, ss), "X", HudIcons.Icon.Kit, new Color(1f, 0.42f, 0.36f), "치료 키트", p.IsUsingItem, p.KitProgress, p.Kits > 0, $"×{p.Kits}",
                 $"<b>치료 키트</b>\n2.5초 동안 상처를 감아 생명 {p.KitHeal:0} 회복.\n감는 동안 느려지고, 맞거나 쏘면 끊긴다.");
-            AbilitySlot(new Rect(sx + (ss + 14) * 4 + 14, sy, ss, ss), "C", "기", "회복제", p.Controller.BoostTime > 0f, p.Controller.BoostTime / 15f, p.Drinks > 0, $"×{p.Drinks}",
+            AbilitySlot(new Rect(sx + (ss + 14) * 4 + 14, sy, ss, ss), "C", HudIcons.Icon.Bottle, new Color(0.45f, 0.78f, 1f), "회복제", p.Controller.BoostTime > 0f, p.Controller.BoostTime / 15f, p.Drinks > 0, $"×{p.Drinks}",
                 "<b>스태미너 회복제</b>\n기운을 다 채우고 15초 동안 덜 지친다.");
 
             // ---- 스태미너 (생명 구슬 아래) ----
@@ -97,6 +97,14 @@ namespace Hunt.UI
             Color stc = ctl.Exhausted ? UITheme.BloodBright : new Color(0.55f, 0.75f, 0.45f);
             UIKit.Bar(new Rect(hpOrb.x + 10, hpOrb.yMax + 14, hpOrb.width - 20, 8), ctl.Stamina / ctl.MaxStamina, stc);
             UIKit.Text(new Rect(hpOrb.x, hpOrb.yMax + 22, hpOrb.width, 16), ctl.Exhausted ? "지쳤다" : "기 운", 12, ctl.Exhausted ? UITheme.BloodBright : UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true);
+            // 앉기 표시: 앉아 있으면 생명 구슬 옆에 웅크린 모양 + 효과 요약
+            if (ctl.CrouchBlend > 0.05f)
+            {
+                var cr = new Rect(262, H - 172, 40, 40); // 능력 칸 줄 바로 위
+                UIKit.Tex(cr, HudIcons.Get(HudIcons.Icon.Crouch), new Color(0.86f, 0.82f, 0.72f, ctl.CrouchBlend));
+                UIKit.Text(new Rect(cr.xMax + 4, cr.y + 4, 140, 18), "앉음", 14, new Color(0.86f, 0.82f, 0.72f, ctl.CrouchBlend), serif: true, bold: true);
+                UIKit.Text(new Rect(cr.xMax + 4, cr.y + 22, 160, 16), "탄퍼짐·반동 ↓  소리 ↓", 11, new Color(0.6f, 0.58f, 0.54f, ctl.CrouchBlend));
+            }
 
             // ---- 치료 중 ----
             if (p.IsUsingItem)
@@ -244,21 +252,37 @@ namespace Hunt.UI
             UIKit.Tex(new Rect(orb.x - 14, y - 5, 10, 10), UITheme.Diamond, c);
         }
 
-        void AbilitySlot(Rect r, string key, string glyph, string name, bool active, float activeT, bool usable, string cost, string tip)
+        /// <summary>
+        /// 능력·보급 칸: 먹색 네모 + 그림 아이콘 + 왼쪽 위 단축키 + 오른쪽 아래 비용/개수 + 아래 이름.
+        /// 쓰는 중이면 아래에서 차오르는 색 + 테두리 빛, 못 쓰면 흐리게.
+        /// </summary>
+        void AbilitySlot(Rect r, string key, HudIcons.Icon icon, Color tint, string name, bool active, float activeT, bool usable, string cost, string tip)
         {
-            UIKit.NineSlice(r, UITheme.Slot, 8, Color.white);
+            bool lit = usable || active;
+            float pulse = active ? 0.6f + 0.4f * Mathf.Sin(Time.unscaledTime * 6f) : 0f;
+            if (active) UIKit.Tex(new Rect(r.x - 16, r.y - 16, r.width + 32, r.height + 32), UITheme.Glow, new Color(tint.r, tint.g, tint.b, 0.35f + 0.2f * pulse));
+            // 바탕: 먹
+            UIKit.Fill(r, new Color(0.035f, 0.033f, 0.035f, 0.88f));
+            UIKit.Fill(new Rect(r.x, r.y, r.width, r.height * 0.45f), new Color(1f, 1f, 1f, 0.025f)); // 위쪽 살짝 밝게
             if (active)
             {
-                UIKit.Tex(new Rect(r.x - 14, r.y - 14, r.width + 28, r.height + 28), UITheme.Glow, new Color(1f, 0.3f, 0.2f, 0.5f));
-                float fh = (r.height - 8) * Mathf.Clamp01(activeT);
-                UIKit.Fill(new Rect(r.x + 4, r.yMax - 4 - fh, r.width - 8, fh), new Color(0.7f, 0.1f, 0.1f, 0.45f));
+                float fh = (r.height - 4) * Mathf.Clamp01(activeT);
+                UIKit.Fill(new Rect(r.x + 2, r.yMax - 2 - fh, r.width - 4, fh), new Color(tint.r, tint.g, tint.b, 0.22f));
             }
-            UIKit.Text(new Rect(r.x, r.y + 4, r.width, r.height - 20), glyph, 34, usable || active ? UITheme.GoldBright : UITheme.Ash, TextAnchor.MiddleCenter, serif: true, bold: true);
-            UIKit.Text(new Rect(r.x + 6, r.y + 2, 20, 20), key, 14, UITheme.Bone, bold: true);
-            UIKit.Text(new Rect(r.x, r.yMax - 22, r.width - 6, 20), cost, 14, usable ? UITheme.Bone : UITheme.BloodBright, TextAnchor.MiddleRight, bold: true);
-            UIKit.Text(new Rect(r.x, r.yMax + 2, r.width, 20), name, 14, UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true);
-            if (!usable && !active) UIKit.Fill(new Rect(r.x + 3, r.y + 3, r.width - 6, r.height - 6), new Color(0, 0, 0, 0.45f));
-            UIKit.NineSlice(r, UITheme.Frame, 6, active ? UITheme.BloodBright : new Color(0.55f, 0.42f, 0.22f, 0.9f));
+            // 아이콘
+            var ir = new Rect(r.center.x - r.width * 0.3f, r.center.y - r.height * 0.3f, r.width * 0.6f, r.height * 0.6f);
+            Color ic = lit ? tint : new Color(0.42f, 0.4f, 0.38f, 0.8f);
+            UIKit.Tex(new Rect(ir.x + 2, ir.y + 3, ir.width, ir.height), HudIcons.Get(icon), new Color(0f, 0f, 0f, 0.6f)); // 그림자
+            UIKit.Tex(ir, HudIcons.Get(icon), ic);
+            // 단축키 (왼쪽 위 작은 한지 칸)
+            var kr = new Rect(r.x + 3, r.y + 3, 20, 20);
+            UIKit.Fill(kr, lit ? new Color(0.86f, 0.82f, 0.72f, 0.92f) : new Color(0.35f, 0.34f, 0.32f, 0.9f));
+            UIKit.Text(kr, key, 13, new Color(0.06f, 0.05f, 0.05f), TextAnchor.MiddleCenter, bold: true);
+            // 비용·개수
+            UIKit.Text(new Rect(r.x, r.yMax - 22, r.width - 5, 20), cost, 15, usable ? UITheme.Bone : UITheme.BloodBright, TextAnchor.MiddleRight, bold: true);
+            // 테두리
+            UIKit.Outline(r, active ? Color.Lerp(tint, Color.white, pulse * 0.3f) : lit ? new Color(0.62f, 0.58f, 0.5f, 0.85f) : new Color(0.3f, 0.29f, 0.27f, 0.8f), active ? 2f : 1f);
+            UIKit.Text(new Rect(r.x - 8, r.yMax + 3, r.width + 16, 18), name, 13, lit ? UITheme.BoneDim : UITheme.Ash, TextAnchor.MiddleCenter, serif: true);
             UIKit.TooltipIf(r, tip);
         }
 
