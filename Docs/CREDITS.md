@@ -36,3 +36,10 @@ https://www.mixamo.com — 사용자 계정으로 내려받음
 
 `Assets/Resources/Mixamo/Romero.dae` (텍스처 4K → 1K JPG로 축소)
 동작 (`Mixamo/Anims/`): Zombie Idle(Twitching) · Walking · Run · Attack(Swipe) · Death · Reaction Hit(Stumble Back) · Scream · Crawl
+
+## 소품 모델 — Poly Haven (CC0)
+https://polyhaven.com/models — FBX 1K + diffuse/normal 1K (잎사귀는 알파를 합쳐 PNG)
+
+`Assets/Resources/Props/`: ceramic_pot(장독대 옹기) · small_lpg_tank · barrel_03 · plastic_crate_02 · old_military_crate ·
+rock_09 · moon_rock_02 · shrub_03 · shrub_sorrel_01 · street_lamp_02 · painted_wooden_bench · stone_fire_pit ·
+metal_trash_can · rusted_spade_01 · machete(근접 무기) · stick_grenade(수류탄)

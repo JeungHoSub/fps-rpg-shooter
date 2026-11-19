@@ -42,6 +42,7 @@ namespace Hunt.Core
             CenterTree();
             Utilities();
             Props();
+            Dressing();
             Mountains();
             Boundary();
 
@@ -75,6 +76,13 @@ namespace Hunt.Core
         {
             var mat = EnvMaterials.Get(kind, new Vector2(Mathf.Max(size.x, size.z), size.y < 0.3f ? Mathf.Min(size.x, size.z) : size.y), tint);
             return Prim(PrimitiveType.Cube, pos, size, mat, parent, rot, collider);
+        }
+
+        /// <summary>Poly Haven 소품 모델을 놓는다. 모델 파일이 없으면 null (호출한 쪽이 도형으로 대체).</summary>
+        static GameObject Model(string id, Vector3 pos, float yaw, float height, Transform parent = null, bool collider = true,
+            Color? tint = null, float gloss = 0.45f, bool cutout = false)
+        {
+            return PropModels.Place(id, parent != null ? parent : root, pos, yaw, height, collider, tint, gloss, cutout, QualityManager.Shadows);
         }
 
         static Transform Group(string name, Vector3 pos, float yaw)
@@ -410,11 +418,16 @@ namespace Hunt.Core
             Prim(PrimitiveType.Cylinder, new Vector3(0.2f, 6.8f, 1.2f), new Vector3(0.4f, 1.6f, 0.4f), bark, g, Quaternion.Euler(35f, 0, 0), collider: false);
             var leaf = EnvMaterials.Plain(new Color(0.06f, 0.09f, 0.05f), 0.35f);
             var rnd = new System.Random(21);
+            bool leafy = PropModels.Has("shrub_03");
             for (int i = 0; i < 9; i++)
             {
                 var p = new Vector3((float)(rnd.NextDouble() * 6 - 3), 7.5f + (float)(rnd.NextDouble() * 2.5), (float)(rnd.NextDouble() * 6 - 3));
                 float s = 3.5f + (float)rnd.NextDouble() * 2.5f;
-                Prim(PrimitiveType.Sphere, p, new Vector3(s, s * 0.7f, s), leaf, g, collider: false);
+                // 잎 모델이 있으면 도형 공은 속을 채우는 정도로 작게, 바깥은 잎사귀 덩어리로
+                Prim(PrimitiveType.Sphere, p, new Vector3(s, s * 0.7f, s) * (leafy ? 0.6f : 1f), leaf, g, collider: false);
+                if (leafy && i < 6)
+                    Model("shrub_03", p - new Vector3(0f, s * 0.35f, 0f), (float)(rnd.NextDouble() * 360), s * 0.75f, g, false,
+                        new Color(0.35f, 0.4f, 0.32f), 0.3f, true);
             }
             // 평상
             Box(new Vector3(2.6f, 0.45f, -2.2f), new Vector3(2.6f, 0.12f, 2f), K.WoodPlanks, g);
@@ -477,13 +490,34 @@ namespace Hunt.Core
         static void StreetLamp(Vector3 p, bool flicker, GfxLevel minLevel)
         {
             var g = Group("가로등", p, 0f);
-            var metal = EnvMaterials.Plain(new Color(0.35f, 0.36f, 0.36f), 0.6f, 0.6f);
-            Prim(PrimitiveType.Cylinder, new Vector3(0, 2.8f, 0), new Vector3(0.16f, 2.8f, 0.16f), metal, g);
-            Prim(PrimitiveType.Cube, new Vector3(0.7f, 5.55f, 0), new Vector3(1.5f, 0.08f, 0.08f), metal, g, collider: false);
-            Prim(PrimitiveType.Cube, new Vector3(1.35f, 5.48f, 0), new Vector3(0.45f, 0.12f, 0.25f), EnvMaterials.Emissive(new Color(1f, 0.75f, 0.45f), 2.2f), g, collider: false);
+            Vector3 lightPos = new Vector3(1.35f, 5.3f, 0);
+            var model = Model("street_lamp_02", Vector3.zero, 0f, 5.8f, g, collider: false, tint: new Color(0.7f, 0.7f, 0.7f), gloss: 0.6f);
+            if (model != null)
+            {
+                // 기둥 판정만 따로, 불빛은 모델의 등갓 쪽(꼭대기에서 기둥 반대편)에
+                var pole = g.gameObject.AddComponent<CapsuleCollider>();
+                pole.center = new Vector3(0f, 2.9f, 0f); pole.height = 5.8f; pole.radius = 0.15f;
+                var rs = model.GetComponentsInChildren<Renderer>();
+                if (rs.Length > 0)
+                {
+                    Bounds b = rs[0].bounds;
+                    foreach (var r in rs) b.Encapsulate(r.bounds);
+                    Vector3 c = g.InverseTransformPoint(b.center);
+                    Vector3 side = new Vector3(c.x, 0f, c.z);
+                    lightPos = side.sqrMagnitude > 0.04f ? side * 2f + Vector3.up * 5.4f : new Vector3(0f, 5.4f, 0f);
+                }
+            }
+            else
+            {
+                var metal = EnvMaterials.Plain(new Color(0.35f, 0.36f, 0.36f), 0.6f, 0.6f);
+                Prim(PrimitiveType.Cylinder, new Vector3(0, 2.8f, 0), new Vector3(0.16f, 2.8f, 0.16f), metal, g);
+                Prim(PrimitiveType.Cube, new Vector3(0.7f, 5.55f, 0), new Vector3(1.5f, 0.08f, 0.08f), metal, g, collider: false);
+            }
+            // 불 켜진 등갓 (모델 위에도 겹쳐 빛나 보이게)
+            Prim(PrimitiveType.Cube, lightPos + new Vector3(0f, 0.15f, 0f), new Vector3(0.4f, 0.06f, 0.22f), EnvMaterials.Emissive(new Color(1f, 0.75f, 0.45f), 2.2f), g, collider: false, shadows: false);
             var lg = new GameObject("LampLight");
             lg.transform.SetParent(g, false);
-            lg.transform.localPosition = new Vector3(1.35f, 5.3f, 0);
+            lg.transform.localPosition = lightPos;
             lg.transform.localRotation = Quaternion.Euler(90f, 0, 0);
             var l = lg.AddComponent<Light>();
             l.type = LightType.Spot;
@@ -529,7 +563,12 @@ namespace Hunt.Core
             // 드럼통 · 장작더미 · 경운기 짐칸
             var rust = EnvMaterials.Plain(new Color(0.35f, 0.18f, 0.1f), 0.5f, 0.3f);
             Vector3[] drums = { new Vector3(-16f, 0.5f, 18f), new Vector3(-15.2f, 0.5f, 18.6f), new Vector3(-31f, 0.5f, -12f), new Vector3(-6.5f, 0.5f, -14f) };
-            foreach (var d in drums) Prim(PrimitiveType.Cylinder, d, new Vector3(0.6f, 0.5f, 0.6f), rust);
+            for (int i = 0; i < drums.Length; i++)
+            {
+                var d = drums[i];
+                if (Model("barrel_03", new Vector3(d.x, 0f, d.z), i * 70f, 0.95f, tint: new Color(0.8f, 0.7f, 0.65f), gloss: 0.55f) == null)
+                    Prim(PrimitiveType.Cylinder, d, new Vector3(0.6f, 0.5f, 0.6f), rust);
+            }
             Box(new Vector3(-33f, 0.5f, -10f), new Vector3(2.4f, 1f, 1.2f), K.WoodPlanks, tint: new Color(0.55f, 0.45f, 0.35f));
             Box(new Vector3(-44f, 0.6f, 30f), new Vector3(1.6f, 0.7f, 2.4f), K.MetalSheet, tint: new Color(0.3f, 0.45f, 0.3f));
 
@@ -540,7 +579,74 @@ namespace Hunt.Core
                 var p = new Vector3((float)(rnd.NextDouble() * 90 - 45), 0.2f, (float)(rnd.NextDouble() * 90 - 45));
                 if (Mathf.Abs(p.x) < 6f) continue;
                 float s = 0.7f + (float)rnd.NextDouble() * 1.4f;
-                Prim(PrimitiveType.Sphere, p, new Vector3(s * 1.3f, s * 0.8f, s), EnvMaterials.Get(K.Rock, new Vector2(s, s)));
+                string rock = i % 2 == 0 ? "rock_09" : "moon_rock_02";
+                if (Model(rock, new Vector3(p.x, -0.1f, p.z), (float)rnd.NextDouble() * 360f, s * 0.9f, tint: new Color(0.6f, 0.62f, 0.58f), gloss: 0.55f) == null)
+                    Prim(PrimitiveType.Sphere, p, new Vector3(s * 1.3f, s * 0.8f, s), EnvMaterials.Get(K.Rock, new Vector2(s, s)));
+            }
+        }
+
+        // ================================================================ 생활 소품 (Poly Haven 모델, 없으면 생략)
+        static void Dressing()
+        {
+            // 장독대: 돌 단 위에 옹기 항아리
+            void Jangdok(Vector3 at, float yaw, int seed)
+            {
+                if (!PropModels.Has("ceramic_pot")) return;
+                var g = Group("장독대", at, yaw);
+                Box(new Vector3(0f, 0.12f, 0f), new Vector3(2.6f, 0.24f, 1.6f), K.StoneWall, g, tint: new Color(0.55f, 0.55f, 0.52f));
+                var r = new System.Random(seed);
+                for (int i = 0; i < 7; i++)
+                {
+                    float x = -0.95f + (i % 4) * 0.62f + (float)r.NextDouble() * 0.08f;
+                    float z = i < 4 ? -0.35f : 0.38f;
+                    float h = i < 4 ? 0.55f + (float)r.NextDouble() * 0.12f : 0.8f + (float)r.NextDouble() * 0.15f; // 뒷줄은 큰 독
+                    Model("ceramic_pot", new Vector3(x, 0.24f, z), (float)r.NextDouble() * 360f, h, g, tint: new Color(0.45f, 0.33f, 0.26f), gloss: 0.75f);
+                }
+            }
+            Jangdok(new Vector3(-20.5f, 0f, -23.6f), -4f, 3);   // 기와집 마당
+            Jangdok(new Vector3(-35.5f, 0f, -8.5f), 12f, 5);    // 초가집 옆
+            Jangdok(new Vector3(-17f, 0f, 29.2f), 0f, 7);       // 농가 뒤
+
+            // LPG 가스통 (농가 벽에 붙여서)
+            Vector3[] lpg = { new Vector3(-14.9f, 0f, 22.5f), new Vector3(-14.9f, 0f, 23.3f), new Vector3(-31.6f, 0f, 20.2f), new Vector3(-7.4f, 0f, -0.5f) };
+            for (int i = 0; i < lpg.Length; i++) Model("small_lpg_tank", lpg[i], i * 40f, 1.25f, gloss: 0.6f);
+
+            // 농가 플라스틱 상자 (쌓아 둔 것)
+            void Crates(Vector3 at, float yaw, int n)
+            {
+                for (int i = 0; i < n; i++)
+                    Model("plastic_crate_02", at + new Vector3((i / 3) * 0.62f, (i % 3) * 0.3f, 0f), yaw + (i % 2) * 6f, 0.3f, gloss: 0.5f);
+            }
+            Crates(new Vector3(11.5f, 0f, -24f), 0f, 6);   // 비닐하우스 앞
+            Crates(new Vector3(-17.5f, 0f, 19f), 90f, 4); // 농가 마당
+            Crates(new Vector3(-40f, 0f, 32.5f), 0f, 5);  // 창고 앞
+
+            // 창고 앞 나무 상자 · 삽, 마을회관 쓰레기통, 평상 옆 의자, 초가집 화덕
+            Model("old_military_crate", new Vector3(-44.5f, 0f, 32.8f), 10f, 0.55f);
+            Model("old_military_crate", new Vector3(-44.3f, 0.55f, 32.9f), -5f, 0.55f);
+            Model("rusted_spade_01", new Vector3(-39.2f, 0f, 33.2f), 30f, 1.1f, collider: false);
+            Model("metal_trash_can", new Vector3(-6.8f, 0f, 2.8f), 0f, 0.95f, gloss: 0.6f);
+            Model("metal_trash_can", new Vector3(-6.9f, 0f, 3.7f), 40f, 0.95f, gloss: 0.6f);
+            Model("painted_wooden_bench", new Vector3(13.5f, 0f, 1.5f), 90f, 0.85f, tint: new Color(0.6f, 0.55f, 0.5f));
+            Model("stone_fire_pit", new Vector3(-33f, 0f, -1.5f), 0f, 0.45f);
+
+            // 덤불: 담장 밑, 집 모퉁이, 길가 (길 위는 피한다)
+            if (PropModels.Has("shrub_03"))
+            {
+                var r = new System.Random(41);
+                Vector3[] spots =
+                {
+                    new Vector3(-28.8f, 0f, 16f), new Vector3(-28.8f, 0f, 21f), new Vector3(-22f, 0f, 30.8f), new Vector3(-33f, 0f, 30.8f),
+                    new Vector3(-17f, 0f, -25.6f), new Vector3(-31f, 0f, -25.6f), new Vector3(-33.2f, 0f, -16f), new Vector3(-15.8f, 0f, -14f),
+                    new Vector3(-41f, 0f, -9f), new Vector3(-42f, 0f, 1f), new Vector3(8f, 0f, -20f), new Vector3(12f, 0f, 14f),
+                    new Vector3(22f, 0f, 20f), new Vector3(-10f, 0f, 38f), new Vector3(28f, 0f, -24f), new Vector3(-12f, 0f, -38f),
+                };
+                for (int i = 0; i < spots.Length; i++)
+                {
+                    bool big = i % 3 != 2 || !PropModels.Has("shrub_sorrel_01");
+                    Model(big ? "shrub_03" : "shrub_sorrel_01", spots[i], (float)r.NextDouble() * 360f, big ? 0.9f + (float)r.NextDouble() * 0.6f : 0.5f,
+                        collider: false, tint: new Color(0.42f, 0.46f, 0.38f), gloss: 0.35f, cutout: true);
+                }
             }
         }
 
