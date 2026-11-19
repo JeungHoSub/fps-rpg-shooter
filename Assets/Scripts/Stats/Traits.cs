@@ -30,11 +30,11 @@ namespace Hunt.Stats
             switch (t)
             {
                 case Trait.Bloodlust: return "피의 갈증";
-                case Trait.RunAndGun: return "런앤건";
-                case Trait.SteadyAim: return "정조준";
+                case Trait.RunAndGun: return "달리며 쏘기";
+                case Trait.SteadyAim: return "숨 고르기";
                 case Trait.ThickSkin: return "두꺼운 피부";
-                case Trait.MutantAffinity: return "변이 친화";
-                case Trait.Scavenger: return "수집가";
+                case Trait.MutantAffinity: return "역병 친화";
+                case Trait.Scavenger: return "넝마주이";
                 case Trait.QuickHands: return "빠른 손";
                 default: return "장사";
             }
@@ -44,13 +44,13 @@ namespace Hunt.Stats
         {
             switch (t)
             {
-                case Trait.Bloodlust: return "처치 시 HP 4 회복, 저지력 +30%";
-                case Trait.RunAndGun: return "이동 중 탄퍼짐 페널티 없음";
-                case Trait.SteadyAim: return "1초간 정지하면 약점 데미지 +50%";
-                case Trait.ThickSkin: return "최대 HP +20%, 감염 축적 -15%";
-                case Trait.MutantAffinity: return "변이 능력 비용 -25%, 지속시간 +25%";
-                case Trait.Scavenger: return "골드 +30%, 파츠 드랍 확률 +40%";
-                case Trait.QuickHands: return "재장전·무기 교체 속도 +25%";
+                case Trait.Bloodlust: return "망자를 쓰러뜨릴 때마다 생명 4 회복, 밀어내기 +30%";
+                case Trait.RunAndGun: return "움직이며 쏴도 탄이 퍼지지 않는다";
+                case Trait.SteadyAim: return "1초 멈춰 서면 약점 피해 +50%";
+                case Trait.ThickSkin: return "최대 생명 +20%, 역병 쌓임 -15%";
+                case Trait.MutantAffinity: return "역병 능력 비용 -25%, 지속 시간 +25%";
+                case Trait.Scavenger: return "엽전 +30%, 부품 줍는 확률 +40%";
+                case Trait.QuickHands: return "장전·무기 교체 25% 빨라짐";
                 default: return "소지 무게 한도 +40%, 칼 피해 +25%";
             }
         }

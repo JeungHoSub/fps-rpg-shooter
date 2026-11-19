@@ -170,12 +170,27 @@ namespace Hunt.UI
                     var t = p.TraitOffer[i];
                     var r = new Rect(right.x + 20 + i * (cw + 10), ty, cw, right.yMax - ty - 16);
                     bool click = UIKit.HitArea(r, "offer" + t, out float hv);
-                    r.y -= hv * 4f;
-                    UIKit.NineSlice(r, hv > 0.5f ? UITheme.PanelHeader : UITheme.Panel, 12, Color.white);
-                    UIKit.NineSlice(new Rect(r.x - 2, r.y - 2, r.width + 4, r.height + 4), UITheme.Frame, 8, new Color(1f, 0.8f, 0.45f, 0.3f + hv * 0.6f));
-                    UIKit.Emblem(new Rect(r.center.x - 26, r.y + 14, 52, 52), GameText.TraitGlyph(t), UITheme.Gold);
-                    UIKit.Text(new Rect(r.x + 8, r.y + 72, r.width - 16, 28), Traits.Name(t), 19, UITheme.Bone, TextAnchor.MiddleCenter, serif: true, bold: true);
-                    UIKit.Text(new Rect(r.x + 10, r.y + 102, r.width - 20, r.height - 110), Traits.Describe(t), 14, UITheme.BoneDim, TextAnchor.UpperCenter, wrap: true);
+                    // 숫자키 1·2·3으로도 고른다
+                    if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Alpha1 + i) { click = true; Event.current.Use(); }
+                    r.y -= hv * 6f;
+                    // 한지 카드: 먹 바탕 + 한지색 테두리, 고르려 하면 밝아진다
+                    UIKit.Tex(new Rect(r.x - 10, r.y - 10, r.width + 20, r.height + 20), UITheme.Glow, new Color(1f, 0.92f, 0.75f, 0.06f + hv * 0.18f));
+                    UIKit.Fill(r, new Color(0.055f, 0.052f, 0.055f, 0.97f));
+                    UIKit.Fill(new Rect(r.x, r.y, r.width, 4), Color.Lerp(new Color(0.6f, 0.56f, 0.48f), UITheme.GoldBright, hv));
+                    UIKit.Outline(r, Color.Lerp(new Color(0.45f, 0.42f, 0.37f), UITheme.GoldBright, hv), 1f + hv);
+                    // 오른쪽 위 낙관 (붉은 도장)
+                    UIKit.Emblem(new Rect(r.xMax - 50, r.y + 8, 44, 44), GameText.TraitGlyph(t), UITheme.Gold);
+                    // 번호
+                    UIKit.Text(new Rect(r.x + 12, r.y + 12, 30, 22), (i + 1).ToString(), 15, UITheme.Ash, bold: true);
+                    // 이름
+                    UIKit.Text(new Rect(r.x + 12, r.y + 40, r.width - 24, 32), Traits.Name(t), 22, UITheme.Bone, TextAnchor.MiddleLeft, serif: true, bold: true);
+                    UIKit.Fill(new Rect(r.x + 12, r.y + 76, r.width - 24, 1), new Color(0.6f, 0.56f, 0.48f, 0.4f));
+                    // 효과: 쉼표마다 줄을 나눠 한눈에
+                    string eff = "";
+                    foreach (var part in Traits.Describe(t).Split(new[] { ", " }, System.StringSplitOptions.RemoveEmptyEntries)) eff += "· " + part + "\n";
+                    UIKit.Text(new Rect(r.x + 12, r.y + 84, r.width - 24, r.height - 150), eff, 15, UITheme.GoldBright, TextAnchor.UpperLeft, wrap: true);
+                    // 한 줄 이야기
+                    UIKit.Text(new Rect(r.x + 12, r.yMax - 64, r.width - 24, 56), GameText.TraitFlavor(t), 13, UITheme.Ash, TextAnchor.LowerLeft, serif: true, wrap: true);
                     if (click) { p.PickTrait(t); break; }
                 }
             }

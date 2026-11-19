@@ -162,11 +162,11 @@ namespace Hunt.Player
             {
                 case PickupKind.Kit:
                     p.Kits++;
-                    HUD.Notify("치료 키트를 주웠다 (X로 사용)", c);
+                    GameHud.OnPickup(HudIcons.Icon.Kit, c, $"치료 키트 +1  (지닌 {p.Kits})");
                     break;
                 case PickupKind.Drink:
                     p.Drinks++;
-                    HUD.Notify("스태미너 회복제를 주웠다 (C로 사용)", c);
+                    GameHud.OnPickup(HudIcons.Icon.Bottle, c, $"회복제 +1  (지닌 {p.Drinks})");
                     break;
                 default:
                 {
@@ -179,7 +179,7 @@ namespace Hunt.Player
                     int add = Mathf.Max(w.data.magazine, 6);
                     int before = w.reserve;
                     w.reserve = Mathf.Min(w.MaxReserve, w.reserve + add);
-                    HUD.Notify($"탄창을 주웠다 — {w.data.displayName} +{w.reserve - before}발", c);
+                    GameHud.OnPickup(HudIcons.Icon.Ammo, c, $"{w.data.displayName} 탄 +{w.reserve - before}");
                     break;
                 }
             }

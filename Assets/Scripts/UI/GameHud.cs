@@ -19,6 +19,44 @@ namespace Hunt.UI
         float introTime;
         static Texture2D scopeMask;
 
+        // ---- 보급품 주움 알림 (능력 칸 위로 떠오른다) ----
+        struct PickupToast { public HudIcons.Icon icon; public Color color; public string text; public float time; }
+        static readonly System.Collections.Generic.List<PickupToast> toasts = new System.Collections.Generic.List<PickupToast>();
+        /// <summary>키트·회복제 칸이 반짝이는 남은 시간.</summary>
+        static float kitFlash, drinkFlash;
+
+        public static void OnPickup(HudIcons.Icon icon, Color color, string text)
+        {
+            toasts.Add(new PickupToast { icon = icon, color = color, text = text, time = Time.unscaledTime });
+            if (toasts.Count > 4) toasts.RemoveAt(0);
+            if (icon == HudIcons.Icon.Kit) kitFlash = 1f;
+            if (icon == HudIcons.Icon.Bottle) drinkFlash = 1f;
+        }
+
+        void DrawPickups(float dt)
+        {
+            kitFlash = Mathf.Max(0f, kitFlash - dt * 1.5f);
+            drinkFlash = Mathf.Max(0f, drinkFlash - dt * 1.5f);
+            float baseY = H - 230;
+            for (int i = toasts.Count - 1; i >= 0; i--)
+            {
+                float age = Time.unscaledTime - toasts[i].time;
+                if (age > 2.6f) { toasts.RemoveAt(i); continue; }
+            }
+            for (int i = 0; i < toasts.Count; i++)
+            {
+                var t = toasts[i];
+                float age = Time.unscaledTime - t.time;
+                float a = Mathf.Clamp01(age * 6f) * Mathf.Clamp01((2.6f - age) * 2f);
+                float y = baseY - (toasts.Count - 1 - i) * 34 - age * 10f;
+                var r = new Rect(262, y, 300, 30);
+                UIKit.Fill(r, new Color(0.03f, 0.03f, 0.03f, 0.6f * a));
+                UIKit.Fill(new Rect(r.x, r.y, 3, r.height), new Color(t.color.r, t.color.g, t.color.b, a));
+                UIKit.Tex(new Rect(r.x + 8, r.y + 3, 24, 24), HudIcons.Get(t.icon), new Color(t.color.r, t.color.g, t.color.b, a));
+                UIKit.Text(new Rect(r.x + 40, r.y, r.width - 44, r.height), t.text, 15, new Color(0.9f, 0.87f, 0.8f, a), serif: true);
+            }
+        }
+
         public static string NightName(int n)
         {
             string[] ord = { "첫째", "둘째", "셋째", "넷째", "다섯째", "여섯째", "일곱째", "여덟째", "아홉째", "열째" };
@@ -87,6 +125,8 @@ namespace Hunt.UI
             AbilitySlot(new Rect(sx + (ss + 14) * 2, sy, ss, ss), "H", HudIcons.Icon.Pill, new Color(0.95f, 0.85f, 0.55f), "청심환", false, 0f, inf.Antidotes > 0, $"×{inf.Antidotes}",
                 "<b>청심환</b>\n폭주를 즉시 멈추거나 역병 기운을 40 낮춘다.\n밤을 넘길 때마다 하나씩 얻는다 (최대 2).");
 
+            if (kitFlash > 0f) UIKit.Tex(new Rect(sx + (ss + 14) * 3 + 14 - 18, sy - 18, ss + 36, ss + 36), UITheme.Glow, new Color(1f, 0.45f, 0.35f, kitFlash * 0.7f));
+            if (drinkFlash > 0f) UIKit.Tex(new Rect(sx + (ss + 14) * 4 + 14 - 18, sy - 18, ss + 36, ss + 36), UITheme.Glow, new Color(0.45f, 0.78f, 1f, drinkFlash * 0.7f));
             AbilitySlot(new Rect(sx + (ss + 14) * 3 + 14, sy, ss, ss), "X", HudIcons.Icon.Kit, new Color(1f, 0.42f, 0.36f), "치료 키트", p.IsUsingItem, p.KitProgress, p.Kits > 0, $"×{p.Kits}",
                 $"<b>치료 키트</b>\n2.5초 동안 상처를 감아 생명 {p.KitHeal:0} 회복.\n감는 동안 느려지고, 맞거나 쏘면 끊긴다.");
             AbilitySlot(new Rect(sx + (ss + 14) * 4 + 14, sy, ss, ss), "C", HudIcons.Icon.Bottle, new Color(0.45f, 0.78f, 1f), "회복제", p.Controller.BoostTime > 0f, p.Controller.BoostTime / 15f, p.Drinks > 0, $"×{p.Drinks}",
@@ -137,6 +177,7 @@ namespace Hunt.UI
             DrawDamageDirections(p, cam);
             DrawStreak(p);
             DrawStragglers(cam, scale);
+            DrawPickups(dt);
         }
 
         /// <summary>맞은 방향을 화면 가장자리에 붉게 (휴대폰에서 뒤에서 맞아도 알 수 있게).</summary>
