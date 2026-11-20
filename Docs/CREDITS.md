@@ -64,3 +64,11 @@ metal_trash_can · rusted_spade_01 · machete(근접 무기) · stick_grenade(�
   → `Assets/Resources/Guns/<무기id>.txt` (OBJ를 총 공간으로 미리 변환한 텍스트, `Weapons/PackGunModel.cs`가 읽음)
 - **Low Poly RPG7** (CC0): https://opengameart.org/content/low-poly-rpg7 → 로켓발사기 (`Guns/rocket.txt`, 기울어진 원본을 주축 정렬)
 - 유탄발사기 M79·연발 유탄발사기: Quaternius 산탄총(SawedOff·Shotgun_4)의 총열을 굵게 변형 (`Guns/m79.txt`, `Guns/mgl.txt`)
+
+## 망자 소리 (실제 녹음, CC0 · OpenGameArt)
+- Zombies Sound Pack (zombies.zip) — 그르렁·피격·죽음 · https://opengameart.org/content/zombies-sound-pack
+- Zombie/Skeleton/Monster Voice Effects — 비명·죽음 · https://opengameart.org/content/zombie-skeleton-monster-voice-effects
+- Undead Moans · https://opengameart.org/content/undead-moans
+- Zombie Noises and Moans · https://opengameart.org/content/zombie-noises-and-moans
+- Zombie Moans 01 (emopreben) · https://opengameart.org/content/zombie-moans-01-by-emopreben
+  → `Assets/Resources/Sounds/Zombie/` (growl·hurt·scream·die·moan_N.ogg, 모노 44.1kHz, 앞뒤 무음 자름)

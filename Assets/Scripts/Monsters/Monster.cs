@@ -33,6 +33,16 @@ namespace Hunt.Monsters
         }
         /// <summary>밤이 깊어질수록 커지는 공격력 배율 (WaveManager가 정한다).</summary>
         public float DamageScale { get; set; } = 1f;
+        /// <summary>목소리 높낮이: 몸집이 클수록 낮고 굵게, 작을수록 높고 날카롭게 (망자마다 조금씩 다르게).</summary>
+        float voicePitch = -1f;
+        public float VoicePitch
+        {
+            get
+            {
+                if (voicePitch < 0f) voicePitch = Mathf.Clamp(1.12f - (Data != null ? Data.scale - 1f : 0f) * 0.55f, 0.6f, 1.25f) * Random.Range(0.92f, 1.08f);
+                return voicePitch;
+            }
+        }
         public bool IsBoss => Data != null && Data.archetype == MonsterArchetype.Boss;
         public int Generation { get; private set; }
         public int BossPhase { get; private set; }
@@ -162,6 +172,7 @@ namespace Hunt.Monsters
             if (alerted && !wasAlerted && rig != null && dist > 6f && !IsBoss)
             {
                 float t = rig.PlayScream();
+                SFX.PlayAt3D(SFX.ZombieScream, transform.position + Vector3.up * 1.6f, 1f, VoicePitch);
                 if (t > 0f) stagger = Mathf.Max(stagger, Mathf.Min(t, 1.6f));
             }
             wasAlerted = alerted;
@@ -172,7 +183,7 @@ namespace Hunt.Monsters
                 growlTimer -= dt;
                 if (growlTimer <= 0f)
                 {
-                    SFX.PlayAt(SFX.Growl, transform.position + Vector3.up * 1.5f, Mathf.Lerp(0.9f, 0.45f, dist / 9f));
+                    SFX.PlayAt3D(SFX.Growl, transform.position + Vector3.up * 1.5f, Mathf.Lerp(0.9f, 0.45f, dist / 9f), VoicePitch);
                     growlTimer = Random.Range(2.2f, 4.2f);
                 }
             }

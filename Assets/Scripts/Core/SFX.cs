@@ -159,7 +159,7 @@ namespace Hunt.Core
         });
 
         /// <summary>가까이 다가온 망자의 그르렁 (낮고 길게).</summary>
-        public static AudioClip Growl => Get("growl_near", () => MakeGrowl(0.9f, 38f, 0.25f));
+        public static AudioClip Growl => Rec("growl", 10, () => Get("growl_near", () => MakeGrowl(0.9f, 38f, 0.25f)));
 
         /// <summary>심장 박동 한 번 (쿵-쿵).</summary>
         public static AudioClip Heartbeat => Get("heart", () =>
@@ -321,8 +321,46 @@ namespace Hunt.Core
         public static AudioClip HitTick => Get("hit", () => MakeTone(0.045f, 1500f, 1500f, 0.5f));
         public static AudioClip WeakTick => Get("weak", () => MakeTone(0.06f, 2300f, 2600f, 0.6f));
         public static AudioClip KillTick => Get("kill", () => MakeKill());
-        public static AudioClip MonsterHurt => Get("mhurt", () => MakeGrowl(0.25f, 70f, 1f));
-        public static AudioClip MonsterDie => Get("mdie", () => MakeGrowl(0.7f, 55f, 0.6f));
+        public static AudioClip MonsterHurt => Rec("hurt", 6, () => Get("mhurt", () => MakeGrowl(0.25f, 70f, 1f)));
+        public static AudioClip MonsterDie => Rec("die", 6, () => Get("mdie", () => MakeGrowl(0.7f, 55f, 0.6f)));
+        /// <summary>망자가 처음 플레이어를 알아챘을 때의 비명.</summary>
+        public static AudioClip ZombieScream => Rec("scream", 10, () => Get("mdie", () => MakeGrowl(0.7f, 55f, 0.6f)));
+        /// <summary>멀리서 들리는 길게 끄는 신음 (분위기).</summary>
+        public static AudioClip ZombieMoan => Rec("moan", 9, () => Growl);
+
+        /// <summary>
+        /// 실제 녹음된 망자 소리 (Resources/Sounds/Zombie/&lt;이름&gt;_N.ogg, CC0) 중 무작위 하나. 없으면 합성음.
+        /// 같은 소리가 연달아 나오지 않게 직전 것은 피한다.
+        /// </summary>
+        static readonly Dictionary<string, int> lastPick = new Dictionary<string, int>();
+        static AudioClip Rec(string name, int max, Func<AudioClip> fallback)
+        {
+            var arr = LoadRecorded("Zombie", name, max);
+            if (arr.Length == 0) return fallback();
+            int i = UnityEngine.Random.Range(0, arr.Length);
+            if (arr.Length > 1 && lastPick.TryGetValue(name, out var last) && last == i) i = (i + 1) % arr.Length;
+            lastPick[name] = i;
+            return arr[i];
+        }
+
+        /// <summary>위치가 들리는 3D 소리 + 음높이 (몸집이 큰 망자는 낮고 굵게).</summary>
+        public static void PlayAt3D(AudioClip clip, Vector3 pos, float volume, float pitch)
+        {
+            if (clip == null) return;
+            var go = new GameObject("SFX3D");
+            go.transform.position = pos;
+            var a = go.AddComponent<AudioSource>();
+            a.clip = clip;
+            a.spatialBlend = 1f;
+            a.volume = volume;
+            a.pitch = pitch;
+            a.minDistance = 2.5f;
+            a.maxDistance = 40f;
+            a.rolloffMode = AudioRolloffMode.Logarithmic;
+            a.dopplerLevel = 0f;
+            a.Play();
+            UnityEngine.Object.Destroy(go, clip.length / Mathf.Max(0.3f, pitch) + 0.1f);
+        }
         public static AudioClip PlayerHurt => Get("phurt", () => MakeThud());
         public static AudioClip UiHover => Get("uihover", () => MakeTone(0.035f, 900f, 1100f, 0.18f));
         public static AudioClip UiClick => Get("uiclick", () => MakeClick(0.06f, 520f, 0.45f));
