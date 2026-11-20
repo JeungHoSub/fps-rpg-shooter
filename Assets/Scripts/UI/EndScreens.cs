@@ -70,34 +70,84 @@ namespace Hunt.UI
             if (UIKit.Button(new Rect(r.x + 90, y, r.width - 180, 56), "처음으로 돌아간다", 20, false, true, "진행 상황은 사라진다")) gm.Restart();
         }
 
+        // 묘비에 새긴 듯한 한 줄 (죽을 때마다 하나)
+        static readonly string[] Epitaphs =
+        {
+            "빗소리만 남았다. 마을은 또 하나의 망자를 얻었다.",
+            "새벽은 끝내 오지 않았다.",
+            "서낭당 돌무더기에 돌 하나가 더 얹혔다.",
+            "누군가 이 이야기를 이어 가리라.",
+            "젖은 흙이 마지막으로 따뜻했다.",
+            "멀리서 징 소리가 한 번 울렸다.",
+        };
+        int epitaph;
+        bool recordChecked, newWave, newKills;
+        int bestWave, bestKills;
+
         public void DrawDeath(GameManager gm, float W, float H)
         {
-            if (UIKit.IsRepaint) deathAppear = Mathf.MoveTowards(deathAppear, 1f, Time.unscaledDeltaTime * 0.6f);
-            float a = deathAppear;
+            if (UIKit.IsRepaint)
+            {
+                if (deathAppear <= 0f) { epitaph = Random.Range(0, Epitaphs.Length); recordChecked = false; }
+                // 쓰러지는 연출(약 1.8초)을 지켜본 뒤 천천히 떠오른다
+                deathAppear = Mathf.MoveTowards(deathAppear, 1f, Time.unscaledDeltaTime * (deathAppear < 0.01f ? 0.012f : 0.55f));
+            }
+            var p = gm.Player;
+            // 최고 기록 (한 번만 저장)
+            if (!recordChecked && p != null && gm.Waves != null)
+            {
+                recordChecked = true;
+                try
+                {
+                    bestWave = PlayerPrefs.GetInt("hunt.best.wave", 0);
+                    bestKills = PlayerPrefs.GetInt("hunt.best.kills", 0);
+                    newWave = gm.Waves.Wave > bestWave;
+                    newKills = p.Kills > bestKills;
+                    if (newWave) PlayerPrefs.SetInt("hunt.best.wave", gm.Waves.Wave);
+                    if (newKills) PlayerPrefs.SetInt("hunt.best.kills", p.Kills);
+                    PlayerPrefs.Save();
+                }
+                catch { }
+            }
+            float a = Mathf.SmoothStep(0f, 1f, deathAppear);
 
+            // 붉게 번지는 피 + 가장자리 먹빛
             UIKit.Fill(new Rect(0, 0, W, H), new Color(0.12f, 0f, 0.01f, 0.55f * a));
             UIKit.Vignette(W, H, new Color(0, 0, 0, a));
             UIKit.Tex(new Rect(-W * 0.2f, H * 0.2f, W * 1.4f, H * 0.6f), UITheme.Glow, new Color(0.6f, 0f, 0.02f, 0.35f * a));
 
             UIKit.Alpha = a;
-            float y = H / 2 - 230 + (1f - a) * 30f;
-            UIKit.Text(new Rect(0, y, W, 110), "당신은 쓰러졌다", 84, UITheme.BloodBright, TextAnchor.MiddleCenter, serif: true, bold: true);
-            UIKit.Text(new Rect(0, y + 110, W, 34), "빗소리만 남았다. 마을은 또 하나의 망자를 얻었다.", 20, UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true);
-            UIKit.Divider(new Rect(W / 2 - 320, y + 160, 640, 12));
+            float y = H / 2 - 250 + (1f - a) * 30f;
+            // 붓 자국 위 제목
+            UIKit.BrushTitle(new Rect(W / 2 - 420, y, 840, 120), "쓰러졌다", 84, new Color(0.03f, 0.02f, 0.02f, 0.9f), UITheme.BloodBright);
+            UIKit.Text(new Rect(0, y + 122, W, 30), Epitaphs[epitaph], 20, UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true);
+            if (p != null && !string.IsNullOrEmpty(p.LastAttacker))
+                UIKit.Text(new Rect(0, y + 154, W, 26), $"— {p.LastAttacker}에게 물려 쓰러짐", 16, UITheme.Ash, TextAnchor.MiddleCenter, serif: true);
+            UIKit.Divider(new Rect(W / 2 - 320, y + 188, 640, 12));
 
-            var p = gm.Player;
             if (p != null)
             {
-                var r = new Rect(W / 2 - 330, y + 190, 660, 170);
+                var r = new Rect(W / 2 - 330, y + 214, 660, 170);
                 UIKit.Panel(r);
                 Stat(new Rect(r.x + 20, r.y + 24, 150, 120), "버틴 밤", gm.Waves.Wave.ToString());
                 Stat(new Rect(r.x + 175, r.y + 24, 150, 120), "단계", $"Lv.{p.Level}");
                 Stat(new Rect(r.x + 330, r.y + 24, 150, 120), "쓰러뜨린 망자", p.Kills.ToString());
                 Stat(new Rect(r.x + 485, r.y + 24, 150, 120), "역병의 적응", $"{gm.Evolution.Profile.generation}세대");
+                // 새 기록이면 해당 칸 위에 붉은 낙관
+                if (newWave) Seal(new Rect(r.x + 120, r.y + 6, 46, 46));
+                if (newKills) Seal(new Rect(r.x + 430, r.y + 6, 46, 46));
+                string best = $"지난 최고 — 밤 {Mathf.Max(bestWave, 0)} · 망자 {Mathf.Max(bestKills, 0)}";
+                UIKit.Text(new Rect(r.x, r.yMax + 8, r.width, 22), best, 14, UITheme.Ash, TextAnchor.MiddleCenter);
             }
 
-            if (a > 0.6f && UIKit.Button(new Rect(W / 2 - 170, y + 400, 340, 70), "다시 사냥한다", 28, false, true, "R")) gm.Restart();
+            if (a > 0.6f && UIKit.Button(new Rect(W / 2 - 170, y + 424, 340, 70), "다시 사냥한다", 28, false, true, "R")) gm.Restart();
             UIKit.Alpha = 1f;
+        }
+
+        static void Seal(Rect r)
+        {
+            UIKit.Tex(r, UITheme.Seal, UITheme.Blood);
+            UIKit.Text(r, "새\n기록", 13, UITheme.GoldBright, TextAnchor.MiddleCenter, serif: true, bold: true);
         }
 
         static void Stat(Rect r, string label, string value)

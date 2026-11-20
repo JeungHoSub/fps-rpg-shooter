@@ -23,6 +23,8 @@ namespace Hunt.Player
         public int StatPoints { get; private set; }
         public int Gold { get; private set; }
         public int Kills { get; private set; }
+        /// <summary>마지막으로 나를 문 망자 이름 (사망 화면용).</summary>
+        public string LastAttacker { get; set; }
         public float HurtFlash { get; private set; }
 
         public readonly List<WeaponPart> Inventory = new List<WeaponPart>();

@@ -115,10 +115,30 @@ namespace Hunt.Player
             recoil = Vector2.MoveTowards(recoil, Vector2.zero, rate * dt * (1f + recoil.magnitude * 0.5f));
         }
 
+        // ---- 쓰러질 때: 시선이 천천히 땅으로 떨어지며 옆으로 기운다 (게임이 멈춰도 돌아가게 실제 시간 기준) ----
+        float deathT;
+        void DeathCam()
+        {
+            if (cam == null) return;
+            deathT += Time.unscaledDeltaTime;
+            // 손에서 총이 떨어진다: 무기 전용 카메라를 끈다
+            if (deathT > 0.25f)
+                foreach (var c in cam.GetComponentsInChildren<Camera>())
+                    if (c != cam && c.enabled) c.enabled = false;
+            float k = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(deathT / 1.8f));
+            var lp = cam.transform.localPosition;
+            cam.transform.localPosition = new Vector3(lp.x, Mathf.Lerp(EyeHeight, 0.28f, k), lp.z);
+            // 무릎 꿇듯 앞으로 숙였다가 옆으로 쓰러진다
+            float bow = Mathf.Sin(Mathf.Clamp01(deathT / 0.9f) * Mathf.PI) * 18f;
+            cam.transform.localRotation = Quaternion.Euler(Mathf.Lerp(pitch, 12f, k) + bow * (1f - k), 0f, Mathf.Lerp(0f, 78f, k));
+            if (cam.fieldOfView > BaseFov - 12f) cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, BaseFov - 12f, Time.unscaledDeltaTime * 1.5f);
+        }
+
         void Update()
         {
             var gm = GameManager.Instance;
-            if (gm == null || !gm.IsWorldRunning || player == null || player.IsDead) { IsSprinting = false; return; }
+            if (player != null && player.IsDead) { DeathCam(); IsSprinting = false; return; }
+            if (gm == null || !gm.IsWorldRunning || player == null) { IsSprinting = false; return; }
             float dt = Time.deltaTime;
             bool input = gm.AcceptsGameplayInput;
 

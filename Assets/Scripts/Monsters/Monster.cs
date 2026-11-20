@@ -295,6 +295,7 @@ namespace Hunt.Monsters
                 }
                 else if (dist <= Data.attackRange + 0.4f)
                 {
+                    target.LastAttacker = Data.displayName;
                     target.TakeDamage(Data.attackDamage * DamageScale, Data.infectionPerHit, transform.position);
                     if (rig != null) rig.PlayBite(1.3f * Mathf.Clamp(0.9f / Mathf.Max(0.1f, Data.attackInterval), 0.7f, 2.4f)); // 공격이 빠른 유형은 동작도 빠르게
                     attackTimer = Data.attackInterval;
