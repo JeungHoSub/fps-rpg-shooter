@@ -65,7 +65,7 @@ Unity 1인칭 싱글플레이 좀비 슈터 + RPG. **비 오는 밤의 한국 �
 - **자동 진행 (사용자 요청 2026-11-19): 사용자가 그만하라고 할 때까지 예약 작업으로 계속 업그레이드.** 남은 큐(순서대로):
   1. ~~맵 덜 딱딱하게~~ 완료(굽은 길 `VillageBuilder.Ribbon`/`RoadX`, 울퉁불퉁 땅+가장자리 언덕 `RollingGround`(보이기만, 판정은 평평), 틀어진 논, 경계 수풀). 영역 축소 완료(`VillageBuilder.Half` 48→44, 무덤·고분·창고·곤포·장승·비닐하우스·스폰 앵커 안쪽으로, 망자 제한도 Half 기준) 2. 능력 칸 완료(`UI/HudIcons.cs` 그림 아이콘·먹 바탕 칸 `GameHud.AbilitySlot`), 기질 카드 완료(한지 카드·낙관·효과 줄나눔·숫자키 1~3, 기질 이름/설명 한국어화) 3. 앉기 표시·보급품 주움 알림(`GameHud.OnPickup`) 완료
   4. 유탄·로켓발사기 완료(RPG7 CC0 + Quaternius 산탄총 총열 굵게, 변환기 `fat`·`pca` 옵션 = scratchpad tools/gunconv.py) 5. 유형별 외형 완료(`MonsterFactory.KindDressing`: 체격 폭·눈빛 색·배/굳은살/앞치마+식칼/핏자국/천, 조준 이름표 `GameHud.DrawTargetTag`) 6. 초가집 완료(`VillageBuilder.ThatchRoof`: 둥근 빵 모양 곡면·두툼한 처마·새끼줄 그물·용마름 + HanokFrame) 7. 밸런스 완료(`Docs/BALANCE.md`: 방어도 상한, 산탄총·기관단총 관통, 망자 공격력 밤마다 +5% `Monster.DamageScale`, 그림자 망자 감속)
-  다음 큐: 8. 무기 HUD 실루엣을 새 총 모델에 맞추기 9. 망자 소리(그르렁·비명·죽음) CC0 실제 녹음으로 10. 서낭당 무기고·방어구 화면 다듬기
+  다음 큐: 8. 무기 아이콘 완료(`Resources/WeaponIcons/<id>.png` = 총 텍스트 옆모습 렌더, `WeaponIcon.Draw(Rect, WeaponData, Color)`, 권총은 도형 유지) 9. 망자 소리(그르렁·비명·죽음) CC0 실제 녹음으로 10. 서낭당 무기고·방어구 화면 다듬기
   11. 시작 화면·게임오버 연출 12. 성능 점검(총 모델 텍스트 읽기 시간·망자 수) 13. 망자 모델 다양화(Mixamo 다른 캐릭터 — 사용자 토큰 필요하면 요청)
   - 매번: 컴파일 확인 → 커밋 → 푸시 → 바뀐 점 보고. 클라우드에선 게임 화면 캡처 불가 (유니티 실행 불가) — 모델/UI 미리보기 이미지만 가능.
 - 다음 할 일: 사용자 플레이 확인 → 밸런스 조정. 남은 그래픽: 소총·기관단총·산탄총·경기관총 실사 모델(Quaternius Ultimate Gun 팩 — 구글 드라이브 다운로드 한도로 보류, 나중에 재시도), 초가집 사실화

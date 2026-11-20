@@ -390,7 +390,7 @@ namespace Hunt.UI
             else
             {
                 Color gc = Grades.Color(w.grade);
-                WeaponIcon.Draw(icon, w.data.weaponClass, Color.Lerp(UITheme.Bone, gc, 0.55f));
+                WeaponIcon.Draw(icon, w.data, Color.Lerp(UITheme.Bone, gc, 0.55f));
                 Color elem = CombatNames.ColorOf(w.DamageType);
                 UIKit.Text(new Rect(card.x + 210, card.y + 8, card.width - 224, 34), w.data.displayName + (w.upgradeLevel > 0 ? $" +{w.upgradeLevel}" : ""), 24, UITheme.Bone, TextAnchor.MiddleRight, serif: true, bold: true);
                 UIKit.Text(new Rect(card.x + 210, card.y + 40, card.width - 224, 22),
@@ -435,7 +435,7 @@ namespace Hunt.UI
                 if (k <= 2 && exists)
                 {
                     var sl = wp.Slots[k == 2 ? wp.Slots.Count - 1 : k];
-                    WeaponIcon.Draw(ir, sl.data.weaponClass, ic);
+                    WeaponIcon.Draw(ir, sl.data, ic);
                 }
                 else if (k == 3) WeaponIcon.Draw(ir, WeaponClass.Melee, ic);
                 else if (k == 4)

@@ -68,6 +68,30 @@ namespace Hunt.UI
             }
         }
 
+        // 새 총 모델의 옆모습을 미리 그려 둔 그림 (Resources/WeaponIcons/<무기 id>.png). 없으면 아래 도형 실루엣.
+        static readonly System.Collections.Generic.Dictionary<string, Texture2D> pics = new System.Collections.Generic.Dictionary<string, Texture2D>();
+        static readonly System.Collections.Generic.Dictionary<string, string> alias = new System.Collections.Generic.Dictionary<string, string>
+        { { "flamer2", "flamer" }, { "napalm", "flamer" } };
+
+        static Texture2D Picture(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return null;
+            if (alias.TryGetValue(id, out var a)) id = a;
+            if (!pics.TryGetValue(id, out var t)) { t = Resources.Load<Texture2D>("WeaponIcons/" + id); pics[id] = t; }
+            return t;
+        }
+
+        /// <summary>무기마다 다른 그림 (모델 옆모습). 칸 비율에 맞춰 가운데 정렬.</summary>
+        public static void Draw(Rect r, Hunt.Data.WeaponData d, Color col)
+        {
+            var t = d != null ? Picture(d.id) : null;
+            if (t == null) { Draw(r, d != null ? d.weaponClass : WeaponClass.Rifle, col); return; }
+            float aspect = t.width / (float)t.height;
+            float w = r.width, h = w / aspect;
+            if (h > r.height) { h = r.height; w = h * aspect; }
+            UIKit.Tex(new Rect(r.center.x - w / 2f, r.center.y - h / 2f, w, h), t, col);
+        }
+
         public static void Draw(Rect r, WeaponClass c, Color col)
         {
             foreach (var p in Shape(c)) Piece(r, p, col);
