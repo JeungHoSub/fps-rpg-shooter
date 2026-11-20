@@ -363,13 +363,13 @@ namespace Hunt.UI
 
             // 망자 방어도 안내
             float def = gm.Waves != null ? gm.Waves.DefenseBonus(Data.MonsterArchetype.Runner) : 0f;
-            float defNext = 1.4f * Mathf.Max(0, (gm.Waves != null ? gm.Waves.Wave : 0));
+            float defNext = 1.4f * Mathf.Min(Mathf.Max(0, (gm.Waves != null ? gm.Waves.Wave : 0)) * 0.85f, 9f); // WaveManager.DefenseBonus와 같은 식 (다음 밤)
             UIKit.Text(new Rect(left.x + 20, left.y + 10, left.width - 40, 26),
-                $"다음 밤 망자 방어도  <color=#{UIKit.Hex(UITheme.BloodBright)}>{defNext:0}</color>  (엘리트 ×1.6, 보스 ×2.1)  ·  한 발마다 그만큼 깎인다 — 연사가 빠른 총은 점점 약해진다",
+                $"다음 밤 망자 방어도  <color=#{UIKit.Hex(UITheme.BloodBright)}>{defNext:0}</color>  (엘리트 ×1.6, 보스 ×2.1, 열 번째 밤쯤 멈춤)  ·  한 발마다 그만큼 깎인다 — 연사가 빠른 총은 점점 약해진다",
                 14, UITheme.BoneDim, TextAnchor.MiddleLeft, wrap: true);
 
             var view = new Rect(left.x + 12, left.y + 44, left.width - 20, left.height - 56);
-            float rowH = 92f;
+            float rowH = 112f;
             var inner = new Rect(0, 0, view.width - 18, DefaultContent.Families.Length * rowH);
             armoryScroll = GUI.BeginScrollView(view, armoryScroll, inner, GUIStyle.none, GUI.skin.verticalScrollbar);
             for (int f = 0; f < DefaultContent.Families.Length; f++)
@@ -389,7 +389,18 @@ namespace Hunt.UI
                     bool equipped = own != null && p.Weapons.Slots.Contains(own);
                     string sub = own != null ? (equipped ? "장착 중 · " : "보유 · ") + Grades.Name(own.grade) + (own.upgradeLevel > 0 ? $" +{own.upgradeLevel}" : "")
                         : $"엽전 {d.price}";
-                    if (UIKit.Button(cell, $"{t + 1}단  {d.displayName}", 16, armorySel == d, true, sub)) armorySel = d;
+                    // 칸: 무기 그림 + 이름 + 상태 (고른 칸은 한지색 테두리)
+                    bool selCell = armorySel == d;
+                    bool clicked = UIKit.HitArea(cell, "arm" + d.id, out float hv);
+                    UIKit.Fill(cell, new Color(0.04f, 0.038f, 0.04f, 0.9f));
+                    if (hv > 0f) UIKit.Fill(cell, new Color(1f, 0.95f, 0.85f, 0.05f * hv));
+                    UIKit.Outline(cell, selCell ? UITheme.GoldBright : equipped ? new Color(0.62f, 0.58f, 0.5f) : new Color(0.3f, 0.29f, 0.27f, 0.9f), selCell ? 2f : 1f);
+                    Color ic = own != null ? (equipped ? UITheme.GoldBright : UITheme.Bone) : new Color(0.45f, 0.43f, 0.4f);
+                    WeaponIcon.Draw(new Rect(cell.x + 8, cell.y + 4, cell.width - 16, cell.height * 0.5f), d, ic);
+                    UIKit.Text(new Rect(cell.x + 6, cell.y + cell.height * 0.52f, cell.width - 12, 20), $"{t + 1}단  {d.displayName}", 14, own != null ? UITheme.Bone : UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true, bold: true);
+                    UIKit.Text(new Rect(cell.x + 6, cell.y + cell.height * 0.52f + 20, cell.width - 12, 18), sub, 12,
+                        equipped ? UITheme.GoldBright : own != null ? UITheme.BoneDim : (p.Gold >= d.price ? UITheme.Good : UITheme.Ash), TextAnchor.MiddleCenter);
+                    if (clicked) armorySel = d;
                 }
             }
             GUI.EndScrollView();
@@ -402,22 +413,46 @@ namespace Hunt.UI
             y += 36;
             UIKit.Text(new Rect(right.x + 20, y, right.width - 40, 24),
                 $"{GameText.WeaponClassName(sel.weaponClass)} {sel.tier}단  ·  {GameText.ElementName(sel.damageType)}" + (inst != null ? "  ·  " + GearLine(inst.grade, inst.upgradeLevel) : ""), 16, UITheme.BoneDim);
-            y += 34;
+            y += 30;
+            // 큰 그림
+            WeaponIcon.Draw(new Rect(right.x + 30, y, right.width - 60, 96), sel, inst != null ? UITheme.GoldBright : UITheme.Bone);
+            y += 104;
             float dmg = inst != null ? inst.Damage : sel.damage;
             float rpm = sel.rpm;
             float dps = dmg * Mathf.Max(1, sel.pellets) * rpm / 60f;
             float effHit = Mathf.Max(dmg - defNext * (1f - Mathf.Clamp01(sel.penetration)), dmg * 0.1f);
             if (sel.explosive || sel.weaponClass == WeaponClass.Flamethrower) effHit = dmg; // 폭발·화염은 방어도 무시
             float effDps = effHit * Mathf.Max(1, sel.pellets) * rpm / 60f;
-            string stats =
-                $"한 발 위력     {dmg:0}{(sel.pellets > 1 ? " × " + sel.pellets : "")}\n" +
-                $"연사             {rpm:0} RPM      탄창  {sel.magazine}\n" +
-                $"관통             {sel.penetration * 100:0}%" + (sel.explosive ? $"      폭발 반경 {sel.blastRadius:0.0}m" : "") + (sel.maxRange < 100f ? $"      사거리 {sel.maxRange:0}m" : "") + "\n" +
-                $"초당 피해       {dps:0}\n" +
-                $"<color=#{UIKit.Hex(effDps < dps * 0.6f ? UITheme.BloodBright : UITheme.GoldBright)}>다음 밤 실제    {effDps:0}  (방어도 적용)</color>\n" +
-                $"무게             {sel.weight:0.0}";
-            UIKit.Text(new Rect(right.x + 24, y, right.width - 48, 170), stats, 17, UITheme.Bone, TextAnchor.UpperLeft, wrap: true);
-            y += 176;
+            // 능력 막대: 전체 무기 중 가장 센 값 기준 (한눈에 비교)
+            float maxHit = 1f, maxRpm = 1f, maxMag = 1f, maxW = 1f;
+            foreach (var cd in DefaultContent.Catalog)
+            {
+                maxHit = Mathf.Max(maxHit, cd.damage * Mathf.Max(1, cd.pellets));
+                maxRpm = Mathf.Max(maxRpm, cd.rpm);
+                maxMag = Mathf.Max(maxMag, cd.magazine);
+                maxW = Mathf.Max(maxW, cd.weight);
+            }
+            void StatBar(string label, float t, string val, Color col)
+            {
+                UIKit.Text(new Rect(right.x + 24, y, 90, 22), label, 15, UITheme.BoneDim, serif: true);
+                var br = new Rect(right.x + 112, y + 7, right.width - 112 - 110, 8);
+                UIKit.Fill(br, new Color(0f, 0f, 0f, 0.6f));
+                UIKit.Fill(new Rect(br.x, br.y, br.width * Mathf.Clamp01(t), br.height), col);
+                UIKit.Text(new Rect(br.xMax + 8, y, 100, 22), val, 15, UITheme.Bone, TextAnchor.MiddleLeft, bold: true);
+                y += 26;
+            }
+            Color barC = new Color(0.86f, 0.82f, 0.72f);
+            StatBar("한 발 위력", Mathf.Sqrt(dmg * Mathf.Max(1, sel.pellets) / maxHit), $"{dmg:0}{(sel.pellets > 1 ? " ×" + sel.pellets : "")}", barC);
+            StatBar("연사", sel.rpm / maxRpm, $"{sel.rpm:0}", barC);
+            StatBar("관통", Mathf.Clamp01(sel.penetration), $"{sel.penetration * 100:0}%", barC);
+            StatBar("탄창", Mathf.Sqrt(sel.magazine / maxMag), $"{sel.magazine}", barC);
+            StatBar("무게", sel.weight / maxW, $"{sel.weight:0.0}", new Color(0.6f, 0.58f, 0.54f));
+            y += 4;
+            string extra = (sel.explosive ? $"폭발 반경 {sel.blastRadius:0.0}m   " : "") + (sel.maxRange < 100f ? $"사거리 {sel.maxRange:0}m" : "");
+            if (extra.Length > 0) { UIKit.Text(new Rect(right.x + 24, y, right.width - 48, 20), extra, 14, UITheme.BoneDim); y += 22; }
+            UIKit.Text(new Rect(right.x + 24, y, right.width - 48, 22), $"초당 피해 {dps:0}   →   다음 밤 실제 " +
+                $"<color=#{UIKit.Hex(effDps < dps * 0.6f ? UITheme.BloodBright : UITheme.GoldBright)}>{effDps:0}</color>  (방어도 적용)", 16, UITheme.Bone, serif: true);
+            y += 30;
             string flavor = GameText.WeaponFlavor(sel);
             if (!string.IsNullOrEmpty(flavor)) { UIKit.Text(new Rect(right.x + 24, y, right.width - 48, 24), flavor, 14, UITheme.Ash, serif: true); y += 28; }
 
