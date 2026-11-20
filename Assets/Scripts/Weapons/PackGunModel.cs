@@ -37,13 +37,134 @@ namespace Hunt.Weapons
             return t;
         }
 
-        public static bool Has(string weaponId) => Asset(weaponId) != null;
+        // ---- 이진 모델 (Resources/GunsBin/<id>.bytes): 같은 점을 합쳐 정점이 절반 이하, 읽기도 훨씬 빠르다 ----
+        // 한 번 만든 메시는 기억해 두고 다시 쓴다 (무기 교체·다시 시작 때 끊김 없음)
+        class Cached
+        {
+            public float sight, muzzleZ, muzzleY;
+            public readonly List<(string part, Mesh mesh, Material[] mats, Vector3 pivot)> parts = new List<(string, Mesh, Material[], Vector3)>();
+        }
+        static readonly Dictionary<string, Cached> cache = new Dictionary<string, Cached>();
+        static readonly Dictionary<string, TextAsset> foundBin = new Dictionary<string, TextAsset>();
+
+        static TextAsset BinAsset(string weaponId)
+        {
+            string id = ModelId(weaponId);
+            if (!foundBin.TryGetValue(id, out var t)) { t = Resources.Load<TextAsset>("GunsBin/" + id); foundBin[id] = t; }
+            return t;
+        }
+
+        public static bool Has(string weaponId) => BinAsset(weaponId) != null || Asset(weaponId) != null;
+
+        static Cached LoadBinary(string id, byte[] bytes)
+        {
+            var c = new Cached();
+            using (var br = new System.IO.BinaryReader(new System.IO.MemoryStream(bytes)))
+            {
+                if (new string(br.ReadChars(4)) != "HGN1") throw new System.Exception("형식이 다름");
+                int nm = br.ReadInt32();
+                c.sight = Mathf.Max(0.02f, br.ReadSingle()); c.muzzleZ = br.ReadSingle(); c.muzzleY = br.ReadSingle(); br.ReadSingle();
+                var materials = new Material[nm];
+                for (int i = 0; i < nm; i++)
+                {
+                    string name = System.Text.Encoding.UTF8.GetString(br.ReadBytes(br.ReadInt32()));
+                    var col = new Color(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+                    byte kind = br.ReadByte();
+                    float metal = br.ReadSingle(), gloss = br.ReadSingle();
+                    materials[i] = GetMaterial(id, name, col, kind == 2 ? "tex" : kind == 1 ? "wood" : "metal", metal, gloss);
+                }
+                int partCount = br.ReadInt32();
+                for (int pi = 0; pi < partCount; pi++)
+                {
+                    string part = System.Text.Encoding.UTF8.GetString(br.ReadBytes(br.ReadInt32()));
+                    int vc = br.ReadInt32();
+                    var verts = new Vector3[vc]; var norms = new Vector3[vc]; var uvs = new Vector2[vc];
+                    for (int i = 0; i < vc; i++)
+                    {
+                        verts[i] = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+                        norms[i] = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+                        uvs[i] = new Vector2(br.ReadSingle(), br.ReadSingle());
+                    }
+                    int subCount = br.ReadInt32();
+                    var subs = new int[subCount][];
+                    var subMats = new Material[subCount];
+                    for (int si = 0; si < subCount; si++)
+                    {
+                        subMats[si] = materials[br.ReadInt32()];
+                        int n = br.ReadInt32();
+                        var idx = new int[n];
+                        for (int k = 0; k < n; k++) idx[k] = br.ReadInt32();
+                        subs[si] = idx;
+                    }
+                    // 탄창·작동부는 자기 중심을 기준점으로
+                    Vector3 pivot = Vector3.zero;
+                    if (part != "body" && vc > 0)
+                    {
+                        var b = new Bounds(verts[0], Vector3.zero);
+                        for (int i = 1; i < vc; i++) b.Encapsulate(verts[i]);
+                        pivot = b.center;
+                        for (int i = 0; i < vc; i++) verts[i] -= pivot;
+                    }
+                    var mesh = new Mesh { name = id + "_" + part };
+                    if (vc > 65000) mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+                    mesh.vertices = verts; mesh.normals = norms; mesh.uv = uvs;
+                    mesh.subMeshCount = subCount;
+                    for (int si = 0; si < subCount; si++) mesh.SetTriangles(subs[si], si);
+                    mesh.RecalculateBounds();
+                    if (subMats.Length > 0 && subMats[0].GetTexture("_BumpMap") != null) mesh.RecalculateTangents();
+                    mesh.UploadMeshData(true); // CPU 사본 버림 (메모리 절약)
+                    c.parts.Add((part, mesh, subMats, pivot));
+                }
+            }
+            return c;
+        }
+
+        static void Instantiate(Cached c, Transform root, GunModel m)
+        {
+            m.sightHeight = c.sight;
+            foreach (var (part, mesh, pmats, pivot) in c.parts)
+            {
+                var go = new GameObject(part);
+                go.transform.SetParent(root, false);
+                go.transform.localPosition = pivot;
+                go.AddComponent<MeshFilter>().sharedMesh = mesh;
+                var r = go.AddComponent<MeshRenderer>();
+                r.sharedMaterials = pmats;
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                r.receiveShadows = false;
+                if (part == "mag") { m.magazine = go.transform; m.magazineRest = pivot; }
+                else if (part == "act") { m.action = go.transform; m.actionRest = pivot; }
+            }
+            var muzzle = new GameObject("Muzzle").transform;
+            muzzle.SetParent(root, false);
+            muzzle.localPosition = new Vector3(0f, c.muzzleY, c.muzzleZ);
+            m.muzzle = muzzle;
+        }
 
         public static bool Build(Transform root, Hunt.Data.WeaponData d, GunModel m)
         {
+            string id = ModelId(d.id);
+            // 1) 이진 모델 (기억해 둔 메시 재사용)
+            if (!cache.TryGetValue(id, out var cached) || cached == null)
+            {
+                var bin = BinAsset(d.id);
+                if (bin != null)
+                {
+                    try { cached = LoadBinary(id, bin.bytes); cache[id] = cached; }
+                    catch (System.Exception e) { Debug.LogWarning($"총 모델 {id} 이진 읽기 실패: {e.Message}"); cached = null; }
+                }
+            }
+            if (cached != null)
+            {
+                Instantiate(cached, root, m);
+                Presets(d.weaponClass, m);
+                foreach (var t in root.GetComponentsInChildren<Transform>(true)) t.gameObject.layer = GunModelBuilder.ViewLayer;
+                return true;
+            }
+
+            // 2) 예전 텍스트 모델 (이진 파일이 없을 때)
             var asset = Asset(d.id);
             if (asset == null) return false;
-            string id = ModelId(d.id);
             try
             {
                 Parse(asset.text, id, root, d, m);
