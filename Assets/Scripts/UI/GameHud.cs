@@ -178,6 +178,39 @@ namespace Hunt.UI
             DrawStreak(p);
             DrawStragglers(cam, scale);
             DrawPickups(dt);
+            DrawTargetTag(cam);
+        }
+
+        // ---- 조준한 망자 이름표 (유형 이름 + 체력) ----
+        Monster tagTarget;
+        float tagTime;
+
+        void DrawTargetTag(Camera cam)
+        {
+            if (cam == null) return;
+            if (UIKit.IsRepaint)
+            {
+                var ray = new Ray(cam.transform.position, cam.transform.forward);
+                if (Physics.Raycast(ray, out var hit, 40f, ~((1 << 2) | (1 << 1)), QueryTriggerInteraction.Ignore))
+                {
+                    var part = hit.collider.GetComponent<MonsterPart>();
+                    if (part != null && part.owner != null && !part.owner.IsDead) { tagTarget = part.owner; tagTime = 1.2f; }
+                }
+                tagTime -= Time.unscaledDeltaTime;
+            }
+            if (tagTarget == null || tagTarget.IsDead || tagTime <= 0f || tagTarget.IsBoss) return;
+            var m = tagTarget;
+            Vector3 head = m.transform.position + Vector3.up * (2.05f * m.Data.scale);
+            Vector3 sp = cam.WorldToScreenPoint(head);
+            if (sp.z <= 0f) return;
+            float k = W / Screen.width;
+            var c = new Vector2(sp.x * k, (Screen.height - sp.y) * k);
+            float a = Mathf.Clamp01(tagTime * 2f);
+            var r = new Rect(c.x - 80, c.y - 34, 160, 34);
+            UIKit.Text(new Rect(r.x - 40, r.y, r.width + 80, 18), m.Data.displayName, 15, new Color(0.9f, 0.87f, 0.8f, a), TextAnchor.MiddleCenter, serif: true, bold: true);
+            var br = new Rect(r.x + 20, r.y + 21, r.width - 40, 6);
+            UIKit.Fill(new Rect(br.x - 1, br.y - 1, br.width + 2, br.height + 2), new Color(0f, 0f, 0f, 0.7f * a));
+            UIKit.Fill(new Rect(br.x, br.y, br.width * Mathf.Clamp01(m.Hp / m.MaxHp), br.height), new Color(0.75f, 0.1f, 0.08f, a));
         }
 
         /// <summary>맞은 방향을 화면 가장자리에 붉게 (휴대폰에서 뒤에서 맞아도 알 수 있게).</summary>

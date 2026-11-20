@@ -310,6 +310,11 @@ namespace Hunt.Monsters
             float height = 1.8f * d.scale * Random.Range(0.95f, 1.05f);
             var rig = ZombieRig.Create(R, height, RigTint(d, evo));
             m.SetRig(rig);
+            string kind = d.id != null && d.id.StartsWith("z_") ? d.id.Substring(2) : "";
+            // 유형별 체격: 부은·거구·돌덩이는 옆으로 퍼지고, 날랜·그림자·굶주린은 홀쭉하다
+            float girth = kind == "tank" ? 1.15f : kind == "butcher" ? 1.1f : kind == "wall" ? 1.12f
+                        : kind == "fast" ? 0.88f : kind == "stalker" ? 0.9f : kind == "gnaw" ? 0.92f : 1f;
+            if (girth != 1f && rig.Pivot != null) rig.Pivot.localScale = Vector3.Scale(rig.Pivot.localScale, new Vector3(girth, 1f, girth));
             float u = rig.Unit;
             Vector3 up = Vector3.up;
             Transform neck = rig.Neck != null ? rig.Neck : rig.Spine2;
@@ -328,8 +333,21 @@ namespace Hunt.Monsters
 
             // ---- 어둠 속에서 빛나는 눈 ----
             var eyeBase = rig.Head.position + R.forward * 0.11f * u + up * 0.06f * u;
+            // 눈빛도 유형마다 다르다 (멀리 어둠 속에서도 무엇이 오는지 알 수 있게)
+            Color eye; float eyeSize = 0.035f;
+            switch (kind)
+            {
+                case "frenzy": eye = new Color(1f, 0.05f, 0.02f); eyeSize = 0.05f; break;   // 미친 망자: 크고 새빨간 눈
+                case "gnaw": eye = new Color(1f, 0.85f, 0.15f); break;                      // 굶주린: 누런 눈
+                case "stalker": eye = new Color(0.75f, 0.9f, 1f); eyeSize = 0.04f; break;   // 그림자: 창백한 푸른 눈
+                case "fast": eye = new Color(1f, 0.5f, 0.1f); break;                        // 날랜: 주황
+                case "tank": eye = new Color(0.6f, 0.9f, 0.3f); break;                      // 부은: 병든 초록
+                case "wall": eye = new Color(0.55f, 0.5f, 0.45f); eyeSize = 0.028f; break;  // 돌덩이: 흐릿
+                default: eye = new Color(1f, 0.15f, 0.08f); break;
+            }
             foreach (var sx in new[] { -0.045f, 0.045f })
-                Cosmetic(PrimitiveType.Sphere, rig.Head, eyeBase + R.right * sx * u, Quaternion.identity, Vector3.one * 0.035f * u, new Color(1f, 0.15f, 0.08f), true);
+                Cosmetic(PrimitiveType.Sphere, rig.Head, eyeBase + R.right * sx * u, Quaternion.identity, Vector3.one * eyeSize * u, eye, true);
+            KindDressing(kind, rig, R, u);
 
             var chest = rig.Spine2.position;
             bool heavy = d.archetype == MonsterArchetype.Brute || d.archetype == MonsterArchetype.Boss;
@@ -388,6 +406,49 @@ namespace Hunt.Monsters
                 RigWeakPoint(m, rig, R, evo.weakPoint, (d.archetype == MonsterArchetype.Runner ? 0.15f : 0.19f) * u);
             }
             return m;
+        }
+
+        /// <summary>망자 유형별 덧붙임 (판정 없음, 겉모습만).</summary>
+        static void KindDressing(string kind, ZombieRig rig, Transform R, float u)
+        {
+            Vector3 up = Vector3.up;
+            var chest = rig.Spine2 != null ? rig.Spine2.position : rig.Hips.position + up * 0.4f * u;
+            switch (kind)
+            {
+                case "tank":
+                    // 부풀어 오른 배와 목덜미 혹
+                    if (rig.Spine != null)
+                        Cosmetic(PrimitiveType.Sphere, rig.Spine, rig.Spine.position + R.forward * 0.13f * u, Quaternion.identity, new Vector3(0.48f, 0.44f, 0.4f) * u, new Color(0.45f, 0.42f, 0.33f), false);
+                    Cosmetic(PrimitiveType.Sphere, rig.Spine2, chest - R.forward * 0.1f * u + up * 0.12f * u, Quaternion.identity, new Vector3(0.3f, 0.22f, 0.26f) * u, new Color(0.42f, 0.38f, 0.3f), false);
+                    break;
+                case "wall":
+                    // 어깨·등을 덮은 돌 같은 굳은살 판
+                    foreach (var sx in new[] { -1f, 1f })
+                        Cosmetic(PrimitiveType.Cube, rig.Spine2, chest + R.right * sx * 0.2f * u + up * 0.12f * u, R.rotation * Quaternion.Euler(0f, 0f, sx * 25f),
+                            new Vector3(0.2f, 0.09f, 0.26f) * u, new Color(0.36f, 0.36f, 0.37f), false);
+                    Cosmetic(PrimitiveType.Cube, rig.Spine2, chest - R.forward * 0.15f * u, R.rotation, new Vector3(0.4f, 0.42f, 0.08f) * u, new Color(0.33f, 0.33f, 0.34f), false);
+                    break;
+                case "butcher":
+                    // 피 묻은 가죽 앞치마 + 오른손 식칼
+                    Cosmetic(PrimitiveType.Cube, rig.Spine != null ? rig.Spine : rig.Hips, rig.Hips.position + R.forward * 0.16f * u + up * 0.05f * u, R.rotation,
+                        new Vector3(0.42f, 0.62f, 0.03f) * u, new Color(0.28f, 0.13f, 0.1f), false);
+                    if (rig.RightHand != null)
+                    {
+                        Cosmetic(PrimitiveType.Cube, rig.RightHand, rig.RightHand.position - up * 0.14f * u, R.rotation, new Vector3(0.02f, 0.24f, 0.12f) * u, new Color(0.5f, 0.5f, 0.52f), false);
+                        Cosmetic(PrimitiveType.Cylinder, rig.RightHand, rig.RightHand.position, R.rotation, new Vector3(0.035f, 0.06f, 0.035f) * u, new Color(0.25f, 0.18f, 0.12f), false);
+                    }
+                    break;
+                case "frenzy":
+                    // 가슴과 입가의 핏자국
+                    Cosmetic(PrimitiveType.Sphere, rig.Spine2, chest + R.forward * 0.15f * u - up * 0.05f * u, Quaternion.identity, new Vector3(0.22f, 0.3f, 0.06f) * u, new Color(0.35f, 0.02f, 0.02f), false);
+                    Cosmetic(PrimitiveType.Sphere, rig.Head, rig.Head.position + R.forward * 0.12f * u - up * 0.04f * u, Quaternion.identity, new Vector3(0.1f, 0.06f, 0.04f) * u, new Color(0.4f, 0.02f, 0.02f), false);
+                    break;
+                case "stalker":
+                    // 앞으로 쏠린 해진 천 조각 (그림자처럼 어둡게)
+                    Cosmetic(PrimitiveType.Cube, rig.Spine2, chest - R.forward * 0.12f * u - up * 0.15f * u, R.rotation * Quaternion.Euler(-15f, 0f, 0f),
+                        new Vector3(0.38f, 0.7f, 0.02f) * u, new Color(0.06f, 0.06f, 0.07f), false);
+                    break;
+            }
         }
 
         static MonsterPart RigWeakPoint(Monster m, ZombieRig rig, Transform R, WeakPointLocation loc, float size)
