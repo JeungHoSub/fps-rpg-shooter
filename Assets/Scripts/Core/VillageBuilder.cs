@@ -347,8 +347,9 @@ namespace Hunt.Core
                     break;
                 }
                 case Roof.Thatch:
-                    // 초가지붕: 둥근 짚더미
-                    Prim(PrimitiveType.Sphere, new Vector3(0, h + 0.1f, 0), new Vector3(w + 1.4f, 2.4f, d + 1.4f), EnvMaterials.Get(K.Thatch, new Vector2(w * 1.6f, d * 1.6f)), g);
+                    // 초가지붕: 두툼한 짚 처마 + 둥근 빵 모양 지붕 + 새끼줄 그물 + 용마름, 기둥·툇마루
+                    ThatchRoof(g, w, d, h);
+                    HanokFrame(g, w, d, h);
                     break;
                 case Roof.Flat:
                     Box(new Vector3(0, h + 0.15f, 0), new Vector3(w + 0.4f, 0.3f, d + 0.4f), K.Concrete, g);
@@ -376,6 +377,121 @@ namespace Hunt.Core
                 wf.minLevel = GfxLevel.High;
             }
             return g;
+        }
+
+        // ================================================================ 초가지붕
+        /// <summary>
+        /// 초가지붕: 둥근 사각 처마선에서 위로 둥글게 부풀어 용마루 선으로 모이는 '빵' 모양.
+        /// 처마 끝은 짚단 두께(약 30cm)가 보이게 아래로 한 번 접는다. 그 위로 새끼줄 그물, 꼭대기엔 용마름.
+        /// </summary>
+        static void ThatchRoof(Transform g, float w, float d, float h)
+        {
+            const int N = 44, M = 9;
+            float A = w / 2f + 0.65f, B = d / 2f + 0.65f;      // 처마 반폭 (벽 밖으로 65cm)
+            float ridgeHalf = Mathf.Max(0.2f, A - B);           // 꼭대기 용마루 반길이
+            float H = 1.9f + d * 0.06f;                         // 지붕 높이 (둥글게 부푼 짚)
+            float eaveY = h + 0.05f;
+
+            // 고리 j의 둘레 점 (둥근 사각, 위로 갈수록 용마루 선으로 모인다)
+            Vector3 Ring(int i, float t, float drop, float shrink)
+            {
+                float th = i / (float)N * Mathf.PI * 2f;
+                float k = Mathf.Pow(Mathf.Cos(t * Mathf.PI * 0.5f), 0.55f) * shrink;
+                float ax = ridgeHalf + (A - ridgeHalf) * k, az = B * k;
+                float c = Mathf.Cos(th), sn = Mathf.Sin(th);
+                const float e = 2.6f; // 둥근 사각 정도
+                float x = Mathf.Sign(c) * Mathf.Pow(Mathf.Abs(c), 2f / e) * ax;
+                float z = Mathf.Sign(sn) * Mathf.Pow(Mathf.Abs(sn), 2f / e) * az;
+                // 짚이 고르지 않게 (처마선이 조금씩 출렁)
+                float wob = 1f + 0.025f * Mathf.Sin(th * 7f + t * 3f) * (1f - t);
+                float y = eaveY + H * Mathf.Pow(Mathf.Sin(t * Mathf.PI * 0.5f), 0.85f) - drop;
+                return new Vector3(x * wob, y, z * wob);
+            }
+
+            var v = new List<Vector3>();
+            var uv = new List<Vector2>();
+            var tri = new List<int>();
+            // 고리 0 = 처마 아래 짚단 밑면(안쪽·아래), 1 = 처마 끝, 2.. = 지붕면
+            int rings = M + 2;
+            for (int j = 0; j < rings; j++)
+            {
+                for (int i = 0; i <= N; i++)
+                {
+                    Vector3 p = j == 0 ? Ring(i % N, 0f, 0.32f, 0.93f) : Ring(i % N, (j - 1) / (float)M, 0f, 1f);
+                    v.Add(p);
+                    float arc = j == 0 ? -0.35f : (j - 1) / (float)M * (H + B);
+                    uv.Add(new Vector2(i / (float)N * (2f * (A + B)) / 100f, arc / 100f));
+                }
+            }
+            int row = N + 1;
+            for (int j = 0; j < rings - 1; j++)
+                for (int i = 0; i < N; i++)
+                {
+                    int a0 = j * row + i, a1 = a0 + 1, b0 = a0 + row, b1 = b0 + 1;
+                    tri.AddRange(new[] { a0, b0, a1, a1, b0, b1 });
+                }
+            var mesh = MeshUtil.DoubleSided("ThatchRoof", v, uv, tri);
+            var go = new GameObject("초가지붕");
+            go.transform.SetParent(g, false);
+            go.AddComponent<MeshFilter>().sharedMesh = mesh;
+            var rr = go.AddComponent<MeshRenderer>();
+            rr.sharedMaterial = EnvMaterials.Get(K.Thatch, new Vector2(100f, 100f), new Color(0.6f, 0.54f, 0.42f));
+            go.AddComponent<MeshCollider>().sharedMesh = mesh;
+
+            // 새끼줄 그물: 지붕면을 따라 세로줄 + 가로줄 두 가닥 (가는 띠, 면보다 2cm 위)
+            var rv = new List<Vector3>();
+            var ruv = new List<Vector2>();
+            var rt = new List<int>();
+            void Strip(System.Func<float, Vector3> f, int seg, float width)
+            {
+                int start = rv.Count;
+                for (int k = 0; k <= seg; k++)
+                {
+                    float t = k / (float)seg;
+                    Vector3 p = f(t), q = f(Mathf.Min(1f, t + 0.01f)), pr = f(Mathf.Max(0f, t - 0.01f));
+                    Vector3 along = (q - pr).normalized;
+                    Vector3 outward = new Vector3(p.x, 0f, p.z).normalized * 0.6f + Vector3.up;
+                    Vector3 side = Vector3.Cross(along, outward).normalized * width * 0.5f;
+                    Vector3 lift = outward.normalized * 0.025f;
+                    rv.Add(p + lift - side); rv.Add(p + lift + side);
+                    ruv.Add(new Vector2(0f, t)); ruv.Add(new Vector2(1f, t));
+                    if (k > 0)
+                    {
+                        int b = start + (k - 1) * 2;
+                        rt.AddRange(new[] { b, b + 2, b + 1, b + 1, b + 2, b + 3 });
+                    }
+                }
+            }
+            Vector3 Surf(float i, float t)
+            {
+                // 둘레 각도 i(0~N)를 실수로 받아 지붕면 위 점
+                int i0 = Mathf.FloorToInt(i) % N, i1 = (i0 + 1) % N;
+                float f = i - Mathf.Floor(i);
+                return Vector3.Lerp(Ring(i0, t, 0f, 1f), Ring(i1, t, 0f, 1f), f);
+            }
+            for (int k = 0; k < 16; k++)
+            {
+                float ii = k * N / 16f + 0.5f;
+                Strip(t => Surf(ii, t * 0.97f), 10, 0.05f);
+            }
+            foreach (var tt in new[] { 0.3f, 0.62f })
+                Strip(u => Surf(u * N, tt), N, 0.05f);
+            var rope = new Mesh { name = "ThatchRope" };
+            rope.SetVertices(rv);
+            rope.SetUVs(0, ruv);
+            rope.SetTriangles(rt, 0);
+            rope.RecalculateNormals();
+            var rgo = new GameObject("새끼줄");
+            rgo.transform.SetParent(g, false);
+            rgo.AddComponent<MeshFilter>().sharedMesh = rope;
+            var ropeR = rgo.AddComponent<MeshRenderer>();
+            ropeR.sharedMaterial = EnvMaterials.Plain(new Color(0.32f, 0.26f, 0.17f), 0.15f);
+            ropeR.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+
+            // 용마름: 꼭대기에 엮어 덮은 짚 (어두운 굵은 원통)
+            var cap = Prim(PrimitiveType.Cylinder, new Vector3(0f, eaveY + H + 0.06f, 0f), new Vector3(0.36f, ridgeHalf + 0.35f, 0.32f),
+                EnvMaterials.Get(K.Thatch, new Vector2(2f, 1f), new Color(0.42f, 0.37f, 0.28f)), g, Quaternion.Euler(0f, 0f, 90f), collider: false);
+            cap.name = "용마름";
         }
 
         // ================================================================ 한국 지붕 (곡면)
