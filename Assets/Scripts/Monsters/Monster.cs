@@ -31,6 +31,8 @@ namespace Hunt.Monsters
             knockVel = Vector3.zero;
             repathTimer = 0f;
         }
+        /// <summary>밤이 깊어질수록 커지는 공격력 배율 (WaveManager가 정한다).</summary>
+        public float DamageScale { get; set; } = 1f;
         public bool IsBoss => Data != null && Data.archetype == MonsterArchetype.Boss;
         public int Generation { get; private set; }
         public int BossPhase { get; private set; }
@@ -214,7 +216,7 @@ namespace Hunt.Monsters
                 if (tp.magnitude > 2.2f) move = PathDirection(DefendTarget.Value, tp.normalized, dt);
                 else if (attackTimer <= 0f)
                 {
-                    if (WaveManager.Instance != null) WaveManager.Instance.DamageDefendPoint(Data.attackDamage * (IsBoss ? 3f : 1f));
+                    if (WaveManager.Instance != null) WaveManager.Instance.DamageDefendPoint(Data.attackDamage * DamageScale * (IsBoss ? 3f : 1f));
                     if (rig != null) rig.PlayBite();
                     attackTimer = Data.attackInterval;
                 }
@@ -282,7 +284,7 @@ namespace Hunt.Monsters
                 }
                 else if (dist <= Data.attackRange + 0.4f)
                 {
-                    target.TakeDamage(Data.attackDamage, Data.infectionPerHit, transform.position);
+                    target.TakeDamage(Data.attackDamage * DamageScale, Data.infectionPerHit, transform.position);
                     if (rig != null) rig.PlayBite(1.3f * Mathf.Clamp(0.9f / Mathf.Max(0.1f, Data.attackInterval), 0.7f, 2.4f)); // 공격이 빠른 유형은 동작도 빠르게
                     attackTimer = Data.attackInterval;
                 }
@@ -358,7 +360,7 @@ namespace Hunt.Monsters
         {
             if (rig != null) rig.PlayBite();
             Vector3 from = head != null ? head.position + transform.forward * 0.4f : transform.position + Vector3.up * 1.6f;
-            MonsterProjectile.Launch(transform.parent, from, target, Data.attackDamage, Data.infectionPerHit);
+            MonsterProjectile.Launch(transform.parent, from, target, Data.attackDamage * DamageScale, Data.infectionPerHit);
         }
 
         /// <summary>플레이어의 탄환이 이 괴물의 부위에 명중했을 때.</summary>

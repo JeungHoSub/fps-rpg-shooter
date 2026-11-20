@@ -65,7 +65,7 @@ namespace Hunt.Data
 
             // 산탄총
             var g2 = Clone(Weapons[3], "autoshotgun", "자동 산탄총", 2, 500);
-            g2.damage = 12; g2.rpm = 230; g2.automatic = true; g2.magazine = 10; g2.recoilVertical = 2.6f; g2.knockback = 7f;
+            g2.damage = 13; g2.penetration = 0.3f; g2.rpm = 230; g2.automatic = true; g2.magazine = 10; g2.recoilVertical = 2.6f; g2.knockback = 7f;
             var g3 = Clone(Weapons[3], "doublebarrel", "쌍발 엽총", 3, 950);
             g3.damage = 26; g3.pellets = 10; g3.rpm = 140; g3.magazine = 2; g3.reloadTime = 2.2f; g3.emptyReloadTime = 2.2f;
             g3.knockback = 14f; g3.penetration = 0.3f; g3.recoilVertical = 6f; g3.weight = 4f;
@@ -167,11 +167,12 @@ namespace Hunt.Data
             var smg = Weapon("smg", "볼트 SMG", WeaponClass.SMG, DamageType.Electric, new Color(0.25f, 0.3f, 0.5f));
             smg.damage = 20; smg.rpm = 900; smg.magazine = 35; smg.reserveAmmo = 280; smg.reloadTime = 1.6f; smg.emptyReloadTime = 2.0f;
             smg.recoilVertical = 0.55f; smg.recoilHorizontal = 0.5f; smg.spreadHip = 2.5f; smg.spreadAds = 0.8f; smg.spreadMovePenalty = 1f;
-            smg.knockback = 0.6f; smg.weight = 2.5f; smg.falloffStart = 12; smg.falloffEnd = 35; smg.adsFov = 60; smg.recoilSeed = 8.3f;
+            smg.knockback = 0.6f; smg.penetration = 0.1f; smg.weight = 2.5f; smg.falloffStart = 12; smg.falloffEnd = 35; smg.adsFov = 60; smg.recoilSeed = 8.3f;
             weapons.Add(smg);
 
             var sg = Weapon("shotgun", "M3 샷건", WeaponClass.Shotgun, DamageType.Physical, new Color(0.4f, 0.25f, 0.15f));
-            sg.damage = 15; sg.pellets = 9; sg.rpm = 75; sg.automatic = false; sg.magazine = 8; sg.reserveAmmo = 64;
+            sg.damage = 18; sg.pellets = 9; sg.penetration = 0.35f; // 가까이서 쏘는 산탄은 방어도를 덜 탄다
+             sg.rpm = 75; sg.automatic = false; sg.magazine = 8; sg.reserveAmmo = 64;
             sg.reloadTime = 2.8f; sg.emptyReloadTime = 3.2f; sg.recoilVertical = 4f; sg.recoilHorizontal = 0.8f;
             sg.spreadHip = 6f; sg.spreadAds = 4.5f; sg.knockback = 9f; sg.weight = 5f; sg.falloffStart = 6; sg.falloffEnd = 20;
             sg.minFalloff = 0.2f; sg.adsFov = 65; sg.recoilSeed = 1.3f;
@@ -252,7 +253,7 @@ namespace Hunt.Data
             new ZombieKind { id = "gnaw",   name = "굶주린 망자", desc = "물어뜯는형 — 약하지만 쉬지 않고 문다",       hp = 0.8f, dmg = 0.55f,speed = 1.1f,  atkInterval = 0.35f,scale = 0.92f, tint = new Color(0.5f, 0.55f, 0.42f),  fromWave = 2, weight = 12 },
             new ZombieKind { id = "wall",   name = "돌덩이 망자", desc = "철벽형 — 엄청 단단하지만 약하고 아주 느리다",  hp = 3.6f, dmg = 0.8f, speed = 0.5f,  atkInterval = 1.3f, scale = 1.28f, tint = new Color(0.42f, 0.42f, 0.44f), fromWave = 3, weight = 8 },
             new ZombieKind { id = "butcher",name = "백정 망자",   desc = "거구형 — 한 방이 무섭고, 걸음은 보통",       hp = 1.8f, dmg = 2.6f, speed = 0.85f, atkInterval = 1.9f, scale = 1.15f, tint = new Color(0.55f, 0.3f, 0.28f),  fromWave = 3, weight = 8 },
-            new ZombieKind { id = "stalker",name = "그림자 망자", desc = "추적형 — 체력 보통, 아주 빠르게 쫓아온다",    hp = 1f,   dmg = 0.9f, speed = 1.7f,  atkInterval = 1.1f, scale = 0.95f, tint = new Color(0.3f, 0.32f, 0.36f),  fromWave = 4, weight = 6 },
+            new ZombieKind { id = "stalker",name = "그림자 망자", desc = "추적형 — 체력 보통, 아주 빠르게 쫓아온다",    hp = 1f,   dmg = 0.9f, speed = 1.55f, atkInterval = 1.1f, scale = 0.95f, tint = new Color(0.3f, 0.32f, 0.36f),  fromWave = 4, weight = 6 },
         };
 
         static readonly Dictionary<string, MonsterData> kindCache = new Dictionary<string, MonsterData>();

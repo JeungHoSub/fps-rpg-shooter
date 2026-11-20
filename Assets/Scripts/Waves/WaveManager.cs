@@ -446,6 +446,8 @@ namespace Hunt.Waves
             Vector3 pos = Navigation.Snap(at ?? SpawnPoint());
             var m = MonsterFactory.Create(data, pos, evo, hpScale, player, root);
             if (m != null) m.AddDefense(DefenseBonus(a));
+            // 밤이 깊을수록 망자도 더 아프게 문다 (밤마다 +5%, 최대 +60%)
+            if (m != null) m.DamageScale = Mathf.Min(1.6f, 1f + 0.05f * (Wave - 1));
             if (m != null && !placed && a != MonsterArchetype.Runner) m.Alert(4f); // 엘리트·보스는 찾아서 온다
             return m;
         }
@@ -457,7 +459,8 @@ namespace Hunt.Waves
         public float DefenseBonus(MonsterArchetype a)
         {
             float k = a == MonsterArchetype.Runner ? 1.4f : a == MonsterArchetype.Boss ? 3f : 2.2f;
-            return Mathf.Max(0, Wave - 1) * k;
+            // 완만하게 오르다 10번째 밤쯤 멈춘다 (예전엔 끝없이 올라 기본 총·산탄총이 쓸모없어졌다)
+            return Mathf.Min(Mathf.Max(0, Wave - 1) * 0.85f, 9f) * k;
         }
 
         /// <summary>보스: 플레이어에서 22~30m 떨어진 곳 (너무 멀어 찾아 헤매지 않게).</summary>
