@@ -71,6 +71,10 @@ namespace Hunt.UI
             UIKit.Fill(new Rect(0, 0, W, H), new Color(0.02f, 0.01f, 0.015f, 0.45f));
             UIKit.Tex(new Rect(-W * 0.2f, -H * 0.55f, W * 1.4f, H * 0.9f), UITheme.Glow, new Color(0.5f, 0.02f, 0.03f, 0.35f));
             UIKit.Vignette(W, H, new Color(0, 0, 0, 0.95f));
+            DrawRain();
+
+            // 처음 켰을 때 한 번: 제목 카드 (클릭·아무 키로 넘김)
+            if (!introShown) { DrawIntroCard(); return; }
 
             UIKit.Alpha = appear;
 
@@ -101,6 +105,61 @@ namespace Hunt.UI
             }
         }
 
+        // ------------------------------------------------------------------ 첫 제목 카드 · 빗줄기
+        static bool introShown;
+        float introT;
+        bool gongPlayed;
+
+        void DrawIntroCard()
+        {
+            if (UIKit.IsRepaint) introT += Time.unscaledDeltaTime;
+            var e = Event.current;
+            bool skip = introT > 0.6f && (e.type == EventType.MouseDown || e.type == EventType.KeyDown);
+            if (skip) e.Use();
+            // 0~1.2초 떠오름, 4.2초부터 사라짐, 5초에 끝
+            float a = Mathf.Clamp01(introT / 1.2f) * Mathf.Clamp01((5f - introT) / 0.8f);
+            UIKit.Alpha = a;
+            float y = H / 2 - 120;
+            UIKit.Text(new Rect(0, y - 40, W, 26), SpaceOut(GameText.TitleSub), 18, UITheme.GoldDim, TextAnchor.MiddleCenter, bold: true);
+            UIKit.BrushTitle(new Rect(0, y, W, 130), GameText.Title, 110, new Color(0f, 0f, 0f, 0.9f), UITheme.GoldBright);
+            float tw = UIKit.TextWidth(GameText.Title, 110, true);
+            // 낙관은 조금 늦게 '찍힌다'
+            float stamp = Mathf.Clamp01((introT - 1.3f) * 5f);
+            if (stamp > 0f)
+            {
+                float sz = Mathf.Lerp(130f, 78f, stamp);
+                UIKit.Alpha = a * stamp;
+                UIKit.Emblem(new Rect(W / 2 + tw / 2 + 20 + (78 - sz) / 2, y + 26 + (78 - sz) / 2, sz, sz), "역병", UITheme.Blood, true);
+                if (stamp >= 1f && !gongPlayed) { gongPlayed = true; SFX.Play(SFX.Gong, 0.5f, 0f); }
+                UIKit.Alpha = a;
+            }
+            float tagA = Mathf.Clamp01((introT - 2f) / 0.8f);
+            UIKit.Alpha = a * tagA;
+            UIKit.Text(new Rect(0, y + 150, W, 34), GameText.Tagline, 22, UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true);
+            UIKit.Alpha = a * Mathf.Clamp01((introT - 3f) / 0.5f) * (0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 3f));
+            UIKit.Text(new Rect(0, H - 90, W, 26), "아무 키나 누르세요", 15, UITheme.Ash, TextAnchor.MiddleCenter, serif: true);
+            UIKit.Alpha = 1f;
+            if (introT >= 5f || skip) { introShown = true; appear = 0f; }
+        }
+
+        // 화면 앞을 스치는 옅은 빗줄기 (분위기)
+        void DrawRain()
+        {
+            float t = Time.unscaledTime;
+            for (int i = 0; i < 70; i++)
+            {
+                float sx = Mathf.Repeat(i * 0.6180339f, 1f), sy = Mathf.Repeat(i * 0.4142135f, 1f);
+                float spd = 0.8f + Mathf.Repeat(i * 0.7548776f, 1f) * 0.6f;
+                float x = Mathf.Repeat(sx * W + t * 90f * spd, W);
+                float y = Mathf.Repeat(sy * H + t * 1100f * spd, H + 60f) - 60f;
+                float len = 30f + spd * 25f;
+                var m = GUI.matrix;
+                GUIUtility.RotateAroundPivot(-6f, new Vector2(x, y));
+                UIKit.Fill(new Rect(x, y, 1.2f, len), new Color(0.75f, 0.8f, 0.9f, 0.05f + 0.04f * spd));
+                GUI.matrix = m;
+            }
+        }
+
         // ------------------------------------------------------------------ 제목
         void DrawTitle()
         {
@@ -111,6 +170,10 @@ namespace Hunt.UI
             float tw = UIKit.TextWidth(GameText.Title, 70, true);
             UIKit.Emblem(new Rect(W / 2 + tw / 2 + 14, y + 34, 58, 58), "역병", UITheme.Blood, true);
             UIKit.Text(new Rect(0, y + 100, W, 30), GameText.Tagline, 18, UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true);
+            // 지난 최고 기록 (사망 화면에서 저장)
+            int bw = 0, bk = 0;
+            try { bw = PlayerPrefs.GetInt("hunt.best.wave", 0); bk = PlayerPrefs.GetInt("hunt.best.kills", 0); } catch { }
+            if (bw > 0) UIKit.Text(new Rect(W - 330, y + 6, 300, 22), $"최고 기록  밤 {bw} · 망자 {bk}", 14, UITheme.Ash, TextAnchor.MiddleRight, serif: true);
             UIKit.Divider(new Rect(W / 2 - 360, y + 138, 720, 12));
         }
 
