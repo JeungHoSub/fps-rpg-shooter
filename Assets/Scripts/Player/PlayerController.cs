@@ -107,6 +107,10 @@ namespace Hunt.Player
         /// <summary>화면 흔들림 추가 (도 단위).</summary>
         public void AddShake(float degrees) { shake = Mathf.Min(shake + degrees, 4f); }
 
+        /// <summary>밀려남 (보스 돌진·내려치기). 금방 잦아든다.</summary>
+        public void Knock(Vector3 v) { knock += new Vector3(v.x, 0f, v.z); if (v.y > 0f && cc != null && cc.isGrounded) verticalVel = Mathf.Max(verticalVel, v.y); }
+        Vector3 knock;
+
         /// <summary>사격 시 달리기를 잠시 끊는다.</summary>
         public void CancelSprint() { sprintBlock = 0.3f; IsSprinting = false; }
 
@@ -224,7 +228,8 @@ namespace Hunt.Player
                 verticalVel += Physics.gravity.y * dt;
             }
 
-            cc.Move((wish * speed + Vector3.up * verticalVel) * dt);
+            cc.Move((wish * speed + Vector3.up * verticalVel + knock) * dt);
+            knock *= Mathf.Exp(-5f * dt);
 
             IsMoving = wish.sqrMagnitude > 0.01f || !cc.isGrounded;
 

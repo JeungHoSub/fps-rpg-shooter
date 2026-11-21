@@ -238,6 +238,7 @@ namespace Hunt.Monsters
                 move = PathDirection(target.transform.position, dir, dt);
             }
             if (stagger > 0f) { stagger -= dt; move = Vector3.zero; }
+            if (IsBoss && alerted) BossPattern(dt, dist, dir, ref move, ref spd);
 
             // 멀리 있을 땐 가는 방향을, 가까우면 플레이어를 바라본다
             Vector3 faceDir = move.sqrMagnitude > 0.01f && dist > Data.attackRange + 1.5f ? move : dir;
@@ -287,7 +288,7 @@ namespace Hunt.Monsters
 
             // 공격
             attackTimer -= dt;
-            if (attackTimer <= 0f && alerted)
+            if (attackTimer <= 0f && alerted && bossState == 0)
             {
                 if (Data.archetype == MonsterArchetype.Spitter)
                 {
@@ -511,6 +512,79 @@ namespace Hunt.Monsters
             if (best == null) return;
             Effects.Line(transform.position + Vector3.up, best.transform.position + Vector3.up, CombatNames.ColorOf(DamageType.Electric), 0.05f, 0.08f);
             best.ApplyDirectDamage(dmg, DamageType.Electric);
+        }
+
+        // ---- 보스 공격 패턴: 돌진 · 땅 내려치기 (예고 동작이 있어 피할 수 있다) ----
+        int bossState;          // 0 평소, 1 돌진 준비, 2 돌진 중, 3 내려치기 준비
+        float bossT, bossCd = 6f;
+        Vector3 chargeDir;
+        bool chargeHit;
+
+        void BossPattern(float dt, float dist, Vector3 dir, ref Vector3 move, ref float spd)
+        {
+            switch (bossState)
+            {
+                case 0:
+                    bossCd -= dt;
+                    if (bossCd > 0f) return;
+                    if (dist < 4.5f)
+                    {
+                        // 가까우면: 땅 내려치기
+                        bossState = 3; bossT = 0.75f;
+                        if (rig != null) rig.PlayBite(0.9f);
+                        SFX.PlayAt3D(SFX.ZombieScream, transform.position + Vector3.up * 2f, 1f, VoicePitch * 0.8f);
+                    }
+                    else if (dist > 7f && dist < 28f)
+                    {
+                        // 멀면: 포효한 뒤 돌진
+                        bossState = 1; bossT = 1.0f;
+                        if (rig != null) rig.PlayScream();
+                        SFX.PlayAt3D(SFX.ZombieScream, transform.position + Vector3.up * 2f, 1f, VoicePitch * 0.75f);
+                        HUD.Notify("대감이 몸을 낮춘다 — 돌진이 온다, 옆으로 피하라", new Color(1f, 0.4f, 0.3f));
+                    }
+                    else bossCd = 1f;
+                    return;
+                case 1: // 돌진 준비: 멈춰서 플레이어를 노려본다
+                    move = Vector3.zero;
+                    chargeDir = dir;
+                    bossT -= dt;
+                    if (bossT <= 0f) { bossState = 2; bossT = 1.3f; chargeHit = false; }
+                    return;
+                case 2: // 돌진: 정한 방향으로 곧게 (도중에 방향을 못 튼다)
+                    move = chargeDir;
+                    spd = speed * 3.4f;
+                    bossT -= dt;
+                    if (!chargeHit && dist < 2.4f * Data.scale * 0.6f + 1f)
+                    {
+                        chargeHit = true;
+                        target.LastAttacker = Data.displayName;
+                        target.TakeDamage(Data.attackDamage * DamageScale * 1.4f, Data.infectionPerHit, transform.position);
+                        target.Controller.Knock(chargeDir * 14f + Vector3.up * 4f);
+                        target.Controller.AddShake(3f);
+                        bossT = Mathf.Min(bossT, 0.25f);
+                    }
+                    if (bossT <= 0f) { bossState = 0; bossCd = Random.Range(7f, 11f) - BossPhase * 1.5f; stagger = 0.8f; }
+                    return;
+                case 3: // 내려치기 준비 → 둘레 4.5m 충격
+                    move = Vector3.zero;
+                    bossT -= dt;
+                    if (bossT <= 0f)
+                    {
+                        bossState = 0;
+                        bossCd = Random.Range(5f, 8f) - BossPhase;
+                        SFX.PlayAt(SFX.Explosion, transform.position, 0.8f);
+                        FX.BloodBurst(transform.position + Vector3.up * 0.2f, new Color(0.3f, 0.25f, 0.2f), 1.6f); // 흙탕물 튀김
+                        Vector3 to = target.transform.position - transform.position; to.y = 0f;
+                        if (to.magnitude < 4.5f)
+                        {
+                            target.LastAttacker = Data.displayName;
+                            target.TakeDamage(Data.attackDamage * DamageScale * 1.2f, Data.infectionPerHit, transform.position);
+                            target.Controller.Knock(to.normalized * 10f + Vector3.up * 3f);
+                        }
+                        target.Controller.AddShake(Mathf.Lerp(3f, 0.8f, to.magnitude / 15f));
+                    }
+                    return;
+            }
         }
 
         void CheckBossPhase()

@@ -68,7 +68,7 @@ Unity 1인칭 싱글플레이 좀비 슈터 + RPG. **비 오는 밤의 한국 �
   다음 큐: 8. 무기 아이콘 완료(`Resources/WeaponIcons/<id>.png` = 총 텍스트 옆모습 렌더, `WeaponIcon.Draw(Rect, WeaponData, Color)`, 권총은 도형 유지) 9. 망자 소리 완료(`Sounds/Zombie` CC0 녹음 41개, `SFX.Rec`·`PlayAt3D`, 몸집별 목소리 높낮이 `Monster.VoicePitch`, 발견 비명·멀리 신음) 10. 무기고 완료(칸마다 무기 그림·상태색, 오른쪽 큰 그림+능력 막대, 방어도 안내 새 식) — 방어구 탭은 그대로
   11. 게임오버 완료(쓰러지는 시점 `PlayerController.DeathCam`, 붓 제목·묘비 문구·'○○에게 물려 쓰러짐' `PlayerCharacter.LastAttacker`·최고 기록 PlayerPrefs `hunt.best.*`·새 기록 낙관), 시작 화면 완료(첫 실행 제목 카드 `StartScreen.DrawIntroCard`·낙관 찍힘+징·앞 빗줄기·최고 기록) 12. 성능 1차 완료(총 모델 이진화 `Resources/GunsBin/*.bytes` + 메시 캐시: 읽기 41ms→0.2~7ms·정점 절반, 원본 텍스트·변환 도구는 `Tools/`) 13. 망자 모델 다양화(Mixamo 다른 캐릭터 — 사용자 토큰 필요하면 요청)
   이후 후보: 14. 방어구 탭 다듬기 15. 사망 연출 완료(피 웅덩이 `FX.BloodPool`/`BloodPoolFx` 최대 18개·48초, 머리·급소 처치 살점 `MonsterGib.Chunk`) — 13번은 Mixamo 토큰 대기 중이라 건너뜀 16. 날씨 완료(`Atmosphere.SetWeather`: 보슬비·장대비·짙은 안개·뇌우·비 잦아듦, 첫 밤 보슬비·대감의 밤 뇌우, 비 세기·안개 농도·천둥 간격·달빛 배율) 17. 조작 안내 완료(`UI/TutorialHints.cs` 첫 밤 9단계, 해 보면 넘어감, PlayerPrefs `hunt.tut.done`)
-  다음 후보: 18. 방어구 탭 다듬기 19. 보스 패턴 다양화(돌진·포효·소환) 20. 엘리트 망자 외형(장군 망자 Mixamo 대체) 21. 서낭당 낮 장면 분위기 22. 모바일 단계 준비 점검
+  다음 후보: 18. 방어구 탭 다듬기 19. 보스 패턴 완료(`Monster.BossPattern`: 포효 1초 예고→곧은 돌진 1.3초(피격 시 큰 피해+밀려남 `PlayerController.Knock`), 가까우면 0.75초 예고→땅 내려치기 4.5m, 단계 오를수록 자주) 20. 엘리트 망자 외형(장군 망자 Mixamo 대체) 21. 서낭당 낮 장면 분위기 22. 모바일 단계 준비 점검
   - 매번: 컴파일 확인 → 커밋 → 푸시 → 바뀐 점 보고. 클라우드에선 게임 화면 캡처 불가 (유니티 실행 불가) — 모델/UI 미리보기 이미지만 가능.
 - 다음 할 일: 사용자 플레이 확인 → 밸런스 조정. 남은 그래픽: 소총·기관단총·산탄총·경기관총 실사 모델(Quaternius Ultimate Gun 팩 — 구글 드라이브 다운로드 한도로 보류, 나중에 재시도), 초가집 사실화
 - 환경 '2번째'에 Poly Haven 호스트(api.polyhaven.com, dl.polyhaven.org) 허용됨. API는 User-Agent 필요.
