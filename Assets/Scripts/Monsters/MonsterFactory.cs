@@ -348,6 +348,7 @@ namespace Hunt.Monsters
             foreach (var sx in new[] { -0.045f, 0.045f })
                 Cosmetic(PrimitiveType.Sphere, rig.Head, eyeBase + R.right * sx * u, Quaternion.identity, Vector3.one * eyeSize * u, eye, true);
             KindDressing(kind, rig, R, u);
+            EliteDressing(d, rig, R, u);
 
             var chest = rig.Spine2.position;
             bool heavy = d.archetype == MonsterArchetype.Brute || d.archetype == MonsterArchetype.Boss;
@@ -406,6 +407,63 @@ namespace Hunt.Monsters
                 RigWeakPoint(m, rig, R, evo.weakPoint, (d.archetype == MonsterArchetype.Runner ? 0.15f : 0.19f) * u);
             }
             return m;
+        }
+
+        /// <summary>
+        /// 엘리트 겉모습 (판정 없음).
+        /// 장군 망자: 두정갑 어깨받이·갑옷 치마·붉은 상모 술·오른손 환도.  토혈귀: 부푼 목, 입에서 흘러내리는 초록 진액, 등의 고름 혹.
+        /// </summary>
+        static void EliteDressing(MonsterData d, ZombieRig rig, Transform R, float u)
+        {
+            Vector3 up = Vector3.up;
+            var chest = rig.Spine2 != null ? rig.Spine2.position : rig.Hips.position + up * 0.4f * u;
+            if (d.archetype == MonsterArchetype.Brute)
+            {
+                // 어깨받이 (붉은 두정갑 + 놋쇠 징)
+                foreach (var sx in new[] { -1f, 1f })
+                {
+                    var arm = sx < 0 ? rig.LeftArm : rig.RightArm;
+                    var at = arm != null ? arm.position : chest + R.right * sx * 0.2f * u;
+                    var parent = arm != null ? arm : rig.Spine2;
+                    Cosmetic(PrimitiveType.Sphere, parent, at + up * 0.04f * u, R.rotation, new Vector3(0.2f, 0.09f, 0.2f) * u, ArmorRed, false);
+                    Cosmetic(PrimitiveType.Sphere, parent, at + up * 0.09f * u, Quaternion.identity, Vector3.one * 0.03f * u, Brass, false);
+                }
+                // 갑옷 치마: 허리 둘레 판 여섯 장 (조금씩 벌어져 늘어짐)
+                var hips = rig.Hips.position;
+                for (int i = 0; i < 6; i++)
+                {
+                    float ang = (i / 6f) * 360f + 30f;
+                    var rot = R.rotation * Quaternion.Euler(0f, ang, 0f);
+                    var pos = hips + rot * Vector3.forward * 0.17f * u - up * 0.14f * u;
+                    Cosmetic(PrimitiveType.Cube, rig.Hips, pos, rot * Quaternion.Euler(12f, 0f, 0f), new Vector3(0.15f, 0.3f, 0.025f) * u, i % 2 == 0 ? ArmorRed : ArmorRed * 0.8f, false);
+                }
+                // 투구 꼭대기 붉은 상모 술
+                if (rig.HeadTop != null)
+                    Cosmetic(PrimitiveType.Sphere, rig.Head, rig.HeadTop.position + up * 0.17f * u, Quaternion.identity, new Vector3(0.1f, 0.14f, 0.1f) * u, new Color(0.55f, 0.04f, 0.03f), false);
+                // 오른손 환도 (녹슨 칼날 + 검은 자루)
+                if (rig.RightHand != null)
+                {
+                    var hand = rig.RightHand.position;
+                    Cosmetic(PrimitiveType.Cube, rig.RightHand, hand - up * 0.45f * u + R.forward * 0.05f * u, R.rotation * Quaternion.Euler(8f, 0f, 0f),
+                        new Vector3(0.015f, 0.75f, 0.05f) * u, new Color(0.42f, 0.4f, 0.38f), false);
+                    Cosmetic(PrimitiveType.Cylinder, rig.RightHand, hand, R.rotation, new Vector3(0.035f, 0.08f, 0.035f) * u, GatBlack, false);
+                    Cosmetic(PrimitiveType.Cube, rig.RightHand, hand - up * 0.08f * u, R.rotation, new Vector3(0.1f, 0.012f, 0.08f) * u, Brass, false); // 코등이
+                }
+            }
+            else if (d.archetype == MonsterArchetype.Spitter && rig.Head != null)
+            {
+                var neck = rig.Neck != null ? rig.Neck.position : rig.Head.position - up * 0.1f * u;
+                // 부풀어 오른 목 (독주머니, 희미하게 빛남)
+                Cosmetic(PrimitiveType.Sphere, rig.Neck != null ? rig.Neck : rig.Head, neck + R.forward * 0.05f * u, Quaternion.identity, new Vector3(0.2f, 0.16f, 0.18f) * u, new Color(0.45f, 0.75f, 0.15f), true);
+                // 입에서 흘러내리는 진액 세 줄기
+                var mouth = rig.Head.position + R.forward * 0.12f * u - up * 0.06f * u;
+                for (int k = 0; k < 3; k++)
+                    Cosmetic(PrimitiveType.Cylinder, rig.Head, mouth + R.right * (k - 1) * 0.025f * u - up * (0.05f + k * 0.02f) * u, Quaternion.identity,
+                        new Vector3(0.012f, 0.05f + k * 0.025f, 0.012f) * u, new Color(0.4f, 0.65f, 0.1f), true);
+                // 등의 고름 혹
+                Cosmetic(PrimitiveType.Sphere, rig.Spine2, chest - R.forward * 0.14f * u + up * 0.05f * u, Quaternion.identity, new Vector3(0.16f, 0.14f, 0.12f) * u, new Color(0.5f, 0.55f, 0.25f), false);
+                Cosmetic(PrimitiveType.Sphere, rig.Spine2, chest - R.forward * 0.12f * u + R.right * 0.1f * u - up * 0.08f * u, Quaternion.identity, new Vector3(0.1f, 0.09f, 0.08f) * u, new Color(0.55f, 0.5f, 0.22f), false);
+            }
         }
 
         /// <summary>망자 유형별 덧붙임 (판정 없음, 겉모습만).</summary>
