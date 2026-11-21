@@ -84,6 +84,77 @@ namespace Hunt.Core
             ps.Emit(ep, 1);
         }
 
+        // ---- 피 웅덩이: 쓰러진 자리에 번져 나가는 검붉은 얼룩 (오래 남다가 옅어진다) ----
+        static Texture2D poolTex;
+        static Material poolMat;
+        static readonly List<Transform> pools = new List<Transform>();
+        static int poolIndex;
+        const int MaxPools = 18;
+
+        static Material PoolMaterial()
+        {
+            if (poolMat != null) return poolMat;
+            if (poolTex == null)
+            {
+                // 둥글지만 가장자리가 울퉁불퉁한 얼룩 (128px, 코드로 생성)
+                const int S = 128;
+                poolTex = new Texture2D(S, S, TextureFormat.RGBA32, true) { wrapMode = TextureWrapMode.Clamp, name = "BloodPool" };
+                var px = new Color32[S * S];
+                for (int y = 0; y < S; y++)
+                    for (int x = 0; x < S; x++)
+                    {
+                        float dx = (x - S / 2f) / (S / 2f), dy = (y - S / 2f) / (S / 2f);
+                        float ang = Mathf.Atan2(dy, dx);
+                        float edge = 0.72f + 0.12f * Mathf.Sin(ang * 5f + 1.3f) + 0.08f * Mathf.Sin(ang * 11f) + 0.1f * (Mathf.PerlinNoise(x * 0.06f, y * 0.06f) - 0.5f);
+                        float d = Mathf.Sqrt(dx * dx + dy * dy);
+                        float a = Mathf.Clamp01((edge - d) * 14f);
+                        // 작은 튄 자국
+                        if (a <= 0f && Mathf.PerlinNoise(x * 0.25f + 7f, y * 0.25f) > 0.78f && d < 0.98f) a = 0.8f;
+                        float shade = 0.75f + 0.25f * Mathf.PerlinNoise(x * 0.1f, y * 0.1f + 3f);
+                        px[y * S + x] = new Color32((byte)(255 * shade), (byte)(255 * shade), (byte)(255 * shade), (byte)(255 * a));
+                    }
+                poolTex.SetPixels32(px);
+                poolTex.Apply(true, true);
+            }
+            poolMat = new Material(Shader.Find("Sprites/Default")) { name = "BloodPool", mainTexture = poolTex, color = new Color(0.22f, 0.015f, 0.02f, 0.9f) };
+            poolMat.renderQueue = 2460;
+            return poolMat;
+        }
+
+        public static void BloodPool(Vector3 pos, float size)
+        {
+            if (root == null) return;
+            Transform t;
+            if (pools.Count < MaxPools)
+            {
+                var go = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                Object.DestroyImmediate(go.GetComponent<Collider>());
+                go.name = "BloodPool";
+                go.layer = 2;
+                go.transform.SetParent(root, false);
+                var r = go.GetComponent<Renderer>();
+                r.sharedMaterial = PoolMaterial();
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                r.receiveShadows = false;
+                go.AddComponent<BloodPoolFx>();
+                t = go.transform;
+                pools.Add(t);
+            }
+            else
+            {
+                t = pools[poolIndex];
+                poolIndex = (poolIndex + 1) % MaxPools;
+                if (t == null) return;
+            }
+            // 바닥 높이에 맞춤 (논두렁·기단 위도)
+            Vector3 p = pos + Vector3.up * 1.5f;
+            if (Physics.Raycast(p, Vector3.down, out var hit, 3f, ~((1 << 2) | (1 << 1)), QueryTriggerInteraction.Ignore)) p = hit.point;
+            else p.y = 0f;
+            t.position = p + Vector3.up * (0.012f + Random.value * 0.006f);
+            t.rotation = Quaternion.Euler(90f, Random.Range(0f, 360f), 0f);
+            t.GetComponent<BloodPoolFx>().Begin(size * Random.Range(1.5f, 2.2f));
+        }
+
         /// <summary>벽·바닥 명중: 불꽃 + 먼지 + 탄흔.</summary>
         public static void ImpactWorld(Vector3 point, Vector3 normal)
         {
@@ -181,6 +252,25 @@ namespace Hunt.Core
             lr.receiveShadows = false;
             var t = go.AddComponent<TracerFx>();
             t.Init(from, to);
+        }
+    }
+}
+
+namespace Hunt.Core
+{
+    /// <summary>피 웅덩이가 1.5초 동안 번지고, 40초 뒤 천천히 옅어진다.</summary>
+    public class BloodPoolFx : MonoBehaviour
+    {
+        float t, target;
+        public void Begin(float size) { t = 0f; target = size; transform.localScale = Vector3.one * 0.05f; gameObject.SetActive(true); }
+
+        void Update()
+        {
+            t += Time.deltaTime;
+            float grow = 1f - Mathf.Pow(1f - Mathf.Clamp01(t / 1.6f), 3f);
+            float fade = Mathf.Clamp01((48f - t) / 8f);
+            transform.localScale = Vector3.one * Mathf.Max(0.01f, target * grow * Mathf.Lerp(0.85f, 1f, fade));
+            if (fade <= 0f) gameObject.SetActive(false);
         }
     }
 }

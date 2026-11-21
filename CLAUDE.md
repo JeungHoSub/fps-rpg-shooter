@@ -67,7 +67,7 @@ Unity 1인칭 싱글플레이 좀비 슈터 + RPG. **비 오는 밤의 한국 �
   4. 유탄·로켓발사기 완료(RPG7 CC0 + Quaternius 산탄총 총열 굵게, 변환기 `fat`·`pca` 옵션 = scratchpad tools/gunconv.py) 5. 유형별 외형 완료(`MonsterFactory.KindDressing`: 체격 폭·눈빛 색·배/굳은살/앞치마+식칼/핏자국/천, 조준 이름표 `GameHud.DrawTargetTag`) 6. 초가집 완료(`VillageBuilder.ThatchRoof`: 둥근 빵 모양 곡면·두툼한 처마·새끼줄 그물·용마름 + HanokFrame) 7. 밸런스 완료(`Docs/BALANCE.md`: 방어도 상한, 산탄총·기관단총 관통, 망자 공격력 밤마다 +5% `Monster.DamageScale`, 그림자 망자 감속)
   다음 큐: 8. 무기 아이콘 완료(`Resources/WeaponIcons/<id>.png` = 총 텍스트 옆모습 렌더, `WeaponIcon.Draw(Rect, WeaponData, Color)`, 권총은 도형 유지) 9. 망자 소리 완료(`Sounds/Zombie` CC0 녹음 41개, `SFX.Rec`·`PlayAt3D`, 몸집별 목소리 높낮이 `Monster.VoicePitch`, 발견 비명·멀리 신음) 10. 무기고 완료(칸마다 무기 그림·상태색, 오른쪽 큰 그림+능력 막대, 방어도 안내 새 식) — 방어구 탭은 그대로
   11. 게임오버 완료(쓰러지는 시점 `PlayerController.DeathCam`, 붓 제목·묘비 문구·'○○에게 물려 쓰러짐' `PlayerCharacter.LastAttacker`·최고 기록 PlayerPrefs `hunt.best.*`·새 기록 낙관), 시작 화면 완료(첫 실행 제목 카드 `StartScreen.DrawIntroCard`·낙관 찍힘+징·앞 빗줄기·최고 기록) 12. 성능 1차 완료(총 모델 이진화 `Resources/GunsBin/*.bytes` + 메시 캐시: 읽기 41ms→0.2~7ms·정점 절반, 원본 텍스트·변환 도구는 `Tools/`) 13. 망자 모델 다양화(Mixamo 다른 캐릭터 — 사용자 토큰 필요하면 요청)
-  이후 후보: 14. 방어구 탭 다듬기 15. 망자 사망 연출(부위 날아감·피 웅덩이) 16. 날씨 변화(폭우·안개 짙어짐 밤마다) 17. 튜토리얼 안내(첫 밤 키 설명)
+  이후 후보: 14. 방어구 탭 다듬기 15. 사망 연출 완료(피 웅덩이 `FX.BloodPool`/`BloodPoolFx` 최대 18개·48초, 머리·급소 처치 살점 `MonsterGib.Chunk`) — 13번은 Mixamo 토큰 대기 중이라 건너뜀 16. 날씨 변화(폭우·안개 짙어짐 밤마다) 17. 튜토리얼 안내(첫 밤 키 설명)
   - 매번: 컴파일 확인 → 커밋 → 푸시 → 바뀐 점 보고. 클라우드에선 게임 화면 캡처 불가 (유니티 실행 불가) — 모델/UI 미리보기 이미지만 가능.
 - 다음 할 일: 사용자 플레이 확인 → 밸런스 조정. 남은 그래픽: 소총·기관단총·산탄총·경기관총 실사 모델(Quaternius Ultimate Gun 팩 — 구글 드라이브 다운로드 한도로 보류, 나중에 재시도), 초가집 사실화
 - 환경 '2번째'에 Poly Haven 호스트(api.polyhaven.com, dl.polyhaven.org) 허용됨. API는 User-Agent 필요.

@@ -581,7 +581,15 @@ namespace Hunt.Player
                                 killPos = hit.point;
                                 // 머리·급소로 끝내면 크게 터진다
                                 if (res.zone == HitZone.Head || res.zone == HitZone.WeakPoint)
+                                {
                                     FX.BloodBurst(hit.point, res.zone == HitZone.WeakPoint ? new Color(1f, 0.55f, 0.1f) : new Color(0.45f, 0.04f, 0.06f), 0.7f);
+                                    // 살점이 총알 방향으로 튀어 오른다 (타격감)
+                                    int n = QualityManager.Level == GfxLevel.Low ? 3 : 6;
+                                    for (int g = 0; g < n; g++)
+                                        Hunt.Monsters.MonsterGib.Chunk(null, hit.point + Random.insideUnitSphere * 0.08f,
+                                            dir * Random.Range(1.5f, 4.5f) + Vector3.up * Random.Range(2f, 4.5f) + Random.insideUnitSphere * 1.5f,
+                                            Color.Lerp(new Color(0.3f, 0.03f, 0.04f), new Color(0.5f, 0.38f, 0.32f), Random.value * 0.4f), Random.Range(0.05f, 0.11f));
+                                }
                             }
                             FX.ImpactFlesh(hit.point, dir, FleshColor(res.zone), res.crit ? 10 : 5);
                         }

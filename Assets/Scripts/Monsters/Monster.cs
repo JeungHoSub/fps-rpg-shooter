@@ -548,6 +548,7 @@ namespace Hunt.Monsters
             Alive.Remove(this);
             if (GameManager.Instance != null) GameManager.Instance.OnMonsterKilled(this);
             FX.BloodBurst(transform.position + Vector3.up * Data.scale, new Color(0.4f, 0.05f, 0.08f), Data.scale);
+            FX.BloodPool(transform.position, Data.scale); // 쓰러진 자리에 피가 번진다
             if (rig != null && rig.Pivot != null)
             {
                 // 판정체·급소 제거 후 그 자세로 쓰러진다

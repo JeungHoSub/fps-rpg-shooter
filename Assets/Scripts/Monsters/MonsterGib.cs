@@ -9,6 +9,27 @@ namespace Hunt.Monsters
         Vector3 velocity, spin, baseScale;
         float life, halfHeight;
 
+        /// <summary>살점 조각 하나 (머리·급소 처치 때 튀어 오른다).</summary>
+        public static void Chunk(Transform parent, Vector3 pos, Vector3 vel, Color col, float size)
+        {
+            var go = GameObject.CreatePrimitive(Random.value < 0.5f ? PrimitiveType.Cube : PrimitiveType.Sphere);
+            Destroy(go.GetComponent<Collider>());
+            go.layer = 2;
+            go.transform.SetParent(parent, false);
+            go.transform.position = pos;
+            go.transform.rotation = Random.rotation;
+            go.transform.localScale = new Vector3(size, size * Random.Range(0.5f, 1f), size * Random.Range(0.6f, 1.2f));
+            var r = go.GetComponent<Renderer>();
+            r.sharedMaterial = EnvMaterials.Plain(col, 0.75f);
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            var gib = go.AddComponent<MonsterGib>();
+            gib.velocity = vel;
+            gib.spin = Random.insideUnitSphere * 600f;
+            gib.life = Random.Range(2.5f, 4f);
+            gib.baseScale = go.transform.localScale;
+            gib.halfHeight = size * 0.35f;
+        }
+
         public static void Shatter(Monster m, Vector3 hitDir)
         {
             var parent = m.transform.parent;
