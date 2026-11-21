@@ -27,6 +27,7 @@ namespace Hunt.UI
         // 화면 객체는 Awake에서 만든다 (필드 초기화 시점에는 유니티 오브젝트 생성이 금지됨)
         StartScreen start;
         GameHud hud;
+        readonly TutorialHints tutorial = new TutorialHints();
         CampMenu camp;
         EndScreens ends;
 
@@ -119,6 +120,7 @@ namespace Hunt.UI
                 case GameState.Playing:
                 case GameState.Intermission:
                     hud.Draw(gm, W, H, scale);
+                    if (!gm.Paused && !gm.MenuOpen) tutorial.Draw(gm, W, H); // 첫 밤 조작 안내
                     if (gm.State == GameState.Intermission && gm.MenuOpen && !gm.Paused) camp.Draw(gm, W, H);
                     break;
                 case GameState.GameOver:
