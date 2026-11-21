@@ -533,8 +533,16 @@ namespace Hunt.UI
                 var piece = set.pieces[i];
                 var row = new Rect(left.x + 14, left.y + 52 + i * rowH, left.width - 28, rowH - 8);
                 UIKit.Tex(new Rect(row.x, row.yMax + 2, row.width, 2), UITheme.LineFade, new Color(0.5f, 0.38f, 0.2f, 0.3f));
-                UIKit.Text(new Rect(row.x + 8, row.y + 6, 260, 30), piece.Name, 21, Grades.Color(piece.grade), serif: true, bold: true);
-                UIKit.Text(new Rect(row.x + 8, row.y + 38, 300, 24), $"방어도 {piece.Defense:0.0}  ·  {piece.EffectText}", 15, UITheme.BoneDim);
+                // 부위 그림 (등급 색 테두리)
+                var ib = new Rect(row.x + 4, row.center.y - 30, 60, 60);
+                UIKit.Fill(ib, new Color(0.03f, 0.03f, 0.03f, 0.85f));
+                UIKit.Outline(ib, Grades.Color(piece.grade), 1.5f);
+                var icon = i == 0 ? HudIcons.Icon.Helmet : i == 1 ? HudIcons.Icon.Vest : i == 2 ? HudIcons.Icon.Greave : i == 3 ? HudIcons.Icon.Glove : HudIcons.Icon.Boot;
+                UIKit.Tex(new Rect(ib.x + 10, ib.y + 10, 40, 40), HudIcons.Get(icon), UITheme.Bone);
+                UIKit.Text(new Rect(row.x + 78, row.y + 4, 280, 30), piece.Name, 20, Grades.Color(piece.grade), serif: true, bold: true);
+                UIKit.Text(new Rect(row.x + 78, row.y + 32, 320, 22), $"방어도 {piece.Defense:0.0}  ·  {piece.EffectText}", 14, UITheme.BoneDim);
+                // 강화 단계 눈금 (+0 ~ +10)
+                UIKit.StatCells(new Rect(row.x + 78, row.y + 58, 190, 8), Grades.MaxUpgrade, 0, piece.upgrade, 0);
                 int upCost = Grades.UpgradeCost(piece.grade, piece.upgrade);
                 int gCost = Grades.GradeUpCost(piece.grade);
                 bool maxUp = piece.upgrade >= Grades.MaxUpgrade;
@@ -551,23 +559,34 @@ namespace Hunt.UI
             // ---- 보급: 소비 아이템 · 특수 기기 ----
             UIKit.Text(new Rect(right.x, right.y + 12, right.width, 30), "보급", 22, UITheme.Gold, TextAnchor.MiddleCenter, serif: true, bold: true);
             float y = right.y + 54;
-            void Buy(string name, string desc, int have, int max, int price, System.Action give)
+            void Buy(HudIcons.Icon icon, Color tint, string name, string desc, int have, int max, int price, System.Action give)
             {
+                // 보급 칸: 그림 + 이름·설명 + 개수 칸 + 가격 (누르면 산다)
                 var r = new Rect(right.x + 16, y, right.width - 32, 66);
-                bool can = have < max && p.Gold >= price;
-                if (UIKit.Button(r, $"{name}   {have} / {max}", 18, false, can, have >= max ? "가득 찼다" : $"엽전 {price}  ·  {desc}"))
-                    if (p.SpendGold(price)) { give(); SFX.Play(SFX.MagIn, 0.8f); }
+                bool full = have >= max;
+                bool can = !full && p.Gold >= price;
+                bool click = UIKit.HitArea(r, "buy" + name, out float hv, can);
+                UIKit.Fill(r, new Color(0.04f, 0.038f, 0.04f, 0.9f));
+                if (hv > 0f) UIKit.Fill(r, new Color(1f, 0.95f, 0.85f, 0.06f * hv));
+                UIKit.Outline(r, can ? Color.Lerp(new Color(0.45f, 0.42f, 0.37f), UITheme.GoldBright, hv) : new Color(0.3f, 0.29f, 0.27f, 0.8f));
+                UIKit.Tex(new Rect(r.x + 12, r.y + 13, 40, 40), HudIcons.Get(icon), can || full ? tint : new Color(0.45f, 0.43f, 0.4f));
+                UIKit.Text(new Rect(r.x + 64, r.y + 6, r.width - 170, 26), name, 17, UITheme.Bone, serif: true, bold: true);
+                UIKit.Text(new Rect(r.x + 64, r.y + 34, r.width - 170, 22), desc, 13, UITheme.BoneDim);
+                UIKit.StatCells(new Rect(r.xMax - 100, r.y + 12, 88, 10), max, 0, have, 0);
+                UIKit.Text(new Rect(r.xMax - 110, r.y + 30, 98, 26), full ? "가득" : $"엽전 {price}", 15, full ? UITheme.Ash : p.Gold >= price ? UITheme.Good : UITheme.BloodBright, TextAnchor.MiddleRight, bold: true);
+                if (click && p.SpendGold(price)) { give(); SFX.Play(SFX.MagIn, 0.8f); }
                 y += 74;
             }
-            Buy("치료 키트 (X)", "2.5초 동안 감는다", p.Kits, PlayerCharacter.MaxKits, 60, () => p.Kits++);
-            Buy("스태미너 회복제 (C)", "기운 즉시 회복", p.Drinks, PlayerCharacter.MaxDrinks, 40, () => p.Drinks++);
+            Buy(HudIcons.Icon.Kit, new Color(1f, 0.42f, 0.36f), "치료 키트 (X)", "2.5초 동안 감는다", p.Kits, PlayerCharacter.MaxKits, 60, () => p.Kits++);
+            Buy(HudIcons.Icon.Bottle, new Color(0.45f, 0.78f, 1f), "스태미너 회복제 (C)", "기운 즉시 회복", p.Drinks, PlayerCharacter.MaxDrinks, 40, () => p.Drinks++);
             var gc = p.Weapons.GadgetCount;
             for (int i = 0; i < Gadgets.Count; i++)
             {
                 var g = (GadgetType)i;
                 int price = g == GadgetType.Grenade ? 50 : g == GadgetType.Mine ? 70 : 160;
                 int idx = i;
-                Buy(Gadgets.Name(g) + (g == GadgetType.Grenade ? " (5 / G)" : " (5)"), Gadgets.Desc(g), gc[i], Gadgets.MaxCarry(g), price, () => gc[idx]++);
+                var gi = g == GadgetType.Grenade ? HudIcons.Icon.Grenade : g == GadgetType.Mine ? HudIcons.Icon.Mine : HudIcons.Icon.Turret;
+                Buy(gi, UITheme.Bone, Gadgets.Name(g) + (g == GadgetType.Grenade ? " (5 / G)" : " (5)"), Gadgets.Desc(g), gc[i], Gadgets.MaxCarry(g), price, () => gc[idx]++);
             }
             UIKit.Text(new Rect(right.x + 20, right.yMax - 60, right.width - 40, 50), "밤을 넘길 때마다 키트·회복제·특수 기기가 하나씩 보급된다.", 14, UITheme.Ash, TextAnchor.MiddleCenter, serif: true, wrap: true);
         }

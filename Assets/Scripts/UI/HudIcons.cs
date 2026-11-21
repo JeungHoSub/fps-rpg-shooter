@@ -11,7 +11,7 @@ namespace Hunt.UI
     /// </summary>
     public static class HudIcons
     {
-        public enum Icon { Flame, Heart, Pill, Kit, Bottle, Crouch, Ammo }
+        public enum Icon { Flame, Heart, Pill, Kit, Bottle, Crouch, Ammo, Helmet, Vest, Glove, Greave, Boot, Grenade, Mine, Turret }
 
         const int Size = 96;
         static readonly Dictionary<Icon, Texture2D> cache = new Dictionary<Icon, Texture2D>();
@@ -88,6 +88,43 @@ namespace Hunt.UI
                         bool arm = Seg(x, y, 0.0f, 0.2f, 0.45f, 0.05f, 0.08f);
                         return head || torso || thigh || shin || arm;
                     };
+                case Icon.Helmet:
+                    // 둥근 철모 + 챙
+                    return (x, y) => ((x * x + (y + 0.05f) * (y + 0.05f) < 0.5f && y > -0.05f) || RoundRect(x, y + 0.12f, 0.85f, 0.08f, 0.04f)) && !(y > -0.05f && y < 0.02f && Mathf.Abs(x) < 0.55f);
+                case Icon.Vest:
+                    // 조끼: 몸통 − 목·팔 구멍, 가운데 여밈선
+                    return (x, y) => RoundRect(x, y + 0.05f, 0.62f, 0.78f, 0.12f)
+                        && !((x * x + (y - 0.85f) * (y - 0.85f)) < 0.09f)
+                        && !(Mathf.Abs(x) > 0.38f && y > 0.15f)
+                        && !(Mathf.Abs(x) < 0.025f && y < 0.5f);
+                case Icon.Glove:
+                    return (x, y) =>
+                    {
+                        if (RoundRect(x, y + 0.3f, 0.42f, 0.42f, 0.14f)) return true;                 // 손바닥
+                        for (int f = 0; f < 4; f++)
+                            if (RoundRect(x - (-0.3f + f * 0.2f), y - 0.3f - (f == 1 || f == 2 ? 0.08f : 0f), 0.075f, 0.34f, 0.07f)) return true; // 손가락
+                        return Seg(x, y, -0.4f, -0.2f, -0.72f, 0.12f, 0.1f);                           // 엄지
+                    };
+                case Icon.Greave:
+                    // 두 다리 정강이받이
+                    return (x, y) => (RoundRect(x + 0.28f, y, 0.2f, 0.82f, 0.12f) || RoundRect(x - 0.28f, y, 0.2f, 0.82f, 0.12f)) && Mathf.Abs(Mathf.Repeat(y * 3.2f, 1f) - 0.5f) < 0.42f;
+                case Icon.Boot:
+                    return (x, y) => RoundRect(x + 0.15f, y - 0.1f, 0.3f, 0.6f, 0.12f) || RoundRect(x - 0.15f, y + 0.55f, 0.62f, 0.2f, 0.12f);
+                case Icon.Grenade:
+                    return (x, y) =>
+                    {
+                        float ex = x / 0.55f, ey = (y + 0.18f) / 0.68f;
+                        bool body = ex * ex + ey * ey < 1f && !(Mathf.Abs(Mathf.Repeat((y + 0.18f) * 3.5f, 1f) - 0.5f) < 0.05f);
+                        bool top = RoundRect(x, y - 0.56f, 0.22f, 0.12f, 0.04f);
+                        bool lever = Seg(x, y, 0.15f, 0.62f, 0.55f, 0.1f, 0.06f);
+                        bool ring = Mathf.Abs(Mathf.Sqrt((x + 0.38f) * (x + 0.38f) + (y - 0.62f) * (y - 0.62f)) - 0.17f) < 0.045f;
+                        return body || top || lever || ring;
+                    };
+                case Icon.Mine:
+                    return (x, y) => RoundRect(x, y + 0.2f, 0.85f, 0.22f, 0.12f) || RoundRect(x, y - 0.12f, 0.25f, 0.12f, 0.05f) || (Mathf.Abs(x) < 0.04f && y > 0f && y < 0.45f);
+                case Icon.Turret:
+                    return (x, y) => Seg(x, y, 0f, 0.05f, -0.6f, -0.8f, 0.06f) || Seg(x, y, 0f, 0.05f, 0.6f, -0.8f, 0.06f) || Seg(x, y, 0f, 0.05f, 0f, -0.8f, 0.06f)
+                        || RoundRect(x - 0.05f, y - 0.2f, 0.32f, 0.16f, 0.05f) || RoundRect(x - 0.55f, y - 0.22f, 0.4f, 0.05f, 0.03f);
                 default:
                     return (x, y) =>
                     {
