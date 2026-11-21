@@ -12,6 +12,15 @@ namespace Hunt.Core
 
         public float RainIntensity { get; private set; } = 0.7f;
 
+        // ---- 서낭당(밤과 밤 사이): 날이 밝는다 ----
+        /// <summary>0 = 밤, 1 = 새벽. 밤을 버티면 천천히 밝아지고, 다음 밤이 오면 다시 어두워진다.</summary>
+        public float Dawn { get; private set; }
+        static readonly Color DawnAmbient = new Color(0.2f, 0.22f, 0.27f);
+        static readonly Color DawnFog = new Color(0.32f, 0.34f, 0.38f);
+        static readonly Color SunColor = new Color(1f, 0.82f, 0.66f);
+        static readonly Color MoonColor = new Color(0.55f, 0.65f, 0.85f);
+        bool dawnBell;
+
         // ---- 밤마다 바뀌는 날씨 ----
         public enum Weather { Drizzle, Downpour, Fog, Storm, Clearing }
         public Weather Current { get; private set; } = Weather.Drizzle;
@@ -232,12 +241,23 @@ namespace Hunt.Core
             if (rain != null)
             {
                 var em = rain.emission;
-                em.rateOverTime = Mathf.Lerp(2000f, 7000f, RainIntensity) * QualityManager.RainRate;
+                em.rateOverTime = Mathf.Lerp(2000f, 7000f, RainIntensity) * QualityManager.RainRate * Mathf.Lerp(1f, 0.12f, Dawn); // 새벽엔 빗방울만
             }
-            if (rainAudio != null) rainAudio.volume = Mathf.Lerp(0.3f, 0.75f, RainIntensity);
+            // 새벽: 서낭당에 있는 동안 밝아진다
+            bool day = gm != null && gm.State == GameState.Intermission;
+            Dawn = Mathf.MoveTowards(Dawn, day ? 1f : 0f, dt * (day ? 0.12f : 0.4f));
+            if (day && Dawn > 0.5f && !dawnBell) { dawnBell = true; SFX.Play(SFX.Gong, 0.35f, 0f); } // 멀리서 새벽 종
+            if (!day) dawnBell = false;
+            if (moon != null)
+            {
+                // 달은 서쪽 높이 → 해는 동쪽 낮게
+                moon.transform.rotation = Quaternion.Slerp(Quaternion.Euler(38f, -140f, 0f), Quaternion.Euler(14f, 70f, 0f), Dawn);
+                moon.color = Color.Lerp(MoonColor, SunColor, Dawn);
+            }
+            if (rainAudio != null) rainAudio.volume = Mathf.Lerp(0.3f, 0.75f, RainIntensity) * Mathf.Lerp(1f, 0.35f, Dawn);
             // 안개는 날씨에 맞춰 천천히 짙어지거나 걷힌다
             fogNow = Mathf.MoveTowards(fogNow, fogMult, dt * 0.08f);
-            RenderSettings.fogDensity = BaseFog * fogNow;
+            RenderSettings.fogDensity = BaseFog * fogNow * Mathf.Lerp(1f, 0.55f, Dawn);
 
             // 멀리서 들려오는 소리: 어딘가의 그르렁, 개 짖는 듯한 울음, 징 — 위치가 들리는 3D (긴장감)
             if (gm != null && gm.State == GameState.Playing && cam != null && Time.time > nextDistant)
@@ -252,7 +272,7 @@ namespace Hunt.Core
             }
 
             // 천둥·번개
-            if (Time.time > nextThunder)
+            if (Time.time > nextThunder && Dawn < 0.3f) // 새벽엔 천둥이 멎는다
             {
                 flash = 1f;
                 thunderDelay = Random.Range(0.6f, 2.5f);
@@ -268,15 +288,15 @@ namespace Hunt.Core
                 flash = Mathf.Max(0f, flash - dt * 3f);
                 // 두 번 번쩍
                 float f = flash > 0.7f ? 1f : flash > 0.55f ? 0.1f : flash > 0.4f ? 0.8f : flash * 0.5f;
-                if (moon != null) moon.intensity = baseMoon * moonMult + f * 2.4f;
-                RenderSettings.ambientLight = baseAmbient + new Color(0.35f, 0.4f, 0.5f) * f;
-                RenderSettings.fogColor = FogColor + new Color(0.12f, 0.14f, 0.18f) * f;
+                if (moon != null) moon.intensity = Mathf.Lerp(baseMoon * moonMult, 0.75f, Dawn) + f * 2.4f;
+                RenderSettings.ambientLight = Color.Lerp(baseAmbient, DawnAmbient, Dawn) + new Color(0.35f, 0.4f, 0.5f) * f;
+                RenderSettings.fogColor = Color.Lerp(FogColor, DawnFog, Dawn) + new Color(0.12f, 0.14f, 0.18f) * f;
             }
             else if (moon != null)
             {
-                moon.intensity = baseMoon * moonMult;
-                RenderSettings.ambientLight = baseAmbient;
-                RenderSettings.fogColor = FogColor;
+                moon.intensity = Mathf.Lerp(baseMoon * moonMult, 0.75f, Dawn);
+                RenderSettings.ambientLight = Color.Lerp(baseAmbient, DawnAmbient, Dawn);
+                RenderSettings.fogColor = Color.Lerp(FogColor, DawnFog, Dawn);
             }
             if (cam != null)
             {
