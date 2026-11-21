@@ -137,6 +137,7 @@ namespace Hunt.Waves
             Monster.GlobalRush = false;
             Monster.DefendTarget = null;
             ChooseRule();
+            if (Atmosphere.Instance != null) Atmosphere.Instance.SetWeather(n, IsBossWave); // 밤마다 날씨가 바뀐다
             BeginStage(RoundStage.Normal);
             Spawning = true;
             if (Rule == RoundRule.Defense) SetupDefense();

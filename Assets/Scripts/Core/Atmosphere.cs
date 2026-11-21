@@ -12,6 +12,49 @@ namespace Hunt.Core
 
         public float RainIntensity { get; private set; } = 0.7f;
 
+        // ---- 밤마다 바뀌는 날씨 ----
+        public enum Weather { Drizzle, Downpour, Fog, Storm, Clearing }
+        public Weather Current { get; private set; } = Weather.Drizzle;
+        float rainLo = 0.45f, rainHi = 0.75f, fogMult = 1f, fogNow = 1f, thunderLo = 25f, thunderHi = 60f, moonMult = 1f;
+
+        public static string WeatherName(Weather w)
+        {
+            switch (w)
+            {
+                case Weather.Downpour: return "장대비 — 빗소리가 발소리를 덮는다";
+                case Weather.Fog: return "짙은 안개 — 열 걸음 앞도 흐리다";
+                case Weather.Storm: return "뇌우 — 번개가 잦다";
+                case Weather.Clearing: return "비가 잦아든다 — 달빛이 비친다";
+                default: return "보슬비";
+            }
+        }
+
+        /// <summary>밤이 시작될 때 날씨를 고른다 (첫 밤은 보슬비, 대감의 밤은 뇌우).</summary>
+        public void SetWeather(int night, bool bossNight)
+        {
+            Weather w;
+            if (night <= 1) w = Weather.Drizzle;
+            else if (bossNight) w = Weather.Storm;
+            else
+            {
+                float r = Random.value;
+                w = r < 0.28f ? Weather.Downpour : r < 0.5f ? Weather.Fog : r < 0.68f ? Weather.Storm : r < 0.82f ? Weather.Clearing : Weather.Drizzle;
+            }
+            Current = w;
+            switch (w)
+            {
+                case Weather.Downpour: rainLo = 0.85f; rainHi = 1f; fogMult = 1.25f; thunderLo = 20f; thunderHi = 45f; moonMult = 0.8f; break;
+                case Weather.Fog: rainLo = 0.25f; rainHi = 0.45f; fogMult = 1.9f; thunderLo = 60f; thunderHi = 120f; moonMult = 0.7f; break;
+                case Weather.Storm: rainLo = 0.7f; rainHi = 1f; fogMult = 1.1f; thunderLo = 7f; thunderHi = 16f; moonMult = 0.85f; break;
+                case Weather.Clearing: rainLo = 0.1f; rainHi = 0.3f; fogMult = 0.7f; thunderLo = 90f; thunderHi = 180f; moonMult = 1.6f; break;
+                default: rainLo = 0.45f; rainHi = 0.75f; fogMult = 1f; thunderLo = 25f; thunderHi = 60f; moonMult = 1f; break;
+            }
+            rainTarget = Random.Range(rainLo, rainHi);
+            nextRainShift = Time.time + Random.Range(20f, 40f);
+            nextThunder = Time.time + Random.Range(thunderLo * 0.3f, thunderLo);
+            if (night > 1) UI.HUD.Notify("날씨 — " + WeatherName(w), new Color(0.7f, 0.8f, 0.95f));
+        }
+
         static readonly Color FogColor = new Color(0.035f, 0.042f, 0.05f);
         const float BaseFog = 0.032f;
 
@@ -182,7 +225,7 @@ namespace Hunt.Core
             // 빗줄기 세기 변화 (가끔 거세졌다 잦아든다)
             if (Time.time > nextRainShift)
             {
-                rainTarget = Random.value < 0.35f ? Random.Range(0.85f, 1f) : Random.Range(0.45f, 0.75f);
+                rainTarget = Random.value < 0.25f ? Mathf.Min(1f, rainHi + 0.15f) : Random.Range(rainLo, rainHi); // 가끔 잠깐 거세진다
                 nextRainShift = Time.time + Random.Range(25f, 50f);
             }
             RainIntensity = Mathf.MoveTowards(RainIntensity, rainTarget, dt * 0.05f);
@@ -192,6 +235,9 @@ namespace Hunt.Core
                 em.rateOverTime = Mathf.Lerp(2000f, 7000f, RainIntensity) * QualityManager.RainRate;
             }
             if (rainAudio != null) rainAudio.volume = Mathf.Lerp(0.3f, 0.75f, RainIntensity);
+            // 안개는 날씨에 맞춰 천천히 짙어지거나 걷힌다
+            fogNow = Mathf.MoveTowards(fogNow, fogMult, dt * 0.08f);
+            RenderSettings.fogDensity = BaseFog * fogNow;
 
             // 멀리서 들려오는 소리: 어딘가의 그르렁, 개 짖는 듯한 울음, 징 — 위치가 들리는 3D (긴장감)
             if (gm != null && gm.State == GameState.Playing && cam != null && Time.time > nextDistant)
@@ -210,7 +256,7 @@ namespace Hunt.Core
             {
                 flash = 1f;
                 thunderDelay = Random.Range(0.6f, 2.5f);
-                nextThunder = Time.time + Random.Range(25f, 60f);
+                nextThunder = Time.time + Random.Range(thunderLo, thunderHi);
             }
             if (thunderDelay > 0f)
             {
@@ -222,13 +268,13 @@ namespace Hunt.Core
                 flash = Mathf.Max(0f, flash - dt * 3f);
                 // 두 번 번쩍
                 float f = flash > 0.7f ? 1f : flash > 0.55f ? 0.1f : flash > 0.4f ? 0.8f : flash * 0.5f;
-                if (moon != null) moon.intensity = baseMoon + f * 2.4f;
+                if (moon != null) moon.intensity = baseMoon * moonMult + f * 2.4f;
                 RenderSettings.ambientLight = baseAmbient + new Color(0.35f, 0.4f, 0.5f) * f;
                 RenderSettings.fogColor = FogColor + new Color(0.12f, 0.14f, 0.18f) * f;
             }
             else if (moon != null)
             {
-                moon.intensity = baseMoon;
+                moon.intensity = baseMoon * moonMult;
                 RenderSettings.ambientLight = baseAmbient;
                 RenderSettings.fogColor = FogColor;
             }
