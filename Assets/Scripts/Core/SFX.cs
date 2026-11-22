@@ -343,6 +343,12 @@ namespace Hunt.Core
             return arr[i];
         }
 
+        /// <summary>망자 발소리 (젖은 흙 녹음 중 무작위) — 3D 재생용 클립.</summary>
+        public static AudioClip ZombieStep
+        {
+            get { var a = LoadRecorded("Steps", "mud", 3); return a.Length > 0 ? a[UnityEngine.Random.Range(0, a.Length)] : null; }
+        }
+
         /// <summary>내 발소리: 바닥에 따라 진흙(mud)·돌길(stone)·나무(wood). Resources/Sounds/Steps (CC0).</summary>
         public static void Footstep(string surface, float volume)
         {

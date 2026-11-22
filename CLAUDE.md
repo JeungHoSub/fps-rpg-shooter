@@ -75,6 +75,7 @@ Unity 1인칭 싱글플레이 좀비 슈터 + RPG. **비 오는 밤의 한국 �
   - 다듬기 3: Esc 메뉴 오른쪽 조작 키 표 + '조작 안내 다시 보기'(`TutorialHints.Replay`, 몇 번째 밤이든)
   - 다듬기 4: 조준점 아래 탄약 경고 `GameHud.DrawAmmoWarning` (25% 이하 'R 장전', 빈 탄창, 예비탄 0이면 무기 교체 안내)
   - 다듬기 5: 내 발소리 `SFX.Footstep` (`Sounds/Steps` CC0, 바닥 따라 흙·돌길·나무, 달리기/걷기/앉기 음량) — 높은 곳은 밟은 재질 이름(Env_WoodPlanks/StoneWall/Concrete…)으로 구분
+  - 다듬기 6: 가까운 망자 발소리 (10m 안, 3D, 몸집별 크기·높낮이, 전체 0.09초 간격 제한 `Monster.stepClock`)
   - 매번: 컴파일 확인 → 커밋 → 푸시 → 바뀐 점 보고. 클라우드에선 게임 화면 캡처 불가 (유니티 실행 불가) — 모델/UI 미리보기 이미지만 가능.
 - 다음 할 일: 사용자 플레이 확인 → 밸런스 조정. 남은 그래픽: 소총·기관단총·산탄총·경기관총 실사 모델(Quaternius Ultimate Gun 팩 — 구글 드라이브 다운로드 한도로 보류, 나중에 재시도), 초가집 사실화
 - 환경 '2번째'에 Poly Haven 호스트(api.polyhaven.com, dl.polyhaven.org) 허용됨. API는 User-Agent 필요.

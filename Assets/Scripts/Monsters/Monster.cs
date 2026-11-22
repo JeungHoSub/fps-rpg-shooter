@@ -137,6 +137,8 @@ namespace Hunt.Monsters
         ZombieRig rig;
         bool wasAlerted;
         float growlTimer = 1f;
+        float stepClock;
+        static float lastZombieStep;
         public void SetRig(ZombieRig r) { rig = r; }
 
         public void SetBossWeakPoints(List<MonsterPart> wps)
@@ -248,6 +250,21 @@ namespace Hunt.Monsters
 
             if (rig != null)
                 rig.SetLocomotion(move.sqrMagnitude > 0.01f ? spd : 0f, legSlow < 1f, alerted && Data.archetype == MonsterArchetype.Runner && Data.moveSpeed > 4f && dist > 3f);
+
+            // 가까이 오는 망자의 발소리 (10m 안, 움직일 때) — 등 뒤에서 다가오는 것도 들린다. 전체에서 0.09초에 한 번까지만
+            if (dist < 10f && move.sqrMagnitude > 0.01f && stagger <= 0f)
+            {
+                stepClock -= dt;
+                if (stepClock <= 0f)
+                {
+                    stepClock = Mathf.Clamp(1.6f / Mathf.Max(0.5f, spd), 0.22f, 0.75f);
+                    if (Time.time - lastZombieStep > 0.09f)
+                    {
+                        lastZombieStep = Time.time;
+                        SFX.PlayAt3D(SFX.ZombieStep, transform.position + Vector3.up * 0.1f, Mathf.Lerp(0.75f, 0.25f, dist / 10f) * Mathf.Clamp(Data.scale, 0.8f, 1.6f), VoicePitch * 0.85f);
+                    }
+                }
+            }
 
             // 무리 간 분리
             Vector3 sep = Vector3.zero;
