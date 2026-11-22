@@ -244,7 +244,13 @@ namespace Hunt.Player
                     // 내 귀에 들리는 발소리: 툇마루·기단 위는 나무, 큰길은 돌, 나머지는 젖은 흙
                     string surf = "mud";
                     Vector3 fp = transform.position;
-                    if (Physics.Raycast(fp + Vector3.up * 0.5f, Vector3.down, out var gh, 1.2f, ~((1 << 2) | (1 << 1)), QueryTriggerInteraction.Ignore) && gh.point.y > 0.12f) surf = "wood";
+                    if (Physics.Raycast(fp + Vector3.up * 0.5f, Vector3.down, out var gh, 1.2f, ~((1 << 2) | (1 << 1)), QueryTriggerInteraction.Ignore) && gh.point.y > 0.12f)
+                    {
+                        // 밟은 물건의 재질 이름으로: 나무판 → 나무, 돌·시멘트·쇠 → 돌, 그 밖(논두렁 풀 등) → 흙
+                        var gr = gh.collider.GetComponent<Renderer>();
+                        string mn = gr != null && gr.sharedMaterial != null ? gr.sharedMaterial.name : "";
+                        surf = mn.Contains("Wood") ? "wood" : (mn.Contains("Stone") || mn.Contains("Concrete") || mn.Contains("Rock") || mn.Contains("Metal") || mn.Contains("Road")) ? "stone" : "mud";
+                    }
                     else if (Mathf.Abs(fp.x - VillageBuilder.RoadX(fp.z)) < 3f) surf = "stone";
                     SFX.Footstep(surf, sprint ? 0.45f : IsCrouching ? 0.12f : 0.28f);
                 }
