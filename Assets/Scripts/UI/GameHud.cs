@@ -90,6 +90,7 @@ namespace Hunt.UI
 
             if (p.Weapons.IsScoped) DrawScope();
             if (gm.State != GameState.GameOver && !gm.MenuOpen) DrawCrosshair(p, cam);
+            if (gm.State == GameState.Playing && !gm.MenuOpen) DrawAmmoWarning(p);
 
             // ---- 생명 구슬 ----
             // 잃은 생명은 잠시 남았다가 천천히 빠진다
@@ -183,6 +184,23 @@ namespace Hunt.UI
             DrawStragglers(cam, scale);
             DrawPickups(dt);
             DrawTargetTag(cam);
+        }
+
+        /// <summary>조준점 아래 탄약 경고: 적으면 'R 장전', 탄창이 비면 강하게, 예비탄까지 없으면 무기 바꾸라고.</summary>
+        void DrawAmmoWarning(PlayerCharacter p)
+        {
+            var wp = p.Weapons;
+            var w = wp.Current;
+            if (w == null || wp.IsReloading || wp.Mode != PlayerWeapons.Hand.Gun || GameInput.Mobile) return;
+            int mag = w.MagazineSize;
+            if (mag <= 0) return;
+            string msg; Color c;
+            if (w.ammoInMag == 0 && w.reserve == 0) { msg = "탄이 떨어졌다 — 다른 무기(1~5)나 칼(V)"; c = UITheme.BloodBright; }
+            else if (w.ammoInMag == 0) { msg = "장전 — R"; c = UITheme.BloodBright; }
+            else if (w.ammoInMag <= Mathf.Max(1, mag * 0.25f)) { msg = "R 장전"; c = UITheme.Warn; }
+            else return;
+            float pulse = w.ammoInMag == 0 && w.reserve == 0 ? 1f : 0.55f + 0.45f * Mathf.Sin(Time.unscaledTime * 7f);
+            UIKit.Text(new Rect(W / 2 - 200, H / 2 + 46, 400, 24), msg, 16, new Color(c.r, c.g, c.b, pulse), TextAnchor.MiddleCenter, serif: true, bold: true);
         }
 
         // ---- 조준한 망자 이름표 (유형 이름 + 체력) ----
