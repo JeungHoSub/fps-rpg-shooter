@@ -18,7 +18,7 @@ namespace Hunt.UI
         const float StickRadius = 120f;
         const float LookGain = 0.11f; // 화면 픽셀 → 마우스 축과 비슷한 크기
 
-        enum Id { Fire, Aim, Reload, Jump, Swap, Grenade, Melee, Flash, Kit, Drink, Rage, Regen, Antidote, Pause, Menu }
+        enum Id { Fire, Aim, Reload, Jump, Swap, Grenade, Melee, Flash, Kit, Drink, Rage, Regen, Antidote, Pause, Menu, Crouch }
 
         struct Btn
         {
@@ -40,7 +40,7 @@ namespace Hunt.UI
         readonly HashSet<Id> held = new HashSet<Id>();
         float W, H, scale;
         Vector2 stickOrigin, stickPos;
-        bool stickActive, aimToggle, mouseWasDown;
+        bool stickActive, aimToggle, crouchToggle, mouseWasDown;
 
         bool Active
         {
@@ -70,6 +70,7 @@ namespace Hunt.UI
             buttons.Add(new Btn { id = Id.Aim, c = new Vector2(W - 430, H - 250), r = 62, label = "조준" });
             buttons.Add(new Btn { id = Id.Reload, c = new Vector2(W - 175, H - 565), r = 54, label = "장전" });
             buttons.Add(new Btn { id = Id.Jump, c = new Vector2(W - 380, H - 455), r = 52, label = "점프" });
+            buttons.Add(new Btn { id = Id.Crouch, c = new Vector2(W - 335, H - 625), r = 46, label = "앉기" }); // 누를 때마다 앉기/서기
             buttons.Add(new Btn { id = Id.Swap, c = new Vector2(W - 72, H - 470), r = 48, label = "교체" });
             buttons.Add(new Btn { id = Id.Grenade, c = new Vector2(W - 560, H - 395), r = 50, label = "투척" });
             buttons.Add(new Btn { id = Id.Melee, c = new Vector2(W - 610, H - 245), r = 48, label = "칼" });
@@ -118,12 +119,14 @@ namespace Hunt.UI
             // 결과를 GameInput으로
             GameInput.touchFire = held.Contains(Id.Fire);
             GameInput.touchAim = aimToggle;
+            GameInput.touchCrouch = crouchToggle;
             if (stickActive)
             {
                 Vector2 v = (stickPos - stickOrigin) / StickRadius;
                 if (v.magnitude > 1f) v.Normalize();
                 GameInput.touchMove = new Vector2(v.x, -v.y); // 화면 위쪽 = 앞
                 GameInput.touchSprint = v.magnitude > 0.92f && -v.y > 0.6f;
+                if (GameInput.touchSprint) crouchToggle = false; // 달리면 일어선다
             }
             else
             {
@@ -191,6 +194,7 @@ namespace Hunt.UI
             {
                 case Id.Fire: GameInput.touchFireDown = true; break;
                 case Id.Aim: aimToggle = !aimToggle; break;
+                case Id.Crouch: crouchToggle = !crouchToggle; break;
                 case Id.Reload: GameInput.touchReload = true; break;
                 case Id.Jump: GameInput.touchJump = true; break;
                 case Id.Swap: GameInput.touchSwap = true; aimToggle = false; break;
@@ -230,7 +234,7 @@ namespace Hunt.UI
 
             foreach (var b in buttons)
             {
-                bool on = held.Contains(b.id) || (b.id == Id.Aim && aimToggle) || (b.id == Id.Fire && GameInput.AutoTarget);
+                bool on = held.Contains(b.id) || (b.id == Id.Aim && aimToggle) || (b.id == Id.Crouch && crouchToggle) || (b.id == Id.Fire && GameInput.AutoTarget);
                 bool fire = b.id == Id.Fire;
                 var r = new Rect(b.c.x - b.r, b.c.y - b.r, b.r * 2, b.r * 2);
                 Color fill = fire ? new Color(0.6f, 0.13f, 0.1f, on ? 0.85f : 0.55f) : new Color(0.05f, 0.05f, 0.06f, on ? 0.8f : 0.45f);
