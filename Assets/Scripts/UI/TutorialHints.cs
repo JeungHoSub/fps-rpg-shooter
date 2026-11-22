@@ -30,6 +30,9 @@ namespace Hunt.UI
         bool done;
         Vector3 startPos;
         bool checkedPrefs;
+        bool anyNight;
+        /// <summary>Esc 메뉴 '조작 안내 다시 보기' — 다음 화면부터 처음부터 다시 (몇 번째 밤이든).</summary>
+        public static bool Replay;
 
         bool Satisfied(int i, PlayerCharacter p)
         {
@@ -49,6 +52,7 @@ namespace Hunt.UI
 
         public void Draw(GameManager gm, float W, float H)
         {
+            if (Replay) { Replay = false; done = false; step = -1; checkedPrefs = true; anyNight = true; }
             if (done || GameInput.Mobile) return;
             if (!checkedPrefs)
             {
@@ -57,7 +61,7 @@ namespace Hunt.UI
                 if (done) return;
             }
             var p = gm.Player;
-            if (p == null || p.IsDead || gm.Waves == null || gm.Waves.Wave != 1 || gm.State != GameState.Playing) return;
+            if (p == null || p.IsDead || gm.Waves == null || (gm.Waves.Wave != 1 && !anyNight) || gm.State != GameState.Playing) return;
 
             if (UIKit.IsRepaint)
             {

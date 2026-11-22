@@ -15,7 +15,7 @@ namespace Hunt.UI
             UIKit.Fill(new Rect(0, 0, W, H), new Color(0.02f, 0.01f, 0.015f, 0.7f));
             UIKit.Vignette(W, H, new Color(0, 0, 0, 0.9f));
 
-            var r = new Rect(W / 2 - 320, H / 2 - 450, 640, 900);
+            var r = new Rect(W / 2 - 320 - (GameInput.Mobile ? 0f : 200f), H / 2 - 450, 640, 900); // PC: 오른쪽 조작 표와 함께 가운데
             UIKit.Panel(r, "숨  을  고 른 다");
 
             float y = r.y + 90;
@@ -68,6 +68,36 @@ namespace Hunt.UI
             UIKit.Divider(new Rect(r.x + 60, y, r.width - 120, 10));
             y += 28;
             if (UIKit.Button(new Rect(r.x + 90, y, r.width - 180, 56), "처음으로 돌아간다", 20, false, true, "진행 상황은 사라진다")) gm.Restart();
+
+            // ---- 오른쪽: 조작 키 모음 (언제든 확인) ----
+            if (!GameInput.Mobile)
+            {
+                var k = new Rect(r.xMax + 20, r.y, 380, r.height);
+                if (k.xMax > W - 10) k.x = W - 10 - k.width;
+                UIKit.Panel(k, "조  작");
+                string[,] keys =
+                {
+                    { "W A S D", "움직이기" }, { "Shift", "달리기" }, { "Space", "뛰기" }, { "Ctrl", "앉기 (탄 모임·반동↓)" },
+                    { "마우스 왼쪽", "쏘기" }, { "마우스 오른쪽", "조준" }, { "R", "장전" }, { "1 ~ 5", "무기 바꾸기" },
+                    { "V", "칼" }, { "G", "수류탄" }, { "F", "손전등" }, { "X", "치료 키트" }, { "C", "스태미너 회복제" },
+                    { "Q", "광폭화" }, { "E", "재생" }, { "H", "청심환" }, { "Tab", "서낭당 (밤 사이)" }, { "Esc", "숨 고르기" },
+                };
+                float ky = k.y + 84;
+                for (int i = 0; i < keys.GetLength(0); i++)
+                {
+                    float kw = Mathf.Max(40f, UIKit.TextWidth(keys[i, 0], 14, false, true) + 16f);
+                    var kr = new Rect(k.x + 30, ky, kw, 28);
+                    UIKit.Fill(kr, new Color(0.86f, 0.82f, 0.72f, 0.92f));
+                    UIKit.Text(kr, keys[i, 0], 14, new Color(0.06f, 0.05f, 0.05f), TextAnchor.MiddleCenter, bold: true);
+                    UIKit.Text(new Rect(kr.xMax + 12, ky, k.width - kw - 60, 28), keys[i, 1], 15, UITheme.Bone, serif: true);
+                    ky += 36;
+                }
+                if (UIKit.Button(new Rect(k.x + 30, k.yMax - 84, k.width - 60, 52), "조작 안내 다시 보기", 17, false, true, "닫으면 왼쪽 위에 한 단계씩"))
+                {
+                    TutorialHints.Replay = true;
+                    gm.TogglePause();
+                }
+            }
         }
 
         // 묘비에 새긴 듯한 한 줄 (죽을 때마다 하나)
