@@ -72,3 +72,7 @@ metal_trash_can · rusted_spade_01 · machete(근접 무기) · stick_grenade(�
 - Zombie Noises and Moans · https://opengameart.org/content/zombie-noises-and-moans
 - Zombie Moans 01 (emopreben) · https://opengameart.org/content/zombie-moans-01-by-emopreben
   → `Assets/Resources/Sounds/Zombie/` (growl·hurt·scream·die·moan_N.ogg, 모노 44.1kHz, 앞뒤 무음 자름)
+
+## 발소리 (CC0)
+- Different steps on wood, stone, leaves, gravel and mud ([kdd]) · https://opengameart.org/content/different-steps-on-wood-stone-leaves-gravel-and-mud
+  → `Assets/Resources/Sounds/Steps/` (mud_1~3·stone_1~2·wood_1~3, 모노·음량 맞춤)

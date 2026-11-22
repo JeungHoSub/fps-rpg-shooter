@@ -241,6 +241,12 @@ namespace Hunt.Player
                 {
                     stepTimer = sprint ? 0.33f : IsCrouching ? 0.7f : 0.5f;
                     Noise.Emit(transform.position, sprint ? 10f : IsCrouching ? 1.5f : 4f, true); // 앉아 걸으면 거의 안 들린다
+                    // 내 귀에 들리는 발소리: 툇마루·기단 위는 나무, 큰길은 돌, 나머지는 젖은 흙
+                    string surf = "mud";
+                    Vector3 fp = transform.position;
+                    if (Physics.Raycast(fp + Vector3.up * 0.5f, Vector3.down, out var gh, 1.2f, ~((1 << 2) | (1 << 1)), QueryTriggerInteraction.Ignore) && gh.point.y > 0.12f) surf = "wood";
+                    else if (Mathf.Abs(fp.x - VillageBuilder.RoadX(fp.z)) < 3f) surf = "stone";
+                    SFX.Footstep(surf, sprint ? 0.45f : IsCrouching ? 0.12f : 0.28f);
                 }
             }
             else stepTimer = 0f;

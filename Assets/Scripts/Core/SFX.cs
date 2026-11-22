@@ -343,6 +343,14 @@ namespace Hunt.Core
             return arr[i];
         }
 
+        /// <summary>내 발소리: 바닥에 따라 진흙(mud)·돌길(stone)·나무(wood). Resources/Sounds/Steps (CC0).</summary>
+        public static void Footstep(string surface, float volume)
+        {
+            var arr = LoadRecorded("Steps", surface, 3);
+            if (arr.Length == 0 || voices[0] == null) return;
+            PlayPitched(arr[UnityEngine.Random.Range(0, arr.Length)], volume, UnityEngine.Random.Range(0.9f, 1.08f));
+        }
+
         /// <summary>위치가 들리는 3D 소리 + 음높이 (몸집이 큰 망자는 낮고 굵게).</summary>
         public static void PlayAt3D(AudioClip clip, Vector3 pos, float volume, float pitch)
         {
