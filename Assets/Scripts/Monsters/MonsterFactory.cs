@@ -578,6 +578,8 @@ namespace Hunt.Monsters
             var r = go.GetComponent<Renderer>();
             if (glow) r.sharedMaterial = Hunt.Core.FX.UnlitMaterial(c);
             else r.sharedMaterial = Hunt.Core.EnvMaterials.Plain(c, 0.45f);
+            // 작은 장식(눈·징·진액·술 등)은 그림자를 만들지 않는다 — 망자 수십 마리 × 장식 십여 개의 그림자 계산을 줄임
+            if (glow || worldScale.magnitude < 0.25f) { r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; r.receiveShadows = false; }
             go.transform.SetParent(parent, true);
         }
 
