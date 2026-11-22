@@ -522,6 +522,9 @@ namespace Hunt.Monsters
 
         void BossPattern(float dt, float dist, Vector3 dir, ref Vector3 move, ref float spd)
         {
+            // 매 밤 나오는 약한 보스는 덜 자주·덜 아프게 (5번째 밤 대감만 온전한 힘)
+            bool fullBoss = WaveManager.Instance == null || WaveManager.Instance.IsBossWave;
+            float pDmg = fullBoss ? 1f : 0.6f;
             switch (bossState)
             {
                 case 0:
@@ -558,12 +561,12 @@ namespace Hunt.Monsters
                     {
                         chargeHit = true;
                         target.LastAttacker = Data.displayName;
-                        target.TakeDamage(Data.attackDamage * DamageScale * 1.4f, Data.infectionPerHit, transform.position);
+                        target.TakeDamage(Data.attackDamage * DamageScale * 1.4f * pDmg, Data.infectionPerHit, transform.position);
                         target.Controller.Knock(chargeDir * 14f + Vector3.up * 4f);
                         target.Controller.AddShake(3f);
                         bossT = Mathf.Min(bossT, 0.25f);
                     }
-                    if (bossT <= 0f) { bossState = 0; bossCd = Random.Range(7f, 11f) - BossPhase * 1.5f; stagger = 0.8f; }
+                    if (bossT <= 0f) { bossState = 0; bossCd = Random.Range(7f, 11f) - BossPhase * 1.5f + (fullBoss ? 0f : 5f); stagger = 0.8f; }
                     return;
                 case 3: // 내려치기 준비 → 둘레 4.5m 충격
                     move = Vector3.zero;
@@ -571,14 +574,14 @@ namespace Hunt.Monsters
                     if (bossT <= 0f)
                     {
                         bossState = 0;
-                        bossCd = Random.Range(5f, 8f) - BossPhase;
+                        bossCd = Random.Range(5f, 8f) - BossPhase + (fullBoss ? 0f : 4f);
                         SFX.PlayAt(SFX.Explosion, transform.position, 0.8f);
                         FX.BloodBurst(transform.position + Vector3.up * 0.2f, new Color(0.3f, 0.25f, 0.2f), 1.6f); // 흙탕물 튀김
                         Vector3 to = target.transform.position - transform.position; to.y = 0f;
                         if (to.magnitude < 4.5f)
                         {
                             target.LastAttacker = Data.displayName;
-                            target.TakeDamage(Data.attackDamage * DamageScale * 1.2f, Data.infectionPerHit, transform.position);
+                            target.TakeDamage(Data.attackDamage * DamageScale * 1.2f * pDmg, Data.infectionPerHit, transform.position);
                             target.Controller.Knock(to.normalized * 10f + Vector3.up * 3f);
                         }
                         target.Controller.AddShake(Mathf.Lerp(3f, 0.8f, to.magnitude / 15f));

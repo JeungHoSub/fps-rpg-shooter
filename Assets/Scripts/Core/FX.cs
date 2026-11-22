@@ -34,6 +34,8 @@ namespace Hunt.Core
             root = worldRoot;
             holes.Clear();
             holeIndex = 0;
+            pools.Clear(); // 다시 시작하면 예전 피 웅덩이(파괴됨)를 버린다 — 안 그러면 웅덩이가 영영 안 생겼다
+            poolIndex = 0;
             debris = MakeSystem("FX_Debris", 1.3f, ParticleSystemRenderMode.Billboard);
             sparks = MakeSystem("FX_Sparks", 0.7f, ParticleSystemRenderMode.Stretch);
         }
