@@ -195,7 +195,11 @@ namespace Hunt.Player
                     break;
                 }
             }
-            SFX.Play(SFX.MagIn, 0.8f, 0.05f);
+            // 종류마다 다른 줍는 소리: 키트는 천 스치는 소리, 회복제는 병 찰랑, 탄창은 철컥
+            if (kind == PickupKind.Kit) { SFX.PlayPitched(SFX.Bandage, 0.45f, 1.6f); SFX.Play(SFX.UiClick, 0.5f); }
+            else if (kind == PickupKind.Drink) SFX.PlayPitched(SFX.Casing, 0.7f, 0.55f);
+            else SFX.Play(SFX.MagIn, 0.8f, 0.05f);
+            SFX.PlayPitched(SFX.LevelUp, 0.12f, 1.8f); // 아주 작게 '얻었다' 방울
         }
     }
 }
