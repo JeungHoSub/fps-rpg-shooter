@@ -48,6 +48,7 @@ namespace Hunt.Player
         /// <summary>앉아서 쏠 때 반동 배율.</summary>
         public float CrouchRecoilMult => Mathf.Lerp(1f, 0.65f, CrouchBlend);
         float shake, sprintBlock, stepTimer;
+        bool wasGrounded = true;
 
         // ---- 스태미너: 달리기·점프·칼질에 쓰고, 쉬면 찬다. 바닥나면 25까지 회복해야 다시 달린다 ----
         public float Stamina { get; private set; } = 100f;
@@ -220,6 +221,14 @@ namespace Hunt.Player
 
             if (cc.isGrounded)
             {
+                // 착지: 떨어지던 속도만큼 쿵 소리 + 시선이 살짝 꺼졌다 올라옴 (발소리처럼 망자에게도 들린다)
+                if (!wasGrounded && verticalVel < -3.5f)
+                {
+                    float k = Mathf.Clamp01((-verticalVel - 3.5f) / 6f);
+                    SFX.Footstep("mud", 0.35f + 0.4f * k);
+                    AddPunch(-1.2f - 2.5f * k, 0f);
+                    Noise.Emit(transform.position, 6f + 6f * k, true);
+                }
                 verticalVel = -1f;
                 if (input && GameInput.JumpDown && !IsCrouching && UseStamina(10f)) verticalVel = jumpSpeed;
             }
@@ -228,6 +237,7 @@ namespace Hunt.Player
                 verticalVel += Physics.gravity.y * dt;
             }
 
+            wasGrounded = cc.isGrounded;
             cc.Move((wish * speed + Vector3.up * verticalVel + knock) * dt);
             knock *= Mathf.Exp(-5f * dt);
 
