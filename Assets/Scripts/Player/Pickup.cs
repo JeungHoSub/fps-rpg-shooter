@@ -17,7 +17,8 @@ namespace Hunt.Player
         float life = 35f, bobSeed;
         Transform visual;
         Vector3 basePos;
-        bool toldFull; // 가득 찬 상태로 밟으면 한 번만 알려 준다
+        bool toldFull;
+        float age; // 떨어진 뒤 지난 시간 (튀어 오르는 연출) // 가득 찬 상태로 밟으면 한 번만 알려 준다
 
         public static Color ColorOf(PickupKind k) =>
             k == PickupKind.Kit ? new Color(1f, 0.3f, 0.25f) : k == PickupKind.Drink ? new Color(0.35f, 0.75f, 1f) : new Color(1f, 0.78f, 0.3f);
@@ -124,7 +125,13 @@ namespace Hunt.Player
             if (life <= 0f) { Destroy(gameObject); return; }
             if (visual != null)
             {
-                visual.localPosition = Vector3.up * (0.3f + Mathf.Sin(Time.time * 2.5f + bobSeed) * 0.06f);
+                age += dt;
+                // 떨어질 때: 톡 튀어 올랐다가 내려앉으며 커진다 (0.45초)
+                float pop = Mathf.Clamp01(age / 0.45f);
+                float hop = Mathf.Sin(pop * Mathf.PI) * 0.55f * (1f - pop * 0.4f);
+                float grow = pop < 1f ? Mathf.LerpUnclamped(0.2f, 1f, 1f - (1f - pop) * (1f - pop) * (1f - 2.2f * pop)) : 1f;
+                visual.localScale = Vector3.one * grow;
+                visual.localPosition = Vector3.up * (0.3f + hop + Mathf.Sin(Time.time * 2.5f + bobSeed) * 0.06f);
                 visual.Rotate(0f, 90f * dt, 0f, Space.World);
                 // 사라지기 직전 깜빡임
                 visual.gameObject.SetActive(life > 5f || Mathf.Repeat(life, 0.4f) > 0.15f);
