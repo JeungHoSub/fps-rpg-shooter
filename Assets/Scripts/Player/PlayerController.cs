@@ -122,14 +122,19 @@ namespace Hunt.Player
 
         // ---- 쓰러질 때: 시선이 천천히 땅으로 떨어지며 옆으로 기운다 (게임이 멈춰도 돌아가게 실제 시간 기준) ----
         float deathT;
+        bool gunCamOff;
+
         void DeathCam()
         {
             if (cam == null) return;
             deathT += Time.unscaledDeltaTime;
             // 손에서 총이 떨어진다: 무기 전용 카메라를 끈다
-            if (deathT > 0.25f)
+            if (deathT > 0.25f && !gunCamOff)
+            {
+                gunCamOff = true; // 한 번만 찾는다 (매 프레임 검색·할당 방지)
                 foreach (var c in cam.GetComponentsInChildren<Camera>())
                     if (c != cam && c.enabled) c.enabled = false;
+            }
             float k = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(deathT / 1.8f));
             var lp = cam.transform.localPosition;
             cam.transform.localPosition = new Vector3(lp.x, Mathf.Lerp(EyeHeight, 0.28f, k), lp.z);
