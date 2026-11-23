@@ -73,7 +73,7 @@ Unity 1인칭 싱글플레이 좀비 슈터 + RPG. **비 오는 밤의 한국 �
     망자 소리 `Sounds/Zombie`(`SFX.Rec`·`PlayAt3D`·`Monster.VoicePitch`) · 발소리 `Sounds/Steps`(`SFX.Footstep`, 망자 발소리) · 착지 ·
     게임오버 `PlayerController.DeathCam`·최고 기록 `hunt.best.*` · 시작 제목 카드 `StartScreen.DrawIntroCard` · 첫 밤 조작 안내 `UI/TutorialHints.cs`(Esc에서 다시 보기) ·
     피 웅덩이 `FX.BloodPool`·살점 `MonsterGib.Chunk` · 날씨 `Atmosphere.SetWeather` · 서낭당 새벽 `Atmosphere.Dawn` · 보스 돌진·내려치기 `Monster.BossPattern`(약한 보스 ×0.6) ·
-    총 모델 이진화 `Resources/GunsBin` + 메시 캐시 · 탄약 경고 `GameHud.DrawAmmoWarning` · 터치 앉기 버튼 · 작은 장식 그림자 끔.
+    총 모델 이진화 `Resources/GunsBin` + 메시 캐시 · 보급품 가득 참 알림 `Pickup.toldFull` · 탄약 경고 `GameHud.DrawAmmoWarning` · 터치 앉기 버튼 · 작은 장식 그림자 끔.
   - 보류: 망자 모델 다양화 (Mixamo — 사용자 토큰 다시 필요, 토큰은 하루쯤 지나면 만료).
   - 이후 작은 후보: 사용자 피드백 반영 → 성능(실기기 확인 필요) · 버그 점검 · 소리/연출 다듬기.
 - 환경 '2번째'에 Poly Haven 호스트(api.polyhaven.com, dl.polyhaven.org) 허용됨. API는 User-Agent 필요.

@@ -17,6 +17,7 @@ namespace Hunt.Player
         float life = 35f, bobSeed;
         Transform visual;
         Vector3 basePos;
+        bool toldFull; // 가득 찬 상태로 밟으면 한 번만 알려 준다
 
         public static Color ColorOf(PickupKind k) =>
             k == PickupKind.Kit ? new Color(1f, 0.3f, 0.25f) : k == PickupKind.Drink ? new Color(0.35f, 0.75f, 1f) : new Color(1f, 0.78f, 0.3f);
@@ -134,7 +135,18 @@ namespace Hunt.Player
             Vector3 to = p.transform.position - transform.position;
             to.y = 0f;
             float d = to.magnitude;
-            if (d < 4f && CanTake(p))
+            bool can = CanTake(p);
+            if (!can && d < 1.1f && !toldFull)
+            {
+                toldFull = true;
+                string full = kind == PickupKind.Kit ? $"치료 키트 가득 참 (최대 {PlayerCharacter.MaxKits}) — 쓰고 나서 주우세요"
+                            : kind == PickupKind.Drink ? $"회복제 가득 참 (최대 {PlayerCharacter.MaxDrinks}) — 쓰고 나서 주우세요"
+                            : "예비 탄약 가득 참";
+                GameHud.OnPickup(kind == PickupKind.Kit ? HudIcons.Icon.Kit : kind == PickupKind.Drink ? HudIcons.Icon.Bottle : HudIcons.Icon.Ammo,
+                                 new Color(0.6f, 0.58f, 0.54f), full);
+            }
+            else if (d > 3f) toldFull = false;
+            if (d < 4f && can)
             {
                 // 자석처럼 끌려온다
                 transform.position = Vector3.MoveTowards(transform.position, new Vector3(p.transform.position.x, basePos.y, p.transform.position.z), (3f + (4f - d) * 3f) * dt);
