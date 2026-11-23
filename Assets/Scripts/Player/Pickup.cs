@@ -143,7 +143,7 @@ namespace Hunt.Player
                             : kind == PickupKind.Drink ? $"회복제 가득 참 (최대 {PlayerCharacter.MaxDrinks}) — 쓰고 나서 주우세요"
                             : "예비 탄약 가득 참";
                 GameHud.OnPickup(kind == PickupKind.Kit ? HudIcons.Icon.Kit : kind == PickupKind.Drink ? HudIcons.Icon.Bottle : HudIcons.Icon.Ammo,
-                                 new Color(0.6f, 0.58f, 0.54f), full);
+                                 new Color(0.6f, 0.58f, 0.54f), full, false);
             }
             else if (d > 3f) toldFull = false;
             if (d < 4f && can)

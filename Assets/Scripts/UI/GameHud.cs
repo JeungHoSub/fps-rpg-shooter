@@ -25,13 +25,18 @@ namespace Hunt.UI
         /// <summary>키트·회복제 칸이 반짝이는 남은 시간.</summary>
         static float kitFlash, drinkFlash;
 
-        public static void OnPickup(HudIcons.Icon icon, Color color, string text)
+        /// <param name="gained">false면 알림만 (가득 참 등) — 칸을 반짝이지 않는다.</param>
+        public static void OnPickup(HudIcons.Icon icon, Color color, string text, bool gained = true)
         {
             toasts.Add(new PickupToast { icon = icon, color = color, text = text, time = Time.unscaledTime });
             if (toasts.Count > 4) toasts.RemoveAt(0);
+            if (!gained) return;
             if (icon == HudIcons.Icon.Kit) kitFlash = 1f;
             if (icon == HudIcons.Icon.Bottle) drinkFlash = 1f;
         }
+
+        /// <summary>새 판 시작 시 지난 판 알림을 지운다.</summary>
+        public static void ClearToasts() { toasts.Clear(); kitFlash = drinkFlash = 0f; }
 
         void DrawPickups(float dt)
         {

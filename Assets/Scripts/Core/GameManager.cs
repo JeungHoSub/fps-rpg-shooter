@@ -286,6 +286,7 @@ namespace Hunt.Core
             Player = null;
             Monster.Alive.Clear();
             DamageNumbers.Clear();
+            Hunt.UI.GameHud.ClearToasts();
             Navigation.Clear();
             Destroy(world.gameObject);
             BuildWorld();
