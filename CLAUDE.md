@@ -62,24 +62,20 @@ Unity 1인칭 싱글플레이 좀비 슈터 + RPG. **비 오는 밤의 한국 �
   - 능력치 [+1]/[전부] 버튼 + 칸 눈금 `UIKit.StatCells`/`SmallButton`
   - 실총 녹음 총성 `Resources/Sounds/Guns` (Free Firearm Sound Library CC0) + `SFX.PlayShot`(녹음+저음층), 장전음 `Sounds/Mech`
   - 총 모델 `Resources/GunsBin/<id>.bytes`(원본 `Tools/GunSource/*.txt`) + `Weapons/PackGunModel.cs` (Quaternius 팩·M4A1·화염방사기, OpenGameArt CC0). 변환 = OBJ → 총 공간 텍스트
-- **자동 진행 (사용자 요청 2026-11-19): 사용자가 그만하라고 할 때까지 예약 작업으로 계속 업그레이드.** 남은 큐(순서대로):
-  1. ~~맵 덜 딱딱하게~~ 완료(굽은 길 `VillageBuilder.Ribbon`/`RoadX`, 울퉁불퉁 땅+가장자리 언덕 `RollingGround`(보이기만, 판정은 평평), 틀어진 논, 경계 수풀). 영역 축소 완료(`VillageBuilder.Half` 48→44, 무덤·고분·창고·곤포·장승·비닐하우스·스폰 앵커 안쪽으로, 망자 제한도 Half 기준) 2. 능력 칸 완료(`UI/HudIcons.cs` 그림 아이콘·먹 바탕 칸 `GameHud.AbilitySlot`), 기질 카드 완료(한지 카드·낙관·효과 줄나눔·숫자키 1~3, 기질 이름/설명 한국어화) 3. 앉기 표시·보급품 주움 알림(`GameHud.OnPickup`) 완료
-  4. 유탄·로켓발사기 완료(RPG7 CC0 + Quaternius 산탄총 총열 굵게, 변환기 `fat`·`pca` 옵션 = scratchpad tools/gunconv.py) 5. 유형별 외형 완료(`MonsterFactory.KindDressing`: 체격 폭·눈빛 색·배/굳은살/앞치마+식칼/핏자국/천, 조준 이름표 `GameHud.DrawTargetTag`) 6. 초가집 완료(`VillageBuilder.ThatchRoof`: 둥근 빵 모양 곡면·두툼한 처마·새끼줄 그물·용마름 + HanokFrame) 7. 밸런스 완료(`Docs/BALANCE.md`: 방어도 상한, 산탄총·기관단총 관통, 망자 공격력 밤마다 +5% `Monster.DamageScale`, 그림자 망자 감속)
-  다음 큐: 8. 무기 아이콘 완료(`Resources/WeaponIcons/<id>.png` = 총 텍스트 옆모습 렌더, `WeaponIcon.Draw(Rect, WeaponData, Color)`, 기본 권총 포함 전부) 9. 망자 소리 완료(`Sounds/Zombie` CC0 녹음 41개, `SFX.Rec`·`PlayAt3D`, 몸집별 목소리 높낮이 `Monster.VoicePitch`, 발견 비명·멀리 신음) 10. 무기고 완료(칸마다 무기 그림·상태색, 오른쪽 큰 그림+능력 막대, 방어도 안내 새 식) — 방어구 탭은 그대로
-  11. 게임오버 완료(쓰러지는 시점 `PlayerController.DeathCam`, 붓 제목·묘비 문구·'○○에게 물려 쓰러짐' `PlayerCharacter.LastAttacker`·최고 기록 PlayerPrefs `hunt.best.*`·새 기록 낙관), 시작 화면 완료(첫 실행 제목 카드 `StartScreen.DrawIntroCard`·낙관 찍힘+징·앞 빗줄기·최고 기록) 12. 성능 1차 완료(총 모델 이진화 `Resources/GunsBin/*.bytes` + 메시 캐시: 읽기 41ms→0.2~7ms·정점 절반, 원본 텍스트·변환 도구는 `Tools/`) 13. 망자 모델 다양화(Mixamo 다른 캐릭터 — 사용자 토큰 필요하면 요청)
-  이후 후보: 14. 방어구 탭 다듬기 15. 사망 연출 완료(피 웅덩이 `FX.BloodPool`/`BloodPoolFx` 최대 18개·48초, 머리·급소 처치 살점 `MonsterGib.Chunk`) — 13번은 Mixamo 토큰 대기 중이라 건너뜀 16. 날씨 완료(`Atmosphere.SetWeather`: 보슬비·장대비·짙은 안개·뇌우·비 잦아듦, 첫 밤 보슬비·대감의 밤 뇌우, 비 세기·안개 농도·천둥 간격·달빛 배율) 17. 조작 안내 완료(`UI/TutorialHints.cs` 첫 밤 9단계, 해 보면 넘어감, PlayerPrefs `hunt.tut.done`)
-  다음 후보: 18. 방어구 탭 완료(부위 아이콘 `HudIcons` Helmet·Vest·Glove·Greave·Boot·Grenade·Mine·Turret, 등급색 테두리·강화 눈금, 보급 카드) 19. 보스 패턴 완료(`Monster.BossPattern`: 포효 1초 예고→곧은 돌진 1.3초(피격 시 큰 피해+밀려남 `PlayerController.Knock`), 가까우면 0.75초 예고→땅 내려치기 4.5m, 단계 오를수록 자주) 20. 엘리트 외형 완료(`MonsterFactory.EliteDressing`: 장군 망자 어깨받이·갑옷 치마·상모 술·환도, 토혈귀 빛나는 독주머니·진액·고름 혹) 21. 새벽 완료(`Atmosphere.Dawn`: 서낭당(Intermission) 동안 동쪽 낮은 해·푸른 회색 하늘·안개 옅어짐·비 잦아듦·천둥 멎음·새벽 종, 다음 밤에 다시 어두워짐) 22. 모바일 점검 완료(`Docs/MOBILE_READINESS.md`: 터치 앉기 버튼, 터치에선 HUD 능력 칸 숨김·알림 왼쪽 위)
-  큐 끝 → 다음: 사용자 플레이 피드백 대기하며 작은 다듬기(성능·밸런스·버그 점검) 또는 사용자가 원하면 휴대폰 단계 시작
-  - 점검 1 (2026-11-22): 다시 시작 후 피 웅덩이 안 생기던 버그(`FX.Init`에서 pools 비움), 매 밤 약한 보스 패턴 피해 ×0.6·간격 +4~5초
-  - 점검 2: 망자 작은 장식·빛나는 장식 그림자 끔 (`MonsterFactory.Cosmetic`, 크기 0.25 미만)
-  - 다듬기 3: Esc 메뉴 오른쪽 조작 키 표 + '조작 안내 다시 보기'(`TutorialHints.Replay`, 몇 번째 밤이든)
-  - 다듬기 4: 조준점 아래 탄약 경고 `GameHud.DrawAmmoWarning` (25% 이하 'R 장전', 빈 탄창, 예비탄 0이면 무기 교체 안내)
-  - 다듬기 5: 내 발소리 `SFX.Footstep` (`Sounds/Steps` CC0, 바닥 따라 흙·돌길·나무, 달리기/걷기/앉기 음량) — 높은 곳은 밟은 재질 이름(Env_WoodPlanks/StoneWall/Concrete…)으로 구분
-  - 다듬기 6: 가까운 망자 발소리 (10m 안, 3D, 몸집별 크기·높낮이, 전체 0.09초 간격 제한 `Monster.stepClock`)
-  - 다듬기 7: 착지 쿵 소리·시선 꺼짐·소음 (`PlayerController.wasGrounded`, 낙하 속도 비례)
-  - 다듬기 8: 기본 권총 아이콘도 실제 모델 옆모습 (Poly Haven service_pistol에서 권총 한 자루 부위만 골라 렌더) → 모든 무기 그림 완료
-  - 매번: 컴파일 확인 → 커밋 → 푸시 → 바뀐 점 보고. 클라우드에선 게임 화면 캡처 불가 (유니티 실행 불가) — 모델/UI 미리보기 이미지만 가능.
-- 다음 할 일: 사용자 플레이 확인 → 밸런스 조정. 남은 그래픽: 소총·기관단총·산탄총·경기관총 실사 모델(Quaternius Ultimate Gun 팩 — 구글 드라이브 다운로드 한도로 보류, 나중에 재시도), 초가집 사실화
+- **자동 진행 (사용자 요청 2026-11-19): "그만"이라고 할 때까지 예약 작업(3시간마다, trigger `trig_01CsfMcvJFCBg6SvvCs8uaSu`)으로 계속 업그레이드.**
+  매번: git pull → 작게 수정 → 컴파일 확인 → 한국어 커밋 → main 푸시 → 이 목록 갱신 → 바뀐 점을 짧게 보고(미리보기 이미지 있으면 보냄).
+  클라우드에선 게임 화면 캡처 불가 (유니티 실행 불가).
+  **사용자 피드백이 오면 그게 최우선.** "모바일 시작" → 휴대폰 단계(`Docs/MOBILE_READINESS.md` 할 일), "그만" → 예약 작업 삭제.
+  - 완료된 큰 작업 (2026-11-19~23): 맵(굽은 길 `VillageBuilder.Ribbon`/`RoadX`·`RollingGround`·경계 수풀·`Half` 44) · 초가집 `ThatchRoof` ·
+    능력 칸 `UI/HudIcons.cs`·`GameHud.AbilitySlot` · 기질 카드 · 보급품 알림 `GameHud.OnPickup` · 앉기 표시 ·
+    유탄/로켓 모델(RPG7) · 무기 아이콘 `Resources/WeaponIcons`(전부, `WeaponIcon.Draw(Rect, WeaponData, Color)`) · 무기고·방어구 탭 ·
+    망자 유형 외형 `MonsterFactory.KindDressing`·엘리트 `EliteDressing`·조준 이름표 `GameHud.DrawTargetTag` · 밸런스 `Docs/BALANCE.md`(`Monster.DamageScale`) ·
+    망자 소리 `Sounds/Zombie`(`SFX.Rec`·`PlayAt3D`·`Monster.VoicePitch`) · 발소리 `Sounds/Steps`(`SFX.Footstep`, 망자 발소리) · 착지 ·
+    게임오버 `PlayerController.DeathCam`·최고 기록 `hunt.best.*` · 시작 제목 카드 `StartScreen.DrawIntroCard` · 첫 밤 조작 안내 `UI/TutorialHints.cs`(Esc에서 다시 보기) ·
+    피 웅덩이 `FX.BloodPool`·살점 `MonsterGib.Chunk` · 날씨 `Atmosphere.SetWeather` · 서낭당 새벽 `Atmosphere.Dawn` · 보스 돌진·내려치기 `Monster.BossPattern`(약한 보스 ×0.6) ·
+    총 모델 이진화 `Resources/GunsBin` + 메시 캐시 · 탄약 경고 `GameHud.DrawAmmoWarning` · 터치 앉기 버튼 · 작은 장식 그림자 끔.
+  - 보류: 망자 모델 다양화 (Mixamo — 사용자 토큰 다시 필요, 토큰은 하루쯤 지나면 만료).
+  - 이후 작은 후보: 사용자 피드백 반영 → 성능(실기기 확인 필요) · 버그 점검 · 소리/연출 다듬기.
 - 환경 '2번째'에 Poly Haven 호스트(api.polyhaven.com, dl.polyhaven.org) 허용됨. API는 User-Agent 필요.
 - **그래픽 결정됨 (2026-11-18): Mixamo 실사 망자 + 분위기형 배경.**
   - **완료 (2026-11-18):** Mixamo API(사용자 토큰, 환경 네트워크 시크릿)로 `Romero` + 동작 8개를 Collada(DAE)로 받아 `Assets/Resources/Mixamo/`에 넣음.
