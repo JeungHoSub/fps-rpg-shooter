@@ -16,6 +16,20 @@ namespace Hunt.Core
         static int litFrame = -1;
         static bool litCache;
 
+        Material litMat;
+        bool shownDark;
+
+        // 정전 동안 등갓 유리도 어둡게 (불빛만 꺼지고 전구가 빛나면 어색하다)
+        void Update()
+        {
+            if (broken || glow == null) return;
+            bool dark = LampFlicker.Blackout;
+            if (dark == shownDark) return;
+            shownDark = dark;
+            if (dark) { litMat = glow.sharedMaterial; glow.sharedMaterial = EnvMaterials.Plain(new Color(0.1f, 0.09f, 0.08f), 0.6f); }
+            else if (litMat != null) glow.sharedMaterial = litMat;
+        }
+
         void OnEnable() { all.Add(this); }
         void OnDisable() { all.Remove(this); }
 
