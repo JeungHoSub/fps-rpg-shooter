@@ -312,6 +312,7 @@ namespace Hunt.Core
                 cam.backgroundColor = RenderSettings.fogColor;
                 cam.farClipPlane = QualityManager.FarClip;
                 UpdateMoonDisc(cam);
+                Dokkaebi.Tick(transform, cam, Dawn); // 먼 곳의 도깨비불
             }
         }
 
