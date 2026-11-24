@@ -21,6 +21,8 @@ namespace Hunt.UI
             new Step { keys = "Ctrl", text = "앉기 — 탄이 모이고 반동·발소리가 줄어든다", maxTime = 12f },
             new Step { keys = "X  C", text = "치료 키트 · 스태미너 회복제 (망자가 떨어뜨리기도 한다)", maxTime = 10f },
             new Step { keys = "G  V", text = "수류탄 · 칼   —   1~5 무기 바꾸기", maxTime = 10f },
+            new Step { keys = "E", text = "발밑 보급품 줍기 · 보급 상자 열기 (근처에 없으면 재생 능력)", maxTime = 10f },
+            new Step { keys = "M", text = "누르고 있으면 마을 지도 — 노란 빛기둥 보급 상자를 찾아라", maxTime = 10f },
             new Step { keys = "Q  E", text = "역병 능력: 광폭화 · 재생 (오른쪽 아래 구슬이 차면)", maxTime = 10f },
             new Step { keys = "Tab", text = "밤이 끝나면 서낭당에서 능력치·무기를 고른다", maxTime = 9f },
         };
@@ -45,7 +47,9 @@ namespace Hunt.UI
                 case 4: return GameInput.Crouch;
                 case 5: return GameInput.KitDown || GameInput.DrinkDown;
                 case 6: return GameInput.GrenadeDown || GameInput.MeleeDown;
-                case 7: return GameInput.RageDown || GameInput.RegenDown;
+                case 7: return GameInput.PickupDown;
+                case 8: return GameInput.MapHeld;
+                case 9: return GameInput.RageDown || GameInput.RegenDown;
                 default: return false;
             }
         }
