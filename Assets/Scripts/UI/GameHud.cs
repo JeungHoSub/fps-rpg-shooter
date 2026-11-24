@@ -1049,15 +1049,35 @@ namespace Hunt.UI
                 float onM = UIKit.Smooth("hud.aimon", aimOnMonster ? 1f : 0f, 16f);
                 Color c = Color.Lerp(new Color(0.95f, 0.88f, 0.75f, alpha), new Color(1f, 0.32f, 0.25f, alpha), onM);
                 Color sh = new Color(0, 0, 0, alpha * 0.6f);
-                float len = 12;
-                Rect[] lines =
+                int style = GameSettings.Crosshair;
+                if (style == 0)
                 {
-                    new Rect(cx - 1, cy - gap - len, 2, len), new Rect(cx - 1, cy + gap, 2, len),
-                    new Rect(cx - gap - len, cy - 1, len, 2), new Rect(cx + gap, cy - 1, len, 2),
-                };
-                foreach (var l in lines) UIKit.Fill(new Rect(l.x - 1, l.y - 1, l.width + 2, l.height + 2), sh);
-                foreach (var l in lines) UIKit.Fill(l, c);
-                UIKit.Tex(new Rect(cx - 3, cy - 3, 6, 6), UITheme.Diamond, c);
+                    float len = 12;
+                    Rect[] lines =
+                    {
+                        new Rect(cx - 1, cy - gap - len, 2, len), new Rect(cx - 1, cy + gap, 2, len),
+                        new Rect(cx - gap - len, cy - 1, len, 2), new Rect(cx + gap, cy - 1, len, 2),
+                    };
+                    foreach (var l in lines) UIKit.Fill(new Rect(l.x - 1, l.y - 1, l.width + 2, l.height + 2), sh);
+                    foreach (var l in lines) UIKit.Fill(l, c);
+                    UIKit.Tex(new Rect(cx - 3, cy - 3, 6, 6), UITheme.Diamond, c);
+                }
+                else if (style == 1)
+                {
+                    // 점: 가운데 점 하나 (탄퍼짐은 점 둘레의 옅은 원으로)
+                    UIKit.Tex(new Rect(cx - 5, cy - 5, 10, 10), UITheme.Diamond, sh);
+                    UIKit.Tex(new Rect(cx - 3.5f, cy - 3.5f, 7, 7), UITheme.Diamond, c);
+                    float rr = gap + 4f;
+                    UIKit.Tex(new Rect(cx - rr, cy - rr, rr * 2f, rr * 2f), UITheme.DiamondHollow, new Color(c.r, c.g, c.b, c.a * 0.25f));
+                }
+                else
+                {
+                    // 원: 탄퍼짐 크기의 고리 + 가운데 점
+                    float rr = gap + 8f;
+                    UIKit.Tex(new Rect(cx - rr - 1, cy - rr - 1, rr * 2f + 2, rr * 2f + 2), UITheme.DiamondHollow, sh);
+                    UIKit.Tex(new Rect(cx - rr, cy - rr, rr * 2f, rr * 2f), UITheme.DiamondHollow, c);
+                    UIKit.Tex(new Rect(cx - 2.5f, cy - 2.5f, 5, 5), UITheme.Diamond, c);
+                }
             }
 
             if (p.Weapons.HitMarker > 0f)

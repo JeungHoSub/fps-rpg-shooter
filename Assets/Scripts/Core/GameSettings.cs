@@ -65,6 +65,17 @@ namespace Hunt.Core
             set { adsSens = Mathf.Clamp(value, 0.4f, 1.6f); Save(AdsKey, adsSens.Value); }
         }
 
+        const string CrossKey = "hunt.crosshair";
+        static int? crosshair;
+
+        /// <summary>조준점 모양: 0 십자 · 1 점 · 2 원.</summary>
+        public static int Crosshair
+        {
+            get { if (crosshair == null) crosshair = Mathf.Clamp(Mathf.RoundToInt(Load(CrossKey, 0f)), 0, 2); return crosshair.Value; }
+            set { crosshair = Mathf.Clamp(value, 0, 2); Save(CrossKey, crosshair.Value); }
+        }
+        public static string CrosshairName(int i) => i == 1 ? "점" : i == 2 ? "원" : "십자";
+
         const string GoreKey = "hunt.gore";
         static bool? gore;
 
