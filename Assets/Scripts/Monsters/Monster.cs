@@ -231,7 +231,7 @@ namespace Hunt.Monsters
                 if (t > 0f) stagger = Mathf.Max(stagger, Mathf.Min(t, 1.6f));
                 if (Data.id == "z_shriek") Wail();
             }
-            if (alerted && !wasAlerted) SpottedAt = Time.time; // 알아챈 순간 (머리 위 '!')
+            if (alerted && !wasAlerted) { SpottedAt = Time.time; EverAlerted = true; } // 알아챈 순간 (머리 위 '!')
             // 놓쳤다: 마지막으로 본 자리로 가서 뒤진다 (머리 위 '?')
             if (!alerted && wasAlerted && target != null)
             {
@@ -700,6 +700,8 @@ namespace Hunt.Monsters
         public float SpottedAt = -100f;
         /// <summary>쫓다가 놓친 순간 (머리 위 '?').</summary>
         public float LostAt = -100f;
+        /// <summary>이 망자가 한 번이라도 나를 알아챘나 (망자 떼 몰래 보내기 판정).</summary>
+        public bool EverAlerted { get; private set; }
         /// <summary>0~1: 나를 알아채기 직전인 정도 (HUD '…').</summary>
         public float Suspicion { get; private set; }
         bool inBush, passedHidden;

@@ -344,8 +344,21 @@ namespace Hunt.Waves
             Monster.GlobalRush = false;
         }
 
-        bool hordeDone = true;
+        bool hordeDone = true, hordeJudged = true;
         float hordeAt;
+        readonly List<Monster> horde = new List<Monster>();
+
+        /// <summary>망자 떼가 나오고 45초 뒤: 한 마리도 나를 알아채지 못했으면 '몰래 보냈다' 보상.</summary>
+        void JudgeHorde()
+        {
+            hordeJudged = true;
+            if (horde.Count == 0 || Monster.GlobalRush || player == null || player.IsDead) return;
+            foreach (var m in horde) if (m != null && m.EverAlerted) return;
+            int gold = 30 + 5 * Wave;
+            player.AddGold(gold);
+            HUD.Notify($"망자 떼를 들키지 않고 보냈다 — 엽전 +{gold}", new Color(0.75f, 0.9f, 0.65f));
+            SFX.PlayPitched(SFX.LevelUp, 0.5f, 0.9f);
+        }
         /// <summary>망자 떼가 나온 곳과 때 (나침반에 10초 동안 '떼').</summary>
         public static Vector3 HordeFrom;
         public static float HordeTime = -100f;
@@ -359,6 +372,7 @@ namespace Hunt.Waves
             float lane = Random.Range(-h * 0.6f, h * 0.6f);
             Vector3 from = alongX ? new Vector3(-h * side, 0f, lane) : new Vector3(lane, 0f, -h * side);
             Vector3 to = alongX ? new Vector3(h * side, 0f, lane + Random.Range(-8f, 8f)) : new Vector3(lane + Random.Range(-8f, 8f), 0f, h * side);
+            horde.Clear(); hordeJudged = false;
             int room = QualityManager.MaxAliveMonsters + 3 - Monster.Alive.Count;
             int count = Mathf.Clamp(Mathf.Min(4 + Wave / 3, room), 2, 6);
             for (int i = 0; i < count; i++)
@@ -366,6 +380,7 @@ namespace Hunt.Waves
                 Vector2 off = Random.insideUnitCircle * 3f;
                 var m = Spawn(MonsterArchetype.Runner, from + new Vector3(off.x, 0f, off.y), placed: true);
                 if (m == null) continue;
+                horde.Add(m);
                 m.HearNoise(to + new Vector3(off.x, 0f, off.y) * 2f, false);
             }
             SFX.PlayPitched(SFX.Drum, 0.6f, 0.6f);
@@ -382,6 +397,7 @@ namespace Hunt.Waves
             float dt = Time.deltaTime;
 
             if (!hordeDone && Time.time > hordeAt && !Monster.GlobalRush) { hordeDone = true; SpawnHorde(); }
+            if (hordeDone && !hordeJudged && Time.time > HordeTime + 45f) JudgeHorde();
 
             // 시간이 지나면 모두 몰려온다
             if (!Monster.GlobalRush)
