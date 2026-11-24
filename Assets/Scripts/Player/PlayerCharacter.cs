@@ -26,6 +26,8 @@ namespace Hunt.Player
         /// <summary>지금까지 받은 피해 합계 · 가장 긴 연속 처치 (새벽 기록 카드용).</summary>
         public float DamageTaken { get; private set; }
         public int BestStreak { get; set; }
+        /// <summary>이번 밤 현상금 망자를 잡았나 (새벽 기록).</summary>
+        public bool BountyThisNight { get; set; }
         /// <summary>마지막으로 나를 문 망자 이름 (사망 화면용).</summary>
         public string LastAttacker { get; set; }
         public float HurtFlash { get; private set; }
@@ -233,6 +235,7 @@ namespace Hunt.Player
                 Pickup.Spawn(PickupKind.Ammo, m.transform.position - Vector3.right * 0.6f, m.transform.parent);
                 HUD.Notify($"현상금 망자를 쓰러뜨렸다 — 엽전 +{bounty}", new Color(1f, 0.85f, 0.4f));
                 Achievements.Add("bounty10");
+                BountyThisNight = true;
                 SFX.PlayPitched(SFX.LevelUp, 0.6f, 0.9f);
             }
 

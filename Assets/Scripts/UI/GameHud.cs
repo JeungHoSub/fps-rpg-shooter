@@ -851,6 +851,7 @@ namespace Hunt.UI
                 nightKills0 = p.Kills; nightGold0 = p.Gold; nightLevel0 = p.Level;
                 nightDmg0 = p.DamageTaken; nightStart = Time.time;
                 p.BestStreak = 0;
+                p.BountyThisNight = false;
                 dawnShown = -100f;
                 nightBanner = Time.unscaledTime; // 밤이 시작될 때 큰 제목
             }
@@ -868,6 +869,7 @@ namespace Hunt.UI
                     $"받은 상처  <b>{p.DamageTaken - nightDmg0:0}</b>",
                     p.BestStreak >= 3 ? $"가장 긴 연속 처치  <b>{p.BestStreak}</b>" : null,
                     lv > 0 ? $"단계 상승  <b>+{lv}</b>" : null,
+                    $"현상금 망자  <b>{(p.BountyThisNight ? "잡았다" : "놓쳤다")}</b>",
                     SupplyCrate.PlacedThisNight > 0 ? $"연 보급 상자  <b>{SupplyCrate.OpenedThisNight} / {SupplyCrate.PlacedThisNight}</b>" : null,
                 };
                 dawnShown = Time.unscaledTime;
