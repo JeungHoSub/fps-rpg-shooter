@@ -599,6 +599,8 @@ namespace Hunt.Monsters
         bool directKill;
         /// <summary>한 번 다시 일어난 망자 (두 번은 안 일어난다).</summary>
         public bool revenant;
+        /// <summary>소리 없는 처치 등: 다시 일어나지 않는다.</summary>
+        public bool NoRevive;
 
         /// <summary>머리를 맞으면 갓·상투 장식이 총알 방향으로 날아간다 (한 번만).</summary>
         public void KnockOffHat(Vector3 dir)
@@ -870,7 +872,7 @@ namespace Hunt.Monsters
             if (Data.id == "z_bloat") BloatBurst();
             FX.BloodPool(transform.position, Data.scale); // 쓰러진 자리에 피가 번진다
             // 머리를 맞히지 않고 쓰러뜨린 평범한 망자는 가끔(12%) 4초 뒤 다시 일어난다 — "망자는 머리를 날려야 눕는다"
-            if (!IsBoss && !directKill && lastZone != HitZone.Head && Data.archetype == MonsterArchetype.Runner && !revenant
+            if (!IsBoss && !directKill && !NoRevive && lastZone != HitZone.Head && Data.archetype == MonsterArchetype.Runner && !revenant
                 && (Data.id == "z_basic" || Data.id == "z_tank" || Data.id == "z_gnaw") && Random.value < 0.12f && WaveManager.Instance != null)
                 WaveManager.Instance.Revive(Data, transform.position);
             if (rig != null && rig.Pivot != null)

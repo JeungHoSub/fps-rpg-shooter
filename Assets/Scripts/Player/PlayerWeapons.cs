@@ -397,6 +397,7 @@ namespace Hunt.Player
                 Vector3 toMo = mo.transform.position - player.transform.position; toMo.y = 0f;
                 bool backstab = swingUnaware.Contains(mo) && !mo.IsBoss && mo.Data.archetype == Hunt.Data.MonsterArchetype.Runner
                                 && toMo.sqrMagnitude > 0.01f && Vector3.Angle(mo.transform.forward, toMo) < 70f;
+                if (backstab) mo.NoRevive = true;
                 var info = new DamageInfo
                 {
                     baseDamage = backstab ? Mathf.Max(MeleeDamage * 12f, mo.MaxHp * 3f) : MeleeDamage, type = DamageType.Physical, weaponClass = WeaponClass.Melee,
