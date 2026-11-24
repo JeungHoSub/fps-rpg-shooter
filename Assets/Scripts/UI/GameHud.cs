@@ -1289,7 +1289,7 @@ namespace Hunt.UI
             if (!near && Jangseung.NearestToPlayer() != null) { near = true; name = "장승에게 절하기"; can = true; }
             if (!near && SentryTurret.NearestToPlayer() != null) { near = true; name = "기관총 거두기"; can = true; }
             var surv = Survivor.NearestToPlayer();
-            if (!near && surv != null) { near = true; name = gm0Player() != null && gm0Player().Kits > 0 ? "상처 감아 주기 (치료 키트 1개)" : "상처 감아 주기 — 치료 키트가 없다"; can = true; }
+            if (!near && surv != null) { near = true; name = gm0Player() != null && gm0Player().Kits > 0 ? $"상처 감아 주기 (치료 키트 1개 · 지닌 {gm0Player().Kits})" : "상처 감아 주기 — 치료 키트가 없다"; can = true; }
             var siren = SirenTower.NearPlayer();
             if (!near && siren != null) { near = true; name = siren.UsedThisNight ? "사이렌 (이번 밤은 이미 울렸다)" : "사이렌 울리기 — 망자를 이쪽으로 꾄다"; can = true; }
             float a = UIKit.Smooth("hud.pickprompt", near ? 1f : 0f, 12f);
