@@ -449,6 +449,21 @@ namespace Hunt.Monsters
         }
 
         /// <summary>폭발/지속피해/연쇄 등 부위 판정 없는 피해. 처치 시 true.</summary>
+        /// <summary>폭발 등으로 밀려남: 가까울수록 세게, 무거운 놈(보스·거구)은 덜. strength 0~1.</summary>
+        public void Blast(Vector3 from, float strength)
+        {
+            if (IsDead) return;
+            Vector3 dir = transform.position - from;
+            dir.y = 0f;
+            if (dir.sqrMagnitude < 0.01f) dir = -transform.forward;
+            float k = Mathf.Clamp01(strength) * (1f - knockbackResist) * (IsBoss ? 0.3f : 1f);
+            knockVel += dir.normalized * 9f * k;
+            if (knockVel.magnitude > 11f) knockVel = knockVel.normalized * 11f;
+            stagger = Mathf.Max(stagger, 0.45f * k);
+            lastHitDir = dir.normalized;
+            if (rig != null) rig.Flinch(dir.normalized, Mathf.Clamp01(0.4f + k), false);
+        }
+
         public bool ApplyDirectDamage(float amount, DamageType type, bool showNumber = true)
         {
             if (IsDead) return false;

@@ -55,6 +55,7 @@ namespace Hunt.Player
                 float d = Vector3.Distance(point, part.owner.transform.position);
                 float k = Mathf.Lerp(1f, 0.35f, Mathf.Clamp01(d / radius));
                 part.owner.ApplyDirectDamage(damage * k, DamageType.Physical);
+                part.owner.Blast(point, k); // 폭발에 밀려 휘청인다
             }
             if (owner != null && !owner.IsDead)
             {
