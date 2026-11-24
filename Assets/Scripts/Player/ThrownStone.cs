@@ -51,6 +51,10 @@ namespace Hunt.Player
         {
             if (landed) return;
             landed = true;
+            // 덤불 떠보기 (돌·폭죽 모두): 그 덤불에 매복한 망자가 있으면 놀라 튀어나온다
+            if (Hiding.InBush(transform.position))
+                foreach (var lm in Hunt.Monsters.Monster.Alive)
+                    if (lm != null && lm.Lurking && (lm.transform.position - transform.position).sqrMagnitude < 2.2f * 2.2f) lm.Disturb();
             if (firecracker) { popsLeft = 9; popClock = 0.3f; life = 4.5f; return; }
             // 망자에게 직접 맞히면: 화가 나서 던진 사람을 쫓아온다
             var hitMonster = c.collider.GetComponentInParent<Hunt.Monsters.Monster>();
@@ -65,9 +69,6 @@ namespace Hunt.Player
             if (Hiding.InBush(transform.position))
             {
                 SFX.PlayAt3D(SFX.Rustle, transform.position, 0.8f, 1f); Hiding.Shake(transform.position); // 덤불에 떨어지면 바스락
-                // 덤불 떠보기: 그 덤불에 매복한 망자가 있으면 놀라 튀어나온다
-                foreach (var lm in Hunt.Monsters.Monster.Alive)
-                    if (lm != null && lm.Lurking && (lm.transform.position - transform.position).sqrMagnitude < 2.2f * 2.2f) lm.Disturb();
             }
             else SFX.PlayAt(SFX.StoneClack, transform.position, 0.7f);
             Noise.Emit(transform.position, 14f, false);
