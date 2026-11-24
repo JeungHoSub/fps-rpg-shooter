@@ -88,6 +88,36 @@ namespace Hunt.Player
 
         GameObject eyes;
 
+        /// <summary>가짜가 정체를 드러낸다: 웅크린 몸이 일어서며 덤벼든다 (키트는 그대로).</summary>
+        void Reveal()
+        {
+            lost = true;
+            var wm = Hunt.Waves.WaveManager.Instance;
+            if (wm != null)
+            {
+                var z = wm.Spawn(Hunt.Data.MonsterArchetype.Runner, transform.position);
+                if (z != null) z.Alert(10f);
+            }
+            SFX.PlayAt3D(SFX.ZombieScream, transform.position + Vector3.up, 1f, 0.9f);
+            var p = GameManager.Instance != null ? GameManager.Instance.Player : null;
+            if (p != null && p.Controller != null) p.Controller.AddShake(1.5f);
+            HUD.Notify("사람이 아니었다!", new Color(1f, 0.35f, 0.3f));
+            PresentThisNight = false; // 새벽 기록에 '다친 사람'으로 남기지 않는다
+            Destroy(gameObject);
+        }
+
+        /// <summary>총에 맞았다: 가짜면 정체를 드러내고, 진짜 사람이면 잃는다.</summary>
+        public void OnShot(Vector3 at)
+        {
+            if (saved || lost) return;
+            if (trap) { Reveal(); return; }
+            lost = true;
+            LostThisNight = true;
+            FX.BloodBurst(at, new Color(0.45f, 0.03f, 0.04f), 0.8f);
+            if (body != null) body.localRotation = Quaternion.Euler(0f, 0f, 80f);
+            HUD.Notify("사람을 쏘았다… 다친 마을 사람이 숨을 거뒀다", new Color(1f, 0.45f, 0.4f));
+        }
+
         /// <summary>가짜(망자)만: 손전등에 비추면 눈이 붉게 번뜩인다.</summary>
         void BuildEyes()
         {
@@ -112,7 +142,7 @@ namespace Hunt.Player
         {
             var g = GameObject.CreatePrimitive(t);
             if (!collider) Destroy(g.GetComponent<Collider>());
-            else g.layer = 2; // 총알이 맞지 않게
+            else g.name = "SurvivorBody"; // 총알이 맞는다 (PlayerWeapons → OnShot)
             g.transform.SetParent(body, false);
             g.transform.localPosition = pos;
             g.transform.localRotation = rot;
@@ -201,23 +231,7 @@ namespace Hunt.Player
             }
             if (!gm.AcceptsGameplayInput || !GameInput.PickupDown || !ReferenceEquals(NearestToPlayer(), this)) return;
             if (Pickup.AnyNearPlayer()) return; // 보급품 줍기가 먼저
-            if (trap)
-            {
-                // 사람이 아니었다: 웅크린 몸이 일어서며 덤벼든다 (키트는 그대로)
-                lost = true;
-                var wm = Hunt.Waves.WaveManager.Instance;
-                if (wm != null)
-                {
-                    var z = wm.Spawn(Hunt.Data.MonsterArchetype.Runner, transform.position);
-                    if (z != null) z.Alert(10f);
-                }
-                SFX.PlayAt3D(SFX.ZombieScream, transform.position + Vector3.up, 1f, 0.9f);
-                if (p.Controller != null) p.Controller.AddShake(1.5f);
-                HUD.Notify("사람이 아니었다!", new Color(1f, 0.35f, 0.3f));
-                PresentThisNight = false; // 새벽 기록에 '다친 사람'으로 남기지 않는다
-                Destroy(gameObject);
-                return;
-            }
+            if (trap) { Reveal(); return; }
             if (p.Kits <= 0) { HUD.Notify("치료 키트가 있어야 상처를 감아 줄 수 있다 (X 키트, 서낭당에서 산다)", UITheme.BoneDim); return; }
             p.Kits--;
             saved = true;

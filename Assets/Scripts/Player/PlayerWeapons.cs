@@ -903,6 +903,7 @@ namespace Hunt.Player
                     }
 
                     if (hit.collider.name == "SirenHorn" && SirenTower.Instance != null) SirenTower.Instance.ShotHorn();
+                    if (hit.collider.name == "SurvivorBody") { var sv = hit.collider.GetComponentInParent<Survivor>(); if (sv != null) sv.OnShot(hit.point); }
                     if (hit.collider.name == "LampHead") { var lampHit = hit.collider.GetComponentInParent<ShootableLamp>(); if (lampHit != null) lampHit.Hit(hit.point); }
                     var boom = hit.collider.GetComponentInParent<ExplosiveProp>();
                     if (boom != null) boom.Hit(w.Damage * dmgScale, flame);
