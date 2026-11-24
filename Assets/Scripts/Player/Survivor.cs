@@ -116,12 +116,21 @@ namespace Hunt.Player
             if (gm == null) return;
             if (saved || lost)
             {
-                // 구했으면 일어나 서낭당 쪽으로 사라지고, 잃었으면 쓰러진 채 남는다
+                // 구했으면 일어나 절뚝이며 어둠 속으로 멀어지고, 잃었으면 쓰러진 채 남는다
                 if (saved)
                 {
                     leaveT += Time.deltaTime;
-                    body.localScale = Vector3.one * Mathf.Clamp01(1f - (leaveT - 1.5f) / 0.8f);
-                    if (leaveT > 2.4f) Destroy(gameObject);
+                    if (leaveT > 0.8f)
+                    {
+                        var pl = gm.Player;
+                        Vector3 away = pl != null ? transform.position - pl.transform.position : transform.forward;
+                        away.y = 0f;
+                        if (away.sqrMagnitude > 0.01f) transform.rotation = Quaternion.LookRotation(away);
+                        transform.position += transform.forward * 2.2f * Time.deltaTime;
+                        body.localPosition = new Vector3(0f, 0.35f + Mathf.Abs(Mathf.Sin(leaveT * 7f)) * 0.06f, 0f); // 일어서서 절뚝
+                    }
+                    body.localScale = Vector3.one * Mathf.Clamp01(1f - (leaveT - 3.2f) / 0.6f);
+                    if (leaveT > 3.8f) Destroy(gameObject);
                 }
                 return;
             }
