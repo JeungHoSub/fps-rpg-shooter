@@ -32,6 +32,9 @@ namespace Hunt.Player
         public float NightStartDamage { get; set; }
         /// <summary>이번 판 통계 (사망 화면): 머리 처치 · 연 보급 상자 · 현상금 · 소리 없는 처치.</summary>
         public int RunHeadKills, RunCrates, RunBounties, RunSilent;
+        /// <summary>서낭당 부적 (다음 밤 하루만): 호신부 피해 -20% · 축지부 이동 +12% · 명중부 탄퍼짐 -25%.</summary>
+        public bool CharmGuard, CharmSwift, CharmAim;
+        public void ClearCharms() { CharmGuard = CharmSwift = CharmAim = false; }
         /// <summary>마지막으로 나를 문 망자 이름 (사망 화면용).</summary>
         public string LastAttacker { get; set; }
         public float HurtFlash { get; private set; }
@@ -162,7 +165,7 @@ namespace Hunt.Player
         public void TakeDamage(float dmg, float infection)
         {
             if (IsDead) return;
-            float taken = dmg * Infection.DamageTakenMultiplier * Armor.DamageTakenMult * Stats.DamageTakenMult;
+            float taken = dmg * Infection.DamageTakenMultiplier * Armor.DamageTakenMult * Stats.DamageTakenMult * (CharmGuard ? 0.8f : 1f);
             Hp -= taken;
             DamageTaken += Mathf.Max(0f, taken);
             if (taken > MaxHp * 0.04f) GameHud.ScreenBlood(taken / Mathf.Max(1f, MaxHp)); // 세게 물리면 화면에 피가 튄다

@@ -235,6 +235,7 @@ namespace Hunt.Core
         {
             LastEvolution = Evolution.Evolve();
             State = GameState.Intermission;
+            if (Player != null) Player.ClearCharms(); // 부적은 하룻밤만
             IntermissionTime = IntermissionDuration;
             MenuOpen = true;
 

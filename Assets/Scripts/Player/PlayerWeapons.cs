@@ -246,7 +246,7 @@ namespace Hunt.Player
             bool runGun = stats.Has(Trait.RunAndGun);
             if (player.Controller.IsMoving && !runGun) s += w.data.spreadMovePenalty;
             s += Mathf.Min(shotIndex, 10) * 0.08f * (1f - aim * 0.7f); // 연사 블룸
-            s *= stats.SpreadMult * w.SpreadMult * player.Controller.CrouchSpreadMult; // 앉으면 탄이 모인다
+            s *= stats.SpreadMult * w.SpreadMult * player.Controller.CrouchSpreadMult * (player.CharmAim ? 0.75f : 1f); // 앉으면 탄이 모인다 · 명중부
             s += player.Infection.IsFrenzy ? 3f : 0f;
             return s;
         }

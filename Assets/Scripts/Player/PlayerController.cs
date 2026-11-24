@@ -288,7 +288,8 @@ namespace Hunt.Player
             else breathTimer = 0f;
             IsSprinting = sprint;
             float speed = player.Stats.MoveSpeed * WeightPenalty * player.Infection.MoveMultiplier * MoveMultiplier * (sprint ? 1.45f : 1f)
-                * player.Armor.MoveMult * (player.IsUsingItem ? 0.45f : 1f) * (Exhausted ? 0.85f : 1f) * GameRules.MoveMult * Mathf.Lerp(1f, 0.5f, CrouchBlend);
+                * player.Armor.MoveMult * (player.IsUsingItem ? 0.45f : 1f) * (Exhausted ? 0.85f : 1f) * GameRules.MoveMult * Mathf.Lerp(1f, 0.5f, CrouchBlend)
+                * (player.CharmSwift ? 1.12f : 1f); // 축지부
             if (sliding)
             {
                 // 처음엔 달리기보다 빠르게, 점점 느려진다. 방향은 미끄러지기 시작한 쪽 그대로

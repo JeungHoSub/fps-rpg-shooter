@@ -600,23 +600,27 @@ namespace Hunt.UI
             // ---- 보급: 소비 아이템 · 특수 기기 ----
             UIKit.Text(new Rect(right.x, right.y + 12, right.width, 30), "보급", 22, UITheme.Gold, TextAnchor.MiddleCenter, serif: true, bold: true);
             float y = right.y + 54;
+            const int buyRows = 2 + Gadgets.Count + 3; // 키트·회복제 + 기기 + 부적 3
+            float rowStep = Mathf.Min(74f, (right.height - 54f - 64f) / buyRows);
+            float buyH = rowStep - 6f;
             void Buy(HudIcons.Icon icon, Color tint, string name, string desc, int have, int max, int price, System.Action give)
             {
                 // 보급 칸: 그림 + 이름·설명 + 개수 칸 + 가격 (누르면 산다)
-                var r = new Rect(right.x + 16, y, right.width - 32, 66);
+                var r = new Rect(right.x + 16, y, right.width - 32, buyH);
                 bool full = have >= max;
                 bool can = !full && p.Gold >= price;
                 bool click = UIKit.HitArea(r, "buy" + name, out float hv, can);
                 UIKit.Fill(r, new Color(0.04f, 0.038f, 0.04f, 0.9f));
                 if (hv > 0f) UIKit.Fill(r, new Color(1f, 0.95f, 0.85f, 0.06f * hv));
                 UIKit.Outline(r, can ? Color.Lerp(new Color(0.45f, 0.42f, 0.37f), UITheme.GoldBright, hv) : new Color(0.3f, 0.29f, 0.27f, 0.8f));
-                UIKit.Tex(new Rect(r.x + 12, r.y + 13, 40, 40), HudIcons.Get(icon), can || full ? tint : new Color(0.45f, 0.43f, 0.4f));
-                UIKit.Text(new Rect(r.x + 64, r.y + 6, r.width - 170, 26), name, 17, UITheme.Bone, serif: true, bold: true);
-                UIKit.Text(new Rect(r.x + 64, r.y + 34, r.width - 170, 22), desc, 13, UITheme.BoneDim);
+                float ic = Mathf.Min(40f, buyH - 16f);
+                UIKit.Tex(new Rect(r.x + 12, r.y + (buyH - ic) / 2f, ic, ic), HudIcons.Get(icon), can || full ? tint : new Color(0.45f, 0.43f, 0.4f));
+                UIKit.Text(new Rect(r.x + 64, r.y + 3, r.width - 170, 24), name, 16, UITheme.Bone, serif: true, bold: true);
+                UIKit.Text(new Rect(r.x + 64, r.y + buyH * 0.48f, r.width - 170, 20), desc, 12, UITheme.BoneDim);
                 UIKit.StatCells(new Rect(r.xMax - 100, r.y + 12, 88, 10), max, 0, have, 0);
                 UIKit.Text(new Rect(r.xMax - 110, r.y + 30, 98, 26), full ? "가득" : $"엽전 {price}", 15, full ? UITheme.Ash : p.Gold >= price ? UITheme.Good : UITheme.BloodBright, TextAnchor.MiddleRight, bold: true);
                 if (click && p.SpendGold(price)) { give(); SFX.Play(SFX.MagIn, 0.8f); }
-                y += 74;
+                y += rowStep;
             }
             Buy(HudIcons.Icon.Kit, new Color(1f, 0.42f, 0.36f), "치료 키트 (X)", "2.5초 동안 감는다", p.Kits, PlayerCharacter.MaxKits, 60, () => p.Kits++);
             Buy(HudIcons.Icon.Bottle, new Color(0.45f, 0.78f, 1f), "스태미너 회복제 (C)", "기운 즉시 회복", p.Drinks, PlayerCharacter.MaxDrinks, 40, () => p.Drinks++);
@@ -629,7 +633,11 @@ namespace Hunt.UI
                 var gi = g == GadgetType.Grenade ? HudIcons.Icon.Grenade : g == GadgetType.Mine ? HudIcons.Icon.Mine : g == GadgetType.Molotov ? HudIcons.Icon.Flame : HudIcons.Icon.Turret;
                 Buy(gi, UITheme.Bone, Gadgets.Name(g) + (g == GadgetType.Grenade ? " (5 / G)" : " (5)"), Gadgets.Desc(g), gc[i], Gadgets.MaxCarry(g), price, () => gc[idx]++);
             }
-            UIKit.Text(new Rect(right.x + 20, right.yMax - 60, right.width - 40, 50), "밤을 넘길 때마다 키트·회복제·특수 기기가 하나씩 보급된다.", 14, UITheme.Ash, TextAnchor.MiddleCenter, serif: true, wrap: true);
+            // 부적: 다음 밤 하루만 듣는다 (밤이 끝나면 사라짐)
+            Buy(HudIcons.Icon.Helmet, new Color(0.95f, 0.85f, 0.6f), "호신부 — 다음 밤", "받는 피해 -20% (하룻밤)", p.CharmGuard ? 1 : 0, 1, 80, () => p.CharmGuard = true);
+            Buy(HudIcons.Icon.Boot, new Color(0.95f, 0.85f, 0.6f), "축지부 — 다음 밤", "이동 속도 +12% (하룻밤)", p.CharmSwift ? 1 : 0, 1, 60, () => p.CharmSwift = true);
+            Buy(HudIcons.Icon.Ammo, new Color(0.95f, 0.85f, 0.6f), "명중부 — 다음 밤", "탄퍼짐 -25% (하룻밤)", p.CharmAim ? 1 : 0, 1, 70, () => p.CharmAim = true);
+            UIKit.Text(new Rect(right.x + 20, right.yMax - 56, right.width - 40, 50), "밤을 넘길 때마다 키트·회복제·특수 기기가 하나씩 보급된다. 부적은 다음 밤 하루만 듣는다.", 13, UITheme.Ash, TextAnchor.MiddleCenter, serif: true, wrap: true);
         }
 
         // ------------------------------------------------------------------ 역병 연구
