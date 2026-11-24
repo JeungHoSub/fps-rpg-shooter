@@ -8,7 +8,8 @@ namespace Hunt.UI
     {
         float deathAppear;
 
-        public void ResetDeath() { deathAppear = 0f; }
+        int tip;
+        public void ResetDeath() { deathAppear = 0f; tip = Random.Range(0, 1000); }
 
         float pauseAppear, lastPauseDraw = -10f;
 
@@ -196,6 +197,8 @@ namespace Hunt.UI
                 UIKit.Text(new Rect(r.x, r.yMax + 8, r.width, 22), best, 14, UITheme.Ash, TextAnchor.MiddleCenter);
             }
 
+            // 요령 한 줄 (쓰러질 때마다 다른 것)
+            UIKit.Text(new Rect(0, y + 506, W, 24), "요령 — " + GameText.DeathTips[tip % GameText.DeathTips.Length], 16, UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true);
             if (a > 0.6f && UIKit.Button(new Rect(W / 2 - 170, y + 424, 340, 70), "다시 사냥한다", 28, false, true, "R")) gm.Restart();
             UIKit.Alpha = 1f;
         }
