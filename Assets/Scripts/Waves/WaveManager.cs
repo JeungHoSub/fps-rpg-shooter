@@ -358,6 +358,7 @@ namespace Hunt.Waves
             int gold = 30 + 5 * Wave;
             player.AddGold(gold);
             HUD.Notify($"망자 떼를 들키지 않고 보냈다 — 엽전 +{gold}", new Color(0.75f, 0.9f, 0.65f));
+            Achievements.Add("horde3");
             SFX.PlayPitched(SFX.LevelUp, 0.5f, 0.9f);
         }
         /// <summary>망자 떼가 나온 곳과 때 (나침반에 10초 동안 '떼').</summary>
