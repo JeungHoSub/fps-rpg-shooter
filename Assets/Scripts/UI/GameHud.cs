@@ -981,7 +981,7 @@ namespace Hunt.UI
 
         // ---- 새벽 기록 카드: 그 밤에 한 일을 날이 밝을 때 잠깐 보여 준다 ----
         GameState nightLastState = GameState.CharacterSelect;
-        int nightKills0, nightGold0, nightLevel0;
+        int nightKills0, nightGold0, nightLevel0, nightSilent0, nightHidden0;
         float nightDmg0, nightStart;
         string[] dawnLines;
         bool dawnFinal;
@@ -996,6 +996,7 @@ namespace Hunt.UI
             if (gm.State == GameState.Playing)
             {
                 nightKills0 = p.Kills; nightGold0 = p.Gold; nightLevel0 = p.Level;
+                nightSilent0 = p.RunSilent; nightHidden0 = p.RunHidden;
                 nightDmg0 = p.DamageTaken; nightStart = Time.time;
                 p.BestStreak = 0;
                 p.BountyThisNight = false;
@@ -1023,6 +1024,7 @@ namespace Hunt.UI
                     lv > 0 ? $"단계 상승  <b>+{lv}</b>" : null,
                     $"현상금 망자  <b>{(p.BountyThisNight ? "잡았다" : "놓쳤다")}</b>",
                     NightTask.Summary,
+                    p.RunSilent > nightSilent0 || p.RunHidden > nightHidden0 ? $"몰래  소리 없는 처치 <b>{p.RunSilent - nightSilent0}</b> · 숨어 보낸 망자 <b>{p.RunHidden - nightHidden0}</b>" : null,
                     SupplyCrate.PlacedThisNight > 0 ? $"연 보급 상자  <b>{SupplyCrate.OpenedThisNight} / {SupplyCrate.PlacedThisNight}</b>" : null,
                 };
                 dawnShown = Time.unscaledTime;
