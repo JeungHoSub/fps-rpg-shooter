@@ -88,6 +88,12 @@ namespace Hunt.UI
                 var sp = ToMap(SirenTower.Instance.transform.position, r);
                 UIKit.Emblem(new Rect(sp.x - 13, sp.y - 13, 26, 26), "탑", SirenTower.Instance.UsedThisNight ? new Color(0.45f, 0.43f, 0.4f) : new Color(1f, 0.7f, 0.35f), true);
             }
+            // 망자 떼가 나온 곳 (20초)
+            if (Time.time - Hunt.Waves.WaveManager.HordeTime < 20f)
+            {
+                var hp = ToMap(Hunt.Waves.WaveManager.HordeFrom, r);
+                UIKit.Emblem(new Rect(hp.x - 13, hp.y - 13, 26, 26), "떼", UITheme.BloodBright, true);
+            }
             // 다친 마을 사람
             foreach (var sv in Survivor.Active)
             {
