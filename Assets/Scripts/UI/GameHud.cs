@@ -1,5 +1,6 @@
 using Hunt.Combat;
 using Hunt.Core;
+using Hunt.Data;
 using Hunt.Monsters;
 using Hunt.Player;
 using Hunt.Waves;
@@ -388,6 +389,23 @@ namespace Hunt.UI
         }
 
         bool aimOnMonster; // 조준점이 망자 위에 있나 (조준선이 붉게)
+        readonly System.Collections.Generic.HashSet<string> seenThisRun = new System.Collections.Generic.HashSet<string>();
+
+        /// <summary>처음 보는 망자 유형을 조준하면 한 번 이름과 특징을 알려 준다 (판이 바뀌어도 기억).</summary>
+        void FirstSight(Monster m)
+        {
+            string id = m.Data.id;
+            if (string.IsNullOrEmpty(id) || !id.StartsWith("z_") || !seenThisRun.Add(id)) return;
+            string key = "hunt.seen." + id;
+            try { if (PlayerPrefs.GetInt(key, 0) == 1) return; PlayerPrefs.SetInt(key, 1); } catch { return; }
+            foreach (var k in DefaultContent.ZombieKinds)
+                if ("z_" + k.id == id)
+                {
+                    if (k.id == "basic") return;
+                    HUD.Notify($"처음 보는 망자 — {k.name}  ·  {k.desc}", new Color(0.95f, 0.8f, 0.55f));
+                    return;
+                }
+        }
 
         void DrawTargetTag(Camera cam)
         {
@@ -399,7 +417,11 @@ namespace Hunt.UI
                 if (Physics.Raycast(ray, out var hit, 40f, ~((1 << 2) | (1 << 1)), QueryTriggerInteraction.Ignore))
                 {
                     var part = hit.collider.GetComponent<MonsterPart>();
-                    if (part != null && part.owner != null && !part.owner.IsDead) { tagTarget = part.owner; tagTime = 1.2f; aimOnMonster = true; }
+                    if (part != null && part.owner != null && !part.owner.IsDead)
+                    {
+                        tagTarget = part.owner; tagTime = 1.2f; aimOnMonster = true;
+                        FirstSight(part.owner);
+                    }
                 }
                 tagTime -= Time.unscaledDeltaTime;
             }
