@@ -62,7 +62,8 @@ namespace Hunt.Player
                 life = 1f;
                 return;
             }
-            SFX.PlayAt(SFX.StoneClack, transform.position, 0.7f);
+            if (Hiding.InBush(transform.position)) { SFX.PlayAt3D(SFX.Rustle, transform.position, 0.8f, 1f); Hiding.Shake(transform.position); } // 덤불에 떨어지면 바스락
+            else SFX.PlayAt(SFX.StoneClack, transform.position, 0.7f);
             Noise.Emit(transform.position, 14f, false);
             life = 2f;
         }
