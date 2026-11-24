@@ -514,6 +514,27 @@ namespace Hunt.Core
             return Clip("knock", d);
         });
 
+        /// <summary>민방위 사이렌: 오르내리는 울음 (5초). 확성기 탑.</summary>
+        public static AudioClip Siren => Get("siren", () =>
+        {
+            const float len = 5f;
+            int n = (int)(Rate * len);
+            var d = new float[n];
+            float ph = 0f;
+            for (int i = 0; i < n; i++)
+            {
+                float t = (float)i / Rate;
+                float sweep = 0.5f - 0.5f * Mathf.Cos(t / len * Mathf.PI * 4f); // 두 번 올라갔다 내려옴
+                float hz = 380f + 420f * sweep;
+                ph += 2f * Mathf.PI * hz / Rate;
+                float env = Mathf.Clamp01(t * 3f) * Mathf.Clamp01((len - t) * 2f);
+                // 확성기처럼 거친 소리: 사인 + 홀수 배음
+                float v = Mathf.Sin(ph) + 0.35f * Mathf.Sin(ph * 3f) + 0.15f * Mathf.Sin(ph * 5f);
+                d[i] = v * 0.32f * env;
+            }
+            return Clip("siren", d);
+        });
+
         /// <summary>까마귀 '까악' 두 번 (거친 톱니파 + 떨림).</summary>
         public static AudioClip Caw => Get("caw", () =>
         {

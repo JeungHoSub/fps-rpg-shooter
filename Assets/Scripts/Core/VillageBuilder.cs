@@ -627,6 +627,7 @@ namespace Hunt.Core
 
             // 확성기 탑
             var t = Group("확성기탑", new Vector3(-6f, 0f, -9f), 0f);
+            t.gameObject.AddComponent<SirenTower>(); // E로 사이렌 (밤마다 한 번)
             Prim(PrimitiveType.Cylinder, new Vector3(0, 4f, 0), new Vector3(0.25f, 4f, 0.25f), EnvMaterials.Plain(new Color(0.5f, 0.5f, 0.48f), 0.5f, 0.4f), t);
             var horn = EnvMaterials.Plain(new Color(0.75f, 0.75f, 0.72f), 0.6f, 0.3f);
             for (int i = 0; i < 4; i++)
