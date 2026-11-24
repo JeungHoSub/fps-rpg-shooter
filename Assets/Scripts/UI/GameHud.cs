@@ -304,6 +304,15 @@ namespace Hunt.UI
                 float x = In(b) ? X(b) : (Mathf.DeltaAngle(yaw, b) > 0 ? r.xMax : r.x);
                 UIKit.Fill(new Rect(x - 4, r.y - 6, 8, 8), new Color(1f, 0.8f, 0.3f, In(b) ? 0.95f : 0.4f));
             }
+            // 지킴 밤: 돌무더기 방향
+            var gmw = GameManager.Instance != null ? GameManager.Instance.Waves : null;
+            if (gmw != null && gmw.Rule == RoundRule.Defense)
+            {
+                float b = Bearing(gmw.DefendPos);
+                bool inside = In(b);
+                float x = inside ? X(b) : (Mathf.DeltaAngle(yaw, b) > 0 ? r.xMax : r.x);
+                UIKit.Text(new Rect(x - 14, r.y - 24, 28, 22), "지", 16, new Color(1f, 0.85f, 0.45f, inside ? 1f : 0.6f), TextAnchor.MiddleCenter, serif: true, bold: true);
+            }
             // 드러난 망자·보스
             foreach (var m in Monster.Alive)
             {
