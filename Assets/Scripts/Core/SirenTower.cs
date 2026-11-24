@@ -34,8 +34,17 @@ namespace Hunt.Core
             return d.sqrMagnitude < Range * Range ? t : null;
         }
 
+        Renderer beacon;
+        float beaconT;
+
         void Update()
         {
+            // 사이렌 뒤 25초 동안 탑 꼭대기 붉은 등이 깜빡인다 (어디로 몰려가는지 보이게)
+            if (beaconT > 0f)
+            {
+                beaconT -= Time.deltaTime;
+                if (beacon != null) beacon.enabled = beaconT > 0f && Mathf.Repeat(Time.time, 0.8f) < 0.4f;
+            }
             var gm = GameManager.Instance;
             if (gm == null || !gm.AcceptsGameplayInput || !GameInput.PickupDown) return;
             if (!ReferenceEquals(NearPlayer(), this)) return;
@@ -47,6 +56,19 @@ namespace Hunt.Core
             SFX.Play(SFX.Siren, 0.35f, 0f); // 가까이서도 귀가 울리게
             Noise.Emit(transform.position, 110f, false); // 폭우에도 마을 끝까지 들린다
             Crows.Startle(transform.position); // 까마귀가 날아오른다
+            if (beacon == null)
+            {
+                var b = FX.LowSphere();
+                b.name = "SirenBeacon";
+                b.layer = 2;
+                b.transform.SetParent(transform, false);
+                b.transform.localPosition = Vector3.up * 8.1f;
+                b.transform.localScale = Vector3.one * 0.35f;
+                beacon = b.GetComponent<Renderer>();
+                beacon.sharedMaterial = FX.UnlitMaterial(new Color(1f, 0.12f, 0.05f));
+                beacon.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            }
+            beaconT = 25f;
             HUD.Notify("사이렌이 울린다 — 망자들이 확성기 탑으로 몰려온다", new Color(1f, 0.7f, 0.35f));
         }
     }
