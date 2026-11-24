@@ -372,6 +372,16 @@ namespace Hunt.Player
 
         readonly HashSet<Monster> swingUnaware = new HashSet<Monster>();
 
+        int impactFrame;
+        /// <summary>벽·땅 명중 소리 (한 프레임 한 번 — 산탄 여러 알이 겹치지 않게). 단단한 면은 가끔 도탄.</summary>
+        void ImpactSound(Vector3 p, Vector3 n)
+        {
+            if (impactFrame == Time.frameCount) return;
+            impactFrame = Time.frameCount;
+            if (n.y > 0.75f) SFX.PlayAt(SFX.MudHit, p, 0.5f);
+            else if (Random.value < 0.14f) SFX.PlayAt(SFX.Ricochet, p, 0.35f);
+        }
+
         void MeleeHit()
         {
             Vector3 center = cam.transform.position + cam.transform.forward * 1.2f;
@@ -814,7 +824,7 @@ namespace Hunt.Player
                     if (hit.collider.name == "LampHead") { var lampHit = hit.collider.GetComponentInParent<ShootableLamp>(); if (lampHit != null) lampHit.Hit(hit.point); }
                     var boom = hit.collider.GetComponentInParent<ExplosiveProp>();
                     if (boom != null) boom.Hit(w.Damage * dmgScale, flame);
-                    if (!flame) FX.ImpactWorld(hit.point, hit.normal);
+                    if (!flame) { FX.ImpactWorld(hit.point, hit.normal); ImpactSound(hit.point, hit.normal); }
                     if (flame || wallPower <= 0.02f) break;
                     // 벽 두께: 관통 깊이만큼 앞에서 거꾸로 쏴서 빠져나오는 면을 찾는다 (없으면 너무 두꺼움)
                     float probe = wallPower + 0.05f;

@@ -340,6 +340,10 @@ namespace Hunt.Core
             return Clip("rocket", d);
         }
         public static AudioClip Empty => Get("empty", () => MakeClick(0.05f, 2600f, 0.5f));
+        /// <summary>도탄 (돌·쇠에 맞고 튕기는 '피웅').</summary>
+        public static AudioClip Ricochet => Get("ricochet", () => MakeTone(0.32f, 4200f, 1500f, 0.16f));
+        /// <summary>젖은 땅에 박히는 '퍽'.</summary>
+        public static AudioClip MudHit => Get("mudhit", () => MakeClick(0.07f, 380f, 0.5f));
         /// <summary>탄창이 바닥날 때 쏠 때마다 나는 가벼운 '틱' (갈수록 높아짐).</summary>
         public static AudioClip LowAmmoTick => Get("lowammo", () => MakeTone(0.035f, 3200f, 3000f, 0.35f));
         public static AudioClip MagOut => Mech("magout", () => MakeClick(0.09f, 900f, 0.8f));

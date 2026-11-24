@@ -336,6 +336,19 @@ namespace Hunt.Core
         /// <summary>벽·바닥 명중: 불꽃 + 먼지 + 탄흔.</summary>
         public static void ImpactWorld(Vector3 point, Vector3 normal)
         {
+            // 젖은 땅: 불꽃 대신 흙탕물이 위로 튄다
+            bool ground = normal.y > 0.75f;
+            if (ground)
+            {
+                for (int i = 0; i < 7; i++)
+                {
+                    Vector3 v = (Vector3.up * 1.6f + Random.insideUnitSphere * 0.7f).normalized * Random.Range(1.8f, 3.6f);
+                    Emit(debris, point + Vector3.up * 0.03f, v, Random.Range(0.03f, 0.07f), Random.Range(0.35f, 0.55f), new Color(0.32f, 0.3f, 0.26f, 0.85f));
+                }
+                Emit(debris, point + Vector3.up * 0.05f, Vector3.up * 0.5f, 0.35f, 0.5f, new Color(0.45f, 0.44f, 0.42f, 0.35f)); // 물안개
+                BulletHole(point, normal);
+                return;
+            }
             for (int i = 0; i < 6; i++)
             {
                 Vector3 v = (normal + Random.insideUnitSphere * 0.8f).normalized * Random.Range(4f, 9f);
