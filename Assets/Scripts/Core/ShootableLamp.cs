@@ -12,6 +12,31 @@ namespace Hunt.Core
         public LampFlicker flicker;
         public Renderer glow;
         bool broken;
+        static readonly System.Collections.Generic.List<ShootableLamp> all = new System.Collections.Generic.List<ShootableLamp>();
+        static int litFrame = -1;
+        static bool litCache;
+
+        void OnEnable() { all.Add(this); }
+        void OnDisable() { all.Remove(this); }
+
+        /// <summary>플레이어가 켜진 가로등 불빛(6.5m) 아래 서 있나 (망자가 더 멀리서 본다). 한 프레임에 한 번만 계산.</summary>
+        public static bool PlayerLit()
+        {
+            if (litFrame == Time.frameCount) return litCache;
+            litFrame = Time.frameCount;
+            litCache = false;
+            var gm = GameManager.Instance;
+            var p = gm != null ? gm.Player : null;
+            if (p == null) return false;
+            Vector3 pp = p.transform.position;
+            foreach (var l in all)
+            {
+                if (l == null || l.broken || l.lamp == null || !l.lamp.enabled) continue;
+                Vector3 d = l.transform.position - pp; d.y = 0f;
+                if (d.sqrMagnitude < 6.5f * 6.5f) { litCache = true; break; }
+            }
+            return litCache;
+        }
 
         public void Hit(Vector3 point)
         {

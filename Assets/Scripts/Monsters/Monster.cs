@@ -359,7 +359,7 @@ namespace Hunt.Monsters
         /// <summary>시야·빛 감지 (0.25초마다). 소리는 Noise가 따로 알려준다.</summary>
         void Sense(float dist)
         {
-            bool lit = Flashlight.Active;
+            bool lit = Flashlight.Active || ShootableLamp.PlayerLit(); // 손전등을 켰거나 가로등 불빛 아래면 멀리서 보인다
             // 앉아 있으면 어둠 속에서 덜 눈에 띈다
             bool low = target != null && target.Controller != null && target.Controller.IsCrouching;
             if (dist < (lit ? SightLit : SightDark) * (low ? 0.7f : 1f)) { Alert(3f); return; }
