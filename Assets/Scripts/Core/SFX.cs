@@ -117,6 +117,7 @@ namespace Hunt.Core
             s.volume = vol;
             s.clip = clip;
             s.Play();
+            Echo(clip, pitch, vol, d.weaponClass);
 
             // 저음 층: 무거운 총일수록 크게
             float thump;
@@ -139,6 +140,31 @@ namespace Hunt.Core
                 t.clip = Thump;
                 t.Play();
             }
+        }
+
+        // ---- 총성 메아리: 산과 집에 부딪혀 0.25초쯤 뒤 낮고 흐리게 되돌아온다 (연사 땐 0.3초에 한 번만) ----
+        static AudioSource echo;
+        static float lastEcho = -10f;
+
+        static void Echo(AudioClip clip, float pitch, float vol, WeaponClass c)
+        {
+            if (Time.unscaledTime - lastEcho < 0.3f || gunVoices[0] == null || c == WeaponClass.Flamethrower) return;
+            lastEcho = Time.unscaledTime;
+            if (echo == null)
+            {
+                var go = new GameObject("GunEcho");
+                go.transform.SetParent(gunVoices[0].transform, false);
+                echo = go.AddComponent<AudioSource>();
+                echo.playOnAwake = false;
+                echo.spatialBlend = 0f;
+                var lp = go.AddComponent<AudioLowPassFilter>();
+                lp.cutoffFrequency = 1500f; // 멀리서 되돌아온 소리처럼 흐리게
+            }
+            float heavy = c == WeaponClass.Sniper || c == WeaponClass.Shotgun || c == WeaponClass.Launcher ? 1.4f : 1f;
+            echo.clip = clip;
+            echo.pitch = pitch * 0.94f;
+            echo.volume = vol * 0.22f * heavy;
+            echo.PlayDelayed(UnityEngine.Random.Range(0.22f, 0.32f));
         }
 
         /// <summary>가슴을 치는 저음 (55→38Hz로 떨어지는 짧은 사인 + 부드러운 클립).</summary>
