@@ -408,7 +408,7 @@ namespace Hunt.Monsters
                 Vector3 tp = target.transform.position - transform.position; tp.y = 0f;
                 if (tp.sqrMagnitude > 0.01f && Vector3.Angle(transform.forward, tp) > 110f) back = 0.45f;
             }
-            if (dist < Mathf.Max(2f, (hidden ? 2.5f : (lit ? SightLit : SightDark) * (low ? 0.7f : 1f)) * back)) { Alert(3f); return; }
+            if (dist < Mathf.Max(2f, (hidden ? 2.5f : (lit ? SightLit : SightDark) * (low ? 0.7f : 1f) * Atmosphere.SightMult) * back)) { Alert(3f); return; }
             if (hidden && !IsAlerted) return; // 덤불 속은 시야선으로도 안 보인다
             if (IsAlerted && alertTime > 1f) return;
 
@@ -417,7 +417,7 @@ namespace Hunt.Monsters
             Vector3 me = transform.position + Vector3.up * 1.5f * Data.scale;
 
             // 손전등 빛줄기에 비치면 빛을 따라 온다
-            if (lit && dist < BeamRange)
+            if (lit && dist < BeamRange * Atmosphere.SightMult)
             {
                 Vector3 toMe = (me - eye.position).normalized;
                 if (Vector3.Dot(eye.forward, toMe) > BeamCos && CanSee(eye.position, me)) { Alert(6f); return; }

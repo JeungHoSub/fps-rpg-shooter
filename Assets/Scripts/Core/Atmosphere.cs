@@ -24,6 +24,22 @@ namespace Hunt.Core
         // ---- 밤마다 바뀌는 날씨 ----
         public enum Weather { Drizzle, Downpour, Fog, Storm, Clearing }
         public Weather Current { get; private set; } = Weather.Drizzle;
+
+        /// <summary>망자 눈이 닿는 거리 배율: 안개 ×0.75, 폭우·폭풍 ×0.9, 갬(달빛) ×1.15.</summary>
+        public static float SightMult
+        {
+            get
+            {
+                if (Instance == null) return 1f;
+                switch (Instance.Current)
+                {
+                    case Weather.Fog: return 0.75f;
+                    case Weather.Downpour: case Weather.Storm: return 0.9f;
+                    case Weather.Clearing: return 1.15f;
+                    default: return 1f;
+                }
+            }
+        }
         float rainLo = 0.45f, rainHi = 0.75f, fogMult = 1f, fogNow = 1f, thunderLo = 25f, thunderHi = 60f, moonMult = 1f;
 
         public static string WeatherName(Weather w)
