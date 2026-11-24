@@ -95,6 +95,13 @@ namespace Hunt.UI
                 $"다음 밤: {GameHud.NightName(nextN)}  ·  {Hunt.Waves.WaveManager.RuleName(nextRule)}" + (nextBoss ? $"  ·  <color=#{UIKit.Hex(UITheme.BloodBright)}>대감의 밤</color>"
                     : $"  ·  보스 <color=#{UIKit.Hex(UITheme.BloodBright)}>{Hunt.Monsters.Monster.AffixName(gm.Waves.NextBossAffix)}</color> 그림자 ({Hunt.Monsters.Monster.AffixDesc(gm.Waves.NextBossAffix)})"),
                 15, UITheme.BoneDim, serif: true);
+            // 다음 밤에 생길 수 있는 일 (매복·망자 떼·정전·다친 사람)
+            string ev = "";
+            if (nextN >= 2) ev += $"덤불 매복 {(nextN >= 4 ? 2 : 1)}";
+            if (nextN >= 3 && nextRule != Hunt.Waves.RoundRule.Defense) ev += (ev.Length > 0 ? " · " : "") + "망자 떼";
+            if (nextN >= 3) ev += (ev.Length > 0 ? " · " : "") + "벼락 정전";
+            if (nextN >= 2) ev += (ev.Length > 0 ? " · " : "") + "다친 사람(가끔)";
+            if (ev.Length > 0) UIKit.Text(new Rect(win.x + 30, by + 50, 520, 22), "있을 수 있는 일: " + ev, 13, UITheme.Ash, serif: true);
             UIKit.Text(new Rect(win.xMax - 430, by, 400, 60), $"엽전 <color=#{UIKit.Hex(UITheme.GoldBright)}>{Mathf.RoundToInt(UIKit.Smooth("camp.gold", p.Gold, 9f))}</color>   ·   청심환 ×{p.Infection.Antidotes}", 18, UITheme.BoneDim, TextAnchor.MiddleRight, serif: true);
             UIKit.Alpha = 1f;
         }
