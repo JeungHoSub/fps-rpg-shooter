@@ -359,6 +359,7 @@ namespace Hunt.Player
             meleeT = 0f;
             meleePending = true;
             kicking = player.Controller.IsSprinting || player.Controller.IsSliding; // 달리거나 미끄러지며 V = 발차기
+            if (kicking) KickLeg.Show(cam.transform);
             player.InterruptItem();
             SFX.Play(SFX.Swing, 0.7f, 0.1f);
             // 휘두르기 시작할 때 나를 못 알아챈 망자들 (칼 소리에 알아채기 전 상태로 등 뒤 처치를 판정)
@@ -406,7 +407,6 @@ namespace Hunt.Player
             Vector3 center = player.transform.position + Vector3.up * 1f + Vector3.ProjectOnPlane(cam.transform.forward, Vector3.up).normalized * 1.3f;
             var hits = Physics.OverlapSphere(center, 1.3f, RaycastMask, QueryTriggerInteraction.Ignore);
             var done = new HashSet<Monster>();
-            KickLeg.Show(cam.transform);
             foreach (var h in hits)
             {
                 var part = h.GetComponent<MonsterPart>();
