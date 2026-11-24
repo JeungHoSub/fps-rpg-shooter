@@ -202,7 +202,19 @@ namespace Hunt.Player
                 if (ctrl.IsSprinting) ctrl.CancelSprint();
                 if (w.ammoInMag > 0) Fire(w);
                 else if (w.reserve > 0) StartReload(w);
-                else if (GameInput.FireDownRaw) SFX.Play(SFX.Empty, 0.8f);
+                else if (GameInput.FireDownRaw)
+                {
+                    SFX.Play(SFX.Empty, 0.8f);
+                    // 탄이 다 떨어졌으면 탄이 남은 다른 총으로 바꿔 든다
+                    for (int i = 0; i < Slots.Count; i++)
+                    {
+                        var o = Slots[i];
+                        if (o == null || o == w || (o.ammoInMag <= 0 && o.reserve <= 0)) continue;
+                        HUD.Notify($"{w.data.displayName} 탄이 떨어졌다 — {o.data.displayName}(으)로", new Color(1f, 0.75f, 0.45f));
+                        Swap(i);
+                        break;
+                    }
+                }
             }
 
             // 사격을 멈추면 반동 회복, 반동 패턴 인덱스 리셋
