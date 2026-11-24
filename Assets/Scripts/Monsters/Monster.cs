@@ -453,7 +453,11 @@ namespace Hunt.Monsters
             if (dist < sightThr) { Alert(3f); Suspicion = 0f; return; }
             if (hidden && !IsAlerted)
             {
-                if (dist < 3.5f && !passedHidden) { passedHidden = true; Achievements.Add("hide10"); target.RunHidden++; }
+                if (dist < 3.5f && !passedHidden)
+                {
+                    passedHidden = true; Achievements.Add("hide10"); target.RunHidden++;
+                    SFX.PlayAt3D(SFX.Growl, transform.position + Vector3.up * 1.4f, 0.4f, VoicePitch * 0.8f); // 바로 옆에서 킁킁 — 숨죽여라
+                }
                 return; // 덤불 속은 시야선으로도 안 보인다
             }
             if (IsAlerted && alertTime > 1f) return;
