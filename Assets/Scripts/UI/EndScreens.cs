@@ -82,7 +82,7 @@ namespace Hunt.UI
                 GameSettings.Gore = !GameSettings.Gore;
             if (UIKit.Button(new Rect(r.x + 226 + cw3, y, cw3, 38), "조준 " + GameSettings.CrosshairName(GameSettings.Crosshair), 15, false))
                 GameSettings.Crosshair = (GameSettings.Crosshair + 1) % 3;
-            if (UIKit.Button(new Rect(r.x + 232 + cw3 * 2f, y, cw3, 38), "흔들림 " + GameSettings.ShakeName(GameSettings.Shake), 15, false))
+            if (UIKit.Button(new Rect(r.x + 232 + cw3 * 2f, y, cw3, 38), "흔들림 " + GameSettings.ShakeName(GameSettings.Shake), 13, false))
                 GameSettings.Shake = (GameSettings.Shake + 1) % 3;
             y += 48;
 
