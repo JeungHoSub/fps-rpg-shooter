@@ -411,7 +411,12 @@ namespace Hunt.Waves
             // 디펜스·미션: 시간
             if (Timed && Stage != RoundStage.Cleared)
             {
+                float prevT = TimeLeft;
                 TimeLeft -= dt;
+                // 남은 시간 경고: 소탕은 서두르라고, 지킴은 조금만 더 버티라고
+                if (prevT > 30f && TimeLeft <= 30f)
+                    HUD.Notify(Rule == RoundRule.Mission ? "30초 남았다 — 남은 망자를 서둘러 찾아라 (M 지도)" : "30초만 더 버텨라 — 곧 날이 밝는다", new Color(1f, 0.75f, 0.4f));
+                if (prevT > 10f && TimeLeft <= 10f && Rule == RoundRule.Mission) { HUD.Notify("10초!", new Color(1f, 0.35f, 0.3f)); SFX.Play(SFX.Gong, 0.5f, 0f); }
                 if (TimeLeft <= 0f)
                 {
                     if (Rule == RoundRule.Defense) { HUD.Notify("날이 밝았다 — 끝까지 지켜냈다", new Color(0.5f, 1f, 0.6f)); ClearRound(gm); }
