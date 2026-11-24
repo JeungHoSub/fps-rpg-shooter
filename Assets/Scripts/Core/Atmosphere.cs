@@ -273,7 +273,8 @@ namespace Hunt.Core
                 Vector2 r2 = Random.insideUnitCircle.normalized * Random.Range(25f, 40f);
                 Vector3 at = cam.transform.position + new Vector3(r2.x, 2f, r2.y);
                 float roll = Random.value;
-                if (roll < 0.55f) SFX.PlayAt3D(SFX.ZombieMoan, at, 0.9f, Random.Range(0.8f, 1.05f));
+                if (roll < 0.45f) SFX.PlayAt3D(SFX.ZombieMoan, at, 0.9f, Random.Range(0.8f, 1.05f));
+                else if (roll < 0.62f) SFX.PlayAt3D(SFX.Knock, at, 0.8f, Random.Range(0.85f, 1.1f)); // 어딘가에서 문을 두드린다
                 else if (roll < 0.85f) SFX.PlayAt(SFX.MonsterDie, at, 0.7f);
                 else SFX.PlayAt(SFX.Gong, at, 0.35f);
             }
