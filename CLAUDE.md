@@ -110,6 +110,7 @@ Unity 1인칭 싱글플레이 좀비 슈터 + RPG. **비 오는 밤의 한국 �
     소음기 모양 `GunModelBuilder.AddSuppressor` · 알아채기 직전 '…' `Monster.Suspicion` · 꾀인 망자 '?' (`HearNoise` fromPlayer=false). 15:56 보고함.
     16:00~: 망자 떼 `WaveManager.SpawnHorde`(셋째 밤부터, 나침반 '떼', 몰래 보내면 엽전 `JudgeHorde`) · 덤불 불타기 `Hiding.Burn` · 덤불 흔들림 `BushShake` ·
     보스 안개 · 서낭당 '있을 수 있는 일' · 이름표 '등 뒤 V' · Esc PC줄: 앉기 방식·머리 위 표시 `GameSettings.Marks` · 다친 사람 흐느낌 `SFX.Sob`.
+    떼: 6밤 거구가 이끎·7밤 두 번·업적 horde3 · 매복 덤불 들썩임 · 숨었을 때 옆에서 킁킁 · 은신부 `PlayerCharacter.CharmHide` · 사망 화면 '숨어 보냄' · 조작 표 Ctrl·E 갱신.
   - 2026-11-24 05:55~10:20 작업 서버 재시작으로 멈춤 → 10:22 재개. 커밋 전 컴파일 확인은 scratchpad `ship.sh "메시지"` (오류면 커밋 안 함).
   - 보류: 망자 모델 다양화 (Mixamo — 사용자 토큰 다시 필요, 토큰은 하루쯤 지나면 만료).
   - 이후 작은 후보: 사용자 피드백 반영 → 성능(실기기 확인 필요) · 버그 점검 · 소리/연출 다듬기.
