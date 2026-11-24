@@ -379,7 +379,9 @@ namespace Hunt.Waves
             for (int i = 0; i < count; i++)
             {
                 Vector2 off = Random.insideUnitCircle * 3f;
-                var m = Spawn(MonsterArchetype.Runner, from + new Vector3(off.x, 0f, off.y), placed: true);
+                // 여섯째 밤부터 떼를 거구 망자(Brute) 하나가 이끈다
+                var arch = i == 0 && Wave >= 6 ? MonsterArchetype.Brute : MonsterArchetype.Runner;
+                var m = Spawn(arch, from + new Vector3(off.x, 0f, off.y), placed: true);
                 if (m == null) continue;
                 horde.Add(m);
                 m.HearNoise(to + new Vector3(off.x, 0f, off.y) * 2f, false);
