@@ -64,7 +64,9 @@ namespace Hunt.Core
         public static bool KitDown => Mobile ? touchKit : Input.GetKeyDown(KeyCode.X);
         public static bool DrinkDown => Mobile ? touchDrink : Input.GetKeyDown(KeyCode.C);
         public static bool RageDown => Mobile ? touchRage : Input.GetKeyDown(KeyCode.Q);
-        public static bool RegenDown => Mobile ? touchRegen : Input.GetKeyDown(KeyCode.E);
+        /// <summary>E: 가까이(3.5m) 보급품이 있으면 줍기, 없으면 재생 능력.</summary>
+        public static bool RegenDown => Mobile ? touchRegen : Input.GetKeyDown(KeyCode.E) && !Hunt.Player.Pickup.AnyNearPlayer();
+        public static bool PickupDown => !Mobile && Input.GetKeyDown(KeyCode.E);
         public static bool AntidoteDown => Mobile ? touchAntidote : Input.GetKeyDown(KeyCode.H);
 
         // ---- 메뉴 ----

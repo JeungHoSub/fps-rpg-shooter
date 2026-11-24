@@ -106,6 +106,7 @@ namespace Hunt.UI
             if (p.Weapons.IsScoped) DrawScope();
             if (gm.State != GameState.GameOver && !gm.MenuOpen) DrawCrosshair(p, cam);
             if (gm.State == GameState.Playing && !gm.MenuOpen) DrawAmmoWarning(p);
+            if (!gm.MenuOpen && !GameInput.Mobile) DrawPickupPrompt();
 
             // ---- 생명 구슬 ----
             // 잃은 생명은 잠시 남았다가 천천히 빠진다
@@ -727,6 +728,27 @@ namespace Hunt.UI
             for (int i = 0; i < 3; i++)
                 UIKit.Tex(new Rect(r.center.x - 40 + i * 30, r.yMax + 8, 16, 16), i <= boss.BossPhase ? UITheme.Diamond : UITheme.DiamondHollow, UITheme.BloodBright);
         }
+
+        /// <summary>발밑 보급품 안내: [E] 줍기 / 가득 차서 못 줍는 이유.</summary>
+        void DrawPickupPrompt()
+        {
+            bool near = Pickup.NearestInfo(out string name, out bool can);
+            float a = UIKit.Smooth("hud.pickprompt", near ? 1f : 0f, 12f);
+            if (a < 0.02f) return;
+            if (near) { lastPromptName = name; lastPromptCan = can; }
+            float keep = UIKit.Alpha;
+            UIKit.Alpha = keep * a;
+            var r = new Rect(W / 2 - 200, H / 2 + 92, 400, 34);
+            UIKit.Tex(r, UITheme.LineFade, new Color(0f, 0f, 0f, 0.6f));
+            string text = lastPromptCan
+                ? $"<color=#{UIKit.Hex(UITheme.GoldBright)}><b>[E]</b></color>  줍기  ·  {lastPromptName}"
+                : $"{lastPromptName}  ·  <color=#{UIKit.Hex(UITheme.Ash)}>{(lastPromptName == Pickup.NameOf(PickupKind.Rune) ? "생명이 가득해 못 줍는다" : "가득 차서 못 줍는다")}</color>";
+            UIKit.Text(r, text, 18, UITheme.Bone, TextAnchor.MiddleCenter, serif: true);
+            UIKit.Alpha = keep;
+        }
+
+        string lastPromptName;
+        bool lastPromptCan;
 
         Monster lastBoss;
         float bossIntro = -100f;

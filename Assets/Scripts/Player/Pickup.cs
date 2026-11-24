@@ -56,6 +56,43 @@ namespace Hunt.Player
             else if (r < pKit + pDrink) Spawn(PickupKind.Drink, at + RandomOffset(), parent);
         }
 
+        // ---- E로 줍기 ----
+        public const float GrabRange = 3.5f;
+        static readonly System.Collections.Generic.List<Pickup> all = new System.Collections.Generic.List<Pickup>();
+        bool grabbed; // E로 집어서 거리와 상관없이 날아오는 중
+
+        void OnEnable() { all.Add(this); }
+        void OnDisable() { all.Remove(this); }
+
+        /// <summary>플레이어 3.5m 안에 보급품이 있나 (E를 줍기로 쓸지 재생으로 쓸지).</summary>
+        public static bool AnyNearPlayer() => NearestToPlayer() != null;
+
+        public static Pickup NearestToPlayer()
+        {
+            var gm = GameManager.Instance;
+            var p = gm != null ? gm.Player : null;
+            if (p == null || p.IsDead) return null;
+            Pickup best = null;
+            float bd = GrabRange * GrabRange;
+            foreach (var k in all)
+            {
+                if (k == null || k.grabbed) continue;
+                Vector3 d = k.transform.position - p.transform.position;
+                d.y = 0f;
+                if (d.sqrMagnitude < bd) { bd = d.sqrMagnitude; best = k; }
+            }
+            return best;
+        }
+
+        /// <summary>HUD 안내용: 가장 가까운 보급품 이름과 지금 주울 수 있는지.</summary>
+        public static bool NearestInfo(out string name, out bool canTake)
+        {
+            var k = NearestToPlayer();
+            name = k != null ? NameOf(k.kind) : null;
+            canTake = k != null && k.CanTake(GameManager.Instance.Player);
+            return k != null;
+        }
+
         static Vector3 RandomOffset() { var c = Random.insideUnitCircle * 0.7f; return new Vector3(c.x, 0f, c.y); }
 
         public static Pickup Spawn(PickupKind k, Vector3 at, Transform parent)
@@ -216,6 +253,28 @@ namespace Hunt.Player
             to.y = 0f;
             float d = to.magnitude;
             bool can = CanTake(p);
+            // E: 3.5m 안의 보급품을 한꺼번에 집는다 (주울 수 없으면 왜 안 되는지 알려 준다)
+            if (!grabbed && d < GrabRange && GameInput.PickupDown && gm.AcceptsGameplayInput)
+            {
+                if (can) grabbed = true;
+                else
+                {
+                    string why = kind == PickupKind.Rune ? "생명이 가득하다 — 다쳤을 때 치유 부적을 주우세요"
+                               : kind == PickupKind.Ammo ? "예비 탄약이 가득하다"
+                               : $"{NameOf(kind)} 가득 참 — 쓰고 나서 주우세요";
+                    GameHud.OnPickup(kind == PickupKind.Kit ? HudIcons.Icon.Kit : kind == PickupKind.Drink ? HudIcons.Icon.Bottle : kind == PickupKind.Rune ? HudIcons.Icon.Heart : HudIcons.Icon.Ammo,
+                                     new Color(0.6f, 0.58f, 0.54f), why, false);
+                    toldFull = true;
+                }
+            }
+            if (grabbed && can)
+            {
+                // 손으로 확 끌어당기듯 빠르게 날아온다
+                transform.position = Vector3.MoveTowards(transform.position, new Vector3(p.transform.position.x, basePos.y, p.transform.position.z), 14f * dt);
+                if (d < 0.9f) { Take(p); Destroy(gameObject); }
+                return;
+            }
+            grabbed = false;
             if (!can && d < 1.1f && !toldFull && kind != PickupKind.Rune) // 부적은 많이 떨어져서 '가득' 알림이 시끄럽지 않게 생략
             {
                 toldFull = true;
