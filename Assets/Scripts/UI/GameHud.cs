@@ -169,7 +169,11 @@ namespace Hunt.UI
 
             // ---- 경험치 ----
             var xr = new Rect(W / 2 - 380, H - 30, 760, 10);
-            UIKit.Bar(xr, (float)p.Xp / p.XpToNext, UITheme.Gold);
+            // 경험치는 툭 튀지 않고 차오른다 (레벨이 오르면 비웠다가 다시)
+            float xpT = (float)p.Xp / p.XpToNext;
+            float xpShown = UIKit.Smooth("hud.xp", xpT, 6f);
+            if (xpShown > xpT + 0.3f) { UIKit.SnapSmooth("hud.xp", 0f); xpShown = 0f; }
+            UIKit.Bar(xr, xpShown, UITheme.Gold);
             UIKit.Text(new Rect(xr.x, xr.y - 26, xr.width, 22),
                 $"Lv.{p.Level}   ·   {p.Xp} / {p.XpToNext}" + (p.StatPoints > 0 || p.PendingTraitPicks > 0 ? $"   ·   <color=#{UIKit.Hex(UITheme.GoldBright)}>새 단련 {p.StatPoints}{(p.PendingTraitPicks > 0 ? " · 새 기질" : "")} — 서낭당에서</color>" : ""),
                 14, UITheme.BoneDim, TextAnchor.MiddleCenter);

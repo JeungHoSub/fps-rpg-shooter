@@ -12,7 +12,7 @@ namespace Hunt.UI
     {
         const float RefHeight = 1080f;
 
-        struct Note { public string text; public Color color; public float time; public float age; }
+        struct Note { public string text; public Color color; public float time; public float age; public float y; }
         static readonly List<Note> notes = new List<Note>();
 
         /// <summary>화면 위쪽 알림 (어디서든 호출).</summary>
@@ -20,7 +20,7 @@ namespace Hunt.UI
         {
             for (int i = 0; i < notes.Count; i++)
                 if (notes[i].text == text) { notes.RemoveAt(i); break; } // 같은 알림은 갱신
-            notes.Add(new Note { text = text, color = color, time = 4f });
+            notes.Add(new Note { text = text, color = color, time = 4f, y = -1f });
             if (notes.Count > 6) notes.RemoveAt(0);
         }
 
@@ -141,8 +141,12 @@ namespace Hunt.UI
             {
                 var n = notes[i];
                 float a = Mathf.Clamp01(n.time) * Mathf.Clamp01(n.age * 6f);
-                float slide = (1f - Mathf.Clamp01(n.age * 6f)) * -12f;
-                var r = new Rect(W / 2 - 420, y + slide, 840, 34);
+                float slide = (1f - UIKit.EaseOut(n.age * 5f)) * -14f;
+                // 자리 이동도 부드럽게 (새 알림이 오거나 하나가 사라질 때 줄이 미끄러진다)
+                if (n.y < 0f) n.y = y;
+                else if (UIKit.IsRepaint) n.y = Mathf.Lerp(n.y, y, 1f - Mathf.Exp(-14f * Mathf.Min(Time.unscaledDeltaTime, 0.05f)));
+                notes[i] = n;
+                var r = new Rect(W / 2 - 420, n.y + slide, 840, 34);
                 UIKit.Tex(new Rect(r.x, r.y + 2, r.width, r.height - 4), UITheme.LineFade, new Color(0f, 0f, 0f, 0.55f * a));
                 var c = n.color;
                 c.a = a;

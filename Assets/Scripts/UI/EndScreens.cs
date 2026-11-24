@@ -10,7 +10,23 @@ namespace Hunt.UI
 
         public void ResetDeath() { deathAppear = 0f; }
 
+        float pauseAppear, lastPauseDraw = -10f;
+
         public void DrawPause(GameManager gm, float W, float H)
+        {
+            // 열릴 때 살짝 아래에서 떠오르며 나타난다 (0.2초)
+            if (Time.unscaledTime - lastPauseDraw > 0.25f) pauseAppear = 0f;
+            lastPauseDraw = Time.unscaledTime;
+            if (UIKit.IsRepaint) pauseAppear = Mathf.MoveTowards(pauseAppear, 1f, Time.unscaledDeltaTime * 5f);
+            float pa = UIKit.EaseOut(pauseAppear);
+            UIKit.Alpha = pa;
+            var keep = GUI.matrix;
+            GUI.matrix = keep * Matrix4x4.Translate(new Vector3(0f, (1f - pa) * 24f, 0f));
+            try { DrawPauseInner(gm, W, H); }
+            finally { GUI.matrix = keep; UIKit.Alpha = 1f; }
+        }
+
+        void DrawPauseInner(GameManager gm, float W, float H)
         {
             UIKit.Fill(new Rect(0, 0, W, H), new Color(0.02f, 0.01f, 0.015f, 0.7f));
             UIKit.Vignette(W, H, new Color(0, 0, 0, 0.9f));

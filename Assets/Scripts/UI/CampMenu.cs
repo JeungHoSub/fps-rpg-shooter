@@ -20,7 +20,7 @@ namespace Hunt.UI
         Vector2 invScroll, historyScroll;
         StatType? hoverStat;
         readonly RadarChart radar = new RadarChart();
-        float appear;
+        float appear, tabAppear = 1f;
 
         public void OnOpen() { appear = 0f; }
 
@@ -29,14 +29,15 @@ namespace Hunt.UI
             var p = gm.Player;
             if (p == null) return;
             if (UIKit.IsRepaint) appear = Mathf.MoveTowards(appear, 1f, Time.unscaledDeltaTime * 4f);
-            UIKit.Alpha = appear;
+            float ease = UIKit.EaseOut(appear);
+            UIKit.Alpha = ease;
             hoverStat = null;
 
             UIKit.Fill(new Rect(0, 0, W, H), new Color(0.02f, 0.01f, 0.015f, 0.6f));
             UIKit.Vignette(W, H, new Color(0, 0, 0, 0.8f));
 
             float pw = Mathf.Min(1560f, W - 60f);
-            var win = new Rect(W / 2 - pw / 2, 96 + (1f - appear) * 20f, pw, 900);
+            var win = new Rect(W / 2 - pw / 2, 96 + (1f - ease) * 26f, pw, 900);
             UIKit.Panel(win);
 
             // 제목
@@ -56,9 +57,16 @@ namespace Hunt.UI
             float tw = Mathf.Min(240, (win.width - 80) / 5f - 10);
             float tx = win.center.x - (tw * 5 + 40) / 2;
             for (int i = 0; i < 5; i++)
-                if (UIKit.Button(new Rect(tx + i * (tw + 10), win.y + 104, tw, 48), names[i], 20, (int)tab == i)) tab = (Tab)i;
+                if (UIKit.Button(new Rect(tx + i * (tw + 10), win.y + 104, tw, 48), names[i], 20, (int)tab == i) && (int)tab != i) { tab = (Tab)i; tabAppear = 0f; }
+            // 선택된 탭 아래 밑줄이 옆으로 미끄러져 따라간다
+            float ux = UIKit.Smooth("camp.tabline", tx + (int)tab * (tw + 10), 14f);
+            UIKit.Tex(new Rect(ux + 14, win.y + 154, tw - 28, 3), UITheme.LineFade, new Color(1f, 0.85f, 0.5f, 0.9f));
 
-            var content = new Rect(win.x + 26, win.y + 168, win.width - 52, win.height - 260);
+            // 탭을 바꾸면 내용이 살짝 옆에서 들어오며 나타난다 (0.18초)
+            if (UIKit.IsRepaint) tabAppear = Mathf.MoveTowards(tabAppear, 1f, Time.unscaledDeltaTime * 5.5f);
+            float te = UIKit.EaseOut(tabAppear);
+            UIKit.Alpha = ease * te;
+            var content = new Rect(win.x + 26 + (1f - te) * 14f, win.y + 168, win.width - 52, win.height - 260);
             switch (tab)
             {
                 case Tab.Stats: DrawStats(p, content); break;
@@ -68,11 +76,12 @@ namespace Hunt.UI
                 default: DrawResearch(gm, content); break;
             }
 
+            UIKit.Alpha = ease;
             // 아래
             float by = win.yMax - 78;
             if (UIKit.Button(new Rect(win.center.x - 190, by, 380, 60), "밤을 맞이한다", 26, false, true, "Enter")) gm.StartNextWave();
             UIKit.Text(new Rect(win.x + 30, by, 400, 60), "Tab — 서낭당을 떠나 마을을 둘러본다", 15, UITheme.Ash);
-            UIKit.Text(new Rect(win.xMax - 430, by, 400, 60), $"엽전 <color=#{UIKit.Hex(UITheme.GoldBright)}>{p.Gold}</color>   ·   청심환 ×{p.Infection.Antidotes}", 18, UITheme.BoneDim, TextAnchor.MiddleRight, serif: true);
+            UIKit.Text(new Rect(win.xMax - 430, by, 400, 60), $"엽전 <color=#{UIKit.Hex(UITheme.GoldBright)}>{Mathf.RoundToInt(UIKit.Smooth("camp.gold", p.Gold, 9f))}</color>   ·   청심환 ×{p.Infection.Antidotes}", 18, UITheme.BoneDim, TextAnchor.MiddleRight, serif: true);
             UIKit.Alpha = 1f;
         }
 

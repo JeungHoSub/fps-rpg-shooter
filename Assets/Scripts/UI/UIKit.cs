@@ -162,10 +162,31 @@ namespace Hunt.UI
                 if (sound && !hoveredLastFrame.Contains(id)) SFX.Play(SFX.UiHover, 0.25f, 0.02f);
             }
             anim.TryGetValue(id, out float v);
-            v = Mathf.MoveTowards(v, over ? 1f : 0f, Dt * 8f);
+            v = Mathf.MoveTowards(v, over ? 1f : 0f, Dt * 7f);
             anim[id] = v;
+            return v * v * (3f - 2f * v); // 직선 대신 부드러운 곡선 (켜고 꺼질 때 덜 딱딱하게)
+        }
+
+        static readonly Dictionary<string, float> smooth = new Dictionary<string, float>();
+
+        /// <summary>
+        /// 화면에 보이는 수치를 목표값으로 부드럽게 따라가게 한다 (막대·숫자가 툭 튀지 않게).
+        /// speed = 초당 따라잡는 비율. 처음 보면 바로 목표값.
+        /// </summary>
+        public static float Smooth(string key, float target, float speed = 10f)
+        {
+            if (!smooth.TryGetValue(key, out float v) || float.IsNaN(v)) v = target;
+            else if (IsRepaint) v = Mathf.Lerp(v, target, 1f - Mathf.Exp(-speed * Mathf.Min(Time.unscaledDeltaTime, 0.05f)));
+            if (Mathf.Abs(v - target) < 0.0005f * Mathf.Max(1f, Mathf.Abs(target))) v = target;
+            smooth[key] = v;
             return v;
         }
+
+        /// <summary>바로 목표값으로 (새 판 시작 등).</summary>
+        public static void SnapSmooth(string key, float value) { smooth[key] = value; }
+
+        /// <summary>0→1 등장 값에 감속 곡선 (처음 빠르고 끝에서 천천히 멈춤).</summary>
+        public static float EaseOut(float t) { t = Mathf.Clamp01(t); return 1f - (1f - t) * (1f - t) * (1f - t); }
 
         static bool Clicked(Rect r, bool enabled)
         {
