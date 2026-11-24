@@ -104,6 +104,7 @@ namespace Hunt.UI
                 UIKit.Fill(new Rect(0, 0, W, H), new Color(0.25f, 0f, 0.3f, 0.12f + Mathf.PingPong(Time.time, 0.5f) * 0.15f));
             }
 
+            DrawLensRain(gm, cam, dt);
             if (p.Weapons.IsScoped) DrawScope(p);
             if (gm.State != GameState.GameOver && !gm.MenuOpen) DrawCrosshair(p, cam);
             if (gm.State == GameState.Playing && !gm.MenuOpen) DrawAmmoWarning(p);
@@ -228,6 +229,41 @@ namespace Hunt.UI
         // ---- 조준한 망자 이름표 (유형 이름 + 체력) ----
         Monster tagTarget;
         float tagTime;
+
+        // ---- 화면에 맺히는 빗방울: 하늘을 올려다보면 맺히고 천천히 흘러내린다 ----
+        struct Drop { public float x, y, r, life, max, slide; }
+        readonly System.Collections.Generic.List<Drop> drops = new System.Collections.Generic.List<Drop>();
+        float dropClock;
+
+        void DrawLensRain(GameManager gm, Camera cam, float dt)
+        {
+            var atm = Atmosphere.Instance;
+            if (cam == null || atm == null || gm.State != GameState.Playing) { drops.Clear(); return; }
+            float up = Mathf.Clamp01((-Mathf.DeltaAngle(0f, cam.transform.eulerAngles.x) - 5f) / 40f); // 위로 볼수록
+            float rate = atm.RainIntensity * (0.4f + 4f * up); // 초당 맺히는 수
+            if (dt > 0f)
+            {
+                dropClock += dt * rate;
+                while (dropClock > 1f && drops.Count < 18)
+                {
+                    dropClock -= 1f;
+                    float life = Random.Range(1.6f, 3.2f);
+                    drops.Add(new Drop { x = Random.Range(0.05f, 0.95f) * W, y = Random.Range(0.05f, 0.8f) * H, r = Random.Range(10f, 26f), life = life, max = life, slide = Random.Range(8f, 40f) });
+                }
+                if (drops.Count >= 18) dropClock = 0f;
+            }
+            for (int i = drops.Count - 1; i >= 0; i--)
+            {
+                var d = drops[i];
+                if (dt > 0f) { d.life -= dt; d.y += d.slide * dt; }
+                if (d.life <= 0f) { drops.RemoveAt(i); continue; }
+                drops[i] = d;
+                float a = Mathf.Clamp01(d.life / d.max * 1.5f) * 0.22f;
+                // 투명한 물방울: 옅은 테두리 + 아래쪽 밝은 반사
+                UIKit.Tex(new Rect(d.x - d.r, d.y - d.r, d.r * 2f, d.r * 2f), UITheme.Circle, new Color(0.75f, 0.8f, 0.9f, a * 0.5f));
+                UIKit.Tex(new Rect(d.x - d.r * 0.35f, d.y + d.r * 0.2f, d.r * 0.7f, d.r * 0.45f), UITheme.Circle, new Color(1f, 1f, 1f, a));
+            }
+        }
 
         /// <summary>깔아 둔 기관총 머리 위: 남은 시간 막대 + 남은 탄 (30m 안, 화면에 보일 때만).</summary>
         void DrawTurretTags(Camera cam)
