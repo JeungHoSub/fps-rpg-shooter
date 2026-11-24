@@ -290,6 +290,7 @@ namespace Hunt.Core
                     float pw = 10.2f + (float)rnd.NextDouble() * 0.6f, pd = 10.4f + (float)rnd.NextDouble() * 0.8f;
                     // 물 댄 논바닥
                     Prim(PrimitiveType.Cube, new Vector3(0, 0.03f, 0), new Vector3(pw, 0.06f, pd), water, pg);
+                    Hiding.AddPaddy(c, pw, pd);
                     // 논두렁 (사방, 높이가 조금씩 다르다)
                     float bh = 0.26f + (float)rnd.NextDouble() * 0.1f;
                     Box(new Vector3(0, bh * 0.5f, pd * 0.5f + 0.3f), new Vector3(pw + 0.9f, bh, 0.6f), K.Grass, pg);

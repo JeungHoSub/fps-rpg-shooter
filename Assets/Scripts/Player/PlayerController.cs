@@ -159,7 +159,7 @@ namespace Hunt.Player
             if (cam.fieldOfView > BaseFov - 12f) cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, BaseFov - 12f, Time.unscaledDeltaTime * 1.5f);
         }
 
-        bool wasInBush;
+        bool wasInBush, inPaddy;
 
         void Update()
         {
@@ -269,6 +269,7 @@ namespace Hunt.Player
             IsSliding = sliding;
             // 덤불에 들어가거나 나올 때 바스락 (작은 소리라 망자는 4m 안에서만 듣는다)
             bool bush = Hiding.InBush(transform.position);
+            inPaddy = Hiding.InPaddy(transform.position);
             if (bush != wasInBush) { SFX.Play(SFX.Rustle, 0.45f, 0.12f); Hiding.Shake(transform.position); if (!IsCrouching) Noise.Emit(transform.position, 4f, true); wasInBush = bush; }
             bool wantCrouch = sliding || (crouchKey && !(forward && GameInput.Sprint && !Exhausted));
             if (wantCrouch) IsCrouching = true;
@@ -305,7 +306,8 @@ namespace Hunt.Player
             IsSprinting = sprint;
             float speed = player.Stats.MoveSpeed * WeightPenalty * player.Infection.MoveMultiplier * MoveMultiplier * (sprint ? 1.45f : 1f)
                 * player.Armor.MoveMult * (player.IsUsingItem ? 0.45f : 1f) * (Exhausted ? 0.85f : 1f) * GameRules.MoveMult * Mathf.Lerp(1f, 0.5f, CrouchBlend)
-                * (player.CharmSwift ? 1.12f : 1f); // 축지부
+                * (player.CharmSwift ? 1.12f : 1f) // 축지부
+                * (inPaddy ? 0.85f : 1f); // 물 댄 논은 발이 빠진다
             if (sliding)
             {
                 // 처음엔 달리기보다 빠르게, 점점 느려진다. 방향은 미끄러지기 시작한 쪽 그대로
@@ -344,7 +346,9 @@ namespace Hunt.Player
                 if (stepTimer <= 0f)
                 {
                     stepTimer = sprint ? 0.33f : IsCrouching ? 0.7f : 0.5f;
-                    Noise.Emit(transform.position, sprint ? 10f : IsCrouching ? 1.5f : 4f, true); // 앉아 걸으면 거의 안 들린다
+                    // 물 댄 논에선 첨벙거려 1.6배 멀리 들린다
+                    Noise.Emit(transform.position, (sprint ? 10f : IsCrouching ? 1.5f : 4f) * (inPaddy ? 1.6f : 1f), true); // 앉아 걸으면 거의 안 들린다
+                    if (inPaddy) SFX.Footstep("mud", sprint ? 0.5f : 0.3f); // 첨벙
                     // 내 귀에 들리는 발소리: 툇마루·기단 위는 나무, 큰길은 돌, 나머지는 젖은 흙
                     string surf = "mud";
                     Vector3 fp = transform.position;

@@ -37,7 +37,16 @@ namespace Hunt.Core
 
         public static IReadOnlyList<Vector4> Spots => spots;
 
-        public static void Clear() { spots.Clear(); visuals.Clear(); }
+        public static void Clear() { spots.Clear(); visuals.Clear(); paddies.Clear(); }
+
+        // 물 댄 논 (첨벙: 발소리가 크고 걸음이 느리다)
+        static readonly List<Rect> paddies = new List<Rect>();
+        public static void AddPaddy(Vector3 center, float w, float d) { paddies.Add(new Rect(center.x - w * 0.5f, center.z - d * 0.5f, w, d)); }
+        public static bool InPaddy(Vector3 p)
+        {
+            for (int i = 0; i < paddies.Count; i++) if (paddies[i].Contains(new Vector2(p.x, p.z))) return true;
+            return false;
+        }
 
         public static void Add(Vector3 center, float radius, GameObject visual = null)
         {
