@@ -99,6 +99,9 @@ namespace Hunt.UI
             }
         }
 
+        /// <summary>망자들이 모두 몰려오기 시작한 시각 (붉은 가장자리 한 번).</summary>
+        public static float RushAt = -100f;
+
         /// <summary>마지막으로 단계가 오른 시각 (금빛 연출).</summary>
         public static float LevelUpAt = -100f;
 
@@ -184,6 +187,8 @@ namespace Hunt.UI
             }
             if (p.HurtFlash > 0f) UIKit.Vignette(W, H, new Color(0.8f, 0f, 0f, p.HurtFlash * 2.5f));
             DrawScreenBlood(dt);
+            float rushAge = Time.unscaledTime - RushAt;
+            if (rushAge < 1.4f) UIKit.Vignette(W, H, new Color(0.6f, 0f, 0f, 0.55f * (1f - rushAge / 1.4f) * (0.7f + 0.3f * Mathf.Sin(rushAge * 18f))));
             DrawLevelUp(p);
             // 치유 부적을 먹으면 가장자리가 잠깐 옥빛으로
             if (HealFlash > 0f)

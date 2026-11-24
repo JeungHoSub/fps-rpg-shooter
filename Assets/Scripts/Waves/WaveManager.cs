@@ -333,6 +333,8 @@ namespace Hunt.Waves
                 if (rushTimer <= 0f)
                 {
                     Monster.GlobalRush = true;
+                    GameHud.RushAt = Time.unscaledTime;                // 화면 가장자리 붉게 한 번
+                    SFX.PlayPitched(SFX.Drum, 0.8f, 0.75f);            // 쿵 — 몰려온다
                     HUD.Notify("망자들이 냄새를 맡았다 — 모두 몰려온다", new Color(1f, 0.35f, 0.35f));
                 }
             }
