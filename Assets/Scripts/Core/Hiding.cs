@@ -7,6 +7,29 @@ namespace Hunt.Core
     /// 숨을 곳 (덤불). 앉아서 덤불 안에 있으면 망자가 가까이 와야 알아챈다 (Monster.Sense).
     /// VillageBuilder가 덤불을 놓을 때 등록. 마을을 다시 지으면 Clear.
     /// </summary>
+    /// <summary>덤불 흔들림: 0.9초 동안 잦아드는 좌우 기울임.</summary>
+    public class BushShake : MonoBehaviour
+    {
+        Quaternion baseRot;
+        float t = 1f;
+        bool init;
+
+        public void Kick()
+        {
+            if (!init) { baseRot = transform.localRotation; init = true; }
+            t = 0f;
+            enabled = true;
+        }
+
+        void Update()
+        {
+            t += Time.deltaTime / 0.9f;
+            float a = (1f - Mathf.Clamp01(t)) * 6f;
+            transform.localRotation = baseRot * Quaternion.Euler(Mathf.Sin(t * 30f) * a, 0f, Mathf.Cos(t * 23f) * a);
+            if (t >= 1f) { transform.localRotation = baseRot; enabled = false; }
+        }
+    }
+
     public static class Hiding
     {
         static readonly List<Vector4> spots = new List<Vector4>(); // xyz = 중심, w = 반지름
@@ -40,6 +63,23 @@ namespace Hunt.Core
                 spots.RemoveAt(i);
                 visuals.RemoveAt(i);
                 Hunt.UI.HUD.Notify("덤불이 타 버렸다 — 이제 숨을 수 없다", new Color(1f, 0.6f, 0.35f));
+            }
+        }
+
+        /// <summary>누가 헤치고 지나가면 그 덤불이 잠깐 흔들린다 (어둠 속에서도 보이는 실마리).</summary>
+        public static void Shake(Vector3 p)
+        {
+            for (int i = 0; i < spots.Count; i++)
+            {
+                var s = spots[i];
+                float dx = p.x - s.x, dz = p.z - s.z;
+                if (dx * dx + dz * dz > s.w * s.w * 1.4f) continue;
+                var v = visuals[i];
+                if (v == null) return;
+                var sh = v.GetComponent<BushShake>();
+                if (sh == null) sh = v.AddComponent<BushShake>();
+                sh.Kick();
+                return;
             }
         }
 

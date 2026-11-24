@@ -259,7 +259,7 @@ namespace Hunt.Player
             IsSliding = sliding;
             // 덤불에 들어가거나 나올 때 바스락 (작은 소리라 망자는 4m 안에서만 듣는다)
             bool bush = Hiding.InBush(transform.position);
-            if (bush != wasInBush) { SFX.Play(SFX.Rustle, 0.45f, 0.12f); if (!IsCrouching) Noise.Emit(transform.position, 4f, true); wasInBush = bush; }
+            if (bush != wasInBush) { SFX.Play(SFX.Rustle, 0.45f, 0.12f); Hiding.Shake(transform.position); if (!IsCrouching) Noise.Emit(transform.position, 4f, true); wasInBush = bush; }
             bool wantCrouch = sliding || (crouchKey && !(forward && GameInput.Sprint && !Exhausted));
             if (wantCrouch) IsCrouching = true;
             else if (IsCrouching && !Physics.SphereCast(transform.position + Vector3.up * 0.6f, cc.radius * 0.9f, Vector3.up, out _, 1.15f, ~((1 << 2) | (1 << 1)), QueryTriggerInteraction.Ignore))

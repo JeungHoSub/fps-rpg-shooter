@@ -219,7 +219,7 @@ namespace Hunt.Monsters
                 senseTimer = 0.25f; Sense(dist);
                 // 덤불을 헤치고 지나가면 바스락 (25m 안만) — 어둠 속에서 다가오는 걸 귀로 안다
                 bool bush = dist < 25f && Hiding.InBush(transform.position);
-                if (bush && !inBush) SFX.PlayAt3D(SFX.Rustle, transform.position + Vector3.up * 0.6f, 0.7f, Random.Range(0.85f, 1.05f));
+                if (bush && !inBush) { SFX.PlayAt3D(SFX.Rustle, transform.position + Vector3.up * 0.6f, 0.7f, Random.Range(0.85f, 1.05f)); Hiding.Shake(transform.position); }
                 inBush = bush;
             }
             bool alerted = IsAlerted;
@@ -741,6 +741,7 @@ namespace Hunt.Monsters
             if (lurkEyes != null) Destroy(lurkEyes);
             if (rig != null && rig.Pivot != null) rig.Pivot.localPosition = lurkBase;
             Emerge(0.55f); // 덤불 속에서 확 솟구친다
+            Hiding.Shake(transform.position);
             Alert(10f);
             SpottedAt = Time.time;
             SFX.PlayAt3D(SFX.ZombieScream, transform.position + Vector3.up * 1.4f, 1f, VoicePitch * 1.05f);
