@@ -906,15 +906,17 @@ namespace Hunt.UI
             float mask = Noise.RainMask;
             string rain = mask < 0.75f ? "  ·  빗소리가 소리를 덮는다" : mask < 0.95f ? "  ·  빗소리" : "";
             string light = Flashlight.Disabled ? "  ·  손전등 금지" : Flashlight.Active ? $"  ·  <color=#{UIKit.Hex(UITheme.GoldBright)}>손전등 켜짐 — 망자가 빛을 본다</color>" : "  ·  손전등 꺼짐 (F)";
-            if (!Flashlight.Active && ShootableLamp.PlayerLit()) light += $"  ·  <color=#{UIKit.Hex(UITheme.GoldBright)}>가로등 불빛 아래 — 눈에 띈다</color>";
-            // 나를 쫓는 망자 수 (몰래 다닐지, 맞설지 판단)
+            UIKit.Text(new Rect(r.x - 160, r.y - 22, r.width + 320, 20), "소 리" + rain + light, 13, UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true);
+            // 둘째 줄: 가로등 불빛 · 쫓는 망자 수 · 부적 (있을 때만)
+            string st = "";
+            if (!Flashlight.Active && ShootableLamp.PlayerLit()) st += $"<color=#{UIKit.Hex(UITheme.GoldBright)}>가로등 불빛 아래 — 눈에 띈다</color>";
             int chasing = 0;
             foreach (var cm in Monster.Alive) if (cm != null && !cm.IsDead && cm.IsAlerted) chasing++;
-            if (chasing > 0) light += $"  ·  <color=#{UIKit.Hex(chasing >= 6 ? UITheme.BloodBright : UITheme.Warn)}>쫓는 망자 {chasing}</color>";
+            if (chasing > 0) st += (st.Length > 0 ? "  ·  " : "") + $"<color=#{UIKit.Hex(chasing >= 6 ? UITheme.BloodBright : UITheme.Warn)}>쫓는 망자 {chasing}</color>";
             var pc = gm.Player;
             if (pc != null && (pc.CharmGuard || pc.CharmSwift || pc.CharmAim))
-                light += $"  ·  <color=#{UIKit.Hex(new Color(0.95f, 0.85f, 0.6f))}>부적: {(pc.CharmGuard ? "호신 " : "")}{(pc.CharmSwift ? "축지 " : "")}{(pc.CharmAim ? "명중" : "")}</color>";
-            UIKit.Text(new Rect(r.x - 460, r.y - 22, r.width + 920, 20), "소 리" + rain + light, 13, UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true);
+                st += (st.Length > 0 ? "  ·  " : "") + $"<color=#{UIKit.Hex(new Color(0.95f, 0.85f, 0.6f))}>부적: {(pc.CharmGuard ? "호신 " : "")}{(pc.CharmSwift ? "축지 " : "")}{(pc.CharmAim ? "명중" : "")}</color>";
+            if (st.Length > 0) UIKit.Text(new Rect(r.x - 160, r.y - 42, r.width + 320, 20), st, 13, UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true);
         }
 
         // ---- 새벽 기록 카드: 그 밤에 한 일을 날이 밝을 때 잠깐 보여 준다 ----
