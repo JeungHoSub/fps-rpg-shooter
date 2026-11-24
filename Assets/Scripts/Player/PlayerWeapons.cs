@@ -757,6 +757,8 @@ namespace Hunt.Player
                         continue;
                     }
 
+                    var boom = hit.collider.GetComponentInParent<ExplosiveProp>();
+                    if (boom != null) boom.Hit(w.Damage * dmgScale, flame);
                     if (!flame) FX.ImpactWorld(hit.point, hit.normal);
                     if (flame || wallPower <= 0.02f) break;
                     // 벽 두께: 관통 깊이만큼 앞에서 거꾸로 쏴서 빠져나오는 면을 찾는다 (없으면 너무 두꺼움)

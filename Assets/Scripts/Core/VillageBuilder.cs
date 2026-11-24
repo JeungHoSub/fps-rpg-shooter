@@ -906,8 +906,9 @@ namespace Hunt.Core
             for (int i = 0; i < drums.Length; i++)
             {
                 var d = drums[i];
-                if (Model("barrel_03", new Vector3(d.x, 0f, d.z), i * 70f, 0.95f, tint: new Color(0.8f, 0.7f, 0.65f), gloss: 0.55f) == null)
-                    Prim(PrimitiveType.Cylinder, d, new Vector3(0.6f, 0.5f, 0.6f), rust);
+                var barrel = Model("barrel_03", new Vector3(d.x, 0f, d.z), i * 70f, 0.95f, tint: new Color(0.8f, 0.7f, 0.65f), gloss: 0.55f);
+                if (barrel == null) barrel = Prim(PrimitiveType.Cylinder, d, new Vector3(0.6f, 0.5f, 0.6f), rust);
+                if (barrel != null) barrel.AddComponent<Hunt.Player.ExplosiveProp>().Setup(110f, 4.5f, 230f); // 쏘면 터지는 드럼통
             }
             Box(new Vector3(-33f, 0.5f, -10f), new Vector3(2.4f, 1f, 1.2f), K.WoodPlanks, tint: new Color(0.55f, 0.45f, 0.35f));
             Box(new Vector3(-40.5f, 0.6f, 28f), new Vector3(1.6f, 0.7f, 2.4f), K.MetalSheet, tint: new Color(0.3f, 0.45f, 0.3f));
@@ -949,7 +950,11 @@ namespace Hunt.Core
 
             // LPG 가스통 (농가 벽에 붙여서)
             Vector3[] lpg = { new Vector3(-14.9f, 0f, 22.5f), new Vector3(-14.9f, 0f, 23.3f), new Vector3(-31.6f, 0f, 20.2f), new Vector3(-7.4f, 0f, -0.5f) };
-            for (int i = 0; i < lpg.Length; i++) Model("small_lpg_tank", lpg[i], i * 40f, 1.25f, gloss: 0.6f);
+            for (int i = 0; i < lpg.Length; i++)
+            {
+                var tank = Model("small_lpg_tank", lpg[i], i * 40f, 1.25f, gloss: 0.6f);
+                if (tank != null) tank.AddComponent<Hunt.Player.ExplosiveProp>().Setup(55f, 5.5f, 320f); // 쏘면 터지는 LPG 가스통
+            }
 
             // 농가 플라스틱 상자 (쌓아 둔 것)
             void Crates(Vector3 at, float yaw, int n)
