@@ -25,6 +25,7 @@ namespace Hunt.Core
             new Def { id = "flawless", name = "상처 없는 새벽", desc = "한 밤을 거의 다치지 않고 버틴다 (받은 상처 10 미만)", goal = 1 },
             new Def { id = "bounty10", name = "현상금 사냥꾼", desc = "현상금 망자 10마리를 쓰러뜨린다",        goal = 10 },
             new Def { id = "molotov",  name = "불바다",        desc = "화염병 불바다 하나로 망자 4마리를 태운다", goal = 1 },
+            new Def { id = "hide10",   name = "숨바꼭질",      desc = "덤불에 숨은 채 망자 10마리를 코앞(3.5m)으로 지나 보낸다", goal = 10 },
             new Def { id = "bloat5",   name = "연쇄 폭발",     desc = "터지는 망자 하나로 망자 5마리를 함께 쓰러뜨린다", goal = 1 },
         };
 

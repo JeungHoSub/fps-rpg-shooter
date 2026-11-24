@@ -409,7 +409,11 @@ namespace Hunt.Monsters
                 if (tp.sqrMagnitude > 0.01f && Vector3.Angle(transform.forward, tp) > 110f) back = 0.45f;
             }
             if (dist < Mathf.Max(2f, (hidden ? 2.5f : (lit ? SightLit : SightDark) * (low ? 0.7f : 1f) * Atmosphere.SightMult) * back)) { Alert(3f); return; }
-            if (hidden && !IsAlerted) return; // 덤불 속은 시야선으로도 안 보인다
+            if (hidden && !IsAlerted)
+            {
+                if (dist < 3.5f && !passedHidden) { passedHidden = true; Achievements.Add("hide10"); }
+                return; // 덤불 속은 시야선으로도 안 보인다
+            }
             if (IsAlerted && alertTime > 1f) return;
 
             var eye = Flashlight.Eye;
@@ -656,7 +660,7 @@ namespace Hunt.Monsters
         public float SpottedAt = -100f;
         /// <summary>쫓다가 놓친 순간 (머리 위 '?').</summary>
         public float LostAt = -100f;
-        bool inBush;
+        bool inBush, passedHidden;
 
         /// <summary>머리를 맞으면 갓·상투 장식이 총알 방향으로 날아간다 (한 번만).</summary>
         public void KnockOffHat(Vector3 dir)
