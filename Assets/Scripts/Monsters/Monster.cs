@@ -1054,6 +1054,17 @@ namespace Hunt.Monsters
                     Destroy(part);
                 }
                 rig.Die(lastHitDir, transform.parent);
+                // 머리로 쓰러뜨리면 머리가 터져 나간다 (보스 제외, 피 표현 켰을 때)
+                if (lastZone == HitZone.Head && !directKill && !IsBoss && GameSettings.Gore && rig.Head != null)
+                {
+                    Vector3 hp = rig.Head.position;
+                    HeadGone.Apply(rig.Head);
+                    FX.BloodBurst(hp, new Color(0.42f, 0.03f, 0.05f), 1.1f * Data.scale);
+                    for (int i = 0; i < (QualityManager.Level == GfxLevel.Low ? 3 : 6); i++)
+                        MonsterGib.Chunk(null, hp + Random.insideUnitSphere * 0.1f,
+                            lastHitDir.normalized * Random.Range(1f, 3f) + Vector3.up * Random.Range(2f, 4f) + Random.insideUnitSphere * 1.5f,
+                            Color.Lerp(new Color(0.32f, 0.03f, 0.04f), new Color(0.55f, 0.45f, 0.4f), Random.value * 0.35f), Random.Range(0.05f, 0.1f));
+                }
             }
             else MonsterGib.Shatter(this, lastHitDir);
             Destroy(gameObject);
