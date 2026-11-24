@@ -78,6 +78,9 @@ namespace Hunt.Player
                     popClock = Random.Range(0.25f, 0.5f);
                     SFX.PlayAt3D(SFX.Pop, transform.position, 1f, Random.Range(0.85f, 1.25f));
                     Effects.Burst(transform.position + Vector3.up * 0.1f, 0.15f, new Color(1f, 0.8f, 0.4f));
+                    // 붉은 종이 부스러기
+                    for (int k = 0; k < 2; k++)
+                        Hunt.Monsters.MonsterGib.Chunk(null, transform.position + Vector3.up * 0.1f, Random.insideUnitSphere * 1.5f + Vector3.up * 2f, new Color(0.75f, 0.1f, 0.08f), 0.03f);
                     Noise.Emit(transform.position, 30f, false);
                 }
             }
