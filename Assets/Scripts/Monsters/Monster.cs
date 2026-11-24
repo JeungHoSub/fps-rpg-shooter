@@ -262,30 +262,40 @@ namespace Hunt.Monsters
             Vector3 move = Vector3.zero;
             if (!alerted)
             {
-                // 모르는 채 서성임: 소리 난 곳을 뒤지거나, 제자리 근처를 어슬렁
-                spd *= hasInvestigate ? 0.55f : 0.3f;
-                Vector3 goal = hasInvestigate ? investigatePos : wanderGoal;
-                wanderTimer -= dt;
-                Vector3 g = goal - transform.position;
-                g.y = 0f;
-                if (g.sqrMagnitude < 2f * 2f || (!hasInvestigate && wanderTimer <= 0f))
+                // 뒤지러 온 자리에서 잠깐 멈춰 두리번 (좌우로 고개를 돌린다)
+                if (lookAround > 0f && !hasInvestigate)
                 {
-                    hasInvestigate = false;
-                    // 소리를 뒤진 자리를 새 거처로 삼는다
-                    if (g.sqrMagnitude < 2f * 2f && goal == investigatePos)
-                    {
-                        home = investigatePos;
-                        // 뒤지러 온 자리에서 킁킁 — 그르렁 (25m 안이면 들린다)
-                        if (dist < 25f && Random.value < 0.5f) SFX.PlayAt3D(SFX.ZombieMoan, transform.position + Vector3.up * 1.5f, 0.5f, VoicePitch * 0.95f);
-                    }
-                    Vector2 off = Random.insideUnitCircle * 5f;
-                    wanderGoal = home + new Vector3(off.x, 0f, off.y);
-                    wanderTimer = Random.Range(5f, 10f);
-                    goal = wanderGoal;
-                    g = goal - transform.position;
-                    g.y = 0f;
+                    lookAround -= dt;
+                    transform.Rotate(0f, Mathf.Sin(lookAround * 2.6f) * 70f * dt, 0f);
                 }
-                move = PathDirection(goal, g.sqrMagnitude > 0.01f ? g.normalized : transform.forward, dt);
+                else
+                {
+                    // 모르는 채 서성임: 소리 난 곳을 뒤지거나, 제자리 근처를 어슬렁
+                    spd *= hasInvestigate ? 0.55f : 0.3f;
+                    Vector3 goal = hasInvestigate ? investigatePos : wanderGoal;
+                    wanderTimer -= dt;
+                    Vector3 g = goal - transform.position;
+                    g.y = 0f;
+                    if (g.sqrMagnitude < 2f * 2f || (!hasInvestigate && wanderTimer <= 0f))
+                    {
+                        hasInvestigate = false;
+                        // 소리를 뒤진 자리를 새 거처로 삼는다
+                        if (g.sqrMagnitude < 2f * 2f && goal == investigatePos)
+                        {
+                            home = investigatePos;
+                            lookAround = Random.Range(1.8f, 3f); // 그 자리에서 두리번거린다
+                            // 뒤지러 온 자리에서 킁킁 — 그르렁 (25m 안이면 들린다)
+                            if (dist < 25f && Random.value < 0.5f) SFX.PlayAt3D(SFX.ZombieMoan, transform.position + Vector3.up * 1.5f, 0.5f, VoicePitch * 0.95f);
+                        }
+                        Vector2 off = Random.insideUnitCircle * 5f;
+                        wanderGoal = home + new Vector3(off.x, 0f, off.y);
+                        wanderTimer = Random.Range(5f, 10f);
+                        goal = wanderGoal;
+                        g = goal - transform.position;
+                        g.y = 0f;
+                    }
+                    move = PathDirection(goal, g.sqrMagnitude > 0.01f ? g.normalized : transform.forward, dt);
+                }
             }
             else if (Data.archetype == MonsterArchetype.Spitter)
             {
@@ -727,6 +737,7 @@ namespace Hunt.Monsters
         /// <summary>0~1: 나를 알아채기 직전인 정도 (HUD '…').</summary>
         public float Suspicion { get; private set; }
         bool inBush, passedHidden, sniffWarned;
+        float lookAround;
         bool lurking, hpLostWhileLurking;
         Vector3 lurkBase;
         GameObject lurkEyes;
