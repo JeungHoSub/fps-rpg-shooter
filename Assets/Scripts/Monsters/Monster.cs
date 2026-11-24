@@ -71,6 +71,7 @@ namespace Hunt.Monsters
 
         // 상태이상
         float burnDps, burnTime, poisonDps, poisonTime, slowTime, dotTick;
+        float hobble; // 다리에 맞으면 잠깐 휘청 (보스는 짧게)
 
         PlayerCharacter target;
         Transform head;
@@ -205,7 +206,7 @@ namespace Hunt.Monsters
             }
 
             float phaseSpeed = IsBoss ? 1f + BossPhase * 0.2f : 1f;
-            float spd = speed * legSlow * (slowTime > 0f ? 0.55f : 1f) * phaseSpeed;
+            float spd = speed * legSlow * (slowTime > 0f ? 0.55f : 1f) * (hobble > 0f ? 0.6f : 1f) * phaseSpeed;
 
             Vector3 move = Vector3.zero;
             if (!alerted)
@@ -483,6 +484,7 @@ namespace Hunt.Monsters
                 if (kb > 2f || crit || zone == HitZone.Head) rig.PlayHit();
             }
 
+            if (zone == HitZone.Leg) hobble = Mathf.Max(hobble, IsBoss ? 0.2f : 0.55f);
             ApplyStatus(info.type, hpDmg);
             if (EvolutionDirector.Instance != null)
                 EvolutionDirector.Instance.Record(info.type, info.weaponClass, zone, hpDmg);
@@ -754,6 +756,7 @@ namespace Hunt.Monsters
         {
             UpdateBurnFx();
             if (slowTime > 0f) slowTime -= dt;
+            if (hobble > 0f) hobble -= dt;
             if (burnTime <= 0f && poisonTime <= 0f) return;
 
             burnTime -= dt;
