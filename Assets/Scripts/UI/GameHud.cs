@@ -1134,6 +1134,11 @@ namespace Hunt.UI
                 for (int i = 0; i < w.Modifiers.Count; i++) mods += (i > 0 ? " · " : "") + WaveManager.ModifierName(w.Modifiers[i]);
                 UIKit.Text(new Rect(0, y + 136, W, 24), mods, 17, UITheme.BloodBright, TextAnchor.MiddleCenter, serif: true);
             }
+            // 오늘 밤의 징조 한 줄 (다친 사람 · 매복 · 떼)
+            string omen = Survivor.PresentThisNight ? "멀리서 누군가 흐느낀다…"
+                        : w.Wave >= 3 && w.Rule != RoundRule.Defense ? "땅이 울린다 — 어딘가에서 떼가 움직인다"
+                        : w.Wave >= 2 ? "덤불이 수상하다" : null;
+            if (omen != null) UIKit.Text(new Rect(0, y + (w.Modifiers.Count > 0 ? 162 : 136), W, 24), omen, 16, UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true);
             UIKit.Alpha = keep;
         }
 
