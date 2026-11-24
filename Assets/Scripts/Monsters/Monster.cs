@@ -540,7 +540,7 @@ namespace Hunt.Monsters
         public int BossAffix { get; private set; }
         float affixClock;
         public static string AffixName(int a) => a == 1 ? "날랜" : a == 2 ? "단단한" : a == 3 ? "부르는" : a == 4 ? "불타는" : "";
-        public static string AffixDesc(int a) => a == 1 ? "아주 빠르게 쫓아온다" : a == 2 ? "체력이 훨씬 많다" : a == 3 ? "15초마다 망자 둘을 땅에서 불러낸다" : a == 4 ? "몸에 불이 붙어 가까이 있으면 뜨겁다" : "";
+        public static string AffixDesc(int a) => a == 1 ? "아주 빠르게 쫓아온다" : a == 2 ? "체력이 훨씬 많다" : a == 3 ? "15초마다 망자 둘을 땅에서 불러낸다" : a == 4 ? "몸에 불이 붙어 가까이 있으면 뜨겁다 (불에 안 탄다)" : "";
 
         public void SetBossAffix(int a)
         {
@@ -656,14 +656,14 @@ namespace Hunt.Monsters
         {
             switch (type)
             {
-                case DamageType.Fire: burnDps = Mathf.Max(burnDps, dmg * 0.25f); burnTime = 3f; break;
+                case DamageType.Fire: if (BossAffix == 4) break; burnDps = Mathf.Max(burnDps, dmg * 0.25f); burnTime = Mathf.Max(burnTime, 3f); break; // 불타는 보스는 불에 안 탄다
                 case DamageType.Poison: poisonDps = Mathf.Max(poisonDps, dmg * 0.3f); poisonTime = 4f; break;
                 case DamageType.Ice: slowTime = 1.5f; break;
             }
         }
 
         /// <summary>불을 붙인다 (화염병 불바다 등): 3초 동안 타오른다.</summary>
-        public void Ignite(float dps) { burnDps = Mathf.Max(burnDps, dps); burnTime = Mathf.Max(burnTime, 3f); }
+        public void Ignite(float dps) { if (BossAffix == 4) return; burnDps = Mathf.Max(burnDps, dps); burnTime = Mathf.Max(burnTime, 3f); }
 
         // 타는 동안 몸에 붙는 불꽃 (도형 3개, 처음 탈 때 만든다)
         Transform[] burnFx;
