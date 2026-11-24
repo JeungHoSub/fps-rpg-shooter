@@ -979,7 +979,8 @@ namespace Hunt.UI
             bool final = w.IsBossWave;
             UIKit.BrushTitle(new Rect(W / 2 - 340, y, 680, 104), NightName(w.Wave) + (final ? "  —  대감의 밤" : ""), final ? 58 : 64,
                 new Color(0.03f, 0.02f, 0.02f, 0.88f), final ? UITheme.BloodBright : UITheme.Bone);
-            string sub = $"{WaveManager.RuleName(w.Rule)}  ·  {WaveManager.RuleGoal(w.Rule)}";
+            string wx = Atmosphere.Instance != null ? Atmosphere.WeatherName(Atmosphere.Instance.Current) + "  ·  " : "";
+            string sub = $"{wx}{WaveManager.RuleName(w.Rule)}  ·  {WaveManager.RuleGoal(w.Rule)}";
             UIKit.Text(new Rect(0, y + 106, W, 28), sub, 20, UITheme.Bone, TextAnchor.MiddleCenter, serif: true, bold: true);
             if (w.Modifiers.Count > 0)
             {
