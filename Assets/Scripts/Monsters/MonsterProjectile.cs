@@ -15,9 +15,8 @@ namespace Hunt.Monsters
 
         public static void Launch(Transform parent, Vector3 from, PlayerCharacter target, float damage, float infection)
         {
-            var go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            var go = FX.LowSphere();
             go.name = "AcidSpit";
-            Object.Destroy(go.GetComponent<Collider>());
             go.transform.SetParent(parent, true);
             go.transform.position = from;
             go.transform.localScale = Vector3.one * 0.35f;

@@ -42,9 +42,8 @@ namespace Hunt.Core
 
         public static void Burst(Vector3 p, float radius, Color c)
         {
-            var go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            var go = FX.LowSphere();
             go.name = "Burst";
-            Object.Destroy(go.GetComponent<Collider>());
             if (Root != null) go.transform.SetParent(Root, true);
             go.transform.position = p;
             go.transform.localScale = Vector3.one * radius * 2f;

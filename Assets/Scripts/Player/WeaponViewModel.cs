@@ -81,8 +81,7 @@ namespace Hunt.Player
 
         void CreateFlash()
         {
-            flash = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            DestroyImmediate(flash.GetComponent<Collider>());
+            flash = FX.LowSphere();
             flash.name = "MuzzleFlash";
             flash.transform.SetParent(model.muzzle, false);
             flash.transform.localPosition = new Vector3(0, 0, 0.05f);
