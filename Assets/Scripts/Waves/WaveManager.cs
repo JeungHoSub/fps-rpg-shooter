@@ -164,7 +164,7 @@ namespace Hunt.Waves
             if (bountyPick != null)
             {
                 bountyPick.MakeBounty();
-                if (n <= 3) HUD.Notify("오늘 밤 현상금 망자가 있다 — 머리 위 노란 등불, 쓰러뜨리면 엽전과 부적", new Color(1f, 0.85f, 0.45f));
+                if (n <= 3) HUD.Notify("오늘 밤 현상금 망자가 있다 — 머리 위 노란 등불, 들키면 도망친다. 쫓아가 쓰러뜨리면 엽전과 부적", new Color(1f, 0.85f, 0.45f));
             }
         }
 
