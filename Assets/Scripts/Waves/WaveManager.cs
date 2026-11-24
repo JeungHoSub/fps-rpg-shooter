@@ -156,7 +156,7 @@ namespace Hunt.Waves
             Survivor.PlaceForNight(root, player != null ? player.transform.position : Vector3.zero, n); // 다친 마을 사람 (둘째 밤부터 40%)
             // 셋째 밤부터: 밤마다 한 번 망자 떼가 마을을 가로질러 지나간다 (숨거나 싸우거나)
             hordeDone = n < 3 || Rule == RoundRule.Defense;
-            hordeJudged = true; horde.Clear();
+            hordeJudged = true; horde.Clear(); secondHorde = false;
             hordeAt = Time.time + Random.Range(35f, 75f);
             if (n <= 2) HUD.Notify("마을 곳곳에 보급 상자 3개 — 노란 빛기둥을 찾아 E로 연다 (아래 나침반에 노란 점)", new Color(1f, 0.85f, 0.45f));
 
@@ -345,7 +345,7 @@ namespace Hunt.Waves
             Monster.GlobalRush = false;
         }
 
-        bool hordeDone = true, hordeJudged = true;
+        bool hordeDone = true, hordeJudged = true, secondHorde;
         float hordeAt;
         readonly List<Monster> horde = new List<Monster>();
 
@@ -401,8 +401,14 @@ namespace Hunt.Waves
             if (!Spawning || gm == null || !gm.IsWorldRunning) return;
             float dt = Time.deltaTime;
 
-            if (!hordeDone && Time.time > hordeAt && !Monster.GlobalRush) { hordeDone = true; SpawnHorde(); }
-            if (hordeDone && !hordeJudged && Time.time > HordeTime + 45f) JudgeHorde();
+            if (!hordeDone && Time.time > hordeAt && !Monster.GlobalRush)
+            {
+                SpawnHorde();
+                // 일곱째 밤부터는 떼가 한 번 더 (70초 뒤)
+                if (Wave >= 7 && !secondHorde) { secondHorde = true; hordeAt = Time.time + 70f; }
+                else hordeDone = true;
+            }
+            if (!hordeJudged && Time.time > HordeTime + 45f) JudgeHorde();
 
             // 시간이 지나면 모두 몰려온다
             if (!Monster.GlobalRush)
