@@ -389,7 +389,8 @@ namespace Hunt.Monsters
                     {
                         lastZombieStep = Time.time;
                         bool wet = Hiding.InPaddy(transform.position); // 논물을 밟으면 더 크게 첨벙
-                        SFX.PlayAt3D(SFX.ZombieStep, transform.position + Vector3.up * 0.1f, Mathf.Lerp(0.75f, 0.25f, dist / 10f) * Mathf.Clamp(Data.scale, 0.8f, 1.6f) * (wet ? 1.4f : 1f), VoicePitch * (wet ? 0.75f : 0.85f));
+                        bool walledStep = Flashlight.Eye != null && !CanSee(Flashlight.Eye.position, transform.position + Vector3.up * 0.8f); // 벽 너머면 작게
+                        SFX.PlayAt3D(SFX.ZombieStep, transform.position + Vector3.up * 0.1f, Mathf.Lerp(0.75f, 0.25f, dist / 10f) * Mathf.Clamp(Data.scale, 0.8f, 1.6f) * (wet ? 1.4f : 1f) * (walledStep ? 0.6f : 1f), VoicePitch * (wet ? 0.75f : 0.85f));
                         if (wet && dist < 20f) FX.Splash(transform.position, 0.8f);
                     }
                 }
