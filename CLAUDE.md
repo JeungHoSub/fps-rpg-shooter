@@ -76,7 +76,7 @@ Unity 1인칭 싱글플레이 좀비 슈터 + RPG. **비 오는 밤의 한국 �
     피 웅덩이 `FX.BloodPool`·살점 `MonsterGib.Chunk` · 날씨 `Atmosphere.SetWeather` · 서낭당 새벽 `Atmosphere.Dawn` · 보스 돌진·내려치기 `Monster.BossPattern`(약한 보스 ×0.6) ·
     총 모델 이진화 `Resources/GunsBin` + 메시 캐시 · 보급품 가득 참 알림 `Pickup.toldFull`·종류별 줍는 소리·떨어질 때 튀어 오름·새벽엔 30m에서 모여듦 · 탄약 경고 `GameHud.DrawAmmoWarning` · 터치 앉기 버튼 · 작은 장식 그림자 끔 · 사망 화면 카메라 검색 1회로 · 새 판에 지난 알림 지움 `GameHud.ClearToasts` · 창 벗어나면 자동 일시정지 `GameManager.AutoPause` · 수류탄 불씨 깜빡임·째깍 `ThrownGrenade.spark` ·
     시야각 설정 `GameSettings.Fov` · 폭발 연출 `Core/ExplosionFx.cs`·그을음 `FX.Scorch`·밀려남 `Monster.Blast`·귀 울림 `Core/EarRing.cs` · 가라앉는 시체 그림자 끔 ·
-    **사용자 피드백 (2026-11-24) "UI 매끄럽게 · 총은 까매야지"** → 총 검은 총철색(`PackGunModel.GetMaterial`·`RealGunModel` 색조) · UI 움직임 `UIKit.Smooth`/`EaseOut`(일시정지 등장·서낭당 탭 밑줄/전환·엽전·경험치·알림 줄·무기 칸 전환·탄 숫자 튐·조준선).
+    **사용자 피드백 (2026-11-24) "UI 매끄럽게 · 총은 까매야지" → 다시 "회색이 나아, 더 예쁘게"** → 총은 회색 총철(밝기 차이↑·푸른 기·금속광·호두나무 개머리, `PackGunModel.GetMaterial`·`RealGunModel` 색조) · UI 움직임 `UIKit.Smooth`/`EaseOut`(일시정지 등장·서낭당 탭 밑줄/전환·엽전·경험치·알림 줄·무기 칸 전환·탄 숫자 튐·조준선) · 새벽 기록 카드 `GameHud.DrawDawnCard`(`PlayerCharacter.DamageTaken`/`BestStreak`) · X자 적중 표시.
   - 보류: 망자 모델 다양화 (Mixamo — 사용자 토큰 다시 필요, 토큰은 하루쯤 지나면 만료).
   - 이후 작은 후보: 사용자 피드백 반영 → 성능(실기기 확인 필요) · 버그 점검 · 소리/연출 다듬기.
 - 환경 '2번째'에 Poly Haven 호스트(api.polyhaven.com, dl.polyhaven.org) 허용됨. API는 User-Agent 필요.
