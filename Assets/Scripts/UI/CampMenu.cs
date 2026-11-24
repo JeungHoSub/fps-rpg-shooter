@@ -719,8 +719,26 @@ namespace Hunt.UI
                 // 망자 도감: 본 적 있는 유형은 이름·특징·쓰러뜨린 수, 아직 못 본 유형은 '???'
                 var kinds = DefaultContent.ZombieKinds;
                 float rowH = 64f;
-                var inn = new Rect(0, 0, view.width - 18, Mathf.Max(view.height, kinds.Length * rowH));
+                string[,] habits =
+                {
+                    { "등 뒤", "어슬렁대는 망자는 등 뒤를 잘 못 본다. 앉아 다가가 칼(V)로 한 번에." },
+                    { "뒤지기", "소리 난 곳·놓친 자리를 뒤진다 (머리 위 '?'). 돌·폭죽·사이렌으로 꾄다." },
+                    { "매복", "둘째 밤부터 큰 덤불 속에 엎드려 있다. 손전등에 붉은 눈, 가까이 가면 들썩인다." },
+                    { "망자 떼", "셋째 밤부터 마을을 가로지른다. 들키지 않고 보내면 엽전." },
+                };
+                int hn = habits.GetLength(0);
+                var inn = new Rect(0, 0, view.width - 18, Mathf.Max(view.height, kinds.Length * rowH + 40 + hn * 52));
                 notesScroll = GUI.BeginScrollView(view, notesScroll, inn, GUIStyle.none, GUI.skin.verticalScrollbar);
+                // 망자의 버릇 (유형 목록 아래)
+                float hy = kinds.Length * rowH + 8;
+                UIKit.Text(new Rect(0, hy, inn.width, 26), "망자의 버릇", 17, UITheme.Gold, TextAnchor.MiddleCenter, serif: true, bold: true);
+                for (int i = 0; i < hn; i++)
+                {
+                    var hr = new Rect(0, hy + 32 + i * 52, inn.width - 6, 46);
+                    UIKit.Fill(hr, new Color(0.04f, 0.038f, 0.04f, 0.7f));
+                    UIKit.Text(new Rect(hr.x + 12, hr.y, 90, hr.height), habits[i, 0], 15, UITheme.Bone, TextAnchor.MiddleLeft, serif: true, bold: true);
+                    UIKit.Text(new Rect(hr.x + 104, hr.y + 2, hr.width - 112, hr.height - 4), habits[i, 1], 13, UITheme.BoneDim, TextAnchor.MiddleLeft, wrap: true);
+                }
                 for (int i = 0; i < kinds.Length; i++)
                 {
                     var k = kinds[i];
