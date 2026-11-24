@@ -97,6 +97,9 @@ namespace Hunt.Core
         static int poolIndex;
         const int MaxPools = 18;
 
+        /// <summary>피 얼룩 무늬 텍스처 (화면 피 튀김 UI에서도 쓴다).</summary>
+        public static Texture2D BloodTexture { get { PoolMaterial(); return poolTex; } }
+
         static Material PoolMaterial()
         {
             if (poolMat != null) return poolMat;

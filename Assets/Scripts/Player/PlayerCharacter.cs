@@ -159,6 +159,7 @@ namespace Hunt.Player
             float taken = dmg * Infection.DamageTakenMultiplier * Armor.DamageTakenMult * Stats.DamageTakenMult;
             Hp -= taken;
             DamageTaken += Mathf.Max(0f, taken);
+            if (taken > MaxHp * 0.04f) GameHud.ScreenBlood(taken / Mathf.Max(1f, MaxHp)); // 세게 물리면 화면에 피가 튄다
             if (dmg > 3f) InterruptItem();
             HurtFlash = 0.25f;
             SFX.Play(SFX.PlayerHurt, 0.8f);

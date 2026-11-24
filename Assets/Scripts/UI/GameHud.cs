@@ -61,6 +61,43 @@ namespace Hunt.UI
             UIKit.Alpha = keep;
         }
 
+        // ---- 화면에 튄 피: 세게 물리면 화면 가장자리에 핏자국이 튀었다가 천천히 흘러내리며 옅어진다 ----
+        struct Splat { public Vector2 pos; public float size, rot, life, max; }
+        static readonly System.Collections.Generic.List<Splat> splats = new System.Collections.Generic.List<Splat>();
+
+        /// <summary>피해 크기(생명 비율)에 맞춰 핏자국 1~3개.</summary>
+        public static void ScreenBlood(float hpFraction)
+        {
+            int n = hpFraction > 0.15f ? 3 : hpFraction > 0.07f ? 2 : 1;
+            for (int i = 0; i < n && splats.Count < 8; i++)
+            {
+                // 가장자리 쪽 (가운데 조준을 가리지 않게)
+                float ang = Random.value * Mathf.PI * 2f;
+                var pos = new Vector2(0.5f + Mathf.Cos(ang) * Random.Range(0.36f, 0.48f), 0.5f + Mathf.Sin(ang) * Random.Range(0.3f, 0.45f));
+                float life = Random.Range(2.5f, 4f);
+                splats.Add(new Splat { pos = pos, size = Random.Range(160f, 300f) * (0.8f + hpFraction * 3f), rot = Random.Range(0f, 360f), life = life, max = life });
+            }
+        }
+
+        void DrawScreenBlood(float dt)
+        {
+            if (splats.Count == 0) return;
+            var tex = FX.BloodTexture;
+            for (int i = splats.Count - 1; i >= 0; i--)
+            {
+                var sp = splats[i];
+                if (dt > 0f) { sp.life -= dt; sp.pos.y += dt * 0.006f; }
+                if (sp.life <= 0f) { splats.RemoveAt(i); continue; }
+                splats[i] = sp;
+                float a = Mathf.Clamp01(sp.life / sp.max * 1.6f) * 0.55f;
+                float cx = sp.pos.x * W, cy = sp.pos.y * H;
+                var keep = GUI.matrix;
+                GUI.matrix = keep * Matrix4x4.Translate(new Vector3(cx, cy, 0f)) * Matrix4x4.Rotate(Quaternion.Euler(0f, 0f, sp.rot)) * Matrix4x4.Translate(new Vector3(-cx, -cy, 0f));
+                UIKit.Tex(new Rect(cx - sp.size / 2f, cy - sp.size / 2f, sp.size, sp.size), tex, new Color(0.45f, 0.02f, 0.03f, a));
+                GUI.matrix = keep;
+            }
+        }
+
         /// <summary>치유 순간 화면 가장자리 옥빛 (0~1).</summary>
         public static float HealFlash;
 
@@ -74,7 +111,7 @@ namespace Hunt.UI
         }
 
         /// <summary>새 판 시작 시 지난 판 알림을 지운다.</summary>
-        public static void ClearToasts() { toasts.Clear(); kitFlash = drinkFlash = 0f; }
+        public static void ClearToasts() { toasts.Clear(); kitFlash = drinkFlash = 0f; splats.Clear(); HealFlash = 0f; }
 
         void DrawPickups(float dt)
         {
@@ -128,6 +165,7 @@ namespace Hunt.UI
                 UIKit.Vignette(W, H, new Color(0.55f, 0f, 0f, (0.35f - hpRatio) * 2.2f * (0.6f + 0.4f * pulse)));
             }
             if (p.HurtFlash > 0f) UIKit.Vignette(W, H, new Color(0.8f, 0f, 0f, p.HurtFlash * 2.5f));
+            DrawScreenBlood(dt);
             // 치유 부적을 먹으면 가장자리가 잠깐 옥빛으로
             if (HealFlash > 0f)
             {
