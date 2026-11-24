@@ -15,6 +15,26 @@ namespace Hunt.Core
         bool told;
 
         void OnEnable() { Instance = this; }
+
+        void Start()
+        {
+            // 확성기 판정 (멀리서 쏴도 울린다): 꼭대기 상자
+            var horn = new GameObject("SirenHorn");
+            horn.transform.SetParent(transform, false);
+            horn.transform.localPosition = Vector3.up * 7.6f;
+            var bc = horn.AddComponent<BoxCollider>();
+            bc.size = new Vector3(1.3f, 0.6f, 1.3f);
+        }
+
+        /// <summary>확성기를 총으로 맞혔다: 밑에서 E를 누른 것처럼 울린다 (밤마다 한 번).</summary>
+        public void ShotHorn()
+        {
+            var gm = GameManager.Instance;
+            if (gm == null || gm.State != GameState.Playing) return;
+            if (UsedThisNight) return;
+            Ring();
+            HUD.Notify("확성기를 쏘아 맞혔다 — 사이렌이 울린다", new Color(1f, 0.75f, 0.45f));
+        }
         void OnDisable() { if (Instance == this) Instance = null; }
 
         int CurrentWave()
@@ -60,6 +80,12 @@ namespace Hunt.Core
             if (!ReferenceEquals(NearPlayer(), this)) return;
             if (Hunt.Player.Pickup.AnyNearPlayer()) return; // 보급품 줍기가 먼저
             if (UsedThisNight) { HUD.Notify("사이렌은 밤마다 한 번 — 이미 울렸다", UITheme.BoneDim); return; }
+            Ring();
+            HUD.Notify("사이렌이 울린다 — 망자들이 확성기 탑으로 몰려온다", new Color(1f, 0.7f, 0.35f));
+        }
+
+        void Ring()
+        {
             usedWave = CurrentWave();
             Vector3 top = transform.position + Vector3.up * 7.6f;
             SFX.PlayAt3D(SFX.Siren, top, 1f, 1f);
@@ -79,7 +105,6 @@ namespace Hunt.Core
                 beacon.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             }
             beaconT = 25f;
-            HUD.Notify("사이렌이 울린다 — 망자들이 확성기 탑으로 몰려온다", new Color(1f, 0.7f, 0.35f));
         }
     }
 }
