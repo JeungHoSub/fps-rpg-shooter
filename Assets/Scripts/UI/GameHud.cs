@@ -296,6 +296,7 @@ namespace Hunt.UI
             DrawBoss(dt);
             DrawIntro(gm, dt);
             DrawDamageDirections(p, cam);
+            if (gm.State == GameState.Playing) DrawBehindWarning(p, cam);
             DrawStreak(p);
             DrawStragglers(cam, scale);
             DrawPickups(dt);
@@ -520,6 +521,30 @@ namespace Hunt.UI
                 float alpha = Mathf.Clamp01(time / 1.2f);
                 UIKit.Tex(new Rect(pos.x - 130, pos.y - 130, 260, 260), UITheme.Glow, new Color(0.9f, 0.05f, 0.03f, 0.75f * alpha));
                 UIKit.Tex(new Rect(pos.x - 16, pos.y - 16, 32, 32), UITheme.Diamond, new Color(1f, 0.25f, 0.2f, alpha));
+            }
+        }
+
+        /// <summary>
+        /// 등 뒤 경고: 시야 밖(앞쪽 70° 밖) 4.5m 안에 망자가 다가오면 그쪽 가장자리가 옅게 붉어진다 — 물리기 전에 돌아볼 수 있게.
+        /// </summary>
+        void DrawBehindWarning(PlayerCharacter p, Camera cam)
+        {
+            if (cam == null || !UIKit.IsRepaint) return;
+            Vector3 fwd = cam.transform.forward; fwd.y = 0f;
+            if (fwd.sqrMagnitude < 0.0001f) return;
+            foreach (var m in Monster.Alive)
+            {
+                if (m == null || m.IsDead || !m.IsAlerted) continue;
+                Vector3 d = m.transform.position - p.transform.position; d.y = 0f;
+                float dist = d.magnitude;
+                if (dist > 4.5f || dist < 0.01f) continue;
+                float ang = Vector3.SignedAngle(fwd, d, Vector3.up);
+                if (Mathf.Abs(ang) < 70f) continue; // 보이는 놈은 표시하지 않는다
+                float a = ang * Mathf.Deg2Rad;
+                var pos = new Vector2(W / 2f + Mathf.Sin(a) * W * 0.46f, H / 2f - Mathf.Cos(a) * H * 0.44f);
+                float k = Mathf.Clamp01((4.5f - dist) / 3f);
+                float pulse = 0.75f + 0.25f * Mathf.Sin(Time.unscaledTime * 10f);
+                UIKit.Tex(new Rect(pos.x - 170, pos.y - 170, 340, 340), UITheme.Glow, new Color(0.85f, 0.04f, 0.02f, 0.45f * k * pulse));
             }
         }
 
