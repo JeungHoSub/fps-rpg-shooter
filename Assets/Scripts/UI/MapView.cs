@@ -96,6 +96,7 @@ namespace Hunt.UI
                 if (m == null || m.IsDead) continue;
                 var p = ToMap(m.transform.position, r);
                 if (m.IsBoss) UIKit.Emblem(new Rect(p.x - 14, p.y - 14, 28, 28), "대", UITheme.BloodBright, true);
+                else if (m.IsBounty) UIKit.Tex(new Rect(p.x - 7, p.y - 7, 14, 14), UITheme.Circle, new Color(1f, 0.82f, 0.3f));
                 else if (m.Revealed) UIKit.Tex(new Rect(p.x - 5, p.y - 5, 10, 10), UITheme.Circle, new Color(0.95f, 0.2f, 0.12f));
             }
             // 나: 흰 점 + 바라보는 쪽 짧은 선
@@ -110,7 +111,7 @@ namespace Hunt.UI
                 GUI.matrix = m0;
                 UIKit.Tex(new Rect(p.x - 7, p.y - 7, 14, 14), UITheme.Circle, Color.white);
             }
-            UIKit.Text(new Rect(r.x, r.yMax + 2, r.width, 20), "흰 점 = 나  ·  노랑 = 보급 상자  ·  대 = 보스  ·  지 = 지킬 곳  ·  붉은 점 = 드러난 망자", 13, UITheme.BoneDim, TextAnchor.MiddleCenter);
+            UIKit.Text(new Rect(r.x, r.yMax + 2, r.width, 20), "흰 점 = 나  ·  노란 네모 = 보급 상자  ·  노란 동그라미 = 현상금  ·  대 = 보스  ·  지 = 지킬 곳  ·  붉은 점 = 망자", 13, UITheme.BoneDim, TextAnchor.MiddleCenter);
             UIKit.Alpha = keep;
         }
     }
