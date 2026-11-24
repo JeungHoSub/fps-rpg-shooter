@@ -340,6 +340,8 @@ namespace Hunt.Core
             return Clip("rocket", d);
         }
         public static AudioClip Empty => Get("empty", () => MakeClick(0.05f, 2600f, 0.5f));
+        /// <summary>탄창이 바닥날 때 쏠 때마다 나는 가벼운 '틱' (갈수록 높아짐).</summary>
+        public static AudioClip LowAmmoTick => Get("lowammo", () => MakeTone(0.035f, 3200f, 3000f, 0.35f));
         public static AudioClip MagOut => Mech("magout", () => MakeClick(0.09f, 900f, 0.8f));
         public static AudioClip MagIn => Mech("magin", () => MakeClick(0.12f, 1300f, 1f));
         public static AudioClip Rack => Mech("rack", () => MakeRack());

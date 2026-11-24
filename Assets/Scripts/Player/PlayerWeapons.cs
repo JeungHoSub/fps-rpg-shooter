@@ -706,6 +706,12 @@ namespace Hunt.Player
                 FX.MuzzleSmoke(mz, ct.forward, wc == WeaponClass.Shotgun || wc == WeaponClass.Sniper ? 2.2f : 0.7f);
             }
             SFX.PlayShot(w.data, 0.9f); // 실총 녹음 + 저음 층
+            // 탄창이 바닥나 간다: 남은 20% 안이면 쏠 때마다 '틱' (남을수록 높게) — 화면을 안 봐도 장전 때를 안다
+            if (w.MagazineSize >= 6 && wc != WeaponClass.Flamethrower)
+            {
+                int low = Mathf.Max(2, Mathf.CeilToInt(w.MagazineSize * 0.2f));
+                if (w.ammoInMag < low) SFX.PlayPitched(SFX.LowAmmoTick, 0.25f, 1f + (low - w.ammoInMag) * 0.08f);
+            }
             // 탄피 떨어지는 소리 (펌프·볼트식은 장전 동작 때)
             bool manual = (w.data.weaponClass == WeaponClass.Shotgun && !w.data.automatic) || (w.data.weaponClass == WeaponClass.Sniper && w.data.rpm < 100f);
             if (w.data.weaponClass != WeaponClass.Flamethrower && w.data.weaponClass != WeaponClass.Launcher && !manual)
