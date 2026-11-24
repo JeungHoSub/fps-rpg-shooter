@@ -485,7 +485,12 @@ namespace Hunt.Monsters
             Suspicion = IsAlerted ? 0f : Mathf.Clamp01((sightThr * 1.6f - dist) / (sightThr * 0.6f));
             // 쫓던 중이라도 6m 밖에서 내가 덤불에 숨으면 곧 놓친다 (정확한 자리는 모른 채 주변을 뒤진다)
             if (hidden && IsAlerted && !GlobalRush && !IsBoss && dist > 6f && alertTime > 1.5f) alertTime = 1.5f;
-            if (dist < sightThr) { Alert(3f); Suspicion = 0f; return; }
+            // 벽·집 뒤에 있으면 못 본다 (2.5m 안은 숨소리·기척으로 안다)
+            bool blocked = false;
+            if (dist < sightThr && dist > 2.5f && Flashlight.Eye != null)
+                blocked = !CanSee(Flashlight.Eye.position, transform.position + Vector3.up * 1.5f * Data.scale);
+            if (blocked) Suspicion *= 0.5f;
+            if (dist < sightThr && !blocked) { Alert(3f); Suspicion = 0f; return; }
             if (hidden && !IsAlerted)
             {
                 if (dist < 3.5f && !passedHidden)
