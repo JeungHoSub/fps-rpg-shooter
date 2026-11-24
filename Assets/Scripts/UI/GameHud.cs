@@ -1062,7 +1062,7 @@ namespace Hunt.UI
 
         void TrackNight(GameManager gm, PlayerCharacter p)
         {
-            if (!ReferenceEquals(p, nightPlayer)) { nightPlayer = p; nightLastState = GameState.CharacterSelect; dawnLines = null; } // 새 판
+            if (!ReferenceEquals(p, nightPlayer)) { nightPlayer = p; nightLastState = GameState.CharacterSelect; dawnLines = null; surroundMuttered = false; } // 새 판
             if (gm.State == nightLastState) return;
             if (gm.State == GameState.Playing)
             {
