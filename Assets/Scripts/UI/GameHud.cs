@@ -68,6 +68,7 @@ namespace Hunt.UI
         /// <summary>피해 크기(생명 비율)에 맞춰 핏자국 1~3개.</summary>
         public static void ScreenBlood(float hpFraction)
         {
+            if (!GameSettings.Gore) return;
             int n = hpFraction > 0.15f ? 3 : hpFraction > 0.07f ? 2 : 1;
             for (int i = 0; i < n && splats.Count < 8; i++)
             {

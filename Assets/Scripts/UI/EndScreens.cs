@@ -64,6 +64,12 @@ namespace Hunt.UI
             UIKit.Text(new Rect(r.xMax - 110, y, 60, 30), $"{GameSettings.Brightness * 100:0}%", 18, UITheme.GoldBright, TextAnchor.MiddleRight, bold: true);
             y += 54;
 
+            // 피 표현
+            UIKit.Text(new Rect(r.x + 60, y + 4, 160, 30), "피 표현", 18, UITheme.Bone, serif: true);
+            if (UIKit.Button(new Rect(r.x + 220, y, (r.width - 340) / 3f * 2f + 6, 38), GameSettings.Gore ? "켜짐 (피·살점)" : "꺼짐 (흙먼지로)", 17, GameSettings.Gore))
+                GameSettings.Gore = !GameSettings.Gore;
+            y += 48;
+
             // 난이도 (새로 나오는 망자부터 바뀐다)
             UIKit.Text(new Rect(r.x + 60, y + 4, 160, 30), "난이도", 18, UITheme.Bone, serif: true);
             float dw = (r.width - 340) / 3f;

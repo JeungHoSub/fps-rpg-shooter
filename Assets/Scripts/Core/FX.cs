@@ -159,7 +159,7 @@ namespace Hunt.Core
 
         public static void BloodPool(Vector3 pos, float size)
         {
-            if (root == null) return;
+            if (root == null || !GameSettings.Gore) return;
             Transform t;
             if (pools.Count < MaxPools)
             {
@@ -244,7 +244,7 @@ namespace Hunt.Core
         /// </summary>
         public static void BloodSplat(Vector3 from, Vector3 dir, float maxDist, float size)
         {
-            if (root == null) return;
+            if (root == null || !GameSettings.Gore) return;
             int n = Physics.RaycastNonAlloc(from, dir, splatHits, maxDist, ~((1 << 2) | (1 << 1)), QueryTriggerInteraction.Ignore);
             float best = float.MaxValue;
             RaycastHit found = default;
@@ -331,6 +331,7 @@ namespace Hunt.Core
 
         public static void ImpactFlesh(Vector3 point, Vector3 shotDir, Color color, int amount)
         {
+            if (!GameSettings.Gore) color = new Color(0.35f, 0.33f, 0.3f, color.a);
             for (int i = 0; i < amount; i++)
             {
                 Vector3 v = (shotDir * 0.6f + Random.insideUnitSphere).normalized * Random.Range(1.5f, 4.5f) + Vector3.up;
@@ -340,6 +341,7 @@ namespace Hunt.Core
 
         public static void BloodBurst(Vector3 center, Color color, float scale)
         {
+            if (!GameSettings.Gore) color = new Color(0.32f, 0.3f, 0.27f, color.a); // 피 표현 끔: 흙먼지
             int n = Mathf.RoundToInt(25 * scale);
             for (int i = 0; i < n; i++)
             {

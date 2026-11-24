@@ -55,6 +55,16 @@ namespace Hunt.Core
         public static float DiffDamage => Difficulty == 0 ? 0.65f : Difficulty == 2 ? 1.3f : 1f;
         public static string DifficultyName(int d) => d == 0 ? "쉬움" : d == 2 ? "어려움" : "보통";
 
+        const string GoreKey = "hunt.gore";
+        static bool? gore;
+
+        /// <summary>피 표현 (피 웅덩이·벽 피·화면 피·살점). 끄면 흙먼지로 바뀐다.</summary>
+        public static bool Gore
+        {
+            get { if (gore == null) gore = Load(GoreKey, 1f) > 0.5f; return gore.Value; }
+            set { gore = value; Save(GoreKey, value ? 1f : 0f); }
+        }
+
         // ---- 모바일 ----
         // PreviewKey2: 예전 키에 '켜짐'이 저장돼 있어도 PC 기본(꺼짐)으로 시작하도록 새 키 사용
         const string AutoFireKey = "hunt.autofire", AssistKey = "hunt.aimassist", PreviewKey2 = "hunt.mobilepreview2";

@@ -713,7 +713,7 @@ namespace Hunt.Player
                                 {
                                     FX.BloodBurst(hit.point, res.zone == HitZone.WeakPoint ? new Color(1f, 0.55f, 0.1f) : new Color(0.45f, 0.04f, 0.06f), 0.7f);
                                     // 살점이 총알 방향으로 튀어 오른다 (타격감)
-                                    int n = QualityManager.Level == GfxLevel.Low ? 3 : 6;
+                                    int n = !GameSettings.Gore ? 0 : QualityManager.Level == GfxLevel.Low ? 3 : 6; // 피 표현 끔이면 살점 없음
                                     for (int g = 0; g < n; g++)
                                         Hunt.Monsters.MonsterGib.Chunk(null, hit.point + Random.insideUnitSphere * 0.08f,
                                             dir * Random.Range(1.5f, 4.5f) + Vector3.up * Random.Range(2f, 4.5f) + Random.insideUnitSphere * 1.5f,
