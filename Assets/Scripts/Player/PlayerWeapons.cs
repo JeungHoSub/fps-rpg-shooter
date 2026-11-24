@@ -486,7 +486,7 @@ namespace Hunt.Player
                 var res = part.ReceiveHit(info);
                 if (!res.hit) continue;
                 kill |= res.killed;
-                if (res.killed) player.RunMelee++;
+                if (res.killed) { player.RunMelee++; if (Random.value < 0.5f) GameHud.ScreenBlood(0.1f); } // 칼로 베면 피가 튄다
                 if (backstab && res.killed)
                 {
                     HUD.Notify("소리 없이 쓰러뜨렸다", new Color(0.75f, 0.85f, 1f));
