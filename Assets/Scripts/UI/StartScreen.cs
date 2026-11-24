@@ -141,7 +141,17 @@ namespace Hunt.UI
         void DrawWhatsNew()
         {
             var btn = new Rect(W - 210, 18, 190, 40);
-            if (UIKit.Button(btn, whatsNewOpen ? "닫기" : "새로 바뀐 점", 17, whatsNewOpen)) { whatsNewOpen = !whatsNewOpen; achOpen = false; }
+            // 아직 안 본 새 소식이 있으면 붉은 점 (업데이트하면 맨 위 줄이 바뀐다)
+            string top = GameText.WhatsNew.Length > 0 ? GameText.WhatsNew[0] : "";
+            string seen = "";
+            try { seen = PlayerPrefs.GetString("hunt.whatsnew.seen", ""); } catch { }
+            bool fresh = top != seen;
+            if (UIKit.Button(btn, whatsNewOpen ? "닫기" : fresh ? "새로 바뀐 점  ●" : "새로 바뀐 점", 17, whatsNewOpen))
+            {
+                whatsNewOpen = !whatsNewOpen; achOpen = false;
+                if (whatsNewOpen) { try { PlayerPrefs.SetString("hunt.whatsnew.seen", top); PlayerPrefs.Save(); } catch { } }
+            }
+            if (fresh && !whatsNewOpen) UIKit.Tex(new Rect(btn.xMax - 14, btn.y - 4, 12, 12), UITheme.Circle, new Color(0.9f, 0.15f, 0.1f, 0.7f + 0.3f * Mathf.Sin(Time.unscaledTime * 4f)));
             var abtn = new Rect(W - 410, 18, 190, 40);
             if (UIKit.Button(abtn, achOpen ? "닫기" : $"업적  {Achievements.DoneCount()} / {Achievements.All.Length}", 17, achOpen)) { achOpen = !achOpen; whatsNewOpen = false; }
             DrawAchievements();
