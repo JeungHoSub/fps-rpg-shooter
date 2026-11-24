@@ -1006,7 +1006,12 @@ namespace Hunt.UI
                 st += (st.Length > 0 ? "  ·  " : "") + $"<color=#{UIKit.Hex(new Color(0.95f, 0.85f, 0.6f))}>부적: {(pc.CharmGuard ? "호신 " : "")}{(pc.CharmSwift ? "축지 " : "")}{(pc.CharmAim ? "명중" : "")}</color>";
             if (pc != null && pc.Firecrackers > 0)
                 st += (st.Length > 0 ? "  ·  " : "") + $"<color=#{UIKit.Hex(new Color(1f, 0.55f, 0.45f))}>폭죽 {pc.Firecrackers} (B)</color>";
-            if (st.Length > 0) UIKit.Text(new Rect(r.x - 160, r.y - 42, r.width + 320, 20), st, 13, UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true);
+            if (st.Length > 0)
+            {
+                // 글이 길면(태그 뺀 글자 38자 넘게) 한 단계 작게 — 무기 칸과 겹치지 않게
+                int plain = System.Text.RegularExpressions.Regex.Replace(st, "<[^>]+>", "").Length;
+                UIKit.Text(new Rect(r.x - 160, r.y - 42, r.width + 320, 20), st, plain > 38 ? 11 : 13, UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true);
+            }
         }
 
         // ---- 새벽 기록 카드: 그 밤에 한 일을 날이 밝을 때 잠깐 보여 준다 ----
