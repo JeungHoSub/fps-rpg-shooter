@@ -379,9 +379,17 @@ namespace Hunt.UI
             }
         }
 
+        static string lastTip;
+        static float tipSince;
+
         public static void DrawTooltip(float W, float H)
         {
-            if (string.IsNullOrEmpty(tooltip)) return;
+            if (string.IsNullOrEmpty(tooltip)) { if (IsRepaint) lastTip = null; return; }
+            // 새 설명이 뜨면 0.12초 동안 스르륵 나타난다 (툭 튀어나오지 않게)
+            if (IsRepaint && tooltip != lastTip) { lastTip = tooltip; tipSince = Time.unscaledTime; }
+            float tipA = EaseOut((Time.unscaledTime - tipSince) / 0.12f);
+            float keepA = Alpha;
+            Alpha = keepA * tipA;
             var st = UITheme.Text(17, TextAnchor.UpperLeft, false, false, true);
             float w = 380f;
             float h = st.CalcHeight(new GUIContent(tooltip), w - 32) + 28;
@@ -392,6 +400,7 @@ namespace Hunt.UI
             var r = new Rect(x, y, w, h);
             NineSlice(r, UITheme.Panel, 12, Color.white);
             Text(new Rect(r.x + 16, r.y + 14, w - 32, h - 28), tooltip, 17, UITheme.Bone, TextAnchor.UpperLeft, wrap: true);
+            Alpha = keepA;
         }
 
         public static string Hex(Color c) => ColorUtility.ToHtmlStringRGB(c);
