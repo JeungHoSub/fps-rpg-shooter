@@ -394,7 +394,14 @@ namespace Hunt.Monsters
             bool low = target != null && target.Controller != null && target.Controller.IsCrouching;
             // 앉아서 덤불 속이면 코앞(어둠 2.5m)에 와야 안다. 손전등을 켜면 소용없다
             bool hidden = low && !lit && Hiding.InBush(target.transform.position);
-            if (dist < (hidden ? 2.5f : (lit ? SightLit : SightDark) * (low ? 0.7f : 1f))) { Alert(3f); return; }
+            // 어슬렁대는 망자는 등 뒤(110° 밖)를 잘 못 본다 → 몰래 다가가 칼질할 수 있다
+            float back = 1f;
+            if (!IsAlerted && target != null)
+            {
+                Vector3 tp = target.transform.position - transform.position; tp.y = 0f;
+                if (tp.sqrMagnitude > 0.01f && Vector3.Angle(transform.forward, tp) > 110f) back = 0.45f;
+            }
+            if (dist < Mathf.Max(2f, (hidden ? 2.5f : (lit ? SightLit : SightDark) * (low ? 0.7f : 1f)) * back)) { Alert(3f); return; }
             if (hidden && !IsAlerted) return; // 덤불 속은 시야선으로도 안 보인다
             if (IsAlerted && alertTime > 1f) return;
 
