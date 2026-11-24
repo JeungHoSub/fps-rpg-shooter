@@ -441,6 +441,13 @@ namespace Hunt.Player
 
         void ImpactSound(Vector3 p, Vector3 n)
         {
+            // 덤불 속 땅을 쏘면 매복한 망자가 놀라 튀어나온다 (사격으로 떠보기)
+            if (Hiding.InBush(p))
+            {
+                Hiding.Shake(p);
+                foreach (var lm in Monster.Alive)
+                    if (lm != null && lm.Lurking && (lm.transform.position - p).sqrMagnitude < 2.4f * 2.4f) lm.Disturb();
+            }
             if (impactFrame == Time.frameCount) return;
             impactFrame = Time.frameCount;
             if (n.y > 0.75f) SFX.PlayAt(SFX.MudHit, p, 0.5f);
