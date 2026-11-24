@@ -729,6 +729,7 @@ namespace Hunt.Monsters
         bool lurking, hpLostWhileLurking;
         Vector3 lurkBase;
         GameObject lurkEyes;
+        Renderer[] lurkHidden;
         bool eyesGrowled;
         float lurkTwitch = 3f;
         public bool Lurking => lurking;
@@ -741,6 +742,9 @@ namespace Hunt.Monsters
             lurkBase = rig.Pivot.localPosition;
             float s = Mathf.Max(0.01f, transform.lossyScale.y);
             rig.Pivot.localPosition = lurkBase - Vector3.up * (2.2f * Data.scale / s);
+            // 땅 밑에 있는 동안은 그리지 않는다 (피부 변형 계산도 쉰다 — 내장 그래픽 절약)
+            lurkHidden = rig.Pivot.GetComponentsInChildren<Renderer>();
+            foreach (var r0 in lurkHidden) if (r0 != null) r0.enabled = false;
             // 손전등에만 보이는 눈 (평소엔 꺼 둠)
             lurkEyes = new GameObject("LurkEyes");
             lurkEyes.transform.SetParent(transform, false);
@@ -763,6 +767,7 @@ namespace Hunt.Monsters
         {
             lurking = false;
             if (lurkEyes != null) Destroy(lurkEyes);
+            if (lurkHidden != null) { foreach (var r0 in lurkHidden) if (r0 != null) r0.enabled = true; lurkHidden = null; }
             if (rig != null && rig.Pivot != null) rig.Pivot.localPosition = lurkBase;
             Emerge(0.55f); // 덤불 속에서 확 솟구친다
             Hiding.Shake(transform.position);
@@ -845,6 +850,7 @@ namespace Hunt.Monsters
                     HUD.Notify("덤불 속 매복 망자를 먼저 잡았다", new Color(0.75f, 0.9f, 0.6f));
                     lurking = false;
                     if (lurkEyes != null) Destroy(lurkEyes);
+                    if (lurkHidden != null) { foreach (var r0 in lurkHidden) if (r0 != null) r0.enabled = true; lurkHidden = null; }
                     if (rig != null && rig.Pivot != null) rig.Pivot.localPosition = lurkBase;
                 }
                 Die();
