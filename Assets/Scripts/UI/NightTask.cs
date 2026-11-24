@@ -50,7 +50,7 @@ namespace Hunt.UI
         }
 
         static string Text => kind == Kind.Head ? $"머리를 맞혀 {goal}마리" : kind == Kind.Melee ? "칼로 3마리" : kind == Kind.Crates ? "보급 상자 셋 모두 열기"
-                            : kind == Kind.Silent ? "소리 없이(등 뒤 칼) 2마리" : kind == Kind.Hidden ? "덤불에 숨어 망자 3마리 지나 보내기" : "현상금 망자 쓰러뜨리기";
+                            : kind == Kind.Silent ? "소리 없이(등 뒤 칼) 2마리" : kind == Kind.Hidden ? "덤불에 숨어 3마리 보내기" : "현상금 망자 쓰러뜨리기";
 
         public static void Draw(PlayerCharacter p, float W)
         {
