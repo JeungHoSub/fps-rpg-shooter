@@ -26,6 +26,39 @@ namespace Hunt.UI
         static float kitFlash, drinkFlash;
 
         /// <param name="gained">false면 알림만 (가득 참 등) — 칸을 반짝이지 않는다.</param>
+        // ---- 찢어진 쪽지 (보급 상자) ----
+        static string noteText;
+        static int noteIndex;
+        static float noteShown = -100f;
+        const string LoreKey = "hunt.lore.read";
+
+        /// <summary>아직 안 읽은 다음 쪽지를 왼쪽에 8초 띄운다. 다 읽었으면 아무것도 안 한다.</summary>
+        public static void ShowNextLoreNote()
+        {
+            int read = 0;
+            try { read = PlayerPrefs.GetInt(LoreKey, 0); } catch { }
+            if (read >= GameText.LoreNotes.Length) return;
+            noteIndex = read;
+            noteText = GameText.LoreNotes[read];
+            noteShown = Time.unscaledTime;
+            try { PlayerPrefs.SetInt(LoreKey, read + 1); PlayerPrefs.Save(); } catch { }
+            SFX.PlayPitched(SFX.Swing, 0.3f, 1.6f); // 종이 펼치는 소리
+        }
+
+        void DrawLoreNote()
+        {
+            float age = Time.unscaledTime - noteShown;
+            if (noteText == null || age > 9f) return;
+            float a = UIKit.EaseOut(age * 3f) * Mathf.Clamp01((9f - age) / 0.8f);
+            float keep = UIKit.Alpha;
+            UIKit.Alpha = keep * a;
+            var r = new Rect(36 - (1f - a) * 20f, H * 0.36f, 440, 190);
+            UIKit.Tex(r, UITheme.Paper, new Color(0.92f, 0.86f, 0.72f, 0.95f));
+            UIKit.Text(new Rect(r.x + 22, r.y + 14, r.width - 44, 24), $"찢어진 쪽지  {noteIndex + 1} / {GameText.LoreNotes.Length}", 15, new Color(0.35f, 0.12f, 0.08f), TextAnchor.MiddleLeft, serif: true, bold: true, shadow: false);
+            UIKit.Text(new Rect(r.x + 22, r.y + 44, r.width - 44, r.height - 56), noteText, 17, new Color(0.12f, 0.1f, 0.08f), TextAnchor.UpperLeft, serif: true, wrap: true, shadow: false);
+            UIKit.Alpha = keep;
+        }
+
         /// <summary>치유 순간 화면 가장자리 옥빛 (0~1).</summary>
         public static float HealFlash;
 
@@ -83,6 +116,7 @@ namespace Hunt.UI
             DrawDamageNumbers(cam, scale);
             TrackNight(gm, p);
             DrawNightBanner(gm);
+            DrawLoreNote();
 
             // ---- 화면 효과 ----
             float hpRatio = p.Hp / p.MaxHp;

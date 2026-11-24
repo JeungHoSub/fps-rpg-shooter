@@ -154,6 +154,8 @@ namespace Hunt.Player
                 }
             }
             HUD.Notify("보급 상자를 열었다", new Color(1f, 0.85f, 0.5f));
+            // 가끔 찢어진 쪽지 (아직 안 읽은 다음 장)
+            if (Random.value < 0.4f) GameHud.ShowNextLoreNote();
             Noise.Emit(c, 6f, true);
         }
     }
