@@ -596,7 +596,17 @@ namespace Hunt.UI
                     GoTo(step + 1);
             }
             UIKit.Text(new Rect(c.x + 220, y, c.width - 460, 54),
-                "WASD 이동 · Shift 달리기 · 좌클릭 사격 · 우클릭 조준 · R 재장전 · F 손전등\nQ 광폭화 · E 재생 · H 청심환 · Tab 서낭당 · Esc 일시정지", 14, UITheme.Ash, TextAnchor.MiddleCenter);
+                "WASD 이동 · Shift 달리기 · Ctrl 앉기(달리며 미끄러지기) · 좌클릭 사격 · 우클릭 조준 · R 장전 · F 손전등\nE 줍기·상자(없으면 재생) · M 지도 · G 수류탄 · V 칼 · Q 광폭화 · Tab 서낭당 · Esc 일시정지", 14, UITheme.Ash, TextAnchor.MiddleCenter);
+            // 빠른 출정: 지난 판 설정 그대로(포인트를 다 썼으면), 처음이면 기본 설정으로
+            if (step == 0)
+            {
+                bool prev = gm.StartPointsLeft == 0;
+                if (UIKit.Button(new Rect(c.xMax - 220, y - 70, 220, 54), "빠른 출정", 20, false, true, prev ? "지난 설정 그대로" : "기본 설정으로"))
+                {
+                    if (!prev) gm.ApplyStartPreset(Hunt.UI.GameText.Presets[0].alloc);
+                    TryDeploy(gm);
+                }
+            }
             UIKit.Text(new Rect(0, H - 30, W - 30, 24), $"그래픽 품질: {QualityManager.Name(QualityManager.Level)}{(QualityManager.AutoDetected ? " (내 PC에 맞춰 자동)" : "")}  ·  게임 중 Esc에서 바꿀 수 있다", 13, UITheme.Ash, TextAnchor.MiddleRight);
         }
 
