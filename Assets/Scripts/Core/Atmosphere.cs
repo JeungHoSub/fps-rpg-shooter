@@ -39,8 +39,11 @@ namespace Hunt.Core
         }
 
         /// <summary>밤이 시작될 때 날씨를 고른다 (첫 밤은 보슬비, 대감의 밤은 뇌우).</summary>
+        bool redMoon; // 대감의 밤: 핏빛 달
+
         public void SetWeather(int night, bool bossNight)
         {
+            redMoon = bossNight;
             Weather w;
             if (night <= 1) w = Weather.Drizzle;
             else if (bossNight) w = Weather.Storm;
@@ -390,7 +393,8 @@ namespace Hunt.Core
             // 구름이 지나가며 흐려졌다 밝아진다 · 날씨(맑아짐은 또렷, 폭우·안개는 거의 안 보임) · 새벽엔 사라짐
             float cloud = Mathf.Lerp(0.35f, 1f, Mathf.PerlinNoise(Time.time * 0.05f, 7.3f));
             float a2 = Mathf.Clamp01((moonMult - 0.6f) * 1.1f) * cloud * (1f - Dawn) * (1f - RainIntensity * 0.45f);
-            moonMat.color = new Color(1f, 1f, 1f, a2);
+            if (redMoon) a2 = Mathf.Max(a2, 0.75f * cloud * (1f - Dawn)); // 대감의 밤엔 폭풍 속에서도 핏빛 달이 또렷하다
+            moonMat.color = redMoon ? new Color(1f, 0.35f, 0.28f, a2) : new Color(1f, 1f, 1f, a2);
         }
     }
 }
