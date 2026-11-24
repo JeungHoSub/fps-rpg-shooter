@@ -241,6 +241,12 @@ namespace Hunt.Monsters
             if (!alerted && wasAlerted && target != null)
             {
                 investigatePos = target.transform.position; hasInvestigate = true;
+                // 덤불에 숨어서 놓쳤다면 정확한 자리 대신 그 언저리(3~5m)를 뒤진다
+                if (target.Controller != null && target.Controller.IsCrouching && Hiding.InBush(target.transform.position))
+                {
+                    Vector2 off = Random.insideUnitCircle.normalized * Random.Range(3f, 5f);
+                    investigatePos += new Vector3(off.x, 0f, off.y);
+                }
                 LostAt = Time.time;
             }
             wasAlerted = alerted;
@@ -477,6 +483,8 @@ namespace Hunt.Monsters
             float sightThr = Mathf.Max(hidden ? hideR : 2f, (hidden ? hideR : (lit ? SightLit : SightDark) * lowMult * Atmosphere.SightMult) * back);
             // 눈치챌락 말락 (알아채는 거리의 1.6배 안): 머리 위 '…' — 물러설 때를 알게
             Suspicion = IsAlerted ? 0f : Mathf.Clamp01((sightThr * 1.6f - dist) / (sightThr * 0.6f));
+            // 쫓던 중이라도 6m 밖에서 내가 덤불에 숨으면 곧 놓친다 (정확한 자리는 모른 채 주변을 뒤진다)
+            if (hidden && IsAlerted && !GlobalRush && !IsBoss && dist > 6f && alertTime > 1.5f) alertTime = 1.5f;
             if (dist < sightThr) { Alert(3f); Suspicion = 0f; return; }
             if (hidden && !IsAlerted)
             {
