@@ -18,6 +18,7 @@ namespace Hunt.Player
         float rushT;
         float shiver, leaveT;
         Transform body;
+        Renderer glow;
 
         public bool Saved => saved;
 
@@ -65,6 +66,15 @@ namespace Hunt.Player
                 Part(PrimitiveType.Capsule, new Vector3(sx * 1.6f, 0.6f, 0.12f), new Vector3(0.11f, 0.22f, 0.11f), Quaternion.Euler(60f, 0f, sx > 0 ? -20f : 20f), cloth, false); // 무릎 감싼 팔
             }
             Part(PrimitiveType.Cube, new Vector3(0.1f, 0.5f, 0.05f), new Vector3(0.16f, 0.12f, 0.02f), Quaternion.identity, blood, false); // 옆구리 상처
+            // 곁에 놓인 꺼져 가는 휴대폰 불빛 (어둠 속에서 찾는 실마리, 조명은 안 씀)
+            var phone = FX.LowSphere();
+            phone.layer = 2;
+            phone.transform.SetParent(transform, false);
+            phone.transform.localPosition = new Vector3(0.45f, 0.04f, 0.3f);
+            phone.transform.localScale = new Vector3(0.09f, 0.02f, 0.16f);
+            glow = phone.GetComponent<Renderer>();
+            glow.sharedMaterial = FX.UnlitMaterial(new Color(0.75f, 0.85f, 1f));
+            glow.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         }
 
         void Part(PrimitiveType t, Vector3 pos, Vector3 scale, Quaternion rot, Material m, bool collider)
@@ -110,8 +120,9 @@ namespace Hunt.Player
                 return;
             }
             if (!gm.IsWorldRunning) return;
-            // 덜덜 떤다
+            // 덜덜 떤다 · 휴대폰 불빛이 깜빡
             shiver += Time.deltaTime;
+            if (glow != null) glow.enabled = Mathf.Repeat(shiver, 2.4f) < 2.0f;
             body.localRotation = Quaternion.Euler(Mathf.Sin(shiver * 23f) * 1.2f, 0f, Mathf.Sin(shiver * 17f) * 1.2f);
             var p = gm.Player;
             if (p == null) return;
