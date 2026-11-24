@@ -777,7 +777,7 @@ namespace Hunt.Player
                 if (wc != WeaponClass.Shotgun && wc != WeaponClass.Sniper) FX.Casing(mz - ct.forward * 0.35f + ct.right * 0.03f, ct.right, ct.up, false);
                 FX.MuzzleSmoke(mz, ct.forward, wc == WeaponClass.Shotgun || wc == WeaponClass.Sniper ? 2.2f : 0.7f);
             }
-            SFX.PlayShot(w.data, 0.9f); // 실총 녹음 + 저음 층
+            SFX.PlayShot(w.data, 0.9f * Mathf.Lerp(0.45f, 1f, (w.NoiseMult - 0.4f) / 0.6f)); // 실총 녹음 + 저음 층 (소음기면 작게)
             // 탄창이 바닥나 간다: 남은 20% 안이면 쏠 때마다 '틱' (남을수록 높게) — 화면을 안 봐도 장전 때를 안다
             if (w.MagazineSize >= 6 && wc != WeaponClass.Flamethrower)
             {
@@ -789,7 +789,7 @@ namespace Hunt.Player
             if (w.data.weaponClass != WeaponClass.Flamethrower && w.data.weaponClass != WeaponClass.Launcher && !manual)
                 SFX.Play(SFX.Casing, 0.18f, 0.2f);
             Noise.Emit(player.transform.position, Noise.ShotRadius(w.data.weaponClass) * w.NoiseMult, true);
-            Noise.MuzzleFlash();
+            if (w.NoiseMult > 0.7f) Noise.MuzzleFlash(); // 소음기를 달면 총구 불꽃도 거의 안 보인다
             float shake = w.data.weaponClass == WeaponClass.Shotgun || w.data.weaponClass == WeaponClass.Sniper || w.data.weaponClass == WeaponClass.Launcher ? 1.4f
                 : w.data.weaponClass == WeaponClass.Flamethrower ? 0.1f : 0.45f;
             shake *= 1f + (w.data.tier - 1) * 0.25f; // 큰 구경일수록 더 흔들린다
