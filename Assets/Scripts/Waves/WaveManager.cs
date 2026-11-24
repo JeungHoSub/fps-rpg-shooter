@@ -95,6 +95,8 @@ namespace Hunt.Waves
         readonly Queue<MonsterArchetype> queue = new Queue<MonsterArchetype>();
         float spawnTimer, stragglerTime, rushTimer, stageClock;
         bool defenseBossSent;
+        bool bossSpawned;
+        Vector3 bossLastPos;
         Transform root;
         PlayerCharacter player;
 
@@ -132,6 +134,7 @@ namespace Hunt.Waves
         {
             Wave = n;
             Boss = null;
+            bossSpawned = false;
             defenseBossSent = false;
             Failed = false;
             Monster.GlobalRush = false;
@@ -306,6 +309,7 @@ namespace Hunt.Waves
                 }
             }
 
+            if (Boss != null && !Boss.IsDead) bossLastPos = Boss.transform.position;
             spawnTimer -= dt;
             // 보스는 망자 수 제한과 상관없이 바로 나온다 (예전엔 남은 망자가 많으면 안 나올 수 있었다)
             bool bossNext = queue.Count > 0 && queue.Peek() == MonsterArchetype.Boss;
@@ -316,6 +320,7 @@ namespace Hunt.Waves
                 if (a == MonsterArchetype.Boss && m != null)
                 {
                     Boss = m;
+                    bossSpawned = true;
                     m.Revealed = true; // 보스 위치는 항상 화면에 표시
                     m.Alert(999f);
                     if (IsBossWave)
@@ -432,6 +437,9 @@ namespace Hunt.Waves
         /// <summary>보스가 쓰러지면 남은 망자도 함께 무너진다.</summary>
         void ClearRound(GameManager gm)
         {
+            // 보스를 쓰러뜨려 끝났나 (보스 오브젝트는 죽으면 곧 사라지므로 '나왔었다' 표시로 판단)
+            bool bossKill = bossSpawned && (Boss == null || Boss.IsDead);
+            bossSpawned = false;
             Stage = RoundStage.Cleared;
             Spawning = false;
             queue.Clear();
@@ -442,8 +450,22 @@ namespace Hunt.Waves
             foreach (var m in rest)
                 if (m != null && !m.IsDead) m.Collapse();
             Monster.Alive.Clear();
+            Vector3 bossAt = bossLastPos;
             Boss = null;
-            gm.OnWaveCleared();
+            if (bossKill) StartCoroutine(BossFallThenDawn(gm, bossAt));
+            else gm.OnWaveCleared();
+        }
+
+        /// <summary>보스를 쓰러뜨리면: 잠깐 느려지며 쓰러지는 걸 보여 준 뒤(2.5초) 날이 밝는다.</summary>
+        System.Collections.IEnumerator BossFallThenDawn(GameManager gm, Vector3 at)
+        {
+            gm.SlowMo(1.6f, 0.3f);
+            if (gm.Player != null) gm.Player.Controller.AddShake(IsBossWave ? 4f : 2.5f);
+            FX.BloodBurst(at + Vector3.up * 1.6f, new Color(0.4f, 0.04f, 0.06f), IsBossWave ? 2.4f : 1.6f);
+            SFX.Play(SFX.Gong, 1f, 0f);
+            HUD.Notify(IsBossWave ? "역병 대감이 쓰러졌다" : "보스가 쓰러졌다 — 남은 망자들이 무너진다", new Color(1f, 0.85f, 0.5f));
+            yield return new WaitForSecondsRealtime(2.5f);
+            if (gm != null && gm.State == GameState.Playing) gm.OnWaveCleared(); // 그 사이 죽었으면 넘기지 않는다
         }
 
         public Monster Spawn(MonsterArchetype a, Vector3? at) => Spawn(a, at, false);

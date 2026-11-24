@@ -266,6 +266,24 @@ namespace Hunt.Core
         float hitStopUntil;
 
         /// <summary>히트스톱: 아주 짧게 시간을 늦춰 타격을 강조한다.</summary>
+        float slowStart = -10f, slowUntil, slowScale = 1f;
+
+        /// <summary>슬로 모션 (보스 처치 등): 처음엔 scale까지 느려졌다가 끝으로 갈수록 원래 속도로 돌아온다.</summary>
+        public void SlowMo(float seconds, float scale)
+        {
+            slowStart = Time.unscaledTime;
+            slowUntil = Time.unscaledTime + seconds;
+            slowScale = Mathf.Clamp(scale, 0.05f, 1f);
+        }
+
+        float SlowFactor()
+        {
+            float now = Time.unscaledTime;
+            if (now >= slowUntil) return 1f;
+            float k = Mathf.InverseLerp(slowStart, slowUntil, now);
+            return Mathf.Lerp(slowScale, 1f, k * k);
+        }
+
         public void HitStop(float seconds)
         {
             if (Paused) return;
@@ -324,7 +342,7 @@ namespace Hunt.Core
             if ((State == GameState.Playing || State == GameState.Intermission) && GameInput.PauseDown)
                 TogglePause();
             if (Paused) return;
-            Time.timeScale = Time.unscaledTime < hitStopUntil ? 0.06f : 1f;
+            Time.timeScale = Time.unscaledTime < hitStopUntil ? 0.06f : SlowFactor();
 
             switch (State)
             {
