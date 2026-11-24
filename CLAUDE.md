@@ -62,10 +62,10 @@ Unity 1인칭 싱글플레이 좀비 슈터 + RPG. **비 오는 밤의 한국 �
   - 능력치 [+1]/[전부] 버튼 + 칸 눈금 `UIKit.StatCells`/`SmallButton`
   - 실총 녹음 총성 `Resources/Sounds/Guns` (Free Firearm Sound Library CC0) + `SFX.PlayShot`(녹음+저음층), 장전음 `Sounds/Mech`
   - 총 모델 `Resources/GunsBin/<id>.bytes`(원본 `Tools/GunSource/*.txt`) + `Weapons/PackGunModel.cs` (Quaternius 팩·M4A1·화염방사기, OpenGameArt CC0). 변환 = OBJ → 총 공간 텍스트
-- **자동 진행 (사용자 요청 2026-11-19): "그만"이라고 할 때까지 예약 작업(3시간마다, trigger `trig_01CsfMcvJFCBg6SvvCs8uaSu`)으로 계속 업그레이드.**
+- **자동 진행 (사용자 요청 2026-11-19): "그만"이라고 할 때까지 예약 작업(2026-11-24부터 1시간마다 매시 21분, trigger `trig_01CsfMcvJFCBg6SvvCs8uaSu`)으로 계속 업그레이드.**
   매번: git pull → 작게 수정 → 컴파일 확인 → 한국어 커밋 → main 푸시 → 이 목록 갱신 → 바뀐 점을 짧게 보고(미리보기 이미지 있으면 보냄).
   클라우드에선 게임 화면 캡처 불가 (유니티 실행 불가).
-  **보고 방식 (2026-11-24 사용자 요청): "많이 작업한 다음에 알려줘, 너무 자주 묻지 말고"** → 한 번에 3~5개 묶어 작업, 보고는 묶어서 한 번, 선택지 질문 나열 금지.
+  **보고 방식 (2026-11-24 사용자 요청): "많이 작업한 다음에 알려줘, 너무 자주 묻지 말고"** → 한 번에 2~4개 묶어 작업, 보고는 묶어서 한 번(1시간마다), 선택지 질문 나열 금지.
   **사용자 피드백이 오면 그게 최우선.** "모바일 시작" → 휴대폰 단계(`Docs/MOBILE_READINESS.md` 할 일), "그만" → 예약 작업 삭제.
   - 완료된 큰 작업 (2026-11-19~23): 맵(굽은 길 `VillageBuilder.Ribbon`/`RoadX`·`RollingGround`·경계 수풀·`Half` 44) · 초가집 `ThatchRoof` ·
     능력 칸 `UI/HudIcons.cs`·`GameHud.AbilitySlot` · 기질 카드 · 보급품 알림 `GameHud.OnPickup` · 앉기 표시 ·
