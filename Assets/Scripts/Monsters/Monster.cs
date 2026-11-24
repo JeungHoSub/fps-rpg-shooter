@@ -109,6 +109,8 @@ namespace Hunt.Monsters
         public void HearNoise(Vector3 pos, bool fromPlayer)
         {
             if (IsDead) return;
+            // 돌·폭죽·사이렌 소리에 고개를 돌린다: 머리 위 '?' (꾀기가 먹혔다는 표시, 3초에 한 번)
+            if (!fromPlayer && !IsAlerted && !lurking && Time.time - LostAt > 3f) LostAt = Time.time;
             investigatePos = pos;
             hasInvestigate = true;
             if (fromPlayer) alertTime = Mathf.Max(alertTime, 6f);
