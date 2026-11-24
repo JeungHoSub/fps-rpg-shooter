@@ -45,7 +45,7 @@ namespace Hunt.Core
         void Update()
         {
             var gm = GameManager.Instance;
-            if (gm != null && gm.Paused) return;
+            if (gm != null && gm.Paused) { filter.enabled = true; filter.cutoffFrequency = 1100f; return; } // 숨 고르는 동안 바깥 소리가 먹먹하게
             amount = Mathf.MoveTowards(amount, 0f, Time.deltaTime * 0.55f);
             // 생명이 20% 아래면 소리가 조금씩 멀어진다 (심장 소리와 함께 긴장감)
             var p = gm != null ? gm.Player : null;
