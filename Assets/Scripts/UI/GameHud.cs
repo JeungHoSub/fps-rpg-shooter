@@ -833,6 +833,17 @@ namespace Hunt.UI
                 UIKit.Text(new Rect(card.x + 14, card.y + 66, card.width - 28, 62),
                     $"{reload}<size={54 + Mathf.RoundToInt(ammoPunch * 6f)}><b>{w.ammoInMag}</b></size><size=22><color=#{UIKit.Hex(UITheme.BoneDim)}>  /  {w.reserve}</color></size>", 54, ac, TextAnchor.MiddleRight, serif: true);
                 if (wp.IsReloading) UIKit.Bar(new Rect(card.x + 20, card.y + 96, 170, 6), wp.ReloadProgress, UITheme.Gold);
+                else if (w.KillsToNextMastery > 0)
+                {
+                    // 숙련 진행: 다음 단계까지 얼마나 남았나 (가는 금빛 선)
+                    int prevStep = w.Mastery > 0 ? WeaponInstance.MasterySteps[w.Mastery - 1] : 0;
+                    int nextStep = WeaponInstance.MasterySteps[w.Mastery];
+                    float mt = Mathf.InverseLerp(prevStep, nextStep, w.kills);
+                    var mr = new Rect(card.x + 20, card.y + 98, 170, 3);
+                    UIKit.Fill(mr, new Color(0f, 0f, 0f, 0.5f));
+                    UIKit.Fill(new Rect(mr.x, mr.y, mr.width * mt, mr.height), new Color(0.95f, 0.8f, 0.45f, 0.8f));
+                    UIKit.TooltipIf(new Rect(mr.x, mr.y - 6, mr.width, 14), $"숙련: 다음 단계까지 {w.KillsToNextMastery}마리");
+                }
 
                 // 탄알: 탄피 + 탄두 모양 (최대 40발 표시)
                 int mag = w.MagazineSize;
