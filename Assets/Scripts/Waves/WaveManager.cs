@@ -389,6 +389,7 @@ namespace Hunt.Waves
             SFX.PlayPitched(SFX.Drum, 0.6f, 0.6f);
             SFX.PlayAt3D(SFX.ZombieMoan, from, 1f, 0.8f);
             HordeFrom = from; HordeTime = Time.time;
+            Crows.Startle(from); // 그쪽 까마귀가 날아오른다
             string dir = Mathf.Abs(from.x) > Mathf.Abs(from.z) ? (from.x > 0 ? "동쪽" : "서쪽") : (from.z > 0 ? "북쪽" : "남쪽");
             HUD.Notify($"{dir}에서 망자 떼가 마을을 가로지른다 — 숨거나, 맞서거나", new Color(1f, 0.55f, 0.4f));
         }
