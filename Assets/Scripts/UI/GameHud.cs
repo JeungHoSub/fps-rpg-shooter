@@ -109,7 +109,7 @@ namespace Hunt.UI
             float a = Mathf.Clamp01(1f - age / 2.2f);
             UIKit.Vignette(W, H, new Color(1f, 0.82f, 0.35f, 0.35f * a * a));
             float pop = 1f + Mathf.Max(0f, 0.25f - age) * 2f;
-            var r = new Rect(W / 2 - 200, H - 120 - UIKit.EaseOut(age * 2f) * 24f, 400, 50);
+            var r = new Rect(W / 2 - 200, H - 205 - UIKit.EaseOut(age * 2f) * 24f, 400, 50); // 나침반 띠 위
             float keep = UIKit.Alpha;
             UIKit.Alpha = keep * a;
             UIKit.Text(r, $"단계 상승  Lv.{p.Level}", Mathf.RoundToInt(30 * pop), UITheme.GoldBright, TextAnchor.MiddleCenter, serif: true, bold: true);
