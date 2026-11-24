@@ -127,7 +127,12 @@ namespace Hunt.Player
                 if (GameInput.GrenadeDown) QuickGrenade();
                 if (GameInput.StoneDown)
                 {
-                    if (ThrownStone.Ready) ThrownStone.Throw(cam.transform);
+                    if (ThrownStone.Ready)
+                    {
+                        bool fc = player.Firecrackers > 0;
+                        if (fc) { player.Firecrackers--; HUD.Notify($"폭죽을 던졌다 (남은 {player.Firecrackers})", new Color(1f, 0.6f, 0.4f)); }
+                        ThrownStone.Throw(cam.transform, fc);
+                    }
                     else HUD.Notify($"돌을 다시 줍는 중 ({Mathf.CeilToInt(ThrownStone.ReadyAt - Time.time)}초)", UITheme.BoneDim);
                 }
             }

@@ -341,6 +341,8 @@ namespace Hunt.Core
         }
         public static AudioClip Empty => Get("empty", () => MakeClick(0.05f, 2600f, 0.5f));
         /// <summary>던진 돌이 '딱'.</summary>
+        /// <summary>폭죽 '타닥'.</summary>
+        public static AudioClip Pop => Get("pop", () => MakeClick(0.09f, 1800f, 1f));
         public static AudioClip StoneClack => Get("stoneclack", () => MakeClick(0.06f, 1100f, 0.9f));
         /// <summary>도탄 (돌·쇠에 맞고 튕기는 '피웅').</summary>
         public static AudioClip Ricochet => Get("ricochet", () => MakeTone(0.32f, 4200f, 1500f, 0.16f));

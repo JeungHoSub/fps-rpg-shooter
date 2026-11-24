@@ -601,7 +601,7 @@ namespace Hunt.UI
             // ---- 보급: 소비 아이템 · 특수 기기 ----
             UIKit.Text(new Rect(right.x, right.y + 12, right.width, 30), "보급", 22, UITheme.Gold, TextAnchor.MiddleCenter, serif: true, bold: true);
             float y = right.y + 54;
-            const int buyRows = 2 + Gadgets.Count + 3; // 키트·회복제 + 기기 + 부적 3
+            const int buyRows = 3 + Gadgets.Count + 3; // 키트·회복제·폭죽 + 기기 + 부적 3
             float rowStep = Mathf.Min(74f, (right.height - 54f - 64f) / buyRows);
             float buyH = rowStep - 6f;
             void Buy(HudIcons.Icon icon, Color tint, string name, string desc, int have, int max, int price, System.Action give)
@@ -625,6 +625,7 @@ namespace Hunt.UI
             }
             Buy(HudIcons.Icon.Kit, new Color(1f, 0.42f, 0.36f), "치료 키트 (X)", "2.5초 동안 감는다", p.Kits, PlayerCharacter.MaxKits, 60, () => p.Kits++);
             Buy(HudIcons.Icon.Bottle, new Color(0.45f, 0.78f, 1f), "스태미너 회복제 (C)", "기운 즉시 회복", p.Drinks, PlayerCharacter.MaxDrinks, 40, () => p.Drinks++);
+            Buy(HudIcons.Icon.Flame, new Color(1f, 0.35f, 0.25f), "폭죽 (B)", "4초 동안 타닥타닥 — 30m 망자를 그쪽으로 꾄다", p.Firecrackers, PlayerCharacter.MaxFirecrackers, 25, () => p.Firecrackers++);
             var gc = p.Weapons.GadgetCount;
             for (int i = 0; i < Gadgets.Count; i++)
             {

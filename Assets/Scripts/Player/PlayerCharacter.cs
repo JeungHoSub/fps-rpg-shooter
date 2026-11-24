@@ -80,7 +80,9 @@ namespace Hunt.Player
         }
 
         // ---- 소비 아이템: X 치료 키트 (2.5초 동안 감는다), C 스태미너 회복제 ----
-        public const int MaxKits = 3, MaxDrinks = 3;
+        public const int MaxKits = 3, MaxDrinks = 3, MaxFirecrackers = 3;
+        /// <summary>폭죽 (B로 돌 대신 먼저 던진다): 4초 동안 터지며 30m 망자를 꾄다.</summary>
+        public int Firecrackers;
         public const float KitTime = 2.5f;
         public int Kits { get; set; } = 2;
         public int Drinks { get; set; } = 2;

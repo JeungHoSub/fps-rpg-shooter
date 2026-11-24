@@ -11,12 +11,13 @@ namespace Hunt.Player
     {
         public const float Cooldown = 4f;
         public static float ReadyAt;
-        bool landed;
+        bool landed, firecracker;
+        float popClock, popsLeft;
         float life = 6f;
 
         public static bool Ready => Time.time >= ReadyAt;
 
-        public static void Throw(Transform cam)
+        public static void Throw(Transform cam, bool isFirecracker = false)
         {
             if (!Ready || cam == null) return;
             ReadyAt = Time.time + Cooldown;
@@ -40,7 +41,9 @@ namespace Hunt.Player
 #endif
             rb.angularVelocity = Random.insideUnitSphere * 10f;
             rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
-            go.AddComponent<ThrownStone>();
+            var st = go.AddComponent<ThrownStone>();
+            st.firecracker = isFirecracker;
+            if (isFirecracker) go.GetComponent<Renderer>().sharedMaterial = EnvMaterials.Plain(new Color(0.7f, 0.1f, 0.08f), 0.4f); // 붉은 종이
             SFX.Play(SFX.Swing, 0.35f, 0.1f);
         }
 
@@ -48,6 +51,7 @@ namespace Hunt.Player
         {
             if (landed) return;
             landed = true;
+            if (firecracker) { popsLeft = 9; popClock = 0.3f; life = 4.5f; return; }
             // 망자에게 직접 맞히면: 화가 나서 던진 사람을 쫓아온다
             var hitMonster = c.collider.GetComponentInParent<Hunt.Monsters.Monster>();
             if (hitMonster != null && !hitMonster.IsDead)
@@ -65,6 +69,18 @@ namespace Hunt.Player
 
         void Update()
         {
+            if (popsLeft > 0)
+            {
+                popClock -= Time.deltaTime;
+                if (popClock <= 0f)
+                {
+                    popsLeft--;
+                    popClock = Random.Range(0.25f, 0.5f);
+                    SFX.PlayAt3D(SFX.Pop, transform.position, 1f, Random.Range(0.85f, 1.25f));
+                    Effects.Burst(transform.position + Vector3.up * 0.1f, 0.15f, new Color(1f, 0.8f, 0.4f));
+                    Noise.Emit(transform.position, 30f, false);
+                }
+            }
             life -= Time.deltaTime;
             if (life <= 0f) Destroy(gameObject);
         }
