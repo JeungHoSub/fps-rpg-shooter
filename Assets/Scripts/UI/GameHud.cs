@@ -240,7 +240,7 @@ namespace Hunt.UI
             // 숨 참기 막대 (덤불 속, 참는 중이거나 아직 덜 찼을 때)
             if (hiddenNow && !p.Weapons.IsScoped && (p.Controller.HoldingBreath || p.Controller.BreathHold < PlayerController.BreathMax - 0.05f))
             {
-                var br = new Rect(W / 2 - 60, H / 2 + 120, 120, 4);
+                var br = new Rect(W / 2 - 60, H / 2 + 140, 120, 4); // 줍기 안내(+92~126) 아래
                 UIKit.Bar(br, p.Controller.BreathHold / PlayerController.BreathMax, p.Controller.HoldingBreath ? new Color(0.75f, 0.85f, 0.95f) : new Color(0.5f, 0.55f, 0.6f));
             }
             if (AcidFlash > 0f)
