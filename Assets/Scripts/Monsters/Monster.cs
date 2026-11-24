@@ -195,7 +195,16 @@ namespace Hunt.Monsters
                         Vector3 toMe = (transform.position + Vector3.up * 0.7f - eye.position).normalized;
                         lit = Vector3.Dot(eye.forward, toMe) > 0.9f;
                     }
-                    if (lurkEyes != null && lurkEyes.activeSelf != lit) lurkEyes.SetActive(lit);
+                    if (lurkEyes != null)
+                    {
+                        if (lurkEyes.activeSelf != lit) lurkEyes.SetActive(lit);
+                        // 잎에 가리지 않게 덤불 바깥쪽(플레이어 쪽) 가장자리에 두고 플레이어를 본다
+                        if (lit)
+                        {
+                            lurkEyes.transform.position = transform.position + Vector3.up * 0.75f + dir * 1.0f;
+                            lurkEyes.transform.rotation = Quaternion.LookRotation(dir);
+                        }
+                    }
                     return;
                 }
             }
@@ -707,7 +716,7 @@ namespace Hunt.Monsters
                 var e = FX.LowSphere();
                 e.layer = 2;
                 e.transform.SetParent(lurkEyes.transform, false);
-                e.transform.localPosition = new Vector3(sx / s, 0f, 0.35f / s);
+                e.transform.localPosition = new Vector3(sx / s, 0f, 0f);
                 e.transform.localScale = Vector3.one * 0.045f / s;
                 var r = e.GetComponent<Renderer>();
                 r.sharedMaterial = FX.UnlitMaterial(new Color(1f, 0.15f, 0.08f));
