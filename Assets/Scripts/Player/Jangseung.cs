@@ -14,6 +14,7 @@ namespace Hunt.Player
         public const float Range = 2.6f;
         public static readonly List<Jangseung> Active = new List<Jangseung>();
         bool blessed;
+        public bool Blessed => blessed;
 
         void OnEnable() { Active.Add(this); }
         void OnDisable() { Active.Remove(this); }

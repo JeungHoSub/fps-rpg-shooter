@@ -82,6 +82,13 @@ namespace Hunt.UI
                 var dp = ToMap(gm.Waves.DefendPos, r);
                 UIKit.Emblem(new Rect(dp.x - 15, dp.y - 15, 30, 30), "지", UITheme.GoldBright, true);
             }
+            // 이미 절한 장승 (찾은 것만 — 못 찾은 장승은 끝까지 숨어 있다)
+            foreach (var j in Jangseung.Active)
+            {
+                if (j == null || !j.Blessed) continue;
+                var jp = ToMap(j.transform.position, r);
+                UIKit.Emblem(new Rect(jp.x - 12, jp.y - 12, 24, 24), "장", new Color(0.75f, 0.6f, 0.4f), true);
+            }
             // 보급 상자
             foreach (var c in SupplyCrate.Active)
             {
