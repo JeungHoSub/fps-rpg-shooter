@@ -278,6 +278,7 @@ namespace Hunt.Core
         {
             State = GameState.GameOver;
             MenuOpen = false;
+            SlowMo(1.6f, 0.25f); // 쓰러지는 순간 시간이 느려진다
         }
 
         float hitStopUntil;
