@@ -343,6 +343,7 @@ namespace Hunt.Monsters
                 case "fast": eye = new Color(1f, 0.5f, 0.1f); break;                        // 날랜: 주황
                 case "tank": eye = new Color(0.6f, 0.9f, 0.3f); break;                      // 부은: 병든 초록
                 case "wall": eye = new Color(0.55f, 0.5f, 0.45f); eyeSize = 0.028f; break;  // 돌덩이: 흐릿
+                case "bloat": eye = new Color(0.85f, 1f, 0.2f); break;                       // 터지는: 누런 초록
                 default: eye = new Color(1f, 0.15f, 0.08f); break;
             }
             foreach (var sx in new[] { -0.045f, 0.045f })
@@ -500,6 +501,15 @@ namespace Hunt.Monsters
                     // 가슴과 입가의 핏자국
                     Cosmetic(PrimitiveType.Sphere, rig.Spine2, chest + R.forward * 0.15f * u - up * 0.05f * u, Quaternion.identity, new Vector3(0.22f, 0.3f, 0.06f) * u, new Color(0.35f, 0.02f, 0.02f), false);
                     Cosmetic(PrimitiveType.Sphere, rig.Head, rig.Head.position + R.forward * 0.12f * u - up * 0.04f * u, Quaternion.identity, new Vector3(0.1f, 0.06f, 0.04f) * u, new Color(0.4f, 0.02f, 0.02f), false);
+                    break;
+                case "bloat":
+                    // 터질 듯 부푼 누런 배 + 군데군데 고름 혹 (빛나서 멀리서도 '저건 터진다'를 알게)
+                    if (rig.Spine != null)
+                    {
+                        Cosmetic(PrimitiveType.Sphere, rig.Spine, rig.Spine.position + R.forward * 0.16f * u, Quaternion.identity, new Vector3(0.56f, 0.5f, 0.5f) * u, new Color(0.55f, 0.58f, 0.28f), false);
+                        Cosmetic(PrimitiveType.Sphere, rig.Spine, rig.Spine.position + R.forward * 0.38f * u + R.right * 0.1f * u + up * 0.06f * u, Quaternion.identity, new Vector3(0.1f, 0.1f, 0.1f) * u, new Color(0.75f, 0.85f, 0.25f), true);
+                        Cosmetic(PrimitiveType.Sphere, rig.Spine, rig.Spine.position + R.forward * 0.33f * u - R.right * 0.14f * u - up * 0.08f * u, Quaternion.identity, new Vector3(0.08f, 0.08f, 0.08f) * u, new Color(0.75f, 0.85f, 0.25f), true);
+                    }
                     break;
                 case "stalker":
                     // 앞으로 쏠린 해진 천 조각 (그림자처럼 어둡게)

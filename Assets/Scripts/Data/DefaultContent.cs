@@ -253,6 +253,7 @@ namespace Hunt.Data
             new ZombieKind { id = "gnaw",   name = "굶주린 망자", desc = "물어뜯는형 — 약하지만 쉬지 않고 문다",       hp = 0.8f, dmg = 0.55f,speed = 1.1f,  atkInterval = 0.35f,scale = 0.92f, tint = new Color(0.5f, 0.55f, 0.42f),  fromWave = 2, weight = 12 },
             new ZombieKind { id = "wall",   name = "돌덩이 망자", desc = "철벽형 — 엄청 단단하지만 약하고 아주 느리다",  hp = 3.6f, dmg = 0.8f, speed = 0.5f,  atkInterval = 1.3f, scale = 1.28f, tint = new Color(0.42f, 0.42f, 0.44f), fromWave = 3, weight = 8 },
             new ZombieKind { id = "butcher",name = "백정 망자",   desc = "거구형 — 한 방이 무섭고, 걸음은 보통",       hp = 1.8f, dmg = 2.6f, speed = 0.85f, atkInterval = 1.9f, scale = 1.15f, tint = new Color(0.55f, 0.3f, 0.28f),  fromWave = 3, weight = 8 },
+            new ZombieKind { id = "bloat",  name = "터지는 망자", desc = "폭발형 — 부푼 배가 죽을 때 터져 주변을 다치게 한다 (다른 망자도)", hp = 0.9f, dmg = 0.8f, speed = 0.8f, atkInterval = 1.2f, scale = 1.12f, tint = new Color(0.55f, 0.6f, 0.32f), fromWave = 2, weight = 9 },
             new ZombieKind { id = "stalker",name = "그림자 망자", desc = "추적형 — 체력 보통, 아주 빠르게 쫓아온다",    hp = 1f,   dmg = 0.9f, speed = 1.55f, atkInterval = 1.1f, scale = 0.95f, tint = new Color(0.3f, 0.32f, 0.36f),  fromWave = 4, weight = 6 },
         };
 

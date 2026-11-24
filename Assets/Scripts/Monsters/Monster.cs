@@ -479,6 +479,40 @@ namespace Hunt.Monsters
             SFX.PlayAt3D(SFX.ZombieMoan, transform.position, 0.7f, VoicePitch);
         }
 
+        /// <summary>터지는 망자: 죽으면 누런 고름이 터져 3.2m 안의 망자·플레이어를 다치게 한다 (일부러 무리 속에서 터뜨리는 맛).</summary>
+        void BloatBurst()
+        {
+            Vector3 at = transform.position + Vector3.up * 1.0f * Data.scale;
+            const float radius = 3.2f;
+            ExplosionFx.Spawn(at, 1.6f, new Color(0.7f, 0.85f, 0.25f));
+            FX.BloodBurst(at, new Color(0.55f, 0.6f, 0.15f), 1.8f);
+            SFX.PlayAt(SFX.Explosion, at, 0.6f);
+            SFX.PlayAt(SFX.FleshHit, at, 1f);
+            Noise.Emit(at, 25f, true);
+            float baseDmg = 55f + Data.maxHp * 0.6f;
+            foreach (var m in Alive.ToArray())
+            {
+                if (m == null || m == this || m.IsDead) continue;
+                float d = Vector3.Distance(at, m.transform.position + Vector3.up);
+                if (d > radius) continue;
+                float k = Mathf.Lerp(1f, 0.4f, d / radius);
+                m.ApplyDirectDamage(baseDmg * k, DamageType.Physical);
+                m.Blast(at, k * 0.8f);
+            }
+            var p = target;
+            if (p != null && !p.IsDead)
+            {
+                float d = Vector3.Distance(at, p.transform.position + Vector3.up);
+                if (d < radius)
+                {
+                    float k = 1f - d / radius;
+                    p.LastAttacker = Data.displayName;
+                    p.TakeDamage(Data.attackDamage * DamageScale * (0.6f + 1.4f * k), Data.infectionPerHit * 2f, at);
+                    p.Controller.AddShake(2f * k + 0.5f);
+                }
+            }
+        }
+
         bool hatGone;
 
         /// <summary>머리를 맞으면 갓·상투 장식이 총알 방향으로 날아간다 (한 번만).</summary>
@@ -709,6 +743,7 @@ namespace Hunt.Monsters
             Alive.Remove(this);
             if (GameManager.Instance != null) GameManager.Instance.OnMonsterKilled(this);
             FX.BloodBurst(transform.position + Vector3.up * Data.scale, new Color(0.4f, 0.05f, 0.08f), Data.scale);
+            if (Data.id == "z_bloat") BloatBurst();
             FX.BloodPool(transform.position, Data.scale); // 쓰러진 자리에 피가 번진다
             if (rig != null && rig.Pivot != null)
             {
