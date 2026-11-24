@@ -350,6 +350,7 @@ namespace Hunt.Core
             Paused = false;
             Time.timeScale = 1f;
             slowUntil = 0f; hitStopUntil = 0f; // 쓰러질 때 건 슬로 모션이 새 판까지 이어지지 않게
+            LampFlicker.BlackoutFrom = LampFlicker.BlackoutUntil = -100f; // 정전도 새 판엔 없다
             Player = null;
             Monster.Alive.Clear();
             DamageNumbers.Clear();
