@@ -97,7 +97,7 @@ namespace Hunt.Waves
         bool defenseBossSent;
         bool bossSpawned;
         /// <summary>다음 '대감의 그림자'의 성질 (1~4). 밤이 끝날 때 새로 정해 서낭당에서 미리 보여 준다.</summary>
-        public int NextBossAffix { get; private set; } = Random.Range(1, 5);
+        public int NextBossAffix { get; private set; } // 0이면 StartWave에서 정한다 (필드 초기화에서 Random 금지)
         float drumClock;
         int drumStep;
         Vector3 bossLastPos;
@@ -137,6 +137,7 @@ namespace Hunt.Waves
         public void StartWave(int n)
         {
             Wave = n;
+            if (NextBossAffix == 0) NextBossAffix = Random.Range(1, 5);
             Boss = null;
             bossSpawned = false;
             defenseBossSent = false;
