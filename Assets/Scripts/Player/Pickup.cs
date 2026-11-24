@@ -48,7 +48,9 @@ namespace Hunt.Player
             float tough = Mathf.Clamp(m.MaxHp / 90f, 0.5f, 6f); // 단단한 망자일수록 잘 떨어뜨린다
             float mult = Mathf.Lerp(1f, 2.2f, (tough - 0.5f) / 5.5f);
             // 사용자 요청: 잡으면 힐링룬·탄창이 잘 나오게 — 부적 약 20%, 탄창 약 22% (따로 굴려서 둘 다 나올 수도)
-            if (Random.value < 0.2f * mult) Spawn(PickupKind.Rune, at + RandomOffset(), parent);
+            var gmH = GameManager.Instance;
+            float hpNeed = gmH != null && gmH.Player != null && gmH.Player.Hp < gmH.Player.MaxHp * 0.35f ? 1.8f : 1f; // 많이 다쳤으면 부적이 더 잘 나온다
+            if (Random.value < 0.2f * mult * hpNeed) Spawn(PickupKind.Rune, at + RandomOffset(), parent);
             // 탄약이 바닥나 가면 탄창이 더 잘 나온다 (예비탄 합계 30% 아래면 2배)
             float ammoNeed = 1f;
             var gmA = GameManager.Instance;
