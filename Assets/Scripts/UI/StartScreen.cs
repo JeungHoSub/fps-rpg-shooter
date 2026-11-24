@@ -394,7 +394,10 @@ namespace Hunt.UI
             int cols = 4;
             float gap = 14;
             float cw = (c.width - 40 - gap * (cols - 1)) / cols;
-            float ch = 270;
+            int rows = (all.Length + cols - 1) / cols;
+            // 기질이 많아 세 줄이 되면 칸을 줄이고 짧은 글만 (패널 밖으로 넘치지 않게)
+            float ch = Mathf.Min(270f, (c.height - 124f - gap * (rows - 1)) / rows);
+            bool compact = ch < 240f;
             for (int i = 0; i < all.Length; i++)
             {
                 var t = all[i];
@@ -409,10 +412,20 @@ namespace Hunt.UI
                 if (sel || hv > 0.01f)
                     UIKit.NineSlice(new Rect(r.x - 3, r.y - 3, r.width + 6, r.height + 6), UITheme.Frame, 8, sel ? UITheme.GoldBright : new Color(1f, 0.8f, 0.5f, hv * 0.7f));
 
-                UIKit.Emblem(new Rect(r.center.x - 34, r.y + 20, 68, 68), GameText.TraitGlyph(t), sel ? UITheme.GoldBright : UITheme.Gold, sel);
-                UIKit.Text(new Rect(r.x + 10, r.y + 98, r.width - 20, 34), Traits.Name(t), 24, sel ? UITheme.GoldBright : UITheme.Bone, TextAnchor.MiddleCenter, serif: true, bold: true);
-                UIKit.Text(new Rect(r.x + 16, r.y + 136, r.width - 32, 50), Traits.Describe(t), 16, UITheme.Bone, TextAnchor.UpperCenter, wrap: true);
-                UIKit.Text(new Rect(r.x + 16, r.y + 194, r.width - 32, 64), GameText.TraitFlavor(t), 14, UITheme.BoneDim, TextAnchor.UpperCenter, serif: true, wrap: true);
+                if (compact)
+                {
+                    UIKit.Emblem(new Rect(r.center.x - 23, r.y + 10, 46, 46), GameText.TraitGlyph(t), sel ? UITheme.GoldBright : UITheme.Gold, sel);
+                    UIKit.Text(new Rect(r.x + 10, r.y + 60, r.width - 20, 28), Traits.Name(t), 20, sel ? UITheme.GoldBright : UITheme.Bone, TextAnchor.MiddleCenter, serif: true, bold: true);
+                    UIKit.Text(new Rect(r.x + 12, r.y + 90, r.width - 24, r.height - 96), Traits.Describe(t), 14, UITheme.Bone, TextAnchor.UpperCenter, wrap: true);
+                    UIKit.TooltipIf(r, GameText.TraitFlavor(t));
+                }
+                else
+                {
+                    UIKit.Emblem(new Rect(r.center.x - 34, r.y + 20, 68, 68), GameText.TraitGlyph(t), sel ? UITheme.GoldBright : UITheme.Gold, sel);
+                    UIKit.Text(new Rect(r.x + 10, r.y + 98, r.width - 20, 34), Traits.Name(t), 24, sel ? UITheme.GoldBright : UITheme.Bone, TextAnchor.MiddleCenter, serif: true, bold: true);
+                    UIKit.Text(new Rect(r.x + 16, r.y + 136, r.width - 32, 50), Traits.Describe(t), 16, UITheme.Bone, TextAnchor.UpperCenter, wrap: true);
+                    UIKit.Text(new Rect(r.x + 16, r.y + 194, r.width - 32, 64), GameText.TraitFlavor(t), 14, UITheme.BoneDim, TextAnchor.UpperCenter, serif: true, wrap: true);
+                }
                 if (sel)
                 {
                     var seal = new Rect(r.xMax - 64, r.y + 12, 52, 52);
