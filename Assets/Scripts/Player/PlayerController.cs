@@ -159,6 +159,8 @@ namespace Hunt.Player
             if (cam.fieldOfView > BaseFov - 12f) cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, BaseFov - 12f, Time.unscaledDeltaTime * 1.5f);
         }
 
+        bool wasInBush;
+
         void Update()
         {
             var gm = GameManager.Instance;
@@ -254,6 +256,9 @@ namespace Hunt.Player
             bool sliding = slideT > 0f;
             if (sliding) slideT -= dt;
             IsSliding = sliding;
+            // 덤불에 들어가거나 나올 때 바스락 (작은 소리라 망자는 4m 안에서만 듣는다)
+            bool bush = Hiding.InBush(transform.position);
+            if (bush != wasInBush) { SFX.Play(SFX.Rustle, 0.45f, 0.12f); if (!IsCrouching) Noise.Emit(transform.position, 4f, true); wasInBush = bush; }
             bool wantCrouch = sliding || (crouchKey && !(forward && GameInput.Sprint && !Exhausted));
             if (wantCrouch) IsCrouching = true;
             else if (IsCrouching && !Physics.SphereCast(transform.position + Vector3.up * 0.6f, cc.radius * 0.9f, Vector3.up, out _, 1.15f, ~((1 << 2) | (1 << 1)), QueryTriggerInteraction.Ignore))

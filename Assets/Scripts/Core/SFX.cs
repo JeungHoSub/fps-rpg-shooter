@@ -438,6 +438,8 @@ namespace Hunt.Core
         public static AudioClip Slash => Get("slash", () => MakeSlash());
         /// <summary>붕대를 감는 부스럭 소리.</summary>
         public static AudioClip Bandage => Get("bandage", () => MakeWhoosh(0.9f, 0.25f, 9f));
+        /// <summary>덤불 헤치는 소리.</summary>
+        public static AudioClip Rustle => Get("rustle", () => MakeWhoosh(0.5f, 0.3f, 14f));
         public static AudioClip Drink => Get("drink", () => MakeDrink());
 
         static AudioClip MakeBoom()
