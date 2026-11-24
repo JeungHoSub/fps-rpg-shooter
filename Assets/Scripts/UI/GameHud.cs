@@ -988,7 +988,7 @@ namespace Hunt.UI
 
             var gm = GameManager.Instance;
             bool finalBoss = gm != null && gm.Waves != null && gm.Waves.IsBossWave;
-            string bossName = BossName(finalBoss);
+            string bossName = BossName(finalBoss) + (boss.BossAffix > 0 ? " — " + Monster.AffixName(boss.BossAffix) : "");
             if (!ReferenceEquals(boss, lastBoss))
             {
                 // 보스 등장: 화면 가운데 큰 제목 + 흔들림
@@ -1048,7 +1048,9 @@ namespace Hunt.UI
             UIKit.Alpha = keep * a;
             float y = H * 0.3f - (1f - UIKit.EaseOut(age * 2.5f)) * 20f;
             UIKit.BrushTitle(new Rect(W / 2 - 360, y, 720, 110), name, finalBoss ? 72 : 60, new Color(0.03f, 0.02f, 0.02f, 0.9f), UITheme.BloodBright);
-            string sub = finalBoss ? "최종 보스  ·  쓰러뜨리면 마을을 지켜낸다" : "보스  ·  쓰러뜨리면 이 밤이 끝난다  ·  위치가 표시된다";
+            var bm = lastBoss;
+            string sub = finalBoss ? "최종 보스  ·  쓰러뜨리면 마을을 지켜낸다"
+                : "보스  ·  쓰러뜨리면 이 밤이 끝난다" + (bm != null && bm.BossAffix > 0 ? "  ·  " + Monster.AffixDesc(bm.BossAffix) : "  ·  위치가 표시된다");
             UIKit.Text(new Rect(0, y + 112, W, 30), sub, 20, UITheme.Bone, TextAnchor.MiddleCenter, serif: true, bold: true);
             UIKit.Alpha = keep;
         }

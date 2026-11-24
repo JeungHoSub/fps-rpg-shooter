@@ -160,6 +160,7 @@ namespace Hunt.Monsters
 
             float dt = Time.deltaTime;
             TickStatus(dt);
+            if (IsBoss) TickBossAffix(dt, target != null ? Vector3.Distance(transform.position, target.transform.position) : 99f);
             if (IsDead) return;
 
             Vector3 to = target.transform.position - transform.position;
@@ -533,6 +534,39 @@ namespace Hunt.Monsters
             }
             Noise.Emit(transform.position, 28f, true);
             if (called > 0) HUD.Notify($"곡하는 망자가 울부짖는다 — 망자 {called}이(가) 몰려온다", new Color(1f, 0.55f, 0.4f));
+        }
+
+        // ---- 매 밤 보스('대감의 그림자')의 성질: 0 없음 · 1 날랜 · 2 단단한 · 3 부르는 · 4 불타는 ----
+        public int BossAffix { get; private set; }
+        float affixClock;
+        public static string AffixName(int a) => a == 1 ? "날랜" : a == 2 ? "단단한" : a == 3 ? "부르는" : a == 4 ? "불타는" : "";
+        public static string AffixDesc(int a) => a == 1 ? "아주 빠르게 쫓아온다" : a == 2 ? "체력이 훨씬 많다" : a == 3 ? "15초마다 망자 둘을 땅에서 불러낸다" : a == 4 ? "몸에 불이 붙어 가까이 있으면 뜨겁다" : "";
+
+        public void SetBossAffix(int a)
+        {
+            BossAffix = a;
+            if (a == 1) speed *= 1.45f;
+            if (a == 2) { MaxHp *= 1.6f; Hp = MaxHp; }
+            if (a == 4) { burnTime = 9999f; burnDps = 0f; } // 몸에 불꽃 (피해 없이 보이기만)
+            affixClock = 8f;
+        }
+
+        void TickBossAffix(float dt, float dist)
+        {
+            if (BossAffix == 0 || !IsAlerted) return;
+            affixClock -= dt;
+            if (BossAffix == 3 && affixClock <= 0f)
+            {
+                affixClock = 15f;
+                if (WaveManager.Instance != null)
+                    for (int i = 0; i < 2; i++) WaveManager.Instance.Spawn(MonsterArchetype.Runner, transform.position + Random.insideUnitSphere.Flat() * 4f);
+                SFX.PlayAt3D(SFX.ZombieScream, transform.position + Vector3.up * 2f, 1f, VoicePitch * 0.7f);
+            }
+            if (BossAffix == 4 && affixClock <= 0f)
+            {
+                affixClock = 0.5f;
+                if (target != null && !target.IsDead && dist < 3.2f) { target.LastAttacker = "불타는 대감의 그림자"; target.TakeDamage(4f * DamageScale, 0f, transform.position); }
+            }
         }
 
         bool hatGone;

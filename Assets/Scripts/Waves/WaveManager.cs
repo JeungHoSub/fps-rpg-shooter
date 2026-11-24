@@ -350,6 +350,7 @@ namespace Hunt.Waves
                     bossSpawned = true;
                     m.Revealed = true; // 보스 위치는 항상 화면에 표시
                     m.Alert(999f);
+                    if (!IsBossWave) m.SetBossAffix(Random.Range(1, 5)); // 매 밤 보스는 성질이 하나씩 다르다
                     if (IsBossWave)
                     {
                         // 최종 보스 대감: 몸에서 붉은 기운이 일렁인다 (멀리서도 '저게 대감'이라고 알게)
