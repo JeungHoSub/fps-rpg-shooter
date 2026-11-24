@@ -73,6 +73,9 @@ namespace Hunt.Player
         float fuse = 2.5f;
         PlayerCharacter owner;
         float damage;
+        Renderer spark;      // 깜빡이는 불씨 (터질 때가 가까울수록 빨라진다)
+        float blinkClock;
+        bool sparkOn;
 
         public static void Throw(Vector3 from, Vector3 velocity, PlayerCharacter owner, float damage)
         {
@@ -108,6 +111,15 @@ namespace Hunt.Player
             var g = go.AddComponent<ThrownGrenade>();
             g.owner = owner;
             g.damage = damage;
+            var sp = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            Destroy(sp.GetComponent<Collider>());
+            sp.layer = 2;
+            sp.transform.SetParent(go.transform, false);
+            sp.transform.localScale = Vector3.one * 0.06f;
+            g.spark = sp.GetComponent<Renderer>();
+            g.spark.sharedMaterial = FX.UnlitMaterial(new Color(1f, 0.25f, 0.1f));
+            g.spark.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            g.spark.enabled = false;
             SFX.Play(SFX.Swap, 0.5f);
         }
 
@@ -121,6 +133,19 @@ namespace Hunt.Player
             var gm = GameManager.Instance;
             if (gm != null && gm.Paused) return;
             fuse -= Time.deltaTime;
+            if (spark != null)
+            {
+                // 깜빡임 간격: 처음 0.45초 → 터지기 직전 0.08초, 켜질 때마다 째깍
+                float interval = Mathf.Lerp(0.08f, 0.45f, Mathf.Clamp01(fuse / 2.5f));
+                blinkClock -= Time.deltaTime;
+                if (blinkClock <= 0f)
+                {
+                    sparkOn = !sparkOn;
+                    blinkClock = sparkOn ? 0.05f : interval;
+                    spark.enabled = sparkOn;
+                    if (sparkOn) SFX.PlayAt(SFX.HitTick, transform.position, 0.25f);
+                }
+            }
             if (fuse > 0f) return;
             Gadgets.Explode(transform.position, 6f, damage, owner);
             Destroy(gameObject);
