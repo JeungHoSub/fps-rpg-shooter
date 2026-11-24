@@ -478,12 +478,13 @@ namespace Hunt.Waves
             // 매 밤 보스가 나온다: 평소엔 약한 보스, 대감의 밤엔 온전한 대감
             if (a == MonsterArchetype.Boss)
                 hpScale = IsBossWave ? 1f + 0.4f * (Wave / BossEvery - 1) : 0.28f + 0.07f * (Wave - 1);
+            hpScale *= GameSettings.DiffHp; // Esc 난이도
             var evo = EvolutionDirector.Instance != null ? EvolutionDirector.Instance.Profile : new EvolutionProfile();
             Vector3 pos = Navigation.Snap(at ?? SpawnPoint());
             var m = MonsterFactory.Create(data, pos, evo, hpScale, player, root);
             if (m != null) m.AddDefense(DefenseBonus(a));
             // 밤이 깊을수록 망자도 더 아프게 문다 (밤마다 +5%, 최대 +60%)
-            if (m != null) m.DamageScale = Mathf.Min(1.6f, 1f + 0.05f * (Wave - 1));
+            if (m != null) m.DamageScale = Mathf.Min(1.6f, 1f + 0.05f * (Wave - 1)) * GameSettings.DiffDamage;
             if (m != null && !placed && a != MonsterArchetype.Runner) m.Alert(4f); // 엘리트·보스는 찾아서 온다
             // 무덤·논 끝에서 새로 나오는 망자는 땅을 헤치고 기어 나온다 (보스는 더 천천히)
             if (m != null && !placed) m.Emerge(a == MonsterArchetype.Boss ? 2.4f : Random.Range(1.3f, 1.8f));

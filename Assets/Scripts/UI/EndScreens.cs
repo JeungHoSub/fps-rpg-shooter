@@ -64,6 +64,13 @@ namespace Hunt.UI
             UIKit.Text(new Rect(r.xMax - 110, y, 60, 30), $"{GameSettings.Brightness * 100:0}%", 18, UITheme.GoldBright, TextAnchor.MiddleRight, bold: true);
             y += 54;
 
+            // 난이도 (새로 나오는 망자부터 바뀐다)
+            UIKit.Text(new Rect(r.x + 60, y + 4, 160, 30), "난이도", 18, UITheme.Bone, serif: true);
+            float dw = (r.width - 340) / 3f;
+            for (int i = 0; i < 3; i++)
+                if (UIKit.Button(new Rect(r.x + 220 + i * (dw + 6), y, dw, 38), GameSettings.DifficultyName(i), 18, GameSettings.Difficulty == i)) GameSettings.Difficulty = i;
+            y += 48;
+
             // 그래픽 품질 (PC가 멈추거나 끊기면 '하')
             UIKit.Text(new Rect(r.x + 60, y + 4, 160, 30), "그래픽", 18, UITheme.Bone, serif: true);
             float bw = (r.width - 340) / 3f;

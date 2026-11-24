@@ -42,6 +42,19 @@ namespace Hunt.Core
             set { brightness = Mathf.Clamp(value, 0.6f, 1.8f); Save(BrightKey, brightness.Value); }
         }
 
+        const string DiffKey = "hunt.difficulty";
+        static int? difficulty;
+
+        /// <summary>난이도 0 쉬움 · 1 보통 · 2 어려움. 새로 나오는 망자의 체력·피해에 곱한다.</summary>
+        public static int Difficulty
+        {
+            get { if (difficulty == null) difficulty = Mathf.Clamp(Mathf.RoundToInt(Load(DiffKey, 1f)), 0, 2); return difficulty.Value; }
+            set { difficulty = Mathf.Clamp(value, 0, 2); Save(DiffKey, difficulty.Value); }
+        }
+        public static float DiffHp => Difficulty == 0 ? 0.75f : Difficulty == 2 ? 1.3f : 1f;
+        public static float DiffDamage => Difficulty == 0 ? 0.65f : Difficulty == 2 ? 1.3f : 1f;
+        public static string DifficultyName(int d) => d == 0 ? "쉬움" : d == 2 ? "어려움" : "보통";
+
         // ---- 모바일 ----
         // PreviewKey2: 예전 키에 '켜짐'이 저장돼 있어도 PC 기본(꺼짐)으로 시작하도록 새 키 사용
         const string AutoFireKey = "hunt.autofire", AssistKey = "hunt.aimassist", PreviewKey2 = "hunt.mobilepreview2";
