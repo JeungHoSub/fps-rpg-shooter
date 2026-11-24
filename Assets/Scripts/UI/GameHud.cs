@@ -349,6 +349,7 @@ namespace Hunt.UI
             DrawTargetTag(cam);
             DrawTurretTags(cam);
             DrawGrenadeWarnings(p, cam);
+            DrawSpotted(cam);
         }
 
         /// <summary>조준점 아래 탄약 경고: 적으면 'R 장전', 탄창이 비면 강하게, 예비탄까지 없으면 무기 바꾸라고.</summary>
@@ -477,6 +478,29 @@ namespace Hunt.UI
             // 가운데 표시
             UIKit.Fill(new Rect(r.center.x - 1, r.y - 2, 2, r.height + 4), new Color(1f, 0.9f, 0.7f, 0.7f));
         }
+
+        /// <summary>망자가 나를 알아챈 순간 머리 위에 붉은 '!' (1.2초) — 들켰다는 걸 바로 알게.</summary>
+        void DrawSpotted(Camera cam)
+        {
+            if (cam == null || GlobalRushActive()) return;
+            float k = W / Screen.width;
+            foreach (var m in Monster.Alive)
+            {
+                if (m == null || m.IsDead || m.IsBoss) continue;
+                float age = Time.time - m.SpottedAt;
+                if (age > 1.2f || age < 0f) continue;
+                Vector3 wp = m.transform.position + Vector3.up * (2.2f * m.Data.scale);
+                if ((wp - cam.transform.position).sqrMagnitude > 35f * 35f) continue;
+                Vector3 sp = cam.WorldToScreenPoint(wp);
+                if (sp.z <= 0f) continue;
+                float a = Mathf.Clamp01((1.2f - age) / 0.4f);
+                float pop = 1f + Mathf.Max(0f, 0.15f - age) * 3f;
+                var c = new Vector2(sp.x * k, (Screen.height - sp.y) * k - age * 10f);
+                UIKit.Text(new Rect(c.x - 20, c.y - 30, 40, 40), "!", Mathf.RoundToInt(30 * pop), new Color(1f, 0.3f, 0.2f, a), TextAnchor.MiddleCenter, bold: true);
+            }
+        }
+
+        static bool GlobalRushActive() => Monster.GlobalRush; // 모두 몰려올 땐 너무 많아 생략
 
         /// <summary>내 발 근처(7m)에 터지기 직전 수류탄이 있으면 그 위에 붉은 '!' — 화면 밖이면 가장자리에.</summary>
         void DrawGrenadeWarnings(PlayerCharacter p, Camera cam)

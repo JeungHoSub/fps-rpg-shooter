@@ -181,6 +181,7 @@ namespace Hunt.Monsters
                 if (t > 0f) stagger = Mathf.Max(stagger, Mathf.Min(t, 1.6f));
                 if (Data.id == "z_shriek") Wail();
             }
+            if (alerted && !wasAlerted) SpottedAt = Time.time; // 알아챈 순간 (머리 위 '!')
             wasAlerted = alerted;
 
             // 가까이 다가온 망자는 그르렁거린다 (위치가 들리는 3D 소리 → 뒤에서 오는 것도 알 수 있음)
@@ -612,6 +613,8 @@ namespace Hunt.Monsters
         public bool revenant;
         /// <summary>소리 없는 처치 등: 다시 일어나지 않는다.</summary>
         public bool NoRevive;
+        /// <summary>나를 알아챈 시각 (HUD가 잠깐 머리 위에 '!'를 띄운다).</summary>
+        public float SpottedAt = -100f;
 
         /// <summary>머리를 맞으면 갓·상투 장식이 총알 방향으로 날아간다 (한 번만).</summary>
         public void KnockOffHat(Vector3 dir)
