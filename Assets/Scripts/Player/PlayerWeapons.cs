@@ -142,7 +142,8 @@ namespace Hunt.Player
             if (Mode != Hand.Gun)
             {
                 aim = Mathf.MoveTowards(aim, 0f, dt * 6f);
-                cam.fieldOfView = Mathf.Lerp(PlayerController.BaseFov, w.data.adsFov, aim);
+                cam.fieldOfView = Mathf.Lerp(PlayerController.BaseFov, w.data.adsFov, aim) - fovKick * GameSettings.ShakeMult;
+                fovKick = Mathf.MoveTowards(fovKick, 0f, Time.unscaledDeltaTime * 14f);
                 ctrl.LookMultiplier = 1f;
                 ctrl.MoveMultiplier = 1f;
                 CurrentSpread = 0f;
@@ -205,7 +206,8 @@ namespace Hunt.Player
             bool wantAim = input && GameInput.Aim && !IsReloading && !ctrl.IsSprinting;
             float adsSpeed = stats.AdsSpeedMult * ctrl.WeightPenalty / Mathf.Max(0.05f, w.data.adsTime);
             aim = Mathf.MoveTowards(aim, wantAim ? 1f : 0f, adsSpeed * dt);
-            cam.fieldOfView = Mathf.Lerp(PlayerController.BaseFov, w.data.adsFov, aim);
+            cam.fieldOfView = Mathf.Lerp(PlayerController.BaseFov, w.data.adsFov, aim) - fovKick * GameSettings.ShakeMult;
+            fovKick = Mathf.MoveTowards(fovKick, 0f, Time.unscaledDeltaTime * 14f);
             ctrl.LookMultiplier = Mathf.Lerp(1f, w.data.adsFov / PlayerController.BaseFov * GameSettings.AdsSensitivity, aim); // Esc '조준 감도'
             ctrl.MoveMultiplier = Mathf.Lerp(1f, 0.6f, aim);
 
@@ -378,6 +380,7 @@ namespace Hunt.Player
         readonly HashSet<Monster> swingUnaware = new HashSet<Monster>();
 
         int impactFrame;
+        float fovKick;
         /// <summary>벽·땅 명중 소리 (한 프레임 한 번 — 산탄 여러 알이 겹치지 않게). 단단한 면은 가끔 도탄.</summary>
         void ImpactSound(Vector3 p, Vector3 n)
         {
@@ -907,7 +910,7 @@ namespace Hunt.Player
             HitMarker = 0.12f;
             LastHitWeak = res.zone == HitZone.WeakPoint || res.zone == HitZone.Head;
             LastHitKill = res.killed;
-            if (res.killed && res.zone == HitZone.Head) { Achievements.Add("head100"); player.RunHeadKills++; }
+            if (res.killed && res.zone == HitZone.Head) { Achievements.Add("head100"); player.RunHeadKills++; fovKick = 2.6f; } // 머리 처치: 화면이 순간 앞으로 '훅'
             if (res.killed && w != null)
             {
                 int before = w.Mastery;
