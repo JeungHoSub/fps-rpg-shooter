@@ -859,6 +859,7 @@ namespace Hunt.Monsters
                 activeWeak = (activeWeak + 1) % bossWeakPoints.Count;
                 RefreshBossWeakPoints();
             }
+            if (Atmosphere.Instance != null) Atmosphere.Instance.StrikeNow(); // 성나는 순간 하늘이 갈라진다
             HUD.Notify(phase == 1 ? "대감이 울부짖는다 — 급소가 옮겨가고 망자들이 몰려온다" : "대감이 미쳐 날뛴다 — 검은 피를 토한다", new Color(1f, 0.35f, 0.35f));
             if (WaveManager.Instance != null)
                 for (int i = 0; i < 3 + phase * 2; i++)

@@ -316,6 +316,16 @@ namespace Hunt.Core
             }
         }
 
+        /// <summary>지금 번개를 친다 (보스가 성나는 순간 등 연출용). 천둥은 0.3초 뒤.</summary>
+        public void StrikeNow()
+        {
+            if (Dawn > 0.3f) return;
+            flash = 1f;
+            thunderDelay = 0.3f;
+            var gm = GameManager.Instance;
+            SpawnBolt(gm != null ? gm.ActiveCamera : null);
+        }
+
         /// <summary>번개 줄기: 먼 하늘에서 땅으로 지그재그로 떨어지는 선 (0.25초). 천둥이 늦게 올수록 멀리.</summary>
         void SpawnBolt(Camera cam)
         {
