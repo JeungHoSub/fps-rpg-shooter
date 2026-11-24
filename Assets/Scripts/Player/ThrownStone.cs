@@ -48,6 +48,16 @@ namespace Hunt.Player
         {
             if (landed) return;
             landed = true;
+            // 망자에게 직접 맞히면: 화가 나서 던진 사람을 쫓아온다
+            var hitMonster = c.collider.GetComponentInParent<Hunt.Monsters.Monster>();
+            if (hitMonster != null && !hitMonster.IsDead)
+            {
+                hitMonster.Alert(6f);
+                SFX.PlayAt(SFX.FleshHit, transform.position, 0.4f);
+                Hunt.UI.HUD.Notify("돌에 맞은 망자가 노려본다", new Color(1f, 0.6f, 0.4f));
+                life = 1f;
+                return;
+            }
             SFX.PlayAt(SFX.StoneClack, transform.position, 0.7f);
             Noise.Emit(transform.position, 14f, false);
             life = 2f;
