@@ -335,7 +335,7 @@ namespace Hunt.Monsters
             if (IsBoss && alerted) BossPattern(dt, dist, dir, ref move, ref spd);
 
             // 멀리 있을 땐 가는 방향을, 가까우면 플레이어를 바라본다
-            Vector3 faceDir = move.sqrMagnitude > 0.01f && dist > Data.attackRange + 1.5f ? move : dir;
+            Vector3 faceDir = move.sqrMagnitude > 0.01f && (dist > Data.attackRange + 1.5f || !alerted) ? move : dir; // 모르는 망자는 가까이 가도 제 갈 길을 본다
             faceDir.y = 0f;
             // 나를 모르는 채 멈춰 있을 땐(두리번·비틀) 나를 쳐다보지 않는다 — 등 뒤로 다가갈 수 있게
             bool idleUnaware = !alerted && move.sqrMagnitude <= 0.01f;
