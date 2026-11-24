@@ -411,7 +411,7 @@ namespace Hunt.Monsters
             if (dist < Mathf.Max(2f, (hidden ? 2.5f : (lit ? SightLit : SightDark) * (low ? 0.7f : 1f) * Atmosphere.SightMult) * back)) { Alert(3f); return; }
             if (hidden && !IsAlerted)
             {
-                if (dist < 3.5f && !passedHidden) { passedHidden = true; Achievements.Add("hide10"); }
+                if (dist < 3.5f && !passedHidden) { passedHidden = true; Achievements.Add("hide10"); target.RunHidden++; }
                 return; // 덤불 속은 시야선으로도 안 보인다
             }
             if (IsAlerted && alertTime > 1f) return;

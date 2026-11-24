@@ -10,7 +10,7 @@ namespace Hunt.UI
     /// </summary>
     public static class NightTask
     {
-        enum Kind { Head, Melee, Crates, Bounty, Silent }
+        enum Kind { Head, Melee, Crates, Bounty, Silent, Hidden }
         static Kind kind;
         static int goal, baseline, reward;
         static bool active, done;
@@ -18,7 +18,7 @@ namespace Hunt.UI
 
         public static void Begin(PlayerCharacter p, int wave)
         {
-            kind = (Kind)Random.Range(0, 5);
+            kind = (Kind)Random.Range(0, 6);
             done = false; active = true;
             reward = 40 + 15 * wave;
             switch (kind)
@@ -27,6 +27,7 @@ namespace Hunt.UI
                 case Kind.Melee: goal = 3; baseline = p.RunMelee; break;
                 case Kind.Crates: goal = 3; baseline = p.RunCrates; break;
                 case Kind.Silent: goal = 2; baseline = p.RunSilent; reward += 30; break;
+                case Kind.Hidden: goal = 3; baseline = p.RunHidden; reward += 20; break;
                 default: goal = 1; baseline = 0; break;
             }
         }
@@ -43,12 +44,13 @@ namespace Hunt.UI
                 case Kind.Melee: return p.RunMelee - baseline;
                 case Kind.Crates: return p.RunCrates - baseline;
                 case Kind.Silent: return p.RunSilent - baseline;
+                case Kind.Hidden: return p.RunHidden - baseline;
                 default: return p.BountyThisNight ? 1 : 0;
             }
         }
 
         static string Text => kind == Kind.Head ? $"머리를 맞혀 {goal}마리" : kind == Kind.Melee ? "칼로 3마리" : kind == Kind.Crates ? "보급 상자 셋 모두 열기"
-                            : kind == Kind.Silent ? "소리 없이(등 뒤 칼) 2마리" : "현상금 망자 쓰러뜨리기";
+                            : kind == Kind.Silent ? "소리 없이(등 뒤 칼) 2마리" : kind == Kind.Hidden ? "덤불에 숨어 망자 3마리 지나 보내기" : "현상금 망자 쓰러뜨리기";
 
         public static void Draw(PlayerCharacter p, float W)
         {
