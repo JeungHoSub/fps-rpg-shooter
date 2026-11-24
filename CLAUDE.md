@@ -101,6 +101,8 @@ Unity 1인칭 싱글플레이 좀비 슈터 + RPG. **비 오는 밤의 한국 �
     11:00~: 연출용 구 `FX.LowSphere`(성능) · 침 초록 번짐 `GameHud.AcidFlash` · 다리 휘청 `Monster.hobble`·칼 마무리 `Monster.Crippled` · 탄창 바닥 '틱' `SFX.LowAmmoTick` ·
     보스 근처 손전등 떨림 · 덤불 숨기 `Core/Hiding.cs`(앉기+손전등 끔, 지도 표시, 바스락) · 땅 명중 흙탕물·도탄음 `PlayerWeapons.ImpactSound` ·
     놓친 망자 '?' 수색 `Monster.LostAt` · 등 뒤 시야 ×0.45 · 돌 던지기 B `Player/ThrownStone.cs`(Noise fromPlayer=false → 뒤지기만).
+    15:20~: 머리 처치 화면 당김 `PlayerWeapons.fovKick` · 망자 덤불 바스락 · 기습 ×1.5 · 날씨 시야 `Atmosphere.SightMult` · 보스 근처 마을 불빛 떨림 `Flashlight.BossNear` ·
+    빈 탄창 떨어짐 · 조각 바닥 높이 `MonsterGib.floorY` · 확성기 탑 사이렌 `Core/SirenTower.cs`(E, 밤마다 한 번, Noise 110m) · 업적 hide10 · 의뢰 Hidden(`RunHidden`) · 덤불 잎 그늘 화면. 수치 `Docs/SYSTEMS_NEW.md` '몰래 하기'.
   - 2026-11-24 05:55~10:20 작업 서버 재시작으로 멈춤 → 10:22 재개. 커밋 전 컴파일 확인은 scratchpad `ship.sh "메시지"` (오류면 커밋 안 함).
   - 보류: 망자 모델 다양화 (Mixamo — 사용자 토큰 다시 필요, 토큰은 하루쯤 지나면 만료).
   - 이후 작은 후보: 사용자 피드백 반영 → 성능(실기기 확인 필요) · 버그 점검 · 소리/연출 다듬기.
