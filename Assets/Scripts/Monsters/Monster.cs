@@ -766,6 +766,13 @@ namespace Hunt.Monsters
             dotTick -= dt;
             if (dotTick > 0f) return;
             dotTick = 0.5f;
+            // 불이 옮겨붙는다: 타는 망자 1.6m 안의 망자에게 (조금 약하게)
+            if (burnDps > 0.5f && burnTime > 0.5f && BossAffix != 4)
+                foreach (var nb in Alive)
+                {
+                    if (nb == null || nb == this || nb.IsDead || nb.burnTime > 0f) continue;
+                    if ((nb.transform.position - transform.position).sqrMagnitude < 1.6f * 1.6f) { nb.Ignite(burnDps * 0.7f); break; }
+                }
             if (burnDps > 0f && ApplyDirectDamage(burnDps * 0.5f, DamageType.Fire)) return;
             if (poisonDps > 0f) ApplyDirectDamage(poisonDps * 0.5f, DamageType.Poison);
         }
