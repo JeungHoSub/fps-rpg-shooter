@@ -189,6 +189,9 @@ namespace Hunt.Monsters
                 if (dist < 4.5f || GlobalRush || Revealed || hpLostWhileLurking) WakeLurk();
                 else
                 {
+                    // 12m 안에 오면 가끔 덤불이 미세하게 들썩인다 (손전등 없이도 눈치챌 수 있는 실마리)
+                    lurkTwitch -= dt;
+                    if (lurkTwitch <= 0f) { lurkTwitch = Random.Range(2.5f, 5f); if (dist < 12f && Random.value < 0.4f) Hiding.Shake(transform.position); }
                     // 손전등으로 비추면 덤불 속에서 붉은 눈 두 개가 번뜩인다 (15m 안, 빛줄기 안)
                     bool lit = false;
                     var eye = Flashlight.Eye;
@@ -709,6 +712,7 @@ namespace Hunt.Monsters
         Vector3 lurkBase;
         GameObject lurkEyes;
         bool eyesGrowled;
+        float lurkTwitch = 3f;
         public bool Lurking => lurking;
 
         /// <summary>덤불 속 매복으로 만든다 (모델이 있는 망자만): 몸을 땅 밑에 숨기고 기다린다.</summary>
