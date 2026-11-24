@@ -48,7 +48,8 @@ namespace Hunt.Core
             if (Root != null) go.transform.SetParent(Root, true);
             go.transform.position = p;
             go.transform.localScale = Vector3.one * radius * 2f;
-            go.GetComponent<Renderer>().material.color = c;
+            // 색마다 재질 하나만 (전에는 터질 때마다 재질 사본이 남았다)
+            go.GetComponent<Renderer>().sharedMaterial = FX.UnlitMaterial(c);
             Object.Destroy(go, 0.12f);
         }
     }

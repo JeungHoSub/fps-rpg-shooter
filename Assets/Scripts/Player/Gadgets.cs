@@ -40,7 +40,7 @@ namespace Hunt.Player
         public static void Explode(Vector3 point, float radius, float damage, PlayerCharacter owner)
         {
             if (owner != null) damage *= owner.Stats.GadgetDamageMult; // 기술
-            Effects.Burst(point, radius * 0.6f, new Color(1f, 0.55f, 0.2f));
+            ExplosionFx.Spawn(point, radius * 0.6f, new Color(1f, 0.55f, 0.2f));
             FX.ImpactWorld(point, Vector3.up);
             SFX.PlayAt(SFX.Explosion, point, 1f);
             Noise.Emit(point, 55f, true);

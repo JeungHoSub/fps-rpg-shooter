@@ -33,6 +33,8 @@ namespace Hunt.Core
         {
             root = worldRoot;
             holes.Clear();
+            scorches.Clear();
+            scorchIndex = 0;
             holeIndex = 0;
             pools.Clear(); // 다시 시작하면 예전 피 웅덩이(파괴됨)를 버린다 — 안 그러면 웅덩이가 영영 안 생겼다
             poolIndex = 0;
@@ -155,6 +157,50 @@ namespace Hunt.Core
             t.position = p + Vector3.up * (0.012f + Random.value * 0.006f);
             t.rotation = Quaternion.Euler(90f, Random.Range(0f, 360f), 0f);
             t.GetComponent<BloodPoolFx>().Begin(size * Random.Range(1.5f, 2.2f));
+        }
+
+        // ---- 그을음 자국 (폭발 자리) — 피 웅덩이 무늬를 검게 ----
+        static Material scorchMat;
+        static readonly List<Transform> scorches = new List<Transform>();
+        static int scorchIndex;
+        const int MaxScorch = 8;
+
+        public static void Scorch(Vector3 pos, float size)
+        {
+            if (root == null) return;
+            if (scorchMat == null)
+            {
+                scorchMat = new Material(PoolMaterial()) { name = "Scorch", color = new Color(0.04f, 0.035f, 0.03f, 0.85f) };
+                scorchMat.renderQueue = 2459;
+            }
+            Transform t;
+            if (scorches.Count < MaxScorch)
+            {
+                var go = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                Object.DestroyImmediate(go.GetComponent<Collider>());
+                go.name = "Scorch";
+                go.layer = 2;
+                go.transform.SetParent(root, false);
+                var r = go.GetComponent<Renderer>();
+                r.sharedMaterial = scorchMat;
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                r.receiveShadows = false;
+                go.AddComponent<BloodPoolFx>();
+                t = go.transform;
+                scorches.Add(t);
+            }
+            else
+            {
+                t = scorches[scorchIndex];
+                scorchIndex = (scorchIndex + 1) % MaxScorch;
+                if (t == null) return;
+            }
+            Vector3 p = pos + Vector3.up * 1.5f;
+            if (Physics.Raycast(p, Vector3.down, out var hit, 3.5f, ~((1 << 2) | (1 << 1)), QueryTriggerInteraction.Ignore)) p = hit.point;
+            else p.y = 0f;
+            t.position = p + Vector3.up * 0.01f;
+            t.rotation = Quaternion.Euler(90f, Random.Range(0f, 360f), 0f);
+            t.GetComponent<BloodPoolFx>().Begin(size * 2f);
         }
 
         /// <summary>벽·바닥 명중: 불꽃 + 먼지 + 탄흔.</summary>
