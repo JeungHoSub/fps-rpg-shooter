@@ -433,6 +433,29 @@ namespace Hunt.Core
             return Clip("boom", d);
         }
 
+        /// <summary>까마귀 '까악' 두 번 (거친 톱니파 + 떨림).</summary>
+        public static AudioClip Caw => Get("caw", () =>
+        {
+            const float len = 0.75f;
+            int n = (int)(Rate * len);
+            var d = new float[n];
+            var rnd = new System.Random(31);
+            float ph = 0f;
+            for (int i = 0; i < n; i++)
+            {
+                float t = (float)i / Rate;
+                float local = t < 0.3f ? t : t - 0.38f;           // 두 번 운다
+                if (t >= 0.3f && t < 0.38f) { d[i] = 0f; continue; }
+                float env = Mathf.Sin(Mathf.Clamp01(local / 0.3f) * Mathf.PI);
+                float hz = 520f + 140f * Mathf.Sin(local * 60f) - local * 300f;
+                ph += hz / Rate;
+                float saw = (ph % 1f) * 2f - 1f;
+                float noise = (float)(rnd.NextDouble() * 2.0 - 1.0);
+                d[i] = (saw * 0.55f + noise * 0.25f) * env * 0.5f;
+            }
+            return Clip("caw", d);
+        });
+
         /// <summary>북(큰북) 한 번: 낮게 울리며 음이 살짝 떨어지는 '둥' + 가죽 치는 소리.</summary>
         public static AudioClip Drum => Get("drum", () =>
         {

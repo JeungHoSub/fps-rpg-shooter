@@ -42,6 +42,7 @@ namespace Hunt.Core
         public static void Emit(Vector3 pos, float radius, bool fromPlayer)
         {
             float r = radius * RainMask;
+            if (fromPlayer && radius >= 25f) Crows.Startle(pos); // 큰 소리에 까마귀가 날아오른다
             if (fromPlayer)
             {
                 float l = Mathf.Clamp01(r / 40f);
