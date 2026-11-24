@@ -514,6 +514,21 @@ namespace Hunt.UI
             foreach (var m in Monster.Alive)
             {
                 if (m == null || m.IsDead || m.IsBoss) continue;
+                // 눈치챌락 말락: 옅은 '…' (가까울수록 진하게)
+                if (!m.IsAlerted && m.Suspicion > 0.05f && Time.time - m.SpottedAt > 1.2f && Time.time - m.LostAt > 1.2f)
+                {
+                    Vector3 sw = m.transform.position + Vector3.up * (2.2f * m.Data.scale);
+                    if ((sw - cam.transform.position).sqrMagnitude < 30f * 30f)
+                    {
+                        Vector3 ss = cam.WorldToScreenPoint(sw);
+                        if (ss.z > 0f)
+                        {
+                            var sc = new Vector2(ss.x * k, (Screen.height - ss.y) * k);
+                            UIKit.Text(new Rect(sc.x - 30, sc.y - 26, 60, 30), "…", 26, new Color(0.95f, 0.9f, 0.75f, 0.25f + 0.65f * m.Suspicion), TextAnchor.MiddleCenter, bold: true);
+                        }
+                    }
+                    continue;
+                }
                 float age = Time.time - m.SpottedAt;
                 bool lost = false;
                 if (age > 1.2f || age < 0f)
