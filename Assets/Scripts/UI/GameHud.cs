@@ -692,13 +692,25 @@ namespace Hunt.UI
 
             if (p.Weapons.HitMarker > 0f)
             {
-                Color hc = p.Weapons.LastHitKill ? UITheme.BloodBright : p.Weapons.LastHitWeak ? new Color(1f, 0.6f, 0.1f) : Color.white;
-                float s = 10 + (0.12f - p.Weapons.HitMarker) * 60f;
+                // X자 짧은 선 4개: 맞히면 흰색, 급소 주황, 처치는 붉고 크게 — 처음 크게 튀었다가 오므라들며 사라진다
+                bool killMark = p.Weapons.LastHitKill;
+                Color hc = killMark ? UITheme.BloodBright : p.Weapons.LastHitWeak ? new Color(1f, 0.62f, 0.15f) : Color.white;
+                float k = Mathf.Clamp01(p.Weapons.HitMarker / 0.12f);           // 1 → 0
+                hc.a = Mathf.Clamp01(k * 1.6f);
+                float inner = (killMark ? 9f : 7f) + (1f - k) * 3f;
+                float len = (killMark ? 13f : 9f) * (0.7f + 0.3f * k) + (1f - UIKit.EaseOut((1f - k) * 3f)) * 4f;
+                float thick = killMark ? 3f : 2f;
+                var keep = GUI.matrix;
                 for (int i = 0; i < 4; i++)
                 {
-                    float sx = (i % 2 == 0 ? -1 : 1), sy = (i < 2 ? -1 : 1);
-                    UIKit.Tex(new Rect(cx + sx * s - 4, cy + sy * s - 4, 8, 8), UITheme.Diamond, hc);
+                    float ang = 45f + i * 90f;
+                    // 화면 배율(가상 1080p)이 걸린 행렬 안에서 조준점 중심으로 회전
+                    GUI.matrix = keep * Matrix4x4.Translate(new Vector3(cx, cy, 0f)) * Matrix4x4.Rotate(Quaternion.Euler(0f, 0f, ang)) * Matrix4x4.Translate(new Vector3(-cx, -cy, 0f));
+                    var line = new Rect(cx + inner, cy - thick / 2f, len, thick);
+                    UIKit.Fill(new Rect(line.x - 1, line.y - 1, line.width + 2, line.height + 2), new Color(0f, 0f, 0f, hc.a * 0.55f));
+                    UIKit.Fill(line, hc);
                 }
+                GUI.matrix = keep;
             }
             if (p.Weapons.IsReloading)
             {
