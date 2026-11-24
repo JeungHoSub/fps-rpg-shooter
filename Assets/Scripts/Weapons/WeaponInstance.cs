@@ -55,7 +55,16 @@ namespace Hunt.Weapons
         }
 
         /// <summary>등급(일반~전설) × 강화(+7%/단계) × 부품.</summary>
-        public float Damage => data.damage * Hunt.Player.Grades.Mult(grade) * Hunt.Player.Grades.UpgradeMult(upgradeLevel) * (1f + Sum(AffixType.DamagePct) / 100f);
+        public float Damage => data.damage * Hunt.Player.Grades.Mult(grade) * Hunt.Player.Grades.UpgradeMult(upgradeLevel) * (1f + Sum(AffixType.DamagePct) / 100f) * MasteryMult;
+
+        // ---- 숙련: 이 총으로 쓰러뜨린 망자 수 → 위력이 조금씩 오른다 ----
+        public int kills;
+        public static readonly int[] MasterySteps = { 30, 100, 250, 500 };
+        public int Mastery { get { int m = 0; foreach (var st in MasterySteps) if (kills >= st) m++; return m; } }
+        public float MasteryMult => 1f + 0.03f * Mastery + (Mastery >= 4 ? 0.03f : 0f); // 3%·6%·9%·15%
+        /// <summary>다음 숙련까지 남은 처치 수 (끝이면 0).</summary>
+        public int KillsToNextMastery { get { foreach (var st in MasterySteps) if (kills < st) return st - kills; return 0; } }
+        public static string MasteryName(int m) => m == 0 ? "" : m == 1 ? "손에 익음" : m == 2 ? "능숙" : m == 3 ? "노련" : "달인";
         public float FireInterval => data.FireInterval / (1f + Sum(AffixType.FireRatePct) / 100f);
         public int MagazineSize => Mathf.Max(1, Mathf.RoundToInt(data.magazine * (1f + Sum(AffixType.MagazinePct) / 100f)));
         public float ReloadSpeedMult => 1f + Sum(AffixType.ReloadSpeedPct) / 100f;

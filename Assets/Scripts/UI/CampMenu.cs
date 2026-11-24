@@ -421,7 +421,8 @@ namespace Hunt.UI
             UIKit.Text(new Rect(right.x + 20, y, right.width - 40, 34), sel.displayName, 26, inst != null ? Grades.Color(inst.grade) : UITheme.Bone, TextAnchor.MiddleLeft, serif: true, bold: true);
             y += 36;
             UIKit.Text(new Rect(right.x + 20, y, right.width - 40, 24),
-                $"{GameText.WeaponClassName(sel.weaponClass)} {sel.tier}단  ·  {GameText.ElementName(sel.damageType)}" + (inst != null ? "  ·  " + GearLine(inst.grade, inst.upgradeLevel) : ""), 16, UITheme.BoneDim);
+                $"{GameText.WeaponClassName(sel.weaponClass)} {sel.tier}단  ·  {GameText.ElementName(sel.damageType)}" + (inst != null ? "  ·  " + GearLine(inst.grade, inst.upgradeLevel) : "")
+                + (inst != null ? $"  ·  숙련 {(inst.Mastery > 0 ? WeaponInstance.MasteryName(inst.Mastery) : "처음")} (처치 {inst.kills}{(inst.KillsToNextMastery > 0 ? $", 다음까지 {inst.KillsToNextMastery}" : "")})" : ""), 16, UITheme.BoneDim);
             y += 30;
             // 큰 그림
             WeaponIcon.Draw(new Rect(right.x + 30, y, right.width - 60, 96), sel, inst != null ? UITheme.GoldBright : UITheme.Bone);

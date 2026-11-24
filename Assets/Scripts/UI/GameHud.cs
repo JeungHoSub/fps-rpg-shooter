@@ -610,6 +610,7 @@ namespace Hunt.UI
                 UIKit.Text(new Rect(card.x + 210, card.y + 8, card.width - 224, 34), w.data.displayName + (w.upgradeLevel > 0 ? $" +{w.upgradeLevel}" : ""), 24, UITheme.Bone, TextAnchor.MiddleRight, serif: true, bold: true);
                 UIKit.Text(new Rect(card.x + 210, card.y + 40, card.width - 224, 22),
                     $"<color=#{UIKit.Hex(gc)}>{Grades.Name(w.grade)}</color>  ·  {GameText.WeaponClassName(w.data.weaponClass)} {w.data.tier}단  ·  <color=#{UIKit.Hex(elem)}>{GameText.ElementName(w.DamageType)}</color>" +
+                    (w.Mastery > 0 ? $"  ·  <color=#{UIKit.Hex(UITheme.GoldBright)}>{WeaponInstance.MasteryName(w.Mastery)}</color>" : "") +
                     (p.Controller.WeightPenalty < 1f ? $"  ·  <color=#{UIKit.Hex(UITheme.Warn)}>과적</color>" : ""),
                     14, UITheme.BoneDim, TextAnchor.MiddleRight);
 
