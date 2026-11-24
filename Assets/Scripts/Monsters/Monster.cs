@@ -279,7 +279,7 @@ namespace Hunt.Monsters
                 else
                 {
                     // 모르는 채 서성임: 소리 난 곳을 뒤지거나, 제자리 근처를 어슬렁
-                    spd *= hasInvestigate ? 0.55f : 0.3f;
+                    spd *= hasInvestigate ? (InHorde ? 0.8f : 0.55f) : 0.3f; // 떼는 바삐 걷는다
                     Vector3 goal = hasInvestigate ? investigatePos : wanderGoal;
                     wanderTimer -= dt;
                     Vector3 g = goal - transform.position;
@@ -779,6 +779,8 @@ namespace Hunt.Monsters
         public float Suspicion { get; private set; }
         bool inBush, passedHidden, sniffWarned;
         float lookAround, bountyBushSearch;
+        /// <summary>망자 떼의 일원 (뒤지러 갈 때 더 빨리 걷는다).</summary>
+        public bool InHorde;
         Vector3? bountyBush;
         bool lurking, hpLostWhileLurking;
         Vector3 lurkBase;

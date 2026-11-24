@@ -393,6 +393,7 @@ namespace Hunt.Waves
                 var m = Spawn(arch, from + new Vector3(off.x, 0f, off.y), placed: true);
                 if (m == null) continue;
                 horde.Add(m);
+                m.InHorde = true;
                 m.HearNoise(to + new Vector3(off.x, 0f, off.y) * 2f, false);
             }
             SFX.PlayPitched(SFX.Drum, 0.6f, 0.6f);
