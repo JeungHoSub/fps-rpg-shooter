@@ -358,6 +358,7 @@ namespace Hunt.Player
             meleeCooldown = 0.55f / player.Stats.SwapSpeedMult;
             meleeT = 0f;
             meleePending = true;
+            kicking = player.Controller.IsSprinting || player.Controller.IsSliding; // 달리거나 미끄러지며 V = 발차기
             player.InterruptItem();
             SFX.Play(SFX.Swing, 0.7f, 0.1f);
             // 휘두르기 시작할 때 나를 못 알아챈 망자들 (칼 소리에 알아채기 전 상태로 등 뒤 처치를 판정)
@@ -394,10 +395,45 @@ namespace Hunt.Player
         }
 
         readonly HashSet<Monster> swingUnaware = new HashSet<Monster>();
+        bool kicking;
 
         int impactFrame;
         float fovKick, lastAmbushNote = -100f;
         /// <summary>벽·땅 명중 소리 (한 프레임 한 번 — 산탄 여러 알이 겹치지 않게). 단단한 면은 가끔 도탄.</summary>
+        /// <summary>발차기: 앞 2m 안 망자 셋까지 크게 밀쳐 비틀거리게 (피해는 칼의 절반). 무리에서 빠져나갈 때.</summary>
+        void Kick()
+        {
+            Vector3 center = player.transform.position + Vector3.up * 1f + Vector3.ProjectOnPlane(cam.transform.forward, Vector3.up).normalized * 1.3f;
+            var hits = Physics.OverlapSphere(center, 1.3f, RaycastMask, QueryTriggerInteraction.Ignore);
+            var done = new HashSet<Monster>();
+            foreach (var h in hits)
+            {
+                var part = h.GetComponent<MonsterPart>();
+                if (part == null || part.owner == null || part.owner.IsDead || done.Contains(part.owner) || done.Count >= 3) continue;
+                var mo = part.owner;
+                done.Add(mo);
+                var info = new DamageInfo
+                {
+                    baseDamage = MeleeDamage * 0.5f, type = DamageType.Physical, weaponClass = WeaponClass.Melee,
+                    critChance = 0f, critMultiplier = 1f, penetration = 0f, knockback = 2f * player.Stats.KnockbackMult,
+                    distance = 1f, falloffStart = 100f, falloffEnd = 200f, minFalloffMultiplier = 1f,
+                    hitPoint = h.ClosestPoint(center), direction = cam.transform.forward,
+                };
+                var res = part.ReceiveHit(info);
+                mo.Blast(player.transform.position, 1f); // 크게 밀려 비틀
+                if (res.killed) player.RunMelee++;
+            }
+            if (done.Count > 0)
+            {
+                SFX.Play(SFX.FleshHit, 1f, 0.1f);
+                SFX.Play(SFX.PlayerHurt, 0.35f, 0.1f); // 둔탁한 '퍽'
+                player.Controller.AddShake(0.9f);
+                player.Controller.AddPunch(-1.2f, 0f);
+                HitMarker = 0.12f;
+                if (done.Count >= 2) HUD.Notify($"발차기 — {done.Count}마리를 밀쳐냈다", new Color(1f, 0.8f, 0.55f));
+            }
+        }
+
         void ImpactSound(Vector3 p, Vector3 n)
         {
             if (impactFrame == Time.frameCount) return;
@@ -408,6 +444,7 @@ namespace Hunt.Player
 
         void MeleeHit()
         {
+            if (kicking) { Kick(); return; }
             Vector3 center = cam.transform.position + cam.transform.forward * 1.2f;
             var hits = Physics.OverlapSphere(center, 1.1f, RaycastMask, QueryTriggerInteraction.Ignore);
             var best = new Dictionary<Monster, MonsterPart>();
