@@ -89,6 +89,8 @@ Unity 1인칭 싱글플레이 좀비 슈터 + RPG. **비 오는 밤의 한국 �
     보급 상자 `Player/SupplyCrate.cs` · 보스 북 `SFX.Drum` · 무기 숙련 `WeaponInstance.kills/Mastery` · 찢어진 쪽지 `GameText.LoreNotes`(`GameHud.ShowNextLoreNote`, 역병 일지에서 다시 읽기) ·
     업적 `Core/Achievements.cs` · 처음 보는 망자 알림 `GameHud.FirstSight` · 화면 피 `GameHud.ScreenBlood` · 피 표현 끄기 `GameSettings.Gore` · 까마귀 `Core/Crows.cs` · 조준 감도 `GameSettings.AdsSensitivity` ·
     탄 떨어지면 자동 교체 · 다시 일어나는 망자 `WaveManager.Revive`(머리 처치 제외) · 다음 밤 미리 보기 `WaveManager.RuleFor` · 화염병 `GadgetType.Molotov`/`ThrownMolotov`/`FireZone` · 불붙은 망자 `Monster.Ignite`.
+    10:22~: 조준점 모양 · 단계 상승 연출 · 매 밤 보스 성질 `Monster.SetBossAffix` · 현상금 망자 `Monster.MakeBounty` · F3 FPS · 등 뒤 경고 `GameHud.DrawBehindWarning` · 조작 안내 E·M ·
+    터지는 소품 `Player/ExplosiveProp.cs` · F12 사진 · 업적 카드 `HUD.ShowAchievement` · 상처 없는 새벽 · 쏘면 꺼지는 가로등 `Core/ShootableLamp.cs`(+`PlayerLit` 시야). 수치 정리 `Docs/SYSTEMS_NEW.md`.
   - 2026-11-24 05:55~10:20 작업 서버 재시작으로 멈춤 → 10:22 재개. 커밋 전 컴파일 확인은 scratchpad `ship.sh "메시지"` (오류면 커밋 안 함).
   - 보류: 망자 모델 다양화 (Mixamo — 사용자 토큰 다시 필요, 토큰은 하루쯤 지나면 만료).
   - 이후 작은 후보: 사용자 피드백 반영 → 성능(실기기 확인 필요) · 버그 점검 · 소리/연출 다듬기.
