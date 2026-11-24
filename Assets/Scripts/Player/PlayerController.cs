@@ -54,6 +54,12 @@ namespace Hunt.Player
         // ---- 스태미너: 달리기·점프·칼질에 쓰고, 쉬면 찬다. 바닥나면 25까지 회복해야 다시 달린다 ----
         public float Stamina { get; private set; } = 100f;
         float breathTimer;
+        // 미끄러지기
+        const float SlideTime = 0.75f;
+        float slideT;
+        Vector3 slideDir;
+        bool prevCrouchKey;
+        public bool IsSliding { get; private set; }
         /// <summary>조준경 숨 참기 (Shift): 남은 시간 · 참는 중인가.</summary>
         public const float BreathMax = 4f;
         public float BreathHold { get; private set; } = BreathMax;
@@ -230,7 +236,22 @@ namespace Hunt.Player
             if (sprintBlock > 0f) sprintBlock -= dt;
             bool forward = input && GameInput.MoveY > 0.1f;
             // 앉기: 머리 위가 막혀 있으면 일어서지 못한다. 달리면 일어선다.
-            bool wantCrouch = input && GameInput.Crouch && !(forward && GameInput.Sprint && !Exhausted);
+            // 미끄러지기: 달리다가 Ctrl을 누르면 낮게 미끄러져 나간다 (0.75초, 스태미너 12)
+            bool crouchKey = input && GameInput.Crouch;
+            if (crouchKey && !prevCrouchKey && IsSprinting && cc.isGrounded && slideT <= 0f && UseStamina(12f))
+            {
+                slideT = SlideTime;
+                slideDir = Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized;
+                SFX.Footstep("mud", 0.6f);
+                SFX.PlayPitched(SFX.Swing, 0.35f, 0.55f); // 쓸리는 소리
+                AddPunch(-1.4f, 0f);
+                Noise.Emit(transform.position, 7f, true);
+            }
+            prevCrouchKey = crouchKey;
+            bool sliding = slideT > 0f;
+            if (sliding) slideT -= dt;
+            IsSliding = sliding;
+            bool wantCrouch = sliding || (crouchKey && !(forward && GameInput.Sprint && !Exhausted));
             if (wantCrouch) IsCrouching = true;
             else if (IsCrouching && !Physics.SphereCast(transform.position + Vector3.up * 0.6f, cc.radius * 0.9f, Vector3.up, out _, 1.15f, ~((1 << 2) | (1 << 1)), QueryTriggerInteraction.Ignore))
                 IsCrouching = false;
@@ -265,6 +286,12 @@ namespace Hunt.Player
             IsSprinting = sprint;
             float speed = player.Stats.MoveSpeed * WeightPenalty * player.Infection.MoveMultiplier * MoveMultiplier * (sprint ? 1.45f : 1f)
                 * player.Armor.MoveMult * (player.IsUsingItem ? 0.45f : 1f) * (Exhausted ? 0.85f : 1f) * GameRules.MoveMult * Mathf.Lerp(1f, 0.5f, CrouchBlend);
+            if (sliding)
+            {
+                // 처음엔 달리기보다 빠르게, 점점 느려진다. 방향은 미끄러지기 시작한 쪽 그대로
+                wish = slideDir;
+                speed = player.Stats.MoveSpeed * WeightPenalty * GameRules.MoveMult * Mathf.Lerp(0.7f, 2.1f, slideT / SlideTime);
+            }
 
             if (cc.isGrounded)
             {
