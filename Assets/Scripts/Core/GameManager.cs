@@ -336,6 +336,7 @@ namespace Hunt.Core
         {
             Paused = false;
             Time.timeScale = 1f;
+            slowUntil = 0f; hitStopUntil = 0f; // 쓰러질 때 건 슬로 모션이 새 판까지 이어지지 않게
             Player = null;
             Monster.Alive.Clear();
             DamageNumbers.Clear();
