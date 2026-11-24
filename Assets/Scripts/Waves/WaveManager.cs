@@ -278,7 +278,7 @@ namespace Hunt.Waves
                 case RoundStage.Boss:
                     queue.Enqueue(MonsterArchetype.Boss);
                     for (int i = 0; i < 2 + n / 2; i++) queue.Enqueue(MonsterArchetype.Runner);
-                    HUD.Notify(IsBossWave ? "역병 대감이 깨어났다 — 대감을 쓰러뜨려라" : "보스 망자가 나타났다 — 쓰러뜨리면 밤이 끝난다", new Color(1f, 0.35f, 0.35f));
+                    HUD.Notify(IsBossWave ? "최종 보스 역병 대감이 깨어났다 — 대감을 쓰러뜨려라" : "보스 '대감의 그림자'가 나타났다 — 쓰러뜨리면 밤이 끝난다", new Color(1f, 0.35f, 0.35f));
                     SFX.Play(SFX.Gong, 0.9f, 0f);
                     break;
             }
@@ -372,7 +372,7 @@ namespace Hunt.Waves
                     queue.Enqueue(MonsterArchetype.Boss);
                     foreach (var r in rest) queue.Enqueue(r);
                     spawnTimer = 0f;
-                    HUD.Notify("보스 망자가 돌무더기를 노린다 — 쓰러뜨리면 밤이 끝난다", new Color(1f, 0.35f, 0.35f));
+                    HUD.Notify("보스 '대감의 그림자'가 돌무더기를 노린다 — 쓰러뜨리면 밤이 끝난다", new Color(1f, 0.35f, 0.35f));
                     SFX.Play(SFX.Gong, 0.9f, 0f);
                 }
                 if (Stage == RoundStage.Boss && Boss != null && Boss.IsDead) { ClearRound(gm); return; }

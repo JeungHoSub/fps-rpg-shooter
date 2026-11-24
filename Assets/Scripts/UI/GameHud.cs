@@ -239,7 +239,7 @@ namespace Hunt.UI
             var c = new Vector2(sp.x * k, (Screen.height - sp.y) * k);
             float a = Mathf.Clamp01(tagTime * 2f);
             var r = new Rect(c.x - 80, c.y - 34, 160, 34);
-            UIKit.Text(new Rect(r.x - 40, r.y, r.width + 80, 18), m.Data.displayName, 15, new Color(0.9f, 0.87f, 0.8f, a), TextAnchor.MiddleCenter, serif: true, bold: true);
+            UIKit.Text(new Rect(r.x - 40, r.y, r.width + 80, 18), (m.IsBoss ? BossName(GameManager.Instance != null && GameManager.Instance.Waves != null && GameManager.Instance.Waves.IsBossWave) : m.Data.displayName), 15, new Color(0.9f, 0.87f, 0.8f, a), TextAnchor.MiddleCenter, serif: true, bold: true);
             var br = new Rect(r.x + 20, r.y + 21, r.width - 40, 6);
             UIKit.Fill(new Rect(br.x - 1, br.y - 1, br.width + 2, br.height + 2), new Color(0f, 0f, 0f, 0.7f * a));
             UIKit.Fill(new Rect(br.x, br.y, br.width * Mathf.Clamp01(m.Hp / m.MaxHp), br.height), new Color(0.75f, 0.1f, 0.08f, a));
@@ -541,6 +541,8 @@ namespace Hunt.UI
         int nightKills0, nightGold0, nightLevel0;
         float nightDmg0, nightStart;
         string[] dawnLines;
+        bool dawnFinal;
+        int dawnWave;
         PlayerCharacter nightPlayer;
         float dawnShown = -100f;
 
@@ -559,6 +561,8 @@ namespace Hunt.UI
             {
                 float secs = Time.time - nightStart;
                 int lv = p.Level - nightLevel0;
+                dawnFinal = gm.Waves != null && gm.Waves.IsBossWave && !gm.Waves.Failed;
+                dawnWave = gm.Waves != null ? gm.Waves.Wave : 0;
                 dawnLines = new[]
                 {
                     $"쓰러뜨린 망자  <b>{p.Kills - nightKills0}</b>",
@@ -573,36 +577,66 @@ namespace Hunt.UI
             nightLastState = gm.State;
         }
 
-        void DrawDawnCard(GameManager gm)
+        const float DawnLife = 9f;
+        bool DawnActive(GameManager gm) => dawnLines != null && gm.State == GameState.Intermission && Time.unscaledTime - dawnShown < DawnLife;
+
+        /// <summary>새벽 카드가 떠 있으면 클릭으로 닫는다 (서낭당 버튼이 같이 눌리지 않게 먼저 호출).</summary>
+        public void DawnInput(GameManager gm)
         {
-            if (dawnLines == null || gm.State != GameState.Intermission || gm.MenuOpen) return;
+            if (!DawnActive(gm)) return;
+            var e = Event.current;
             float age = Time.unscaledTime - dawnShown;
-            if (age < 0.6f || age > 10f) return; // 날이 밝는 연출 뒤에 나타나 9초쯤 머문다
-            float a = UIKit.EaseOut((age - 0.6f) * 2.5f) * Mathf.Clamp01((10f - age) / 1.2f);
+            if (age < 0.5f) { if (e.type == EventType.MouseDown) e.Use(); return; } // 막 떴을 때 잘못 눌러 닫히지 않게
+            if (e.type == EventType.MouseDown) // Enter는 '밤을 맞는다'라서 쓰지 않는다
+            {
+                dawnShown = Time.unscaledTime - DawnLife + 0.35f; // 0.35초 동안 사라진다
+                e.Use();
+            }
+        }
+
+        /// <summary>날이 밝으면 서낭당 위에 '지난 밤의 기록'을 띄운다 (9초 또는 클릭하면 닫힘).</summary>
+        public void DrawDawnCard(GameManager gm)
+        {
+            if (!DawnActive(gm)) return;
+            float age = Time.unscaledTime - dawnShown;
+            float a = UIKit.EaseOut(age * 3f) * Mathf.Clamp01((DawnLife - age) / 0.35f);
             int n = 0;
             foreach (var l in dawnLines) if (l != null) n++;
-            var r = new Rect(W / 2 - 230, 118 + (1f - a) * 16f, 460, 64 + n * 30);
+            float extra = dawnFinal ? 96f : 0f;
+            var r = new Rect(W / 2 - 260, H / 2 - (110 + n * 30 + extra) / 2 + (1f - a) * 16f, 520, 110 + n * 30 + extra);
             float keep = UIKit.Alpha;
             UIKit.Alpha = keep * a;
+            UIKit.Fill(new Rect(0, 0, W, H), new Color(0f, 0f, 0f, 0.45f));
             UIKit.Panel(r);
-            UIKit.Text(new Rect(r.x, r.y + 12, r.width, 30), "지난 밤의 기록", 22, UITheme.GoldBright, TextAnchor.MiddleCenter, serif: true, bold: true);
-            float y = r.y + 50;
+            float y = r.y + 16;
+            if (dawnFinal)
+            {
+                UIKit.BrushTitle(new Rect(r.x + 20, y, r.width - 40, 60), "마을을 지켜냈다", 40, new Color(0.03f, 0.02f, 0.02f, 0.9f), UITheme.GoldBright);
+                UIKit.Text(new Rect(r.x, y + 60, r.width, 26), dawnWave <= WaveManager.BossEvery ? "역병 대감이 쓰러졌다 — 이제 끝없는 밤이 이어진다" : "역병 대감이 또 쓰러졌다", 17, UITheme.Bone, TextAnchor.MiddleCenter, serif: true);
+                // 붉은 낙관
+                var seal = new Rect(r.xMax - 70, r.y + 14, 50, 50);
+                UIKit.Tex(seal, UITheme.Seal, UITheme.Blood);
+                UIKit.Text(seal, "승", 24, UITheme.GoldBright, TextAnchor.MiddleCenter, serif: true, bold: true);
+                y += extra;
+            }
+            UIKit.Text(new Rect(r.x, y, r.width, 30), $"{NightName(dawnWave)}의 기록", 22, UITheme.GoldBright, TextAnchor.MiddleCenter, serif: true, bold: true);
+            y += 40;
             int i = 0;
             foreach (var l in dawnLines)
             {
                 if (l == null) continue;
-                // 한 줄씩 차례로 떠오른다
-                float la = UIKit.EaseOut((age - 0.8f - i * 0.12f) * 4f);
+                float la = UIKit.EaseOut((age - 0.25f - i * 0.12f) * 4f); // 한 줄씩 차례로 떠오른다
                 UIKit.Alpha = keep * a * la;
                 UIKit.Text(new Rect(r.x + 40 + (1f - la) * 10f, y, r.width - 80, 28), l, 18, UITheme.Bone, TextAnchor.MiddleCenter, serif: true);
                 y += 30; i++;
             }
+            UIKit.Alpha = keep * a * 0.8f;
+            UIKit.Text(new Rect(r.x, r.yMax - 34, r.width, 22), "클릭하면 서낭당으로", 14, UITheme.Ash, TextAnchor.MiddleCenter, serif: true);
             UIKit.Alpha = keep;
         }
 
         void DrawNightPlaque(GameManager gm)
         {
-            DrawDawnCard(gm);
             var waves = gm.Waves;
             var r = new Rect(W / 2 - 240, 12, 480, 70);
             UIKit.NineSlice(r, UITheme.Panel, 12, new Color(1, 1, 1, 0.92f));
@@ -632,6 +666,11 @@ namespace Hunt.UI
                     sub = $"<color=#{UIKit.Hex(UITheme.GoldBright)}>소탕</color>  ·  남은 시간 <color=#{UIKit.Hex(waves.TimeLeft < 30f ? UITheme.BloodBright : UITheme.Bone)}>{waves.TimeLeft:0}초</color>  ·  남은 망자 {waves.AliveCount + waves.RemainingToSpawn}";
                 else
                     sub = $"{Step(RoundStage.Normal)}  ›  {Step(RoundStage.Elite)}  ›  {Step(RoundStage.Boss)}    ·    남은 {waves.AliveCount + waves.RemainingToSpawn}";
+                if (!waves.IsBossWave)
+                {
+                    int left = WaveManager.BossEvery - waves.Wave % WaveManager.BossEvery;
+                    sub += $"    ·    <color=#{UIKit.Hex(UITheme.BloodBright)}>대감의 밤까지 {left}밤</color>";
+                }
                 UIKit.Text(new Rect(r.x, r.y + 38, r.width, 24), sub, 15, UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true);
                 // 몰려오기까지 남은 시간
                 if (waves.Modifiers.Count > 0)
@@ -654,17 +693,50 @@ namespace Hunt.UI
         {
             Monster boss = null;
             foreach (var m in Monster.Alive) if (m.IsBoss) { boss = m; break; }
-            if (boss == null) { bossTrail = 1f; return; }
+            if (boss == null) { bossTrail = 1f; lastBoss = null; return; }
+
+            var gm = GameManager.Instance;
+            bool finalBoss = gm != null && gm.Waves != null && gm.Waves.IsBossWave;
+            string bossName = BossName(finalBoss);
+            if (!ReferenceEquals(boss, lastBoss))
+            {
+                // 보스 등장: 화면 가운데 큰 제목 + 흔들림
+                lastBoss = boss;
+                bossIntro = Time.unscaledTime;
+                // 징은 단계가 바뀔 때(WaveManager) 이미 울린다 — 여기선 흔들림만
+                if (gm != null && gm.Player != null) gm.Player.Controller.AddShake(finalBoss ? 3f : 1.5f);
+            }
+            DrawBossIntro(bossName, finalBoss);
 
             float t = boss.Hp / boss.MaxHp;
             bossTrail = Mathf.Max(t, Mathf.MoveTowards(bossTrail, t, dt * 0.25f));
             var r = new Rect(W / 2 - 430, 128, 860, 22);
-            UIKit.Text(new Rect(r.x, r.y - 34, r.width, 30), boss.Data.displayName, 24, UITheme.BloodBright, TextAnchor.MiddleCenter, serif: true, bold: true);
+            UIKit.Text(new Rect(r.x, r.y - 34, r.width, 30), bossName, 24, UITheme.BloodBright, TextAnchor.MiddleCenter, serif: true, bold: true);
             UIKit.Bar(r, t, new Color(0.6f, 0.05f, 0.1f), null, bossTrail);
             for (int i = 1; i <= 2; i++)
                 UIKit.Tex(new Rect(r.x + r.width * (i / 3f) - 7, r.y + 4, 14, 14), UITheme.Diamond, i <= boss.BossPhase ? UITheme.Ash : UITheme.GoldBright);
             for (int i = 0; i < 3; i++)
                 UIKit.Tex(new Rect(r.center.x - 40 + i * 30, r.yMax + 8, 16, 16), i <= boss.BossPhase ? UITheme.Diamond : UITheme.DiamondHollow, UITheme.BloodBright);
+        }
+
+        Monster lastBoss;
+        float bossIntro = -100f;
+
+        /// <summary>매 밤 나오는 약한 보스와 다섯째 밤의 최종 보스(대감)를 이름으로 구분.</summary>
+        public static string BossName(bool finalBoss) => finalBoss ? "역병 대감" : "대감의 그림자";
+
+        void DrawBossIntro(string name, bool finalBoss)
+        {
+            float age = Time.unscaledTime - bossIntro;
+            if (age > 4f) return;
+            float a = UIKit.EaseOut(age * 3f) * Mathf.Clamp01((4f - age) / 0.8f);
+            float keep = UIKit.Alpha;
+            UIKit.Alpha = keep * a;
+            float y = H * 0.3f - (1f - UIKit.EaseOut(age * 2.5f)) * 20f;
+            UIKit.BrushTitle(new Rect(W / 2 - 360, y, 720, 110), name, finalBoss ? 72 : 60, new Color(0.03f, 0.02f, 0.02f, 0.9f), UITheme.BloodBright);
+            string sub = finalBoss ? "최종 보스  ·  쓰러뜨리면 마을을 지켜낸다" : "보스  ·  쓰러뜨리면 이 밤이 끝난다  ·  위치가 표시된다";
+            UIKit.Text(new Rect(0, y + 112, W, 30), sub, 20, UITheme.Bone, TextAnchor.MiddleCenter, serif: true, bold: true);
+            UIKit.Alpha = keep;
         }
 
         void DrawCrosshair(PlayerCharacter p, Camera cam)

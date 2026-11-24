@@ -121,7 +121,9 @@ namespace Hunt.UI
                 case GameState.Intermission:
                     hud.Draw(gm, W, H, scale);
                     if (!gm.Paused && !gm.MenuOpen) tutorial.Draw(gm, W, H); // 첫 밤 조작 안내
+                    if (!gm.Paused) hud.DawnInput(gm); // 새벽 기록 카드가 떠 있으면 클릭을 먼저 받는다
                     if (gm.State == GameState.Intermission && gm.MenuOpen && !gm.Paused) camp.Draw(gm, W, H);
+                    if (!gm.Paused) hud.DrawDawnCard(gm);
                     break;
                 case GameState.GameOver:
                     hud.Draw(gm, W, H, scale);
