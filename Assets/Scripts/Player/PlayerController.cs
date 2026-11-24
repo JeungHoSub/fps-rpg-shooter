@@ -54,6 +54,12 @@ namespace Hunt.Player
         // ---- 스태미너: 달리기·점프·칼질에 쓰고, 쉬면 찬다. 바닥나면 25까지 회복해야 다시 달린다 ----
         public float Stamina { get; private set; } = 100f;
         float breathTimer;
+        /// <summary>조준경 숨 참기 (Shift): 남은 시간 · 참는 중인가.</summary>
+        public const float BreathMax = 4f;
+        public float BreathHold { get; private set; } = BreathMax;
+        public bool HoldingBreath { get; private set; }
+        bool breathSpent;
+        float scopeSwayAmp;
         public float MaxStamina => 100f + player.Stats.Agility * 1.5f + player.Armor.BonusStamina;
         public bool Exhausted { get; private set; }
         /// <summary>스태미너 회복제: 남은 시간 동안 소모 절반, 회복 두 배.</summary>
@@ -177,6 +183,28 @@ namespace Hunt.Player
             float jitter = player.Infection.AimJitter;
             float jx = jitter > 0f ? (Mathf.PerlinNoise(Time.time * 3f, 0f) * 2f - 1f) * jitter : 0f;
             float jy = jitter > 0f ? (Mathf.PerlinNoise(0f, Time.time * 3f) * 2f - 1f) * jitter : 0f;
+
+            // 저격 조준경: 숨 쉴 때마다 조준이 천천히 흔들린다. Shift로 숨을 참으면 멈춘다 (4초, 다 쓰면 더 흔들림)
+            if (player.Weapons.IsScoped && !GameInput.Mobile)
+            {
+                bool hold = GameInput.Sprint && BreathHold > 0f && !breathSpent;
+                if (hold) { BreathHold = Mathf.Max(0f, BreathHold - dt); if (BreathHold <= 0f) breathSpent = true; }
+                else BreathHold = Mathf.Min(BreathMax, BreathHold + dt * 0.7f);
+                if (breathSpent && !GameInput.Sprint && BreathHold > BreathMax * 0.35f) breathSpent = false;
+                HoldingBreath = hold;
+                float steady = Mathf.Lerp(1f, 0.55f, Mathf.Clamp01(player.Stats.Vitality / 40f)) * Mathf.Lerp(1f, 0.6f, CrouchBlend);
+                float amp = (hold ? 0.04f : breathSpent ? 0.75f : 0.32f) * steady;
+                scopeSwayAmp = Mathf.MoveTowards(scopeSwayAmp, amp, dt * 1.5f);
+                float tt = Time.time;
+                jx += (Mathf.PerlinNoise(tt * 0.45f, 11f) * 2f - 1f) * scopeSwayAmp * 1.4f;
+                jy += (Mathf.PerlinNoise(23f, tt * 0.5f) * 2f - 1f) * scopeSwayAmp + Mathf.Sin(tt * 1.6f) * scopeSwayAmp * 0.35f;
+            }
+            else
+            {
+                HoldingBreath = false;
+                BreathHold = Mathf.Min(BreathMax, BreathHold + dt);
+                scopeSwayAmp = 0f;
+            }
 
             // 시점 반동 스프링
             punchVel -= punch * 260f * dt;

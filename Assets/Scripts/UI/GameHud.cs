@@ -104,7 +104,7 @@ namespace Hunt.UI
                 UIKit.Fill(new Rect(0, 0, W, H), new Color(0.25f, 0f, 0.3f, 0.12f + Mathf.PingPong(Time.time, 0.5f) * 0.15f));
             }
 
-            if (p.Weapons.IsScoped) DrawScope();
+            if (p.Weapons.IsScoped) DrawScope(p);
             if (gm.State != GameState.GameOver && !gm.MenuOpen) DrawCrosshair(p, cam);
             if (gm.State == GameState.Playing && !gm.MenuOpen) DrawAmmoWarning(p);
             if (!gm.MenuOpen && !GameInput.Mobile) DrawPickupPrompt();
@@ -919,7 +919,20 @@ namespace Hunt.UI
         }
 
         /// <summary>저격 스코프 화면: 원형 시야 + 십자선, 나머지는 검게.</summary>
-        void DrawScope()
+        void DrawScope(PlayerCharacter p)
+        {
+            DrawScopeMask();
+            if (GameInput.Mobile) return;
+            // 숨 참기 막대 (조준경 아래)
+            var c = p.Controller;
+            float t = c.BreathHold / PlayerController.BreathMax;
+            var r = new Rect(W / 2 - 90, H - 120, 180, 6);
+            UIKit.Bar(r, t, c.HoldingBreath ? new Color(0.75f, 0.85f, 0.95f) : new Color(0.5f, 0.55f, 0.6f));
+            string label = c.HoldingBreath ? "숨을 참는 중" : t < 0.3f ? "숨이 가쁘다" : "Shift  숨 참기 (조준이 멈춘다)";
+            UIKit.Text(new Rect(r.x - 100, r.y - 24, r.width + 200, 20), label, 14, UITheme.Bone, TextAnchor.MiddleCenter, serif: true);
+        }
+
+        void DrawScopeMask()
         {
             if (scopeMask == null)
             {
