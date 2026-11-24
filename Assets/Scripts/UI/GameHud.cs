@@ -140,6 +140,8 @@ namespace Hunt.UI
 
         /// <summary>치유 순간 화면 가장자리 옥빛 (0~1).</summary>
         public static float HealFlash;
+        /// <summary>역병 침을 맞았을 때 화면 가장자리 누런 초록 (MonsterProjectile).</summary>
+        public static float AcidFlash;
         /// <summary>회복제를 마신 순간 화면 가장자리 푸른빛 (0~1).</summary>
         public static float DrinkFlash;
 
@@ -153,7 +155,7 @@ namespace Hunt.UI
         }
 
         /// <summary>새 판 시작 시 지난 판 알림을 지운다.</summary>
-        public static void ClearToasts() { toasts.Clear(); kitFlash = drinkFlash = 0f; splats.Clear(); HealFlash = 0f; }
+        public static void ClearToasts() { toasts.Clear(); kitFlash = drinkFlash = 0f; splats.Clear(); HealFlash = 0f; AcidFlash = 0f; }
 
         void DrawPickups(float dt)
         {
@@ -230,6 +232,11 @@ namespace Hunt.UI
             {
                 UIKit.Vignette(W, H, new Color(0.25f, 0.9f, 0.45f, HealFlash * 0.55f));
                 HealFlash = Mathf.Max(0f, HealFlash - dt * 1.8f);
+            }
+            if (AcidFlash > 0f)
+            {
+                UIKit.Vignette(W, H, new Color(0.5f, 0.85f, 0.1f, AcidFlash * 0.6f));
+                AcidFlash = Mathf.Max(0f, AcidFlash - dt * 1.1f);
             }
             if (p.Infection.IsFrenzy)
             {

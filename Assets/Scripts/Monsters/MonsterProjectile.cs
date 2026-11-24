@@ -46,11 +46,23 @@ namespace Hunt.Monsters
                 if ((transform.position - center).sqrMagnitude < 0.8f * 0.8f)
                 {
                     target.TakeDamage(damage, infection, transform.position - velocity.normalized * 3f);
+                    Hunt.UI.GameHud.AcidFlash = 1f;
+                    SFX.PlayAt(SFX.FleshHit, transform.position, 0.6f);
                     Destroy(gameObject);
                     return;
                 }
             }
-            if (life <= 0f || transform.position.y < 0f) Destroy(gameObject);
+            if (life <= 0f) { Destroy(gameObject); return; }
+            // 땅·벽에 닿으면 터지며 초록 얼룩 (전에는 땅을 뚫고 지나갔다)
+            if (Physics.Raycast(transform.position, velocity.normalized, out var hit, velocity.magnitude * dt + 0.2f, ~0, QueryTriggerInteraction.Ignore)
+                && hit.collider.GetComponentInParent<Monster>() == null && hit.collider.GetComponentInParent<PlayerCharacter>() == null)
+            {
+                Effects.Burst(hit.point, 0.3f, new Color(0.5f, 0.85f, 0.15f));
+                SFX.PlayAt(SFX.FleshHit, hit.point, 0.35f);
+                Destroy(gameObject);
+                return;
+            }
+            if (transform.position.y < -1f) Destroy(gameObject);
         }
     }
 }
