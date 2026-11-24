@@ -153,6 +153,7 @@ namespace Hunt.Waves
 
             // 보급 상자 3개 (지난 밤 남은 상자는 치운다)
             SupplyCrate.PlaceForNight(root, player != null ? player.transform.position : Vector3.zero, 3);
+            Survivor.PlaceForNight(root, player != null ? player.transform.position : Vector3.zero, n); // 다친 마을 사람 (둘째 밤부터 40%)
             if (n <= 2) HUD.Notify("마을 곳곳에 보급 상자 3개 — 노란 빛기둥을 찾아 E로 연다 (아래 나침반에 노란 점)", new Color(1f, 0.85f, 0.45f));
 
             // 기본 망자 절반은 처음부터 마을 곳곳에 서성이고 있다

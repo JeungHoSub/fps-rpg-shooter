@@ -1213,6 +1213,8 @@ namespace Hunt.UI
             if (!near && SupplyCrate.NearestToPlayer() != null) { near = true; name = "보급 상자 열기"; can = true; }
             if (!near && Jangseung.NearestToPlayer() != null) { near = true; name = "장승에게 절하기"; can = true; }
             if (!near && SentryTurret.NearestToPlayer() != null) { near = true; name = "기관총 거두기"; can = true; }
+            var surv = Survivor.NearestToPlayer();
+            if (!near && surv != null) { near = true; name = gm0Player() != null && gm0Player().Kits > 0 ? "상처 감아 주기 (치료 키트 1개)" : "상처 감아 주기 — 치료 키트가 없다"; can = true; }
             var siren = SirenTower.NearPlayer();
             if (!near && siren != null) { near = true; name = siren.UsedThisNight ? "사이렌 (이번 밤은 이미 울렸다)" : "사이렌 울리기 — 망자를 이쪽으로 꾄다"; can = true; }
             float a = UIKit.Smooth("hud.pickprompt", near ? 1f : 0f, 12f);
@@ -1223,12 +1225,14 @@ namespace Hunt.UI
             var r = new Rect(W / 2 - 200, H / 2 + 92, 400, 34);
             UIKit.Tex(r, UITheme.LineFade, new Color(0f, 0f, 0f, 0.6f));
             string text = lastPromptCan
-                ? (lastPromptName == "보급 상자 열기" || lastPromptName == "장승에게 절하기" || lastPromptName == "기관총 거두기" || lastPromptName.StartsWith("사이렌") ? $"<color=#{UIKit.Hex(UITheme.GoldBright)}><b>[E]</b></color>  {lastPromptName}"
+                ? (lastPromptName == "보급 상자 열기" || lastPromptName == "장승에게 절하기" || lastPromptName == "기관총 거두기" || lastPromptName.StartsWith("사이렌") || lastPromptName.StartsWith("상처") ? $"<color=#{UIKit.Hex(UITheme.GoldBright)}><b>[E]</b></color>  {lastPromptName}"
                    : $"<color=#{UIKit.Hex(UITheme.GoldBright)}><b>[E]</b></color>  줍기  ·  {lastPromptName}")
                 : $"{lastPromptName}  ·  <color=#{UIKit.Hex(UITheme.Ash)}>{(lastPromptName == Pickup.NameOf(PickupKind.Rune) ? "생명이 가득해 못 줍는다" : "가득 차서 못 줍는다")}</color>";
             UIKit.Text(r, text, 18, UITheme.Bone, TextAnchor.MiddleCenter, serif: true);
             UIKit.Alpha = keep;
         }
+
+        static PlayerCharacter gm0Player() => GameManager.Instance != null ? GameManager.Instance.Player : null;
 
         string lastPromptName;
         bool lastPromptCan;
