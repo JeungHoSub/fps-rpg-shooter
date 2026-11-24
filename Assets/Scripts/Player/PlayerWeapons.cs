@@ -422,6 +422,7 @@ namespace Hunt.Player
                 };
                 var res = part.ReceiveHit(info);
                 mo.Blast(player.transform.position, 1f); // 크게 밀려 비틀
+                mo.Stagger(0.95f);
                 if (res.killed) player.RunMelee++;
             }
             if (done.Count > 0)

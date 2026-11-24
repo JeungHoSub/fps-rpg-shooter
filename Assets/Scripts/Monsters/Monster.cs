@@ -763,6 +763,14 @@ namespace Hunt.Monsters
         }
 
         /// <summary>폭발 등으로 밀려남: 가까울수록 세게, 무거운 놈(보스·거구)은 덜. strength 0~1.</summary>
+        /// <summary>발차기 등으로 잠깐 비틀거리게 (보스는 짧게).</summary>
+        public void Stagger(float seconds)
+        {
+            if (IsDead) return;
+            stagger = Mathf.Max(stagger, IsBoss ? seconds * 0.25f : seconds * (1f - knockbackResist * 0.5f));
+            if (rig != null) rig.PlayHit();
+        }
+
         public void Blast(Vector3 from, float strength)
         {
             if (IsDead) return;
