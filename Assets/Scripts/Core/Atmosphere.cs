@@ -94,6 +94,8 @@ namespace Hunt.Core
         int chasingNow;
         float baseMoon = 0.22f;
         float nextThunder, flash, thunderDelay = -1f;
+        /// <summary>번개가 번쩍인 정도 0~1 (매복 망자 눈이 순간 비친다).</summary>
+        public static float Flash => Instance != null ? Instance.flash : 0f;
         float rainTarget = 0.7f, nextRainShift, nextDistant = 20f;
         Color baseAmbient;
 

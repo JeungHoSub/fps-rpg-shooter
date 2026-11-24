@@ -200,6 +200,7 @@ namespace Hunt.Monsters
                         Vector3 toMe = (transform.position + Vector3.up * 0.7f - eye.position).normalized;
                         lit = Vector3.Dot(eye.forward, toMe) > 0.9f;
                     }
+                    if (!lit && Atmosphere.Flash > 0.5f && dist < 22f) lit = true; // 번개가 번쩍이면 덤불 속 눈이 순간 비친다
                     if (lurkEyes != null)
                     {
                         if (lurkEyes.activeSelf != lit) lurkEyes.SetActive(lit);
