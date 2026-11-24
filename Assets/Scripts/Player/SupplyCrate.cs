@@ -156,6 +156,18 @@ namespace Hunt.Player
                 }
             }
             HUD.Notify("보급 상자를 열었다", new Color(1f, 0.85f, 0.5f));
+            // 함정: 둘째 밤부터 18% — 상자 주변 땅에서 망자 셋이 기어 나온다 (보급품은 그대로)
+            var wm = Hunt.Waves.WaveManager.Instance;
+            if (wm != null && wm.Wave >= 2 && wm.Spawning && Random.value < 0.18f)
+            {
+                for (int i = 0; i < 3; i++)
+                {
+                    Vector3 off = Quaternion.Euler(0f, i * 120f + Random.Range(-20f, 20f), 0f) * Vector3.forward * Random.Range(3.5f, 5f);
+                    wm.Spawn(Hunt.Data.MonsterArchetype.Runner, c + off);
+                }
+                HUD.Notify("함정이다! 상자 주변 땅에서 망자들이 기어 나온다", new Color(1f, 0.35f, 0.3f));
+                SFX.PlayPitched(SFX.Drum, 0.7f, 0.8f);
+            }
             // 가끔 찢어진 쪽지 (아직 안 읽은 다음 장)
             if (Random.value < 0.4f) GameHud.ShowNextLoreNote();
             Noise.Emit(c, 6f, true);
