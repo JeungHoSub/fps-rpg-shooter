@@ -194,6 +194,12 @@ namespace Hunt.Monsters
                 if (Data.id == "z_shriek") Wail();
             }
             if (alerted && !wasAlerted) SpottedAt = Time.time; // 알아챈 순간 (머리 위 '!')
+            // 놓쳤다: 마지막으로 본 자리로 가서 뒤진다 (머리 위 '?')
+            if (!alerted && wasAlerted && target != null)
+            {
+                investigatePos = target.transform.position; hasInvestigate = true;
+                LostAt = Time.time;
+            }
             wasAlerted = alerted;
 
             // 가까이 다가온 망자는 그르렁거린다 (위치가 들리는 3D 소리 → 뒤에서 오는 것도 알 수 있음)
@@ -634,6 +640,8 @@ namespace Hunt.Monsters
         public bool NoRevive;
         /// <summary>나를 알아챈 시각 (HUD가 잠깐 머리 위에 '!'를 띄운다).</summary>
         public float SpottedAt = -100f;
+        /// <summary>쫓다가 놓친 순간 (머리 위 '?').</summary>
+        public float LostAt = -100f;
 
         /// <summary>머리를 맞으면 갓·상투 장식이 총알 방향으로 날아간다 (한 번만).</summary>
         public void KnockOffHat(Vector3 dir)

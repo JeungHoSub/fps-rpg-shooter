@@ -496,7 +496,12 @@ namespace Hunt.UI
             {
                 if (m == null || m.IsDead || m.IsBoss) continue;
                 float age = Time.time - m.SpottedAt;
-                if (age > 1.2f || age < 0f) continue;
+                bool lost = false;
+                if (age > 1.2f || age < 0f)
+                {
+                    age = Time.time - m.LostAt; lost = true; // 놓친 망자: 옅은 '?'
+                    if (age > 1.2f || age < 0f || m.IsAlerted) continue;
+                }
                 Vector3 wp = m.transform.position + Vector3.up * (2.2f * m.Data.scale);
                 if ((wp - cam.transform.position).sqrMagnitude > 35f * 35f) continue;
                 Vector3 sp = cam.WorldToScreenPoint(wp);
@@ -504,7 +509,7 @@ namespace Hunt.UI
                 float a = Mathf.Clamp01((1.2f - age) / 0.4f);
                 float pop = 1f + Mathf.Max(0f, 0.15f - age) * 3f;
                 var c = new Vector2(sp.x * k, (Screen.height - sp.y) * k - age * 10f);
-                UIKit.Text(new Rect(c.x - 20, c.y - 30, 40, 40), "!", Mathf.RoundToInt(30 * pop), new Color(1f, 0.3f, 0.2f, a), TextAnchor.MiddleCenter, bold: true);
+                UIKit.Text(new Rect(c.x - 20, c.y - 30, 40, 40), lost ? "?" : "!", Mathf.RoundToInt(30 * pop), lost ? new Color(0.9f, 0.85f, 0.6f, a * 0.85f) : new Color(1f, 0.3f, 0.2f, a), TextAnchor.MiddleCenter, bold: true);
             }
         }
 
