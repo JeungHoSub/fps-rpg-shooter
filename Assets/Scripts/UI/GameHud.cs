@@ -273,7 +273,9 @@ namespace Hunt.UI
         {
             if (cam == null) return;
             const float span = 75f;
-            var r = new Rect(W / 2 - 260, H - 160, 520, 26);
+            // 오른쪽 무기 칸(W-702부터)과 겹치지 않게 폭을 줄인다 (좁은 화면비)
+            float half = Mathf.Clamp(W / 2f - 712f, 140f, 260f);
+            var r = new Rect(W / 2 - half, H - 160, half * 2f, 26);
             UIKit.Tex(r, UITheme.LineFade, new Color(0f, 0f, 0f, 0.5f));
             float yaw = cam.transform.eulerAngles.y;
             float X(float bearing) => r.center.x + Mathf.DeltaAngle(yaw, bearing) / span * (r.width / 2f);
