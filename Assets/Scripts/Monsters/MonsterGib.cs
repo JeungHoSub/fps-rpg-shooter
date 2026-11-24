@@ -12,8 +12,9 @@ namespace Hunt.Monsters
         /// <summary>살점 조각 하나 (머리·급소 처치 때 튀어 오른다).</summary>
         public static void Chunk(Transform parent, Vector3 pos, Vector3 vel, Color col, float size)
         {
-            var go = GameObject.CreatePrimitive(Random.value < 0.5f ? PrimitiveType.Cube : PrimitiveType.Sphere);
-            Destroy(go.GetComponent<Collider>());
+            GameObject go;
+            if (Random.value < 0.5f) { go = GameObject.CreatePrimitive(PrimitiveType.Cube); Destroy(go.GetComponent<Collider>()); }
+            else go = FX.LowSphere(); // 가벼운 공
             go.layer = 2;
             go.transform.SetParent(parent, false);
             go.transform.position = pos;

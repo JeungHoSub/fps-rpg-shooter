@@ -195,7 +195,18 @@ namespace Hunt.Player
                 float p = ReloadProgress;
                 float pitch = ReloadPitch(w.data.weaponClass);
                 float inAt = reloadFromEmpty ? 0.62f : 0.72f;
-                if (reloadStage == 0 && p > 0.25f) { SFX.PlayPitched(SFX.MagOut, 0.7f, pitch); reloadStage = 1; }
+                if (reloadStage == 0 && p > 0.25f)
+                {
+                    SFX.PlayPitched(SFX.MagOut, 0.7f, pitch); reloadStage = 1;
+                    // 빈 탄창이 발밑으로 떨어진다
+                    var wcl = w.data.weaponClass;
+                    if (wcl != WeaponClass.Flamethrower && wcl != WeaponClass.Launcher && wcl != WeaponClass.Shotgun)
+                    {
+                        var ct = cam.transform;
+                        Hunt.Monsters.MonsterGib.Chunk(null, ct.position + ct.forward * 0.35f - ct.up * 0.3f + ct.right * 0.05f,
+                            ct.forward * 0.6f - ct.up * 0.5f + Random.insideUnitSphere * 0.3f, new Color(0.13f, 0.13f, 0.14f), 0.07f);
+                    }
+                }
                 if (reloadStage == 1 && p > inAt) { SFX.PlayPitched(SFX.MagIn, 0.85f, pitch); reloadStage = 2; }
                 if (reloadStage == 2 && reloadFromEmpty && p > 0.86f) { SFX.PlayPitched(SFX.Bolt, 0.85f, pitch); reloadStage = 3; }
                 if (reloadTime <= 0f) FinishReload(w);
