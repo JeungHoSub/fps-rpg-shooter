@@ -167,7 +167,8 @@ namespace Hunt.Waves
 
         void ChooseRule()
         {
-            Rule = RuleFor(Wave);
+            int n = Wave;
+            Rule = RuleFor(n);
 
             Modifiers.Clear();
             GameRules.Reset();
