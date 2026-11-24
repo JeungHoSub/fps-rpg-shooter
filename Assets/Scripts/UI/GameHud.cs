@@ -1020,6 +1020,7 @@ namespace Hunt.UI
             UIKit.Bar(r, loud, c);
             float mask = Noise.RainMask;
             string rain = mask < 0.75f ? "  ·  빗소리가 소리를 덮는다" : mask < 0.95f ? "  ·  빗소리" : "";
+            if (Time.time < Noise.GustUntil) rain += "  ·  돌풍";
             float sightK = Atmosphere.SightMult;
             if (sightK < 0.8f) rain += "  ·  안개(덜 보임)";
             else if (sightK > 1.05f) rain += "  ·  달빛(잘 보임)";
