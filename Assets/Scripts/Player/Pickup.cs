@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Hunt.Player
 {
-    public enum PickupKind { Kit, Drink, Ammo, Rune }
+    public enum PickupKind { Kit, Drink, Ammo, Rune, Pill }
 
     /// <summary>
     /// 망자가 떨어뜨리는 보급품: 치료 키트 · 스태미너 회복제 · 탄창 · 치유 부적(힐링룬, 먹으면 바로 회복).
@@ -22,9 +22,9 @@ namespace Hunt.Player
 
         public static Color ColorOf(PickupKind k) =>
             k == PickupKind.Kit ? new Color(1f, 0.3f, 0.25f) : k == PickupKind.Drink ? new Color(0.35f, 0.75f, 1f)
-            : k == PickupKind.Rune ? new Color(0.4f, 1f, 0.55f) : new Color(1f, 0.78f, 0.3f);
+            : k == PickupKind.Rune ? new Color(0.4f, 1f, 0.55f) : k == PickupKind.Pill ? new Color(0.85f, 0.55f, 1f) : new Color(1f, 0.78f, 0.3f);
 
-        public static string NameOf(PickupKind k) => k == PickupKind.Kit ? "치료 키트" : k == PickupKind.Drink ? "스태미너 회복제" : k == PickupKind.Rune ? "치유 부적" : "탄창";
+        public static string NameOf(PickupKind k) => k == PickupKind.Kit ? "치료 키트" : k == PickupKind.Drink ? "스태미너 회복제" : k == PickupKind.Rune ? "치유 부적" : k == PickupKind.Pill ? "청심환" : "탄창";
 
         /// <summary>치유 부적 하나가 바로 채워 주는 생명 (최대 생명의 비율).</summary>
         public const float RuneHeal = 0.15f;
@@ -52,6 +52,7 @@ namespace Hunt.Player
             if (Random.value < 0.22f * mult) Spawn(PickupKind.Ammo, at + RandomOffset(), parent);
             float r = Random.value;
             float pKit = 0.035f * mult, pDrink = 0.045f * mult;
+            if (Random.value < 0.03f * mult) Spawn(PickupKind.Pill, at + RandomOffset(), parent); // 드물게 청심환 (역병 기운을 씻는다, H)
             if (r < pKit) Spawn(PickupKind.Kit, at + RandomOffset(), parent);
             else if (r < pKit + pDrink) Spawn(PickupKind.Drink, at + RandomOffset(), parent);
         }
@@ -120,6 +121,7 @@ namespace Hunt.Player
                 case PickupKind.Kit: BuildKit(c); break;
                 case PickupKind.Drink: BuildBottle(c); break;
                 case PickupKind.Rune: BuildRune(c); break;
+                case PickupKind.Pill: BuildPill(); break;
                 default: BuildMagazine(); break;
             }
 
@@ -220,6 +222,13 @@ namespace Hunt.Player
             }
         }
 
+        /// <summary>청심환: 금박 싼 동그란 환약 + 비단 끈.</summary>
+        void BuildPill()
+        {
+            Part(PrimitiveType.Sphere, Vector3.zero, Vector3.one * 0.14f, FX.UnlitMaterial(new Color(0.95f, 0.78f, 0.35f)));
+            Part(PrimitiveType.Cube, Vector3.zero, new Vector3(0.16f, 0.025f, 0.03f), FX.UnlitMaterial(new Color(0.7f, 0.25f, 0.6f)), new Vector3(0f, 0f, 35f));
+        }
+
         /// <summary>치유 부적(힐링룬): 빛나는 옥빛 구슬 + 그 둘레를 도는 가는 고리 두 개.</summary>
         void BuildRune(Color c)
         {
@@ -312,7 +321,7 @@ namespace Hunt.Player
                     string why = kind == PickupKind.Rune ? "생명이 가득하다 — 다쳤을 때 치유 부적을 주우세요"
                                : kind == PickupKind.Ammo ? "탄약도 수류탄도 가득하다"
                                : $"{NameOf(kind)} 가득 참 — 쓰고 나서 주우세요";
-                    GameHud.OnPickup(kind == PickupKind.Kit ? HudIcons.Icon.Kit : kind == PickupKind.Drink ? HudIcons.Icon.Bottle : kind == PickupKind.Rune ? HudIcons.Icon.Heart : HudIcons.Icon.Ammo,
+                    GameHud.OnPickup(kind == PickupKind.Kit ? HudIcons.Icon.Kit : kind == PickupKind.Drink ? HudIcons.Icon.Bottle : kind == PickupKind.Rune ? HudIcons.Icon.Heart : kind == PickupKind.Pill ? HudIcons.Icon.Pill : HudIcons.Icon.Ammo,
                                      new Color(0.6f, 0.58f, 0.54f), why, false);
                     toldFull = true;
                 }
@@ -332,7 +341,7 @@ namespace Hunt.Player
                             : kind == PickupKind.Kit ? $"치료 키트 가득 참 (최대 {PlayerCharacter.MaxKits}) — 쓰고 나서 주우세요"
                             : kind == PickupKind.Drink ? $"회복제 가득 참 (최대 {PlayerCharacter.MaxDrinks}) — 쓰고 나서 주우세요"
                             : "탄약도 수류탄도 가득 참";
-                GameHud.OnPickup(kind == PickupKind.Kit ? HudIcons.Icon.Kit : kind == PickupKind.Drink ? HudIcons.Icon.Bottle : kind == PickupKind.Rune ? HudIcons.Icon.Heart : HudIcons.Icon.Ammo,
+                GameHud.OnPickup(kind == PickupKind.Kit ? HudIcons.Icon.Kit : kind == PickupKind.Drink ? HudIcons.Icon.Bottle : kind == PickupKind.Rune ? HudIcons.Icon.Heart : kind == PickupKind.Pill ? HudIcons.Icon.Pill : HudIcons.Icon.Ammo,
                                  new Color(0.6f, 0.58f, 0.54f), full, false);
             }
             else if (d > 3f) toldFull = false;
@@ -353,6 +362,7 @@ namespace Hunt.Player
                 case PickupKind.Kit: return p.Kits < PlayerCharacter.MaxKits;
                 case PickupKind.Drink: return p.Drinks < PlayerCharacter.MaxDrinks;
                 case PickupKind.Rune: return p.Hp < p.MaxHp - 0.5f;
+                case PickupKind.Pill: return p.Infection.Antidotes < 3;
                 default:
                     foreach (var w in p.Weapons.Slots)
                         if (w != null && w.reserve < w.MaxReserve) return true;
@@ -379,6 +389,10 @@ namespace Hunt.Player
                     GameHud.HealFlash = 1f;
                     return;
                 }
+                case PickupKind.Pill:
+                    p.Infection.Antidotes++;
+                    GameHud.OnPickup(HudIcons.Icon.Pill, c, $"청심환 +1  (지닌 {p.Infection.Antidotes}, H로 먹는다)");
+                    break;
                 case PickupKind.Drink:
                     p.Drinks++;
                     GameHud.OnPickup(HudIcons.Icon.Bottle, c, $"회복제 +1  (지닌 {p.Drinks})");
