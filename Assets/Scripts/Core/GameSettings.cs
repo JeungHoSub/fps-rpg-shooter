@@ -76,6 +76,18 @@ namespace Hunt.Core
         }
         public static string CrosshairName(int i) => i == 1 ? "점" : i == 2 ? "원" : "십자";
 
+        const string ShakeKey = "hunt.shake";
+        static int? shake;
+
+        /// <summary>화면 흔들림: 0 보통 · 1 약하게 · 2 끔 (어지러움 줄이기).</summary>
+        public static int Shake
+        {
+            get { if (shake == null) shake = Mathf.Clamp(Mathf.RoundToInt(Load(ShakeKey, 0f)), 0, 2); return shake.Value; }
+            set { shake = Mathf.Clamp(value, 0, 2); Save(ShakeKey, shake.Value); }
+        }
+        public static float ShakeMult => Shake == 0 ? 1f : Shake == 1 ? 0.4f : 0f;
+        public static string ShakeName(int i) => i == 1 ? "약하게" : i == 2 ? "끔" : "보통";
+
         const string GoreKey = "hunt.gore";
         static bool? gore;
 

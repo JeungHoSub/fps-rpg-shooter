@@ -76,12 +76,14 @@ namespace Hunt.UI
             y += 54;
 
             // 피 표현 · 조준점 모양 (한 줄에)
-            UIKit.Text(new Rect(r.x + 60, y + 4, 160, 30), "피 · 조준점", 18, UITheme.Bone, serif: true);
+            UIKit.Text(new Rect(r.x + 60, y + 4, 160, 30), "보기", 18, UITheme.Bone, serif: true);
             float cw3 = (r.width - 340) / 3f;
-            if (UIKit.Button(new Rect(r.x + 220, y, cw3, 38), GameSettings.Gore ? "피 켜짐" : "피 꺼짐", 16, GameSettings.Gore))
+            if (UIKit.Button(new Rect(r.x + 220, y, cw3, 38), GameSettings.Gore ? "피 켜짐" : "피 꺼짐", 15, GameSettings.Gore))
                 GameSettings.Gore = !GameSettings.Gore;
-            if (UIKit.Button(new Rect(r.x + 226 + cw3, y, cw3 * 2f, 38), "조준점: " + GameSettings.CrosshairName(GameSettings.Crosshair), 16, false))
+            if (UIKit.Button(new Rect(r.x + 226 + cw3, y, cw3, 38), "조준 " + GameSettings.CrosshairName(GameSettings.Crosshair), 15, false))
                 GameSettings.Crosshair = (GameSettings.Crosshair + 1) % 3;
+            if (UIKit.Button(new Rect(r.x + 232 + cw3 * 2f, y, cw3, 38), "흔들림 " + GameSettings.ShakeName(GameSettings.Shake), 15, false))
+                GameSettings.Shake = (GameSettings.Shake + 1) % 3;
             y += 48;
 
             // 난이도 (새로 나오는 망자부터 바뀐다)

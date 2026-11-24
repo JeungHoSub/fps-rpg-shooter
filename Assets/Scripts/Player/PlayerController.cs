@@ -121,7 +121,7 @@ namespace Hunt.Player
         public void AddRecoil(Vector2 kick) { recoil += kick; }
 
         /// <summary>화면 흔들림 추가 (도 단위).</summary>
-        public void AddShake(float degrees) { shake = Mathf.Min(shake + degrees, 4f); }
+        public void AddShake(float degrees) { shake = Mathf.Min(shake + degrees * GameSettings.ShakeMult, 4f); } // Esc '흔들림'
 
         /// <summary>밀려남 (보스 돌진·내려치기). 금방 잦아든다.</summary>
         public void Knock(Vector3 v) { knock += new Vector3(v.x, 0f, v.z); if (v.y > 0f && cc != null && cc.isGrounded) verticalVel = Mathf.Max(verticalVel, v.y); }
