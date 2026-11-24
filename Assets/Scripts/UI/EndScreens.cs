@@ -223,8 +223,8 @@ namespace Hunt.UI
             // 붓 자국 위 제목
             UIKit.BrushTitle(new Rect(W / 2 - 420, y, 840, 120), "쓰러졌다", 84, new Color(0.03f, 0.02f, 0.02f, 0.9f), UITheme.BloodBright);
             UIKit.Text(new Rect(0, y + 122, W, 30), Epitaphs[epitaph], 20, UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true);
-            if (p != null && !string.IsNullOrEmpty(p.LastAttacker))
-                UIKit.Text(new Rect(0, y + 154, W, 26), $"— {p.LastAttacker}에게 물려 쓰러짐", 16, UITheme.Ash, TextAnchor.MiddleCenter, serif: true);
+            if (p != null && (!string.IsNullOrEmpty(p.DeathCause) || !string.IsNullOrEmpty(p.LastAttacker)))
+                UIKit.Text(new Rect(0, y + 154, W, 26), !string.IsNullOrEmpty(p.DeathCause) ? $"— {p.DeathCause}" : $"— {p.LastAttacker}에게 물려 쓰러짐", 16, UITheme.Ash, TextAnchor.MiddleCenter, serif: true);
             UIKit.Divider(new Rect(W / 2 - 320, y + 188, 640, 12));
 
             if (p != null)

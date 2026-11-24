@@ -45,6 +45,8 @@ namespace Hunt.Monsters
                 Vector3 center = target.transform.position + Vector3.up * 1f;
                 if ((transform.position - center).sqrMagnitude < 0.8f * 0.8f)
                 {
+                    target.LastAttacker = "침 뱉는 망자";
+                    target.DeathCause = "역병 침을 맞고 쓰러짐";
                     target.TakeDamage(damage, infection, transform.position - velocity.normalized * 3f);
                     Hunt.UI.GameHud.AcidFlash = 1f;
                     SFX.PlayAt(SFX.FleshHit, transform.position, 0.6f);

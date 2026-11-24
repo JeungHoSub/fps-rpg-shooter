@@ -36,7 +36,10 @@ namespace Hunt.Player
         public bool CharmGuard, CharmSwift, CharmAim;
         public void ClearCharms() { CharmGuard = CharmSwift = CharmAim = false; }
         /// <summary>마지막으로 나를 문 망자 이름 (사망 화면용).</summary>
-        public string LastAttacker { get; set; }
+        public string LastAttacker { get { return lastAttacker; } set { lastAttacker = value; DeathCause = null; } }
+        string lastAttacker;
+        /// <summary>물린 게 아닌 죽음의 까닭 (침·폭발·불) — 사망 화면에 그대로.</summary>
+        public string DeathCause { get; set; }
         public float HurtFlash { get; private set; }
 
         public readonly List<WeaponPart> Inventory = new List<WeaponPart>();
