@@ -491,15 +491,17 @@ namespace Hunt.Monsters
             SFX.PlayAt(SFX.FleshHit, at, 1f);
             Noise.Emit(at, 25f, true);
             float baseDmg = 55f + Data.maxHp * 0.6f;
+            int burstKills = 0;
             foreach (var m in Alive.ToArray())
             {
                 if (m == null || m == this || m.IsDead) continue;
                 float d = Vector3.Distance(at, m.transform.position + Vector3.up);
                 if (d > radius) continue;
                 float k = Mathf.Lerp(1f, 0.4f, d / radius);
-                m.ApplyDirectDamage(baseDmg * k, DamageType.Physical);
+                if (m.ApplyDirectDamage(baseDmg * k, DamageType.Physical)) burstKills++;
                 m.Blast(at, k * 0.8f);
             }
+            if (burstKills >= 5) Achievements.Unlock("bloat5");
             var p = target;
             if (p != null && !p.IsDead)
             {

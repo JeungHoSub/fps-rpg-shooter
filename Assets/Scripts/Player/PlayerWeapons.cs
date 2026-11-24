@@ -811,10 +811,12 @@ namespace Hunt.Player
             HitMarker = 0.12f;
             LastHitWeak = res.zone == HitZone.WeakPoint || res.zone == HitZone.Head;
             LastHitKill = res.killed;
+            if (res.killed && res.zone == HitZone.Head) Achievements.Add("head100");
             if (res.killed && w != null)
             {
                 int before = w.Mastery;
                 w.kills++;
+                if (w.Mastery >= 4) Achievements.Unlock("master");
                 if (w.Mastery > before)
                 {
                     HUD.Notify($"{w.data.displayName} 숙련 — {WeaponInstance.MasteryName(w.Mastery)}  (위력 +{(w.MasteryMult - 1f) * 100f:0}%)", new Color(1f, 0.85f, 0.45f));

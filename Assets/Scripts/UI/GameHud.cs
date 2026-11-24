@@ -42,6 +42,7 @@ namespace Hunt.UI
             noteText = GameText.LoreNotes[read];
             noteShown = Time.unscaledTime;
             try { PlayerPrefs.SetInt(LoreKey, read + 1); PlayerPrefs.Save(); } catch { }
+            if (read + 1 >= GameText.LoreNotes.Length) Achievements.Unlock("lore");
             SFX.PlayPitched(SFX.Swing, 0.3f, 1.6f); // 종이 펼치는 소리
         }
 

@@ -134,6 +134,7 @@ namespace Hunt.Player
             opened = true;
             openT = 0f;
             OpenedThisNight++;
+            Achievements.Add("crates20");
             SFX.PlayAt(SFX.Rack, transform.position, 0.8f);
             SFX.PlayPitched(SFX.LevelUp, 0.3f, 1.1f);
             Vector3 c = transform.position;

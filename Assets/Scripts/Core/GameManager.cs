@@ -250,6 +250,12 @@ namespace Hunt.Core
             Player.Infection.Antidotes = Mathf.Min(2, Player.Infection.Antidotes + 1);
             Player.AddGold(Mathf.RoundToInt((40 + 20 * Waves.Wave) * reward));
 
+            if (!failed)
+            {
+                if (Waves.Wave >= 1) Achievements.Unlock("night1");
+                if (Waves.Wave >= 10) Achievements.Unlock("night10");
+                if (Waves.IsBossWave) Achievements.Unlock("daegam");
+            }
             if (!failed) HUD.Notify($"{GameHud.NightName(Waves.Wave)}을 버텼다 — 날이 밝는다" + (reward > 1f ? $"  (변고 보상 ×{reward:0.00})" : ""), new Color(0.5f, 1f, 0.6f));
             if (LastEvolution.Count > 0) HUD.Notify("망자들이 당신의 사냥법을 배웠다… (서낭당 · 역병 일지)", new Color(0.85f, 0.4f, 1f));
         }

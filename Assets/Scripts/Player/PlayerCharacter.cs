@@ -211,6 +211,8 @@ namespace Hunt.Player
             StreakTime = 0f;
             if (KillStreak >= 2) SFX.PlayPitched(SFX.KillTick, 0.7f, 1f + Mathf.Min(KillStreak - 1, 8) * 0.08f);
             Kills++;
+            Achievements.Add("kills1000");
+            if (KillStreak >= 10) Achievements.Unlock("streak10");
             if (KillStreak > BestStreak) BestStreak = KillStreak;
             var evo = EvolutionDirector.Instance != null ? EvolutionDirector.Instance.Profile : null;
             float reward = evo != null ? evo.RewardMultiplier : 1f;

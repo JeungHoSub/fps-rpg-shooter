@@ -107,13 +107,44 @@ namespace Hunt.UI
         }
 
         // ------------------------------------------------------------------ 새로 바뀐 점 (오른쪽 위 단추 → 펼침)
-        bool whatsNewOpen;
-        float whatsNewT;
+        bool whatsNewOpen, achOpen;
+        float whatsNewT, achT;
+
+        void DrawAchievements()
+        {
+            if (UIKit.IsRepaint) achT = Mathf.MoveTowards(achT, achOpen ? 1f : 0f, Time.unscaledDeltaTime * 6f);
+            if (achT <= 0.01f) return;
+            float e = UIKit.EaseOut(achT);
+            float keep = UIKit.Alpha;
+            UIKit.Alpha = keep * e;
+            var list = Achievements.All;
+            var r = new Rect(W - 620, 66 + (1f - e) * 12f, 600, 70 + list.Length * 46);
+            UIKit.Panel(r);
+            UIKit.Text(new Rect(r.x, r.y + 14, r.width, 28), "업적", 22, UITheme.GoldBright, TextAnchor.MiddleCenter, serif: true, bold: true);
+            float y = r.y + 54;
+            foreach (var d in list)
+            {
+                bool done = Achievements.Done(d);
+                int prog = Achievements.Progress(d.id);
+                var seal = new Rect(r.x + 24, y + 4, 34, 34);
+                if (done) { UIKit.Tex(seal, UITheme.Seal, UITheme.Blood); UIKit.Text(seal, "완", 15, UITheme.GoldBright, TextAnchor.MiddleCenter, serif: true, bold: true); }
+                else UIKit.Outline(seal, new Color(0.4f, 0.38f, 0.34f), 1f);
+                UIKit.Text(new Rect(r.x + 70, y, r.width - 200, 24), d.name, 17, done ? UITheme.GoldBright : UITheme.Bone, TextAnchor.MiddleLeft, serif: true, bold: true);
+                UIKit.Text(new Rect(r.x + 70, y + 22, r.width - 200, 20), d.desc, 13, UITheme.BoneDim, TextAnchor.MiddleLeft);
+                if (d.goal > 1 && !done)
+                    UIKit.Text(new Rect(r.xMax - 130, y + 8, 110, 24), $"{prog} / {d.goal}", 15, UITheme.BoneDim, TextAnchor.MiddleRight);
+                y += 46;
+            }
+            UIKit.Alpha = keep;
+        }
 
         void DrawWhatsNew()
         {
             var btn = new Rect(W - 210, 18, 190, 40);
-            if (UIKit.Button(btn, whatsNewOpen ? "닫기" : "새로 바뀐 점", 17, whatsNewOpen)) whatsNewOpen = !whatsNewOpen;
+            if (UIKit.Button(btn, whatsNewOpen ? "닫기" : "새로 바뀐 점", 17, whatsNewOpen)) { whatsNewOpen = !whatsNewOpen; achOpen = false; }
+            var abtn = new Rect(W - 410, 18, 190, 40);
+            if (UIKit.Button(abtn, achOpen ? "닫기" : $"업적  {Achievements.DoneCount()} / {Achievements.All.Length}", 17, achOpen)) { achOpen = !achOpen; whatsNewOpen = false; }
+            DrawAchievements();
             if (UIKit.IsRepaint) whatsNewT = Mathf.MoveTowards(whatsNewT, whatsNewOpen ? 1f : 0f, Time.unscaledDeltaTime * 6f);
             if (whatsNewT <= 0.01f) return;
             float e = UIKit.EaseOut(whatsNewT);
