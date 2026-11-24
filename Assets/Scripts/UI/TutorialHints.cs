@@ -20,7 +20,7 @@ namespace Hunt.UI
             new Step { keys = "F", text = "손전등 — 잘 보이지만, 망자도 불빛을 보고 온다", maxTime = 12f },
             new Step { keys = "Ctrl", text = "앉기 — 탄이 모이고 발소리가 줄어든다 · 큰 덤불에 앉으면 숨는다 (Esc에서 전환식으로)", maxTime = 12f },
             new Step { keys = "X  C", text = "치료 키트 · 스태미너 회복제 (망자가 떨어뜨리기도 한다)", maxTime = 10f },
-            new Step { keys = "G  V  B", text = "수류탄 · 칼 · 돌 던지기(소리로 꾀기)   —   1~5 무기 바꾸기", maxTime = 10f },
+            new Step { keys = "G  V  B", text = "수류탄 · 칼(달리며 누르면 발차기) · 돌 던지기(소리로 꾀기)   —   1~5 무기", maxTime = 10f },
             new Step { keys = "E", text = "발밑 보급품 줍기 · 보급 상자 열기 (근처에 없으면 재생 능력)", maxTime = 10f },
             new Step { keys = "M", text = "누르고 있으면 마을 지도 — 노란 빛기둥 보급 상자를 찾아라", maxTime = 10f },
             new Step { keys = "Q  E", text = "역병 능력: 광폭화 · 재생 (오른쪽 아래 구슬이 차면)", maxTime = 10f },
