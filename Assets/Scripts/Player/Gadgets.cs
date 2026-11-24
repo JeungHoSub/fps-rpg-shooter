@@ -8,11 +8,11 @@ using UnityEngine;
 namespace Hunt.Player
 {
     /// <summary>5번 슬롯 특수 기기.</summary>
-    public enum GadgetType { Grenade, Mine, Turret }
+    public enum GadgetType { Grenade, Mine, Turret, Molotov }
 
     public static class Gadgets
     {
-        public const int Count = 3;
+        public const int Count = 4;
 
         public static string Name(GadgetType t)
         {
@@ -20,6 +20,7 @@ namespace Hunt.Player
             {
                 case GadgetType.Grenade: return "투척 수류탄";
                 case GadgetType.Mine: return "설치형 지뢰";
+                case GadgetType.Molotov: return "화염병";
                 default: return "설치형 기관총";
             }
         }
@@ -30,11 +31,12 @@ namespace Hunt.Player
             {
                 case GadgetType.Grenade: return "던지면 2.5초 뒤 터진다 (반경 6m)";
                 case GadgetType.Mine: return "발밑에 묻는다. 망자가 밟으면 터진다";
+                case GadgetType.Molotov: return "던지면 깨져 7초 동안 불바다 (반경 3m) — 길목을 막는다";
                 default: return "30초 동안 가까운 망자를 쏜다. 총성이 망자를 끌어들인다";
             }
         }
 
-        public static int MaxCarry(GadgetType t) => t == GadgetType.Grenade ? 4 : t == GadgetType.Mine ? 3 : 1;
+        public static int MaxCarry(GadgetType t) => t == GadgetType.Grenade ? 4 : t == GadgetType.Mine ? 3 : t == GadgetType.Molotov ? 3 : 1;
 
         /// <summary>폭발: 반경 안 망자에게 거리 비례 피해, 너무 가까우면 나도 다친다.</summary>
         public static void Explode(Vector3 point, float radius, float damage, PlayerCharacter owner)
@@ -151,6 +153,163 @@ namespace Hunt.Player
             if (fuse > 0f) return;
             Gadgets.Explode(transform.position, 6f, damage, owner);
             Destroy(gameObject);
+        }
+    }
+
+    /// <summary>화염병: 던지면 처음 부딪히는 곳에서 깨져 불바다(FireZone)가 된다.</summary>
+    public class ThrownMolotov : MonoBehaviour
+    {
+        PlayerCharacter owner;
+        float damage, life = 4f;
+        bool broken;
+
+        public static void Throw(Vector3 from, Vector3 velocity, PlayerCharacter owner, float damage)
+        {
+            var go = new GameObject("Molotov");
+            go.layer = 2;
+            go.transform.position = from;
+            // 병 + 불붙은 심지
+            var bottle = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            Destroy(bottle.GetComponent<Collider>());
+            bottle.layer = 2;
+            bottle.transform.SetParent(go.transform, false);
+            bottle.transform.localScale = new Vector3(0.08f, 0.1f, 0.08f);
+            bottle.GetComponent<Renderer>().sharedMaterial = FX.UnlitMaterial(new Color(0.35f, 0.5f, 0.3f, 0.85f));
+            var wick = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            Destroy(wick.GetComponent<Collider>());
+            wick.layer = 2;
+            wick.transform.SetParent(go.transform, false);
+            wick.transform.localPosition = new Vector3(0f, 0.13f, 0f);
+            wick.transform.localScale = Vector3.one * 0.06f;
+            wick.GetComponent<Renderer>().sharedMaterial = FX.UnlitMaterial(new Color(1f, 0.6f, 0.15f));
+            var col = go.AddComponent<SphereCollider>();
+            col.radius = 0.06f;
+            var rb = go.AddComponent<Rigidbody>();
+            rb.mass = 0.5f;
+#if UNITY_2023_3_OR_NEWER
+            rb.linearVelocity = velocity;
+#else
+            rb.velocity = velocity;
+#endif
+            rb.angularVelocity = Random.insideUnitSphere * 10f;
+            rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+            var m = go.AddComponent<ThrownMolotov>();
+            m.owner = owner;
+            m.damage = damage;
+            SFX.Play(SFX.Swing, 0.5f, 0.1f);
+        }
+
+        void OnCollisionEnter(Collision c)
+        {
+            if (broken || c.collider is CharacterController) return;
+            Break(c.contacts.Length > 0 ? c.contacts[0].point : transform.position);
+        }
+
+        void Update()
+        {
+            var gm = GameManager.Instance;
+            if (gm != null && gm.Paused) return;
+            life -= Time.deltaTime;
+            if (life <= 0f && !broken) Break(transform.position);
+        }
+
+        void Break(Vector3 at)
+        {
+            broken = true;
+            SFX.PlayAt(SFX.Casing, at, 1f);           // 유리 깨지는 소리 (짧고 높게)
+            SFX.PlayAt(SFX.Explosion, at, 0.35f);     // 확 붙는 소리
+            FireZone.Spawn(FX.FloorUnder(at + Vector3.up * 0.4f), 3f, 7f, damage, owner);
+            Destroy(gameObject);
+        }
+    }
+
+    /// <summary>불바다: radius 안 망자에게 0.4초마다 불 피해, 나도 들어가면 조금 뜨겁다. 일렁이는 불꽃 도형 + 빛.</summary>
+    public class FireZone : MonoBehaviour
+    {
+        float radius, life, maxLife, dps, tick;
+        PlayerCharacter owner;
+        Transform[] flames;
+        Light glow;
+
+        public static void Spawn(Vector3 at, float radius, float seconds, float dps, PlayerCharacter owner)
+        {
+            var go = new GameObject("불바다");
+            if (Effects.Root != null) go.transform.SetParent(Effects.Root, true);
+            go.transform.position = at;
+            var z = go.AddComponent<FireZone>();
+            z.radius = radius; z.life = z.maxLife = seconds; z.dps = dps; z.owner = owner;
+            z.Build();
+            Noise.Emit(at, 18f, true);
+            FX.Scorch(at, radius * 0.7f);
+        }
+
+        void Build()
+        {
+            bool low = QualityManager.Level == GfxLevel.Low;
+            int n = low ? 6 : 11;
+            flames = new Transform[n];
+            for (int i = 0; i < n; i++)
+            {
+                var f = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                Destroy(f.GetComponent<Collider>());
+                f.layer = 2;
+                f.transform.SetParent(transform, false);
+                Vector2 p = Random.insideUnitCircle * radius * 0.85f;
+                f.transform.localPosition = new Vector3(p.x, 0.25f, p.y);
+                var r = f.GetComponent<Renderer>();
+                r.sharedMaterial = FX.UnlitMaterial(i % 3 == 0 ? new Color(1f, 0.85f, 0.3f, 0.75f) : new Color(1f, 0.42f, 0.1f, 0.6f));
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                flames[i] = f.transform;
+            }
+            if (!low)
+            {
+                glow = new GameObject("불빛").AddComponent<Light>();
+                glow.transform.SetParent(transform, false);
+                glow.transform.localPosition = Vector3.up * 1f;
+                glow.type = LightType.Point;
+                glow.color = new Color(1f, 0.55f, 0.2f);
+                glow.range = radius * 3f;
+                glow.intensity = 2.5f;
+                glow.shadows = LightShadows.None;
+            }
+        }
+
+        void Update()
+        {
+            var gm = GameManager.Instance;
+            if (gm != null && gm.Paused) return;
+            float dt = Time.deltaTime;
+            life -= dt;
+            float fade = Mathf.Clamp01(life / 1.2f) * Mathf.Clamp01((maxLife - life) / 0.25f);
+            float t = Time.time;
+            for (int i = 0; i < flames.Length; i++)
+            {
+                if (flames[i] == null) continue;
+                float h = (0.5f + 0.5f * Mathf.PerlinNoise(i * 3.1f, t * 4f)) * 1.1f * fade;
+                flames[i].localScale = new Vector3(0.45f * fade, h, 0.45f * fade);
+                var lp = flames[i].localPosition; lp.y = h * 0.5f; flames[i].localPosition = lp;
+            }
+            if (glow != null) glow.intensity = (2f + Mathf.PerlinNoise(t * 6f, 1f)) * fade;
+            tick -= dt;
+            if (tick <= 0f && life > 0f)
+            {
+                tick = 0.4f;
+                float r2 = radius * radius;
+                foreach (var m in Monster.Alive.ToArray())
+                {
+                    if (m == null || m.IsDead) continue;
+                    Vector3 d = m.transform.position - transform.position; d.y = 0f;
+                    if (d.sqrMagnitude > r2) continue;
+                    m.ApplyDirectDamage(dps * 0.4f, DamageType.Fire);
+                    m.Alert(5f);
+                }
+                if (owner != null && !owner.IsDead)
+                {
+                    Vector3 d = owner.transform.position - transform.position; d.y = 0f;
+                    if (d.sqrMagnitude < r2 * 0.6f) owner.TakeDamage(3f, 0f); // 나도 뜨겁다
+                }
+            }
+            if (life <= 0f) Destroy(gameObject);
         }
     }
 

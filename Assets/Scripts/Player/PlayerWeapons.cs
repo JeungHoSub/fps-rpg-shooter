@@ -55,7 +55,7 @@ namespace Hunt.Player
         public int ActiveKey => Mode == Hand.Melee ? 3 : Mode == Hand.Gadget ? 4 : (CurrentIndex == Slots.Count - 1 ? 2 : CurrentIndex);
         public int PrimaryCount => Mathf.Max(0, Slots.Count - 1);
         public GadgetType Gadget { get; private set; }
-        public readonly int[] GadgetCount = { 3, 2, 1 };
+        public readonly int[] GadgetCount = { 3, 2, 1, 2 };
         /// <summary>칼 휘두름 진행도 0→1 (1 = 쉬는 중).</summary>
         public float MeleeSwing => meleeT;
         public const string MeleeName = "마체테";
@@ -65,6 +65,8 @@ namespace Hunt.Player
         bool quickMelee;
 
         public float MeleeDamage => (70f + player.Level * 4f) * player.Stats.MeleeDamageMult * GameRules.DamageMult;
+        /// <summary>화염병 불바다 초당 피해 (기술·기질 '화약쟁이' 반영은 GadgetDamageMult로).</summary>
+        public float MolotovDps => (45f + player.Level * 6f) * player.Stats.GadgetDamageMult * GameRules.DamageMult;
         public float GrenadeDamage => (220f + player.Level * 25f) * (1f + player.Stats.Tech * 0.02f) * GameRules.DamageMult;
         public float MineDamage => (300f + player.Level * 30f) * (1f + player.Stats.Tech * 0.02f) * GameRules.DamageMult;
         public float TurretDamage => (14f + player.Level * 1.5f) * (1f + player.Stats.Tech * 0.02f) * GameRules.DamageMult;
@@ -130,8 +132,8 @@ namespace Hunt.Player
             UpdateMelee(dt);
 
             bool gadgetReady = input && Mode == Hand.Gadget && GadgetCount[(int)Gadget] > 0 && !player.IsUsingItem;
-            UpdateGrenadeArc(gadgetReady && Gadget == GadgetType.Grenade);
-            UpdatePlacePreview(gadgetReady && Gadget != GadgetType.Grenade);
+            UpdateGrenadeArc(gadgetReady && (Gadget == GadgetType.Grenade || Gadget == GadgetType.Molotov));
+            UpdatePlacePreview(gadgetReady && (Gadget == GadgetType.Mine || Gadget == GadgetType.Turret));
             if (Mode != Hand.Gun)
             {
                 aim = Mathf.MoveTowards(aim, 0f, dt * 6f);
@@ -527,6 +529,10 @@ namespace Hunt.Player
                 case GadgetType.Grenade:
                     ThrownGrenade.Throw(t.position + t.forward * 0.5f + t.right * 0.15f, t.forward * 15f + Vector3.up * 3.5f, player, GrenadeDamage);
                     meleeT = 0f; // 던지는 팔 동작 재사용
+                    break;
+                case GadgetType.Molotov:
+                    ThrownMolotov.Throw(t.position + t.forward * 0.5f + t.right * 0.15f, t.forward * 15f + Vector3.up * 3.5f, player, MolotovDps);
+                    meleeT = 0f;
                     break;
                 case GadgetType.Mine:
                     LandMine.Plant(player.transform.position + flatFwd * 1.1f, player, MineDamage);

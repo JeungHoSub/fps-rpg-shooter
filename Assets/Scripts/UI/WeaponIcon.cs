@@ -109,6 +109,12 @@ namespace Hunt.UI
                     Piece(r, new P(0.2f, 0.5f, 0.6f, 0.16f), col);
                     Piece(r, new P(0.4f, 0.4f, 0.2f, 0.1f), col);
                     break;
+                case GadgetType.Molotov:
+                    // 병 몸통 + 목 + 불꽃 심지
+                    Piece(r, new P(0.38f, 0.42f, 0.24f, 0.46f), col);
+                    Piece(r, new P(0.45f, 0.22f, 0.1f, 0.2f), col);
+                    Piece(r, new P(0.46f, 0.1f, 0.08f, 0.12f, 20f), new Color(1f, 0.55f, 0.2f, col.a));
+                    break;
                 default:
                     Piece(r, new P(0.3f, 0.25f, 0.45f, 0.16f), col);
                     Piece(r, new P(0.72f, 0.29f, 0.22f, 0.06f), col);

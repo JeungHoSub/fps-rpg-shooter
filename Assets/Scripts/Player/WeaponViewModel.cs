@@ -255,7 +255,7 @@ namespace Hunt.Player
             var ctrl = player.Controller;
             GameObject show;
             if (wp.Mode == PlayerWeapons.Hand.Melee) show = machete;
-            else show = wp.Gadget == GadgetType.Grenade ? grenade : wp.Gadget == GadgetType.Mine ? mine : turretKit;
+            else show = wp.Gadget == GadgetType.Grenade || wp.Gadget == GadgetType.Molotov ? grenade : wp.Gadget == GadgetType.Mine ? mine : turretKit; // 화염병은 던지는 손 모양을 같이 쓴다
             if (wp.Mode == PlayerWeapons.Hand.Gadget && wp.GadgetCount[(int)wp.Gadget] <= 0) show = null;
             ShowHeld(show);
 

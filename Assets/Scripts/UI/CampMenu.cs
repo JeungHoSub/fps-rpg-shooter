@@ -619,9 +619,9 @@ namespace Hunt.UI
             for (int i = 0; i < Gadgets.Count; i++)
             {
                 var g = (GadgetType)i;
-                int price = g == GadgetType.Grenade ? 50 : g == GadgetType.Mine ? 70 : 160;
+                int price = g == GadgetType.Grenade ? 50 : g == GadgetType.Mine ? 70 : g == GadgetType.Molotov ? 55 : 160;
                 int idx = i;
-                var gi = g == GadgetType.Grenade ? HudIcons.Icon.Grenade : g == GadgetType.Mine ? HudIcons.Icon.Mine : HudIcons.Icon.Turret;
+                var gi = g == GadgetType.Grenade ? HudIcons.Icon.Grenade : g == GadgetType.Mine ? HudIcons.Icon.Mine : g == GadgetType.Molotov ? HudIcons.Icon.Flame : HudIcons.Icon.Turret;
                 Buy(gi, UITheme.Bone, Gadgets.Name(g) + (g == GadgetType.Grenade ? " (5 / G)" : " (5)"), Gadgets.Desc(g), gc[i], Gadgets.MaxCarry(g), price, () => gc[idx]++);
             }
             UIKit.Text(new Rect(right.x + 20, right.yMax - 60, right.width - 40, 50), "밤을 넘길 때마다 키트·회복제·특수 기기가 하나씩 보급된다.", 14, UITheme.Ash, TextAnchor.MiddleCenter, serif: true, wrap: true);
