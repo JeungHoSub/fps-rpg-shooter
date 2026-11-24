@@ -20,6 +20,8 @@ namespace Hunt.Weapons
         PostReloadBurst,   // 재장전 후 첫 3발 데미지 +X%
         AmmoOnWeakPoint,   // 약점 명중 시 X% 확률로 탄 1발 회복
         ExplodeOnKill,     // 처치 시 X% 확률로 폭발
+        // 총구 '소음기' 전용 (새 항목은 끝에 — 저장된 값이 밀리지 않게)
+        QuietPct,          // 총성이 들리는 거리 -X%
     }
 
     [Serializable]
@@ -52,6 +54,7 @@ namespace Hunt.Weapons
                 case AffixType.PostReloadBurst: return $"재장전 후 첫 3발 데미지 +{v}%";
                 case AffixType.AmmoOnWeakPoint: return $"약점 명중 시 {v}% 확률로 탄 1발 회복";
                 case AffixType.ExplodeOnKill: return $"처치 시 {v}% 확률로 폭발";
+                case AffixType.QuietPct: return $"총성 -{v}% (망자가 덜 듣는다)";
                 default: return type.ToString();
             }
         }
@@ -135,7 +138,7 @@ namespace Hunt.Weapons
             { PartSlot.Magazine, new[] { "확장 탄창", "드럼 탄창", "퀵 탄창" } },
             { PartSlot.Stock, new[] { "전술 개머리판", "충격흡수 개머리판" } },
             { PartSlot.Scope, new[] { "홀로그램 조준경", "열상 조준경", "약점 분석 조준경" } },
-            { PartSlot.Muzzle, new[] { "보정기", "소염기", "제퇴기" } },
+            { PartSlot.Muzzle, new[] { "보정기", "소염기", "제퇴기", "소음기" } },
             { PartSlot.Module, new[] { "변이 코어", "실험체 모듈", "공명 장치" } },
         };
 
@@ -164,6 +167,8 @@ namespace Hunt.Weapons
             // 슬롯 고유 옵션
             if (slot == PartSlot.Module)
                 part.affixes.Add(Roll(ModulePool[Random.Range(0, ModulePool.Length)], level, rarity));
+            else if (part.name == "소음기")
+                part.affixes.Add(Roll(AffixType.QuietPct, level, rarity)); // 소음기는 총성을 줄인다
             else
                 part.affixes.Add(Roll(SlotPrimary[slot], level, rarity));
 
@@ -193,6 +198,7 @@ namespace Hunt.Weapons
                 case AffixType.RecoilReductionPct: v = Random.Range(8f, 16f) * q; break;
                 case AffixType.SpreadReductionPct: v = Random.Range(8f, 16f) * q; break;
                 case AffixType.KnockbackPct: v = Random.Range(10f, 25f) * q; break;
+                case AffixType.QuietPct: v = Mathf.Min(60f, Random.Range(28f, 40f) * q); break;
                 case AffixType.CritChancePct: v = Random.Range(2f, 5f) * q; break;
                 case AffixType.WeakPointDamagePct: v = Random.Range(10f, 25f) * q; break;
                 case AffixType.WeightReductionPct: v = Random.Range(8f, 18f) * q; break;

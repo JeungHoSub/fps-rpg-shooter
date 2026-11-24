@@ -71,6 +71,8 @@ namespace Hunt.Weapons
         public float RecoilMult => Mathf.Max(0.3f, 1f - Sum(AffixType.RecoilReductionPct) / 100f);
         public float SpreadMult => Mathf.Max(0.3f, 1f - Sum(AffixType.SpreadReductionPct) / 100f);
         public float KnockbackMult => 1f + Sum(AffixType.KnockbackPct) / 100f;
+        /// <summary>소음기: 총성이 들리는 거리 배율 (최소 0.4).</summary>
+        public float NoiseMult => Mathf.Max(0.4f, 1f - Sum(AffixType.QuietPct) / 100f);
         public float CritChanceBonus => Sum(AffixType.CritChancePct) / 100f;
         public float WeakPointBonus => Sum(AffixType.WeakPointDamagePct) / 100f;
         public float Weight => data.weight * Mathf.Max(0.4f, 1f - Sum(AffixType.WeightReductionPct) / 100f);

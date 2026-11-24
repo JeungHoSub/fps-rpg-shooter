@@ -788,7 +788,7 @@ namespace Hunt.Player
             bool manual = (w.data.weaponClass == WeaponClass.Shotgun && !w.data.automatic) || (w.data.weaponClass == WeaponClass.Sniper && w.data.rpm < 100f);
             if (w.data.weaponClass != WeaponClass.Flamethrower && w.data.weaponClass != WeaponClass.Launcher && !manual)
                 SFX.Play(SFX.Casing, 0.18f, 0.2f);
-            Noise.Emit(player.transform.position, Noise.ShotRadius(w.data.weaponClass), true);
+            Noise.Emit(player.transform.position, Noise.ShotRadius(w.data.weaponClass) * w.NoiseMult, true);
             Noise.MuzzleFlash();
             float shake = w.data.weaponClass == WeaponClass.Shotgun || w.data.weaponClass == WeaponClass.Sniper || w.data.weaponClass == WeaponClass.Launcher ? 1.4f
                 : w.data.weaponClass == WeaponClass.Flamethrower ? 0.1f : 0.45f;
