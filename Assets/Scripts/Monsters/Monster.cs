@@ -61,6 +61,8 @@ namespace Hunt.Monsters
         float speed;
         float knockbackResist;
         float legSlow = 1f;
+        /// <summary>다리가 꺾여 절뚝이는 중 (칼 마무리 대상).</summary>
+        public bool Crippled => legSlow < 1f;
 
         Vector3 knockVel;
         Vector3 lastHitDir;

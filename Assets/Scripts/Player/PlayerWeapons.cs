@@ -398,9 +398,11 @@ namespace Hunt.Player
                 bool backstab = swingUnaware.Contains(mo) && !mo.IsBoss && mo.Data.archetype == Hunt.Data.MonsterArchetype.Runner
                                 && toMo.sqrMagnitude > 0.01f && Vector3.Angle(mo.transform.forward, toMo) < 70f;
                 if (backstab) mo.NoRevive = true;
+                // 마무리: 다리 꺾인 망자는 칼 한 번에 (보스 제외) — 다리 쏘고 베는 흐름
+                bool finisher = !backstab && mo.Crippled && !mo.IsBoss;
                 var info = new DamageInfo
                 {
-                    baseDamage = backstab ? Mathf.Max(MeleeDamage * 12f, mo.MaxHp * 3f) : MeleeDamage, type = DamageType.Physical, weaponClass = WeaponClass.Melee,
+                    baseDamage = backstab ? Mathf.Max(MeleeDamage * 12f, mo.MaxHp * 3f) : finisher ? Mathf.Max(MeleeDamage * 6f, mo.MaxHp * 1.6f) : MeleeDamage, type = DamageType.Physical, weaponClass = WeaponClass.Melee,
                     critChance = player.Stats.CritChance, critMultiplier = player.Stats.CritMultiplier,
                     weakPointBonus = player.Stats.WeakPointBonus, penetration = 0.5f, knockback = 3.5f * player.Stats.KnockbackMult,
                     distance = 1f, falloffStart = 100f, falloffEnd = 200f, minFalloffMultiplier = 1f,
@@ -415,6 +417,11 @@ namespace Hunt.Player
                     HUD.Notify("소리 없이 쓰러뜨렸다", new Color(0.75f, 0.85f, 1f));
                     Achievements.Add("silent10");
                     player.RunSilent++;
+                }
+                else if (finisher && res.killed)
+                {
+                    HUD.Notify("절뚝이는 망자를 마무리했다", new Color(1f, 0.75f, 0.4f));
+                    player.Controller.AddShake(0.5f);
                 }
                 // 칼로 쓰러뜨리면 35% 확률로 치유 부적 (가까이 붙는 위험의 보상)
                 if (res.killed && Random.value < 0.35f)
