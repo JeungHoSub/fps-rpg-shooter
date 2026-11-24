@@ -405,7 +405,7 @@ namespace Hunt.Player
             {
                 if (t == null) continue;
                 Vector3 d = t.transform.position - p.transform.position; d.y = 0f;
-                if (d.sqrMagnitude < 4f) return t;
+                if (d.sqrMagnitude < 4f && MaxLife - t.life > 2f) return t; // 막 깐 기관총은 거두지 않는다
             }
             return null;
         }
@@ -471,7 +471,7 @@ namespace Hunt.Player
             life -= dt;
             if (life <= 0f || ammo <= 0) { FX.ImpactWorld(head.position, Vector3.up); Destroy(gameObject); return; }
             // E: 가까이서 거둬 다시 가방에 넣는다 (반 넘게 남았을 때만 — 아니면 고장 나서 못 쓴다)
-            if (gm.AcceptsGameplayInput && GameInput.PickupDown && ReferenceEquals(NearestToPlayer(), this))
+            if (gm.AcceptsGameplayInput && GameInput.PickupDown && MaxLife - life > 2f && !Pickup.AnyNearPlayer() && ReferenceEquals(NearestToPlayer(), this))
             {
                 var pl = gm.Player;
                 int gi = (int)GadgetType.Turret;
