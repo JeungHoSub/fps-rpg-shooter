@@ -24,6 +24,7 @@ namespace Hunt.Core
         // ---- 밤마다 바뀌는 날씨 ----
         public enum Weather { Drizzle, Downpour, Fog, Storm, Clearing }
         public Weather Current { get; private set; } = Weather.Drizzle;
+        float bossFog;
 
         /// <summary>망자 눈이 닿는 거리 배율: 안개 ×0.75, 폭우·폭풍 ×0.9, 갬(달빛) ×1.15.</summary>
         public static float SightMult
@@ -280,7 +281,11 @@ namespace Hunt.Core
             if (rainAudio != null) rainAudio.volume = Mathf.Lerp(0.3f, 0.75f, RainIntensity) * Mathf.Lerp(1f, 0.35f, Dawn) * GameSettings.AmbientVolume; // Esc '빗소리'
             // 안개는 날씨에 맞춰 천천히 짙어지거나 걷힌다
             fogNow = Mathf.MoveTowards(fogNow, fogMult, dt * 0.08f);
-            RenderSettings.fogDensity = BaseFog * fogNow * Mathf.Lerp(1f, 0.55f, Dawn);
+            // 보스가 살아 있는 동안 안개가 조금 짙어진다 (불길한 징조)
+            var wmF = gm != null ? gm.Waves : null;
+            bool bossAlive = wmF != null && wmF.Boss != null && !wmF.Boss.IsDead;
+            bossFog = Mathf.MoveTowards(bossFog, bossAlive ? 1f : 0f, dt * 0.25f);
+            RenderSettings.fogDensity = BaseFog * fogNow * (1f + 0.25f * bossFog) * Mathf.Lerp(1f, 0.55f, Dawn);
 
             // 멀리서 들려오는 소리: 어딘가의 그르렁, 개 짖는 듯한 울음, 징 — 위치가 들리는 3D (긴장감)
             if (gm != null && gm.State == GameState.Playing && cam != null && Time.time > nextDistant)
