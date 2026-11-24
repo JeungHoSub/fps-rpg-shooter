@@ -348,7 +348,7 @@ namespace Hunt.Player
                     stepTimer = sprint ? 0.33f : IsCrouching ? 0.7f : 0.5f;
                     // 물 댄 논에선 첨벙거려 1.6배 멀리 들린다
                     Noise.Emit(transform.position, (sprint ? 10f : IsCrouching ? 1.5f : 4f) * (inPaddy ? 1.6f : 1f), true); // 앉아 걸으면 거의 안 들린다
-                    if (inPaddy) SFX.Footstep("mud", sprint ? 0.5f : 0.3f); // 첨벙
+                    if (inPaddy) { SFX.Footstep("mud", sprint ? 0.5f : 0.3f); FX.Splash(transform.position, sprint ? 1.4f : IsCrouching ? 0.5f : 1f); } // 첨벙
                     // 내 귀에 들리는 발소리: 툇마루·기단 위는 나무, 큰길은 돌, 나머지는 젖은 흙
                     string surf = "mud";
                     Vector3 fp = transform.position;

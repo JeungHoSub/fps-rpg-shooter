@@ -333,6 +333,18 @@ namespace Hunt.Core
             t.GetComponent<BloodPoolFx>().Begin(size * Mathf.Lerp(0.6f, 1.2f, k) * Random.Range(0.8f, 1.2f));
         }
 
+        /// <summary>발밑 물 튐 (논물을 밟을 때).</summary>
+        public static void Splash(Vector3 p, float strength)
+        {
+            if (debris == null) return;
+            int n = Mathf.RoundToInt(5 * strength);
+            for (int i = 0; i < n; i++)
+            {
+                Vector3 v = (Vector3.up * 1.4f + Random.insideUnitSphere * 0.9f).normalized * Random.Range(1.2f, 2.4f) * strength;
+                Emit(debris, p + Vector3.up * 0.05f, v, Random.Range(0.025f, 0.05f), Random.Range(0.3f, 0.45f), new Color(0.4f, 0.42f, 0.42f, 0.7f));
+            }
+        }
+
         /// <summary>벽·바닥 명중: 불꽃 + 먼지 + 탄흔.</summary>
         public static void ImpactWorld(Vector3 point, Vector3 normal)
         {
