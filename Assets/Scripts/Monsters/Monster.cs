@@ -386,7 +386,10 @@ namespace Hunt.Monsters
             bool lit = Flashlight.Active || ShootableLamp.PlayerLit(); // 손전등을 켰거나 가로등 불빛 아래면 멀리서 보인다
             // 앉아 있으면 어둠 속에서 덜 눈에 띈다
             bool low = target != null && target.Controller != null && target.Controller.IsCrouching;
-            if (dist < (lit ? SightLit : SightDark) * (low ? 0.7f : 1f)) { Alert(3f); return; }
+            // 앉아서 덤불 속이면 코앞(어둠 2.5m)에 와야 안다. 손전등을 켜면 소용없다
+            bool hidden = low && !lit && Hiding.InBush(target.transform.position);
+            if (dist < (hidden ? 2.5f : (lit ? SightLit : SightDark) * (low ? 0.7f : 1f))) { Alert(3f); return; }
+            if (hidden && !IsAlerted) return; // 덤불 속은 시야선으로도 안 보인다
             if (IsAlerted && alertTime > 1f) return;
 
             var eye = Flashlight.Eye;
