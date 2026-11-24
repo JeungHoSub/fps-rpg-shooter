@@ -266,6 +266,7 @@ namespace Hunt.Player
                 StatPoints += 3;
                 Hp = Mathf.Min(MaxHp, MaxHp * hpRatio + MaxHp * 0.2f);
                 SFX.Play(SFX.LevelUp, 0.7f, 0f);
+                GameHud.LevelUpAt = Time.unscaledTime; // 화면 연출
                 HUD.Notify($"더 강해졌다 — Lv.{Level}  ·  단련 +3 (서낭당에서)", new Color(1f, 0.9f, 0.3f));
                 if (Level % Traits.PickEveryLevels == 0)
                 {

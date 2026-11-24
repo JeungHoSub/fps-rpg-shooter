@@ -99,6 +99,23 @@ namespace Hunt.UI
             }
         }
 
+        /// <summary>마지막으로 단계가 오른 시각 (금빛 연출).</summary>
+        public static float LevelUpAt = -100f;
+
+        void DrawLevelUp(PlayerCharacter p)
+        {
+            float age = Time.unscaledTime - LevelUpAt;
+            if (age > 2.2f) return;
+            float a = Mathf.Clamp01(1f - age / 2.2f);
+            UIKit.Vignette(W, H, new Color(1f, 0.82f, 0.35f, 0.35f * a * a));
+            float pop = 1f + Mathf.Max(0f, 0.25f - age) * 2f;
+            var r = new Rect(W / 2 - 200, H - 120 - UIKit.EaseOut(age * 2f) * 24f, 400, 50);
+            float keep = UIKit.Alpha;
+            UIKit.Alpha = keep * a;
+            UIKit.Text(r, $"단계 상승  Lv.{p.Level}", Mathf.RoundToInt(30 * pop), UITheme.GoldBright, TextAnchor.MiddleCenter, serif: true, bold: true);
+            UIKit.Alpha = keep;
+        }
+
         /// <summary>치유 순간 화면 가장자리 옥빛 (0~1).</summary>
         public static float HealFlash;
 
@@ -167,6 +184,7 @@ namespace Hunt.UI
             }
             if (p.HurtFlash > 0f) UIKit.Vignette(W, H, new Color(0.8f, 0f, 0f, p.HurtFlash * 2.5f));
             DrawScreenBlood(dt);
+            DrawLevelUp(p);
             // 치유 부적을 먹으면 가장자리가 잠깐 옥빛으로
             if (HealFlash > 0f)
             {
