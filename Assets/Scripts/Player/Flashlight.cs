@@ -60,7 +60,26 @@ namespace Hunt.Player
             lagRot = Quaternion.Slerp(lagRot, cam.rotation, Time.deltaTime * 14f);
             spot.transform.rotation = lagRot;
             // 배터리가 약한 듯 아주 가끔 흔들림
-            spot.intensity = 2.6f * (0.96f + 0.04f * Mathf.PerlinNoise(Time.time * 6f, 3.3f));
+            float k = 0.96f + 0.04f * Mathf.PerlinNoise(Time.time * 6f, 3.3f);
+            // 보스가 25m 안이면 불빛이 떨린다 (가까울수록 자주, 꺼질 듯) — 0.25초마다 한 번만 찾는다
+            if ((bossCheck -= Time.deltaTime) <= 0f)
+            {
+                bossCheck = 0.25f; bossNear = 0f;
+                foreach (var m in Hunt.Monsters.Monster.Alive)
+                {
+                    if (m == null || m.IsDead || !m.IsBoss) continue;
+                    float d = Vector3.Distance(m.transform.position, cam.position);
+                    if (d < 25f) bossNear = Mathf.Max(bossNear, 1f - d / 25f);
+                }
+            }
+            if (bossNear > 0f && Hunt.Core.GameSettings.ShakeMult > 0f) // 흔들림 끔이면 깜빡임도 끔
+            {
+                float n = Mathf.PerlinNoise(Time.time * (9f + bossNear * 14f), 7.1f);
+                if (n < 0.18f + bossNear * 0.22f) k *= 0.15f + n; // 툭 꺼질 듯
+            }
+            spot.intensity = 2.6f * k;
         }
+
+        float bossCheck, bossNear;
     }
 }
