@@ -137,6 +137,7 @@ namespace Hunt.Player
             Achievements.Add("crates20");
             p.RunCrates++;
             SFX.PlayAt(SFX.Rack, transform.position, 0.8f);
+            if (p.Controller != null) p.Controller.AddPunch(-2.5f, 0f); // 몸을 숙여 뚜껑을 젖힌다
             SFX.PlayPitched(SFX.LevelUp, 0.3f, 1.1f);
             Vector3 c = transform.position;
             // 앞쪽(플레이어 쪽)으로 쏟아진다
