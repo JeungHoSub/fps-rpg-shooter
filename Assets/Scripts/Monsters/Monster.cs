@@ -449,6 +449,28 @@ namespace Hunt.Monsters
         }
 
         /// <summary>폭발/지속피해/연쇄 등 부위 판정 없는 피해. 처치 시 true.</summary>
+        bool hatGone;
+
+        /// <summary>머리를 맞으면 갓·상투 장식이 총알 방향으로 날아간다 (한 번만).</summary>
+        public void KnockOffHat(Vector3 dir)
+        {
+            if (hatGone || rig == null || rig.Head == null) return;
+            var pieces = new System.Collections.Generic.List<Transform>();
+            foreach (Transform c in rig.Head.GetComponentsInChildren<Transform>(true))
+                if (c != rig.Head && c.name == "Hat") pieces.Add(c);
+            if (pieces.Count == 0) return;
+            hatGone = true;
+            Vector3 center = Vector3.zero;
+            foreach (var t in pieces) center += t.position;
+            center /= pieces.Count;
+            var holder = new GameObject("날아간 갓").transform;
+            holder.SetParent(transform.parent, true);
+            holder.position = center;
+            foreach (var t in pieces) t.SetParent(holder, true);
+            dir.y = 0f;
+            holder.gameObject.AddComponent<HatFly>().Launch(dir.normalized * Random.Range(2.5f, 4f) + Vector3.up * Random.Range(3.5f, 5f));
+        }
+
         /// <summary>폭발 등으로 밀려남: 가까울수록 세게, 무거운 놈(보스·거구)은 덜. strength 0~1.</summary>
         public void Blast(Vector3 from, float strength)
         {

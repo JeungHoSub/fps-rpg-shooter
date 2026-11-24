@@ -591,6 +591,7 @@ namespace Hunt.Player
                                             Color.Lerp(new Color(0.3f, 0.03f, 0.04f), new Color(0.5f, 0.38f, 0.32f), Random.value * 0.4f), Random.Range(0.05f, 0.11f));
                                 }
                             }
+                            if (res.zone == HitZone.Head && (res.killed || Random.value < 0.3f)) part.owner.KnockOffHat(dir); // 갓이 날아간다
                             FX.ImpactFlesh(hit.point, dir, FleshColor(res.zone), res.crit ? 10 : 5);
                             // 뒤쪽 벽·바닥에 피가 튄다 (처치·머리·치명타는 항상, 그 외 가끔 — 너무 많지 않게)
                             if (res.killed || res.zone == HitZone.Head || res.crit || Random.value < 0.25f)
