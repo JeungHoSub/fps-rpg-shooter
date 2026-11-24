@@ -346,6 +346,7 @@ namespace Hunt.Player
                     }
                     else if (Mathf.Abs(fp.x - VillageBuilder.RoadX(fp.z)) < 3f) surf = "stone";
                     SFX.Footstep(surf, sprint ? 0.45f : IsCrouching ? 0.12f : 0.28f);
+                    if (wasInBush) SFX.Play(SFX.Rustle, IsCrouching ? 0.12f : 0.25f, 0.15f); // 덤불 속 걸음은 잎이 스친다
                 }
             }
             else stepTimer = 0f;
