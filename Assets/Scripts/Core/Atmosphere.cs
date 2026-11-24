@@ -89,7 +89,9 @@ namespace Hunt.Core
 
         Light moon;
         ParticleSystem rain, splash;
-        AudioSource rainAudio;
+        AudioSource rainAudio, chaseAudio;
+        float chaseVol, chaseCheck;
+        int chasingNow;
         float baseMoon = 0.22f;
         float nextThunder, flash, thunderDelay = -1f;
         float rainTarget = 0.7f, nextRainShift, nextDistant = 20f;
@@ -142,6 +144,14 @@ namespace Hunt.Core
             rainAudio.spatialBlend = 0f;
             rainAudio.volume = 0.5f;
             rainAudio.Play();
+
+            // ---- 쫓길 때 낮은 울림 (쫓는 망자 수에 따라 커짐) ----
+            chaseAudio = gameObject.AddComponent<AudioSource>();
+            chaseAudio.clip = SFX.ChaseDrone;
+            chaseAudio.loop = true;
+            chaseAudio.spatialBlend = 0f;
+            chaseAudio.volume = 0f;
+            chaseAudio.Play();
 
             nextThunder = Time.time + Random.Range(8f, 18f);
             nextRainShift = Time.time + 20f;
@@ -279,6 +289,20 @@ namespace Hunt.Core
                 moon.color = Color.Lerp(MoonColor, SunColor, Dawn);
             }
             if (rainAudio != null) rainAudio.volume = Mathf.Lerp(0.3f, 0.75f, RainIntensity) * Mathf.Lerp(1f, 0.35f, Dawn) * GameSettings.AmbientVolume; // Esc '빗소리'
+            // 쫓는 망자가 셋 이상이면 낮은 울림이 깔린다 (0.5초마다 센다, 천천히 커지고 잦아듦)
+            if (chaseAudio != null)
+            {
+                if ((chaseCheck -= dt) <= 0f)
+                {
+                    chaseCheck = 0.5f; chasingNow = 0;
+                    if (gm != null && gm.State == GameState.Playing && !Hunt.Monsters.Monster.GlobalRush)
+                        foreach (var cm in Hunt.Monsters.Monster.Alive) if (cm != null && !cm.IsDead && cm.IsAlerted && !cm.IsBoss) chasingNow++;
+                }
+                float want = Mathf.Clamp01((chasingNow - 2) / 4f) * 0.45f * GameSettings.AmbientVolume;
+                chaseVol = Mathf.MoveTowards(chaseVol, want, dt * (want > chaseVol ? 0.25f : 0.12f));
+                chaseAudio.volume = chaseVol;
+            }
+
             // 안개는 날씨에 맞춰 천천히 짙어지거나 걷힌다
             fogNow = Mathf.MoveTowards(fogNow, fogMult, dt * 0.08f);
             // 보스가 살아 있는 동안 안개가 조금 짙어진다 (불길한 징조)

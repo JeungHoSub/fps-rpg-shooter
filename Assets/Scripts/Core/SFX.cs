@@ -607,6 +607,24 @@ namespace Hunt.Core
             return Clip("sob", d);
         });
 
+        /// <summary>쫓길 때 깔리는 낮은 울림 (4초 반복): 두 저음이 맞물려 일렁이고, 가끔 쇳소리 같은 높은 음.</summary>
+        public static AudioClip ChaseDrone => Get("chasedrone", () =>
+        {
+            const float len = 4f;
+            int n = (int)(Rate * len);
+            var d = new float[n];
+            for (int i = 0; i < n; i++)
+            {
+                float t = (float)i / Rate;
+                // 반복 이음매가 매끄럽게: 4초에 딱 맞는 주파수 (정수 × 0.25Hz)
+                float a = Mathf.Sin(2f * Mathf.PI * 55f * t) + 0.8f * Mathf.Sin(2f * Mathf.PI * 58.25f * t);
+                float trem = 0.75f + 0.25f * Mathf.Sin(2f * Mathf.PI * 1f * t);           // 두근두근
+                float hi = 0.12f * Mathf.Sin(2f * Mathf.PI * 466.5f * t) * (0.5f + 0.5f * Mathf.Sin(2f * Mathf.PI * 0.25f * t));
+                d[i] = (a * 0.35f * trem + hi) * 0.5f;
+            }
+            return Clip("chasedrone", d);
+        });
+
         /// <summary>까마귀 '까악' 두 번 (거친 톱니파 + 떨림).</summary>
         public static AudioClip Caw => Get("caw", () =>
         {
