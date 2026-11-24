@@ -31,7 +31,7 @@ namespace Hunt.Player
             {
                 case GadgetType.Grenade: return "던지면 2.5초 뒤 터진다 (반경 6m)";
                 case GadgetType.Mine: return "발밑에 묻는다. 망자가 밟으면 터진다";
-                case GadgetType.Molotov: return "던지면 깨져 7초쯤 불바다 (반경 3m, 비가 세면 빨리 꺼짐) — 길목을 막는다";
+                case GadgetType.Molotov: return "깨지면 7초쯤 불바다 (3m, 비에 빨리 꺼짐) · 덤불도 태운다";
                 default: return "30초 동안 가까운 망자를 쏜다. 총성이 망자를 끌어들인다";
             }
         }
