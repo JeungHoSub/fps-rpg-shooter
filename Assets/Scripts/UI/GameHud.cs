@@ -102,6 +102,25 @@ namespace Hunt.UI
         /// <summary>망자들이 모두 몰려오기 시작한 시각 (붉은 가장자리 한 번).</summary>
         public static float RushAt = -100f;
 
+        // ---- 혼잣말 (자막만): 주인공이 중얼거린다 ----
+        static string mutter;
+        static float mutterAt = -100f;
+
+        public static void Mutter(string text) { mutter = text; mutterAt = Time.unscaledTime; }
+
+        void DrawMutter()
+        {
+            float age = Time.unscaledTime - mutterAt;
+            if (mutter == null || age > 3.6f) return;
+            float a = Mathf.Clamp01(age * 4f) * Mathf.Clamp01((3.6f - age) / 0.6f);
+            float keep = UIKit.Alpha;
+            UIKit.Alpha = keep * a;
+            UIKit.Text(new Rect(0, H * 0.66f, W, 30), "“" + mutter + "”", 19, new Color(0.88f, 0.85f, 0.78f), TextAnchor.MiddleCenter, serif: true);
+            UIKit.Alpha = keep;
+        }
+
+        bool lowHpMuttered;
+
         /// <summary>마지막으로 단계가 오른 시각 (금빛 연출).</summary>
         public static float LevelUpAt = -100f;
 
@@ -187,6 +206,14 @@ namespace Hunt.UI
             }
             if (p.HurtFlash > 0f) UIKit.Vignette(W, H, new Color(0.8f, 0f, 0f, p.HurtFlash * 2.5f));
             DrawScreenBlood(dt);
+            DrawMutter();
+            // 생명이 처음 25% 아래로 떨어지면 한마디 (밤마다 한 번)
+            if (gm.State == GameState.Playing && p.Hp / p.MaxHp < 0.25f && !lowHpMuttered)
+            {
+                lowHpMuttered = true;
+                string[] lines = { "피가… 너무 많이 난다", "여기서 쓰러지면 안 돼", "키트… 키트가 있었지(X)", "숨이 넘어갈 것 같다" };
+                Mutter(lines[Random.Range(0, lines.Length)]);
+            }
             float rushAge = Time.unscaledTime - RushAt;
             if (rushAge < 1.4f) UIKit.Vignette(W, H, new Color(0.6f, 0f, 0f, 0.55f * (1f - rushAge / 1.4f) * (0.7f + 0.3f * Mathf.Sin(rushAge * 18f))));
             DrawLevelUp(p);
@@ -873,6 +900,9 @@ namespace Hunt.UI
                 p.BestStreak = 0;
                 p.BountyThisNight = false;
                 p.NightStartDamage = p.DamageTaken;
+                lowHpMuttered = false;
+                string[] nightLines = { "또 밤이 왔다", "비가 그치질 않는구나", "오늘 밤만 넘기자", "고분 쪽에서 또 소리가 난다" };
+                Mutter(nightLines[Random.Range(0, nightLines.Length)]);
                 dawnShown = -100f;
                 nightBanner = Time.unscaledTime; // 밤이 시작될 때 큰 제목
             }
@@ -894,6 +924,8 @@ namespace Hunt.UI
                     SupplyCrate.PlacedThisNight > 0 ? $"연 보급 상자  <b>{SupplyCrate.OpenedThisNight} / {SupplyCrate.PlacedThisNight}</b>" : null,
                 };
                 dawnShown = Time.unscaledTime;
+                string[] dawnLines2 = { "살았다…", "날이 밝는다", "서낭당에서 숨 좀 돌리자" };
+                Mutter(dawnLines2[Random.Range(0, dawnLines2.Length)]);
             }
             nightLastState = gm.State;
         }
@@ -1050,6 +1082,7 @@ namespace Hunt.UI
                 // 보스 등장: 화면 가운데 큰 제목 + 흔들림
                 lastBoss = boss;
                 bossIntro = Time.unscaledTime;
+                Mutter(finalBoss ? "저게… 할아버지가 말한 대감인가" : "저놈이 이 밤의 우두머리다");
                 // 징은 단계가 바뀔 때(WaveManager) 이미 울린다 — 여기선 흔들림만
                 if (gm != null && gm.Player != null) gm.Player.Controller.AddShake(finalBoss ? 3f : 1.5f);
             }
