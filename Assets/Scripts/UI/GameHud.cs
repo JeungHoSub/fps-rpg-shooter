@@ -396,8 +396,43 @@ namespace Hunt.UI
             var wp = p.Weapons;
             var w = wp.Current;
             float right = W - 262;
+            // 무기를 바꾸면 카드 내용이 아래에서 살짝 올라오며 바뀐다
+            object cur = wp.Mode == PlayerWeapons.Hand.Gun ? (object)w : wp.Mode;
+            if (!ReferenceEquals(cur, lastCardItem) && !(cur is PlayerWeapons.Hand h0 && lastCardItem is PlayerWeapons.Hand h1 && h0 == h1))
+            {
+                lastCardItem = cur;
+                cardAppear = 0f;
+            }
+            if (UIKit.IsRepaint) cardAppear = Mathf.MoveTowards(cardAppear, 1f, Time.unscaledDeltaTime * 6f);
+            // 쏠 때마다 탄 숫자가 톡 튄다
+            if (w != null && wp.Mode == PlayerWeapons.Hand.Gun)
+            {
+                if (w.ammoInMag < lastAmmo && ReferenceEquals(w, lastAmmoWeapon)) ammoPunch = 1f;
+                lastAmmo = w.ammoInMag;
+                lastAmmoWeapon = w;
+            }
+            if (UIKit.IsRepaint) ammoPunch = Mathf.MoveTowards(ammoPunch, 0f, Time.unscaledDeltaTime * 9f);
+            float ce = UIKit.EaseOut(cardAppear);
             var card = new Rect(right - 440, H - 214, 440, 166);
             UIKit.NineSlice(card, UITheme.Slot, 10, new Color(1, 1, 1, 0.85f));
+            float keepAlpha = UIKit.Alpha;
+            cardBaseAlpha = keepAlpha;
+            UIKit.Alpha = keepAlpha * Mathf.Lerp(0.2f, 1f, ce);
+            card.y += (1f - ce) * 10f;
+            try { DrawWeaponCard(p, wp, w, card); }
+            finally { UIKit.Alpha = keepAlpha; }
+        }
+
+        object lastCardItem;
+        float cardAppear = 1f, ammoPunch;
+        int lastAmmo;
+        object lastAmmoWeapon;
+
+        float cardBaseAlpha = 1f;
+
+        void DrawWeaponCard(PlayerCharacter p, PlayerWeapons wp, WeaponInstance w, Rect card)
+        {
+            float right = W - 262;
             var icon = new Rect(card.x + 14, card.y + 12, 190, 74);
 
             if (wp.Mode == PlayerWeapons.Hand.Melee)
@@ -433,7 +468,7 @@ namespace Hunt.UI
                 Color ac = w.ammoInMag == 0 ? UITheme.BloodBright : low ? UITheme.Warn : UITheme.Bone;
                 string reload = wp.IsReloading ? $"<size=18><color=#{UIKit.Hex(UITheme.Gold)}>{(w.ammoInMag == 0 ? "빈 탄창 교체" : "탄창 교체")}</color></size>   " : "";
                 UIKit.Text(new Rect(card.x + 14, card.y + 66, card.width - 28, 62),
-                    $"{reload}<size=54><b>{w.ammoInMag}</b></size><size=22><color=#{UIKit.Hex(UITheme.BoneDim)}>  /  {w.reserve}</color></size>", 54, ac, TextAnchor.MiddleRight, serif: true);
+                    $"{reload}<size={54 + Mathf.RoundToInt(ammoPunch * 6f)}><b>{w.ammoInMag}</b></size><size=22><color=#{UIKit.Hex(UITheme.BoneDim)}>  /  {w.reserve}</color></size>", 54, ac, TextAnchor.MiddleRight, serif: true);
                 if (wp.IsReloading) UIKit.Bar(new Rect(card.x + 20, card.y + 96, 170, 6), wp.ReloadProgress, UITheme.Gold);
 
                 // 탄알: 탄피 + 탄두 모양 (최대 40발 표시)
@@ -452,6 +487,7 @@ namespace Hunt.UI
                 }
             }
 
+            UIKit.Alpha = cardBaseAlpha; // 슬롯 줄은 전환 효과 없이 그대로
             // ---- 슬롯 5칸: 1·2 주무기  3 권총  4 칼  5 기기 ----
             float sw = 84, sh = 40, gap = 6;
             float sx0 = right - 5 * (sw + gap) + gap;
@@ -574,6 +610,7 @@ namespace Hunt.UI
                 float fov = cam != null ? cam.fieldOfView : 75f;
                 float gap = Mathf.Tan(p.Weapons.CurrentSpread * Mathf.Deg2Rad) / Mathf.Tan(fov * 0.5f * Mathf.Deg2Rad) * (H / 2f);
                 gap = Mathf.Clamp(gap, 4f, 300f);
+                gap = UIKit.Smooth("hud.crossgap", gap, 22f); // 쏘거나 조준할 때 조준선이 툭 튀지 않고 벌어졌다 모인다
                 Color c = new Color(0.95f, 0.88f, 0.75f, alpha);
                 Color sh = new Color(0, 0, 0, alpha * 0.6f);
                 float len = 12;
