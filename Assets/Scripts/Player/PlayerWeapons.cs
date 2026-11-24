@@ -432,6 +432,7 @@ namespace Hunt.Player
                 SFX.Play(SFX.PlayerHurt, 0.35f, 0.1f); // 둔탁한 '퍽'
                 player.Controller.AddShake(0.9f);
                 player.Controller.AddPunch(-1.2f, 0f);
+                if (GameManager.Instance != null) GameManager.Instance.HitStop(0.06f); // 발에 닿는 순간 '턱' 멈칫
                 HitMarker = 0.12f;
                 if (done.Count >= 2) HUD.Notify($"발차기 — {done.Count}마리를 밀쳐냈다", new Color(1f, 0.8f, 0.55f));
             }
