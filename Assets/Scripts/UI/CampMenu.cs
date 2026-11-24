@@ -441,21 +441,39 @@ namespace Hunt.UI
                 maxMag = Mathf.Max(maxMag, cd.magazine);
                 maxW = Mathf.Max(maxW, cd.weight);
             }
-            void StatBar(string label, float t, string val, Color col)
+            // 지금 손에 든 총과 비교: 막대 위 가는 금(지금 총 값) — 더 높으면 막대 끝이 밝게
+            var curW = p.Weapons.Current;
+            var cur = curW != null && curW.data != sel ? curW.data : null;
+            void StatBar(string label, float t, string val, Color col, float cmp = -1f, bool lowerBetter = false)
             {
                 UIKit.Text(new Rect(right.x + 24, y, 90, 22), label, 15, UITheme.BoneDim, serif: true);
                 var br = new Rect(right.x + 112, y + 7, right.width - 112 - 110, 8);
                 UIKit.Fill(br, new Color(0f, 0f, 0f, 0.6f));
                 UIKit.Fill(new Rect(br.x, br.y, br.width * Mathf.Clamp01(t), br.height), col);
+                if (cmp >= 0f)
+                {
+                    float cx = br.x + br.width * Mathf.Clamp01(cmp);
+                    UIKit.Fill(new Rect(cx - 1f, br.y - 4, 2f, br.height + 8), new Color(0.95f, 0.92f, 0.85f, 0.9f));
+                    bool better = lowerBetter ? t < cmp - 0.01f : t > cmp + 0.01f;
+                    bool worse = lowerBetter ? t > cmp + 0.01f : t < cmp - 0.01f;
+                    if (better || worse)
+                        UIKit.Text(new Rect(br.xMax + 62, y, 40, 22), better ? "▲" : "▼", 13, better ? UITheme.Good : UITheme.BloodBright, TextAnchor.MiddleLeft, bold: true);
+                }
                 UIKit.Text(new Rect(br.xMax + 8, y, 100, 22), val, 15, UITheme.Bone, TextAnchor.MiddleLeft, bold: true);
                 y += 26;
             }
             Color barC = new Color(0.86f, 0.82f, 0.72f);
-            StatBar("한 발 위력", Mathf.Sqrt(dmg * Mathf.Max(1, sel.pellets) / maxHit), $"{dmg:0}{(sel.pellets > 1 ? " ×" + sel.pellets : "")}", barC);
-            StatBar("연사", sel.rpm / maxRpm, $"{sel.rpm:0}", barC);
-            StatBar("관통", Mathf.Clamp01(sel.penetration), $"{sel.penetration * 100:0}%", barC);
-            StatBar("탄창", Mathf.Sqrt(sel.magazine / maxMag), $"{sel.magazine}", barC);
-            StatBar("무게", sel.weight / maxW, $"{sel.weight:0.0}", new Color(0.6f, 0.58f, 0.54f));
+            StatBar("한 발 위력", Mathf.Sqrt(dmg * Mathf.Max(1, sel.pellets) / maxHit), $"{dmg:0}{(sel.pellets > 1 ? " ×" + sel.pellets : "")}", barC,
+                cur != null ? Mathf.Sqrt(curW.Damage * Mathf.Max(1, cur.pellets) / maxHit) : -1f);
+            StatBar("연사", sel.rpm / maxRpm, $"{sel.rpm:0}", barC, cur != null ? cur.rpm / maxRpm : -1f);
+            StatBar("관통", Mathf.Clamp01(sel.penetration), $"{sel.penetration * 100:0}%", barC, cur != null ? Mathf.Clamp01(cur.penetration) : -1f);
+            StatBar("탄창", Mathf.Sqrt(sel.magazine / maxMag), $"{sel.magazine}", barC, cur != null ? Mathf.Sqrt(cur.magazine / maxMag) : -1f);
+            StatBar("무게", sel.weight / maxW, $"{sel.weight:0.0}", new Color(0.6f, 0.58f, 0.54f), cur != null ? cur.weight / maxW : -1f, lowerBetter: true);
+            if (cur != null)
+            {
+                UIKit.Text(new Rect(right.x + 24, y, right.width - 48, 18), $"가는 금 = 지금 든 {cur.displayName}", 12, UITheme.Ash, serif: true);
+                y += 20;
+            }
             y += 4;
             string extra = (sel.explosive ? $"폭발 반경 {sel.blastRadius:0.0}m   " : "") + (sel.maxRange < 100f ? $"사거리 {sel.maxRange:0}m" : "");
             if (extra.Length > 0) { UIKit.Text(new Rect(right.x + 24, y, right.width - 48, 20), extra, 14, UITheme.BoneDim); y += 22; }
