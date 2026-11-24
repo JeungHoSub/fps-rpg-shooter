@@ -228,7 +228,54 @@ namespace Hunt.Core
 
         public static void PlayAt(AudioClip clip, Vector3 pos, float volume = 1f)
         {
-            if (clip != null) AudioSource.PlayClipAtPoint(clip, pos, volume);
+            if (clip == null) return;
+            var a = Grab(volume);
+            if (a == null) return;
+            a.transform.position = pos;
+            a.clip = clip; a.volume = volume; a.pitch = 1f;
+            a.minDistance = 1f; a.maxDistance = 500f; // PlayClipAtPoint와 같은 퍼짐
+            a.Play();
+        }
+
+        // ---- 3D 소리 묶음 (성능): 소리마다 오브젝트를 만들고 지우는 대신 22개를 돌려 쓴다 ----
+        const int PoolSize = 22;
+        static AudioSource[] pool;
+        static GameObject poolRoot;
+
+        /// <summary>쉬는 소리 칸을 하나 준다. 모두 울리는 중이면 가장 작게(거의 끝나 가는) 울리는 칸을 끊고 준다. 새 소리가 그보다 작으면 null.</summary>
+        static AudioSource Grab(float volume)
+        {
+            if (poolRoot == null)
+            {
+                poolRoot = new GameObject("SFX_Pool");
+                UnityEngine.Object.DontDestroyOnLoad(poolRoot);
+                pool = new AudioSource[PoolSize];
+                for (int i = 0; i < PoolSize; i++)
+                {
+                    var go = new GameObject("SFX3D");
+                    go.transform.SetParent(poolRoot.transform, false);
+                    var s = go.AddComponent<AudioSource>();
+                    s.playOnAwake = false;
+                    s.spatialBlend = 1f;
+                    s.rolloffMode = AudioRolloffMode.Logarithmic;
+                    s.dopplerLevel = 0f;
+                    pool[i] = s;
+                }
+            }
+            AudioSource weakest = null;
+            float weakVal = float.MaxValue;
+            for (int i = 0; i < PoolSize; i++)
+            {
+                var s = pool[i];
+                if (s == null) continue;
+                if (!s.isPlaying) return s;
+                float left = s.clip != null && s.clip.length > 0f ? 1f - s.time / s.clip.length : 0f;
+                float v = s.volume * (0.3f + 0.7f * left);
+                if (v < weakVal) { weakVal = v; weakest = s; }
+            }
+            if (weakest == null || weakVal > volume) return null;
+            weakest.Stop();
+            return weakest;
         }
 
         /// <summary>괴물 피격음은 너무 잦지 않게 제한.</summary>
@@ -397,19 +444,15 @@ namespace Hunt.Core
         public static void PlayAt3D(AudioClip clip, Vector3 pos, float volume, float pitch)
         {
             if (clip == null) return;
-            var go = new GameObject("SFX3D");
-            go.transform.position = pos;
-            var a = go.AddComponent<AudioSource>();
+            var a = Grab(volume);
+            if (a == null) return;
+            a.transform.position = pos;
             a.clip = clip;
-            a.spatialBlend = 1f;
             a.volume = volume;
             a.pitch = pitch;
             a.minDistance = 2.5f;
             a.maxDistance = 40f;
-            a.rolloffMode = AudioRolloffMode.Logarithmic;
-            a.dopplerLevel = 0f;
             a.Play();
-            UnityEngine.Object.Destroy(go, clip.length / Mathf.Max(0.3f, pitch) + 0.1f);
         }
         public static AudioClip PlayerHurt => Get("phurt", () => MakeThud());
         public static AudioClip UiHover => Get("uihover", () => MakeTone(0.035f, 900f, 1100f, 0.18f));
