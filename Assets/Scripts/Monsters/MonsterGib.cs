@@ -7,7 +7,7 @@ namespace Hunt.Monsters
     public class MonsterGib : MonoBehaviour
     {
         Vector3 velocity, spin, baseScale;
-        float life, halfHeight;
+        float life, halfHeight, floorY; // 바닥 높이 (언덕진 땅: 처음에 한 번 잰다)
 
         /// <summary>살점 조각 하나 (머리·급소 처치 때 튀어 오른다).</summary>
         public static void Chunk(Transform parent, Vector3 pos, Vector3 vel, Color col, float size)
@@ -29,6 +29,7 @@ namespace Hunt.Monsters
             gib.life = Random.Range(2.5f, 4f);
             gib.baseScale = go.transform.localScale;
             gib.halfHeight = size * 0.35f;
+            gib.floorY = FX.FloorUnder(pos).y;
         }
 
         public static void Shatter(Monster m, Vector3 hitDir)
@@ -38,6 +39,7 @@ namespace Hunt.Monsters
             if (hitDir.sqrMagnitude < 0.01f) hitDir = Random.insideUnitSphere;
             hitDir.Normalize();
             float force = m.IsBoss ? 3f : 5f;
+            float fy = FX.FloorUnder(m.transform.position).y;
 
             var parts = m.GetComponentsInChildren<Renderer>();
             foreach (var r in parts)
@@ -56,6 +58,7 @@ namespace Hunt.Monsters
                 gib.life = Random.Range(1.8f, 2.6f);
                 gib.baseScale = go.transform.localScale;
                 gib.halfHeight = go.transform.lossyScale.y * 0.4f;
+                gib.floorY = fy;
             }
         }
 
@@ -67,9 +70,9 @@ namespace Hunt.Monsters
 
             velocity += Physics.gravity * dt;
             var p = transform.position + velocity * dt;
-            if (p.y < halfHeight)
+            if (p.y < floorY + halfHeight)
             {
-                p.y = halfHeight;
+                p.y = floorY + halfHeight;
                 velocity = new Vector3(velocity.x * 0.5f, -velocity.y * 0.25f, velocity.z * 0.5f);
                 spin *= 0.6f;
             }
