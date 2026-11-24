@@ -82,19 +82,13 @@ namespace Hunt.UI
 
             // 피 표현 · 조준점 모양 (한 줄에)
             UIKit.Text(new Rect(r.x + 60, y + 4, 160, 30), "보기", 18, UITheme.Bone, serif: true);
-            float cw3 = (r.width - 340 - 24) / 5f;
+            float cw3 = (r.width - 340 - 12) / 3f;
             if (UIKit.Button(new Rect(r.x + 220, y, cw3, 38), GameSettings.Gore ? "피 켜짐" : "피 꺼짐", 15, GameSettings.Gore))
                 GameSettings.Gore = !GameSettings.Gore;
             if (UIKit.Button(new Rect(r.x + 226 + cw3, y, cw3, 38), "조준 " + GameSettings.CrosshairName(GameSettings.Crosshair), 15, false))
                 GameSettings.Crosshair = (GameSettings.Crosshair + 1) % 3;
             if (UIKit.Button(new Rect(r.x + 232 + cw3 * 2f, y, cw3, 38), "흔들림 " + GameSettings.ShakeName(GameSettings.Shake), 13, false))
                 GameSettings.Shake = (GameSettings.Shake + 1) % 3;
-            // 앉기: 누르는 동안 / 한 번 눌러 전환 (덤불에 오래 숨을 때 편하게)
-            if (UIKit.Button(new Rect(r.x + 238 + cw3 * 3f, y, cw3, 38), GameSettings.CrouchToggle ? "앉기 전환" : "앉기 누름", 13, GameSettings.CrouchToggle))
-                GameSettings.CrouchToggle = !GameSettings.CrouchToggle;
-            // 망자 머리 위 표시 (! ? …) 켜고 끄기
-            if (UIKit.Button(new Rect(r.x + 244 + cw3 * 4f, y, cw3, 38), GameSettings.Marks ? "표시 켬" : "표시 끔", 13, GameSettings.Marks))
-                GameSettings.Marks = !GameSettings.Marks;
             y += 48;
 
             // 난이도 (새로 나오는 망자부터 바뀐다)
@@ -123,10 +117,22 @@ namespace Hunt.UI
 
             // 터치 조작 설정
             float tw = (r.width - 120 - 12) / 3f;
-            if (UIKit.Button(new Rect(r.x + 60, y, tw, 52), "자동 사격", 16, GameSettings.AutoFire, true, GameSettings.AutoFire ? "켜짐" : "꺼짐"))
-                GameSettings.AutoFire = !GameSettings.AutoFire;
-            if (UIKit.Button(new Rect(r.x + 66 + tw, y, tw, 52), "조준 보조", 16, GameSettings.AimAssist, true, GameSettings.AimAssist ? "켜짐" : "꺼짐"))
-                GameSettings.AimAssist = !GameSettings.AimAssist;
+            if (GameInput.Mobile)
+            {
+                // 터치 조작: 자동 사격 · 조준 보조
+                if (UIKit.Button(new Rect(r.x + 60, y, tw, 52), "자동 사격", 16, GameSettings.AutoFire, true, GameSettings.AutoFire ? "켜짐" : "꺼짐"))
+                    GameSettings.AutoFire = !GameSettings.AutoFire;
+                if (UIKit.Button(new Rect(r.x + 66 + tw, y, tw, 52), "조준 보조", 16, GameSettings.AimAssist, true, GameSettings.AimAssist ? "켜짐" : "꺼짐"))
+                    GameSettings.AimAssist = !GameSettings.AimAssist;
+            }
+            else
+            {
+                // PC: 앉기 방식 (누르는 동안 / 한 번 눌러 전환) · 망자 머리 위 표시 (! ? …)
+                if (UIKit.Button(new Rect(r.x + 60, y, tw, 52), "앉기 (Ctrl)", 16, GameSettings.CrouchToggle, true, GameSettings.CrouchToggle ? "한 번 눌러 전환" : "누르는 동안"))
+                    GameSettings.CrouchToggle = !GameSettings.CrouchToggle;
+                if (UIKit.Button(new Rect(r.x + 66 + tw, y, tw, 52), "머리 위 표시", 16, GameSettings.Marks, true, GameSettings.Marks ? "! ? … 켜짐" : "꺼짐"))
+                    GameSettings.Marks = !GameSettings.Marks;
+            }
             if (!Application.isMobilePlatform &&
                 UIKit.Button(new Rect(r.x + 72 + tw * 2, y, tw, 52), "터치 미리보기", 16, GameSettings.ForceMobileControls, true, GameSettings.ForceMobileControls ? "켜짐" : "꺼짐"))
                 GameSettings.ForceMobileControls = !GameSettings.ForceMobileControls;
