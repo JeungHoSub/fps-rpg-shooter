@@ -12,6 +12,7 @@ namespace Hunt.Core
         public const float Range = 3f;
         public static SirenTower Instance { get; private set; }
         int usedWave = -1;
+        bool told;
 
         void OnEnable() { Instance = this; }
         void OnDisable() { if (Instance == this) Instance = null; }
@@ -48,6 +49,13 @@ namespace Hunt.Core
                 if (beacon != null) beacon.enabled = beaconT > 0f && Mathf.Repeat(Time.time, 0.8f) < 0.4f;
             }
             var gm = GameManager.Instance;
+            // 처음 탑 가까이(14m) 오면 한 번 알려 준다
+            if (!told && gm != null && gm.State == GameState.Playing && gm.Player != null
+                && (gm.Player.transform.position - transform.position).sqrMagnitude < 14f * 14f)
+            {
+                told = true;
+                HUD.Notify("확성기 탑 — 밑에서 E를 누르면 사이렌이 울려 망자들을 이쪽으로 꾄다 (밤마다 한 번)", new Color(1f, 0.75f, 0.45f));
+            }
             if (gm == null || !gm.AcceptsGameplayInput || !GameInput.PickupDown) return;
             if (!ReferenceEquals(NearPlayer(), this)) return;
             if (Hunt.Player.Pickup.AnyNearPlayer()) return; // 보급품 줍기가 먼저
