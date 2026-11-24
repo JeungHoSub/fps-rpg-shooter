@@ -220,6 +220,15 @@ namespace Hunt.Player
 
             if (Stats.Has(Trait.Bloodlust)) Heal(4f);
 
+            // 연속 처치 보상: 5연속마다 엽전 보너스, 10연속마다 치유 부적이 발밑에 떨어진다 (마구 쏘는 맛)
+            if (KillStreak >= 5 && KillStreak % 5 == 0)
+            {
+                int bonus = 4 * KillStreak;
+                AddGold(bonus);
+                GameHud.OnPickup(HudIcons.Icon.Flame, new Color(1f, 0.8f, 0.4f), $"{KillStreak}연속 처치  엽전 +{bonus}");
+                if (KillStreak % 10 == 0) Pickup.Spawn(PickupKind.Rune, transform.position + transform.forward * 1.2f, m.transform.parent);
+            }
+
             // 보급품 드롭: 치료 키트 · 스태미너 회복제 · 탄창
             Pickup.RollDrops(m);
 
