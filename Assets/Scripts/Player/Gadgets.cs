@@ -299,6 +299,11 @@ namespace Hunt.Player
             {
                 tick = 0.4f;
                 float r2 = radius * radius;
+                foreach (var h in Physics.OverlapSphere(transform.position, radius, ~(1 << 2), QueryTriggerInteraction.Ignore))
+                {
+                    var prop = h.GetComponentInParent<ExplosiveProp>();
+                    if (prop != null) prop.Hit(dps * 0.4f, true); // 불바다 옆 가스통도 달아오른다
+                }
                 foreach (var m in Monster.Alive.ToArray())
                 {
                     if (m == null || m.IsDead) continue;
