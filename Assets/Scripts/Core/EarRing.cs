@@ -51,6 +51,8 @@ namespace Hunt.Core
             var p = gm != null ? gm.Player : null;
             float low = 0f;
             if (p != null && !p.IsDead && p.MaxHp > 0f) low = Mathf.Clamp01((0.2f - p.Hp / p.MaxHp) / 0.2f) * 0.55f;
+            // 숨을 참으면 바깥 소리가 살짝 멀어진다 (심장 소리만 또렷)
+            if (p != null && !p.IsDead && p.Controller != null && p.Controller.HoldingBreath) low = Mathf.Max(low, 0.35f);
             lowHp = Mathf.MoveTowards(lowHp, low, Time.deltaTime * 0.8f);
             float k = Mathf.Max(amount, lowHp);
             // 22000Hz(평소) ↔ 700Hz(먹먹)
