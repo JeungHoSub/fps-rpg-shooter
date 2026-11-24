@@ -3,10 +3,6 @@ using UnityEngine;
 
 namespace Hunt.Core
 {
-    /// <summary>
-    /// 숨을 곳 (덤불). 앉아서 덤불 안에 있으면 망자가 가까이 와야 알아챈다 (Monster.Sense).
-    /// VillageBuilder가 덤불을 놓을 때 등록. 마을을 다시 지으면 Clear.
-    /// </summary>
     /// <summary>덤불 흔들림: 0.9초 동안 잦아드는 좌우 기울임.</summary>
     public class BushShake : MonoBehaviour
     {
@@ -30,6 +26,10 @@ namespace Hunt.Core
         }
     }
 
+    /// <summary>
+    /// 숨을 곳 (덤불). 앉아서 덤불 안에 있으면 망자가 가까이 와야 알아챈다 (Monster.Sense).
+    /// VillageBuilder가 덤불을 놓을 때 등록. 마을을 다시 지으면 Clear.
+    /// </summary>
     public static class Hiding
     {
         static readonly List<Vector4> spots = new List<Vector4>(); // xyz = 중심, w = 반지름
