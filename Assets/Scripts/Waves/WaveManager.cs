@@ -96,6 +96,8 @@ namespace Hunt.Waves
         float spawnTimer, stragglerTime, rushTimer, stageClock;
         bool defenseBossSent;
         bool bossSpawned;
+        /// <summary>다음 '대감의 그림자'의 성질 (1~4). 밤이 끝날 때 새로 정해 서낭당에서 미리 보여 준다.</summary>
+        public int NextBossAffix { get; private set; } = Random.Range(1, 5);
         float drumClock;
         int drumStep;
         Vector3 bossLastPos;
@@ -368,7 +370,7 @@ namespace Hunt.Waves
                     bossSpawned = true;
                     m.Revealed = true; // 보스 위치는 항상 화면에 표시
                     m.Alert(999f);
-                    if (!IsBossWave) m.SetBossAffix(Random.Range(1, 5)); // 매 밤 보스는 성질이 하나씩 다르다
+                    if (!IsBossWave) m.SetBossAffix(NextBossAffix); // 매 밤 보스는 성질이 하나씩 다르다 (서낭당에서 미리 알려 준 것)
                     if (IsBossWave)
                     {
                         // 최종 보스 대감: 몸에서 붉은 기운이 일렁인다 (멀리서도 '저게 대감'이라고 알게)
@@ -503,6 +505,7 @@ namespace Hunt.Waves
             Monster.Alive.Clear();
             Vector3 bossAt = bossLastPos;
             Boss = null;
+            NextBossAffix = Random.Range(1, 5); // 다음 밤 보스 성질
             if (bossKill) StartCoroutine(BossFallThenDawn(gm, bossAt));
             else gm.OnWaveCleared();
         }

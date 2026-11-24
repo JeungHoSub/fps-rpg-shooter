@@ -92,7 +92,8 @@ namespace Hunt.UI
             var nextRule = Hunt.Waves.WaveManager.RuleFor(nextN);
             bool nextBoss = nextN % Hunt.Waves.WaveManager.BossEvery == 0;
             UIKit.Text(new Rect(win.x + 30, by + 28, 520, 30),
-                $"다음 밤: {GameHud.NightName(nextN)}  ·  {Hunt.Waves.WaveManager.RuleName(nextRule)}" + (nextBoss ? $"  ·  <color=#{UIKit.Hex(UITheme.BloodBright)}>대감의 밤</color>" : ""),
+                $"다음 밤: {GameHud.NightName(nextN)}  ·  {Hunt.Waves.WaveManager.RuleName(nextRule)}" + (nextBoss ? $"  ·  <color=#{UIKit.Hex(UITheme.BloodBright)}>대감의 밤</color>"
+                    : $"  ·  보스 <color=#{UIKit.Hex(UITheme.BloodBright)}>{Hunt.Monsters.Monster.AffixName(gm.Waves.NextBossAffix)}</color> 그림자 ({Hunt.Monsters.Monster.AffixDesc(gm.Waves.NextBossAffix)})"),
                 15, UITheme.BoneDim, serif: true);
             UIKit.Text(new Rect(win.xMax - 430, by, 400, 60), $"엽전 <color=#{UIKit.Hex(UITheme.GoldBright)}>{Mathf.RoundToInt(UIKit.Smooth("camp.gold", p.Gold, 9f))}</color>   ·   청심환 ×{p.Infection.Antidotes}", 18, UITheme.BoneDim, TextAnchor.MiddleRight, serif: true);
             UIKit.Alpha = 1f;
