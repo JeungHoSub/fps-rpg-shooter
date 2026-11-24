@@ -17,7 +17,8 @@ namespace Hunt.UI
         enum Tab { Stats, Armory, Arms, Gear, Research }
         Tab tab = Tab.Stats;
         int weaponIdx;
-        Vector2 invScroll, historyScroll;
+        Vector2 invScroll, historyScroll, notesScroll;
+        bool showNotes;
         StatType? hoverStat;
         readonly RadarChart radar = new RadarChart();
         float appear, tabAppear = 1f;
@@ -681,9 +682,30 @@ namespace Hunt.UI
                 $"전리품 ×{evo.RewardMultiplier:0.0}    부품 행운 +{evo.PartLuck * 100:0}%";
             UIKit.Text(new Rect(left.x + 30, y, left.width - 60, 110), misc, 16, UITheme.BoneDim, TextAnchor.UpperLeft, wrap: true);
 
-            // 기록
-            UIKit.Text(new Rect(right.x, right.y + 16, right.width, 30), "지난 밤들의 기록", 22, UITheme.Gold, TextAnchor.MiddleCenter, serif: true, bold: true);
-            var view = new Rect(right.x + 20, right.y + 60, right.width - 30, right.height - 76);
+            // 오른쪽: 기록 / 찢어진 쪽지 (단추로 바꿔 본다)
+            int notesRead = 0;
+            try { notesRead = Mathf.Clamp(PlayerPrefs.GetInt("hunt.lore.read", 0), 0, GameText.LoreNotes.Length); } catch { }
+            float hb = (right.width - 60) / 2f;
+            if (UIKit.Button(new Rect(right.x + 20, right.y + 14, hb, 38), "지난 밤들의 기록", 16, !showNotes)) showNotes = false;
+            if (UIKit.Button(new Rect(right.x + 40 + hb, right.y + 14, hb, 38), $"찢어진 쪽지  {notesRead} / {GameText.LoreNotes.Length}", 16, showNotes)) showNotes = true;
+            var view = new Rect(right.x + 20, right.y + 64, right.width - 30, right.height - 80);
+            if (showNotes)
+            {
+                float rowH = 92f;
+                var inn = new Rect(0, 0, view.width - 18, Mathf.Max(view.height, notesRead * rowH));
+                notesScroll = GUI.BeginScrollView(view, notesScroll, inn, GUIStyle.none, GUI.skin.verticalScrollbar);
+                if (notesRead == 0)
+                    UIKit.Text(new Rect(0, 20, inn.width, 60), "아직 주운 쪽지가 없다.\n보급 상자를 열면 가끔 나온다.", 16, UITheme.Ash, TextAnchor.MiddleCenter, serif: true, wrap: true);
+                for (int i = 0; i < notesRead; i++)
+                {
+                    var nr = new Rect(0, i * rowH, inn.width - 6, rowH - 8);
+                    UIKit.Tex(nr, UITheme.Paper, new Color(0.9f, 0.84f, 0.7f, 0.9f));
+                    UIKit.Text(new Rect(nr.x + 12, nr.y + 6, 60, 20), $"{i + 1}", 13, new Color(0.4f, 0.12f, 0.08f), serif: true, bold: true, shadow: false);
+                    UIKit.Text(new Rect(nr.x + 36, nr.y + 6, nr.width - 48, nr.height - 12), GameText.LoreNotes[i], 14, new Color(0.12f, 0.1f, 0.08f), TextAnchor.UpperLeft, serif: true, wrap: true, shadow: false);
+                }
+                GUI.EndScrollView();
+                return;
+            }
             var inner = new Rect(0, 0, view.width - 18, Mathf.Max(view.height, evo.history.Count * 30));
             historyScroll = GUI.BeginScrollView(view, historyScroll, inner, GUIStyle.none, GUI.skin.verticalScrollbar);
             if (evo.history.Count == 0)
