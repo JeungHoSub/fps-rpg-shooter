@@ -714,7 +714,7 @@ namespace Hunt.Player
             int pellets = Mathf.Max(1, w.data.pellets);
             float tracerWidth = pellets > 1 ? 0.012f : 0.025f;
 
-            bool anyHit = false, anyWeak = false, anyKill = false;
+            bool anyHit = false, anyWeak = false, anyKill = false, anyArmor = false;
             Vector3 killPos = Vector3.zero, hurtPos = Vector3.zero;
 
             // 유탄·로켓: 날아가서 터지는 탄
@@ -761,6 +761,7 @@ namespace Hunt.Player
                             anyHit = true;
                             hurtPos = hit.point;
                             anyWeak |= res.zone == HitZone.WeakPoint || res.zone == HitZone.Head;
+                            anyArmor |= res.zone == HitZone.Armor;
                             if (res.killed)
                             {
                                 anyKill = true;
@@ -816,6 +817,7 @@ namespace Hunt.Player
             }
 
             if (anyHit) SFX.Play(SFX.HitFor(w.data.weaponClass), pellets > 1 ? 0.8f : 0.6f, 0.08f);
+            if (anyArmor) { SFX.PlayPitched(SFX.Casing, 0.7f, 0.8f); SFX.PlayPitched(SFX.HitTick, 0.35f, 1.9f); } // 갑옷에 튕기는 '팅'
             if (anyKill)
             {
                 SFX.Play(SFX.KillTick, 0.6f, 0f);
