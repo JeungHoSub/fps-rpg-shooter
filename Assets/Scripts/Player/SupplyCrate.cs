@@ -155,6 +155,12 @@ namespace Hunt.Player
                     GameHud.OnPickup(HudIcons.Icon.Grenade, new Color(1f, 0.8f, 0.4f), $"보급 상자에서 수류탄 +1  (지닌 {p.Weapons.GadgetCount[gi]})");
                 }
             }
+            // 가끔 폭죽 (B로 던져 망자를 꾄다)
+            if (Random.value < 0.35f && p.Firecrackers < PlayerCharacter.MaxFirecrackers)
+            {
+                p.Firecrackers++;
+                GameHud.OnPickup(HudIcons.Icon.Flame, new Color(1f, 0.4f, 0.3f), $"보급 상자에서 폭죽 +1  (B로 던진다, 지닌 {p.Firecrackers})");
+            }
             HUD.Notify("보급 상자를 열었다", new Color(1f, 0.85f, 0.5f));
             // 함정: 둘째 밤부터 18% — 상자 주변 땅에서 망자 셋이 기어 나온다 (보급품은 그대로)
             var wm = Hunt.Waves.WaveManager.Instance;
