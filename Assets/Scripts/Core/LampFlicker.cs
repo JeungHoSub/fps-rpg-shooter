@@ -50,8 +50,8 @@ namespace Hunt.Core
             // 보스가 가까우면 마을 불빛이 모두 떨린다 (Flashlight가 0.25초마다 잰 값)
             float bn = Hunt.Player.Flashlight.BossNear;
             if (bn > 0f && GameSettings.ShakeMult > 0f && Mathf.PerlinNoise(seed + t * (7f + bn * 12f), 1.7f) < 0.15f + bn * 0.2f) k *= 0.25f;
-            // 정전: 벼락 뒤 20초 동안 꺼진다 (켜질 때 몇 번 깜빡)
-            if (t > BlackoutFrom && t < BlackoutUntil) k = t > BlackoutUntil - 1.2f && Mathf.PerlinNoise(seed, t * 20f) > 0.5f ? k * 0.6f : 0f;
+            // 정전: 벼락 뒤 20초 동안 전깃불이 꺼진다 (촛불·등잔은 그대로, 켜질 때 몇 번 깜빡)
+            if (!subtle && !pulse && t > BlackoutFrom && t < BlackoutUntil) k = t > BlackoutUntil - 1.2f && Mathf.PerlinNoise(seed, t * 20f) > 0.5f ? k * 0.6f : 0f;
             lt.intensity = baseIntensity * k;
         }
     }
