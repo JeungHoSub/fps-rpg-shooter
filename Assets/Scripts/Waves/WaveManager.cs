@@ -350,6 +350,7 @@ namespace Hunt.Waves
         float hordeAt;
         readonly List<Monster> horde = new List<Monster>();
         float hordeThump;
+        bool packAlerted;
 
         /// <summary>망자 떼가 나오고 45초 뒤: 한 마리도 나를 알아채지 못했으면 '몰래 보냈다' 보상.</summary>
         void JudgeHorde()
@@ -381,7 +382,7 @@ namespace Hunt.Waves
             Vector3 to = alongX ? new Vector3(h * side, 0f, lane + Random.Range(-8f, 8f)) : new Vector3(lane + Random.Range(-8f, 8f), 0f, h * side);
             // 내가 나올 자리 가까이(16m) 있으면 반대쪽에서 나오게 (코앞에서 갑자기 생기지 않게)
             if (player != null && (player.transform.position - from).sqrMagnitude < 16f * 16f) { var tmp = from; from = to; to = tmp; }
-            horde.Clear(); hordeJudged = false;
+            horde.Clear(); hordeJudged = false; packAlerted = false;
             int room = QualityManager.MaxAliveMonsters + 1 - Monster.Alive.Count; // 내장 그래픽 '하'(10마리)를 크게 넘지 않게
             int count = Mathf.Clamp(Mathf.Min(4 + Wave / 3, room), 2, 6);
             for (int i = 0; i < count; i++)
@@ -423,6 +424,20 @@ namespace Hunt.Waves
                 int nearH = 0;
                 foreach (var hm in horde) if (hm != null && !hm.IsDead && (hm.transform.position - player.transform.position).sqrMagnitude < 14f * 14f) nearH++;
                 if (nearH >= 2 && player.Controller != null) player.Controller.AddShake(0.12f * nearH);
+                // 떼는 함께 움직인다: 한 마리가 나를 보면 15m 안의 떼 전부가 알아챈다
+                if (!packAlerted)
+                {
+                    Monster seer = null;
+                    foreach (var hm in horde) if (hm != null && !hm.IsDead && hm.IsAlerted && !Monster.GlobalRush) { seer = hm; break; }
+                    if (seer != null)
+                    {
+                        packAlerted = true;
+                        foreach (var hm in horde)
+                            if (hm != null && !hm.IsDead && (hm.transform.position - seer.transform.position).sqrMagnitude < 15f * 15f) hm.Alert(8f);
+                        SFX.PlayAt3D(SFX.ZombieScream, seer.transform.position + Vector3.up * 1.5f, 1f, 0.85f);
+                        HUD.Notify("떼에게 들켰다 — 모두 몰려온다!", new Color(1f, 0.4f, 0.3f));
+                    }
+                }
             }
 
             // 시간이 지나면 모두 몰려온다
