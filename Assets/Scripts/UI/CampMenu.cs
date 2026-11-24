@@ -81,7 +81,11 @@ namespace Hunt.UI
             UIKit.Alpha = ease;
             // 아래
             float by = win.yMax - 78;
-            if (UIKit.Button(new Rect(win.center.x - 190, by, 380, 60), "밤을 맞이한다", 26, false, true, "Enter")) gm.StartNextWave();
+            // 남은 단련·기질이 있으면 단추 아래에 알려 준다 (그냥 지나치지 않게)
+            string remind = p.StatPoints > 0 && p.PendingTraitPicks > 0 ? $"단련 {p.StatPoints} · 기질 고르기가 남았다"
+                          : p.StatPoints > 0 ? $"단련 포인트 {p.StatPoints} 남음 — '몸 · 기질' 탭"
+                          : p.PendingTraitPicks > 0 ? "새 기질을 고를 수 있다 — '몸 · 기질' 탭" : "Enter";
+            if (UIKit.Button(new Rect(win.center.x - 190, by, 380, 60), "밤을 맞이한다", 26, false, true, remind)) gm.StartNextWave();
             UIKit.Text(new Rect(win.x + 30, by, 400, 30), "Tab — 서낭당을 떠나 마을을 둘러본다", 15, UITheme.Ash);
             // 다음 밤 미리 보기
             int nextN = gm.Waves.Wave + 1;
