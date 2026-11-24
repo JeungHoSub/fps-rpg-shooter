@@ -31,7 +31,7 @@ namespace Hunt.Player
         /// <summary>이번 밤이 시작될 때의 받은 피해 합계 (상처 없는 새벽 판정).</summary>
         public float NightStartDamage { get; set; }
         /// <summary>이번 판 통계 (사망 화면): 머리 처치 · 연 보급 상자 · 현상금 · 소리 없는 처치.</summary>
-        public int RunHeadKills, RunCrates, RunBounties, RunSilent, RunMelee, RunHidden;
+        public int RunHeadKills, RunCrates, RunBounties, RunSilent, RunMelee, RunHidden, RunRescued;
         /// <summary>서낭당 부적 (다음 밤 하루만): 호신부 피해 -20% · 축지부 이동 +12% · 명중부 탄퍼짐 -25%.</summary>
         public bool CharmGuard, CharmSwift, CharmAim, CharmHide;
         public void ClearCharms() { CharmGuard = CharmSwift = CharmAim = CharmHide = false; }

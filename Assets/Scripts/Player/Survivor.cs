@@ -173,6 +173,7 @@ namespace Hunt.Player
             p.Kits--;
             saved = true;
             SavedThisNight = true;
+            p.RunRescued++;
             int wave = gm.Waves != null ? gm.Waves.Wave : 1;
             int gold = 60 + 12 * wave;
             p.AddGold(gold);
