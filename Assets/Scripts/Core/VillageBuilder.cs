@@ -999,9 +999,9 @@ namespace Hunt.Core
                 for (int i = 0; i < spots.Length; i++)
                 {
                     bool big = i % 3 != 2 || !PropModels.Has("shrub_sorrel_01");
-                    if (big) Hiding.Add(spots[i], 1.3f); // 큰 덤불엔 앉아서 숨을 수 있다
-                    Model(big ? "shrub_03" : "shrub_sorrel_01", spots[i], (float)r.NextDouble() * 360f, big ? 0.9f + (float)r.NextDouble() * 0.6f : 0.5f,
+                    var bushGo = Model(big ? "shrub_03" : "shrub_sorrel_01", spots[i], (float)r.NextDouble() * 360f, big ? 0.9f + (float)r.NextDouble() * 0.6f : 0.5f,
                         collider: false, tint: new Color(0.42f, 0.46f, 0.38f), gloss: 0.35f, cutout: true);
+                    if (big) Hiding.Add(spots[i], 1.3f, bushGo); // 큰 덤불엔 앉아서 숨을 수 있다 (불타면 못 숨는다)
                 }
             }
         }

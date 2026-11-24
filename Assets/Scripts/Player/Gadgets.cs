@@ -251,6 +251,7 @@ namespace Hunt.Player
             z.Build();
             Noise.Emit(at, 18f, true);
             FX.Scorch(at, radius * 0.7f);
+            Hiding.Burn(at, radius);
         }
 
         void Build()
