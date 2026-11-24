@@ -31,6 +31,27 @@ namespace Hunt.Weapons
         static readonly Color Metal = new Color(0.11f, 0.11f, 0.12f);
         static readonly Color MetalLight = new Color(0.24f, 0.24f, 0.26f);
 
+        /// <summary>총구 부품이 '소음기'면 총구 앞에 검은 통 (팩·실사 모델용 — 도형 총은 아래에서 따로 그린다). 총구 불꽃 자리는 통 끝으로.</summary>
+        static void AddSuppressor(GunModel m, WeaponInstance w)
+        {
+            if (m == null || m.muzzle == null || !w.parts.TryGetValue(PartSlot.Muzzle, out var mp) || mp.name != "소음기") return;
+            var par = m.muzzle.parent;
+            float s = par != null ? Mathf.Max(0.0001f, par.lossyScale.x) : 1f;
+            const float len = 0.16f, dia = 0.038f; // 미터
+            var c = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            Object.Destroy(c.GetComponent<Collider>());
+            c.name = "Suppressor";
+            c.layer = ViewLayer;
+            c.transform.SetParent(par, false);
+            c.transform.localRotation = m.muzzle.localRotation * Quaternion.Euler(90f, 0f, 0f);
+            c.transform.localPosition = m.muzzle.localPosition + m.muzzle.localRotation * Vector3.forward * (len * 0.5f / s);
+            c.transform.localScale = new Vector3(dia / s, len * 0.5f / s, dia / s);
+            var r = c.GetComponent<Renderer>();
+            r.sharedMaterial = Hunt.Core.EnvMaterials.Plain(new Color(0.08f, 0.085f, 0.09f), 0.55f, 0.6f);
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            m.muzzle.localPosition += m.muzzle.localRotation * Vector3.forward * (len / s);
+        }
+
         public static GunModel Build(Transform parent, WeaponInstance w)
         {
             var root = new GameObject("Gun_" + w.data.id);
@@ -40,7 +61,7 @@ namespace Hunt.Weapons
 
             // 무기별 모델 (Quaternius 총 팩 · 실사 M4A1 · 화염방사기). 기본 권총·저격총은 아래 실사 모델 우선
             bool phFirst = (w.data.id == "pistol" || w.data.id == "sniper") && RealGunModel.Has(w.data.weaponClass);
-            if (!phFirst && PackGunModel.Has(w.data.id) && PackGunModel.Build(t, w.data, m)) return m;
+            if (!phFirst && PackGunModel.Has(w.data.id) && PackGunModel.Build(t, w.data, m)) { AddSuppressor(m, w); return m; }
 
             // 실사 모델이 있는 계열 (권총·저격총)은 그것으로
             if (RealGunModel.Has(w.data.weaponClass) && RealGunModel.Build(t, w.data.weaponClass, m))
@@ -54,6 +75,7 @@ namespace Hunt.Weapons
                     m.hipOffset = new Vector3(0.12f, -0.12f, 0.2f); m.adsZ = 0.1f; m.kickStrength = 1.6f;
                     m.hideWhenScoped = true; m.pumpAction = true; m.actionTravel = 0.06f;
                 }
+                AddSuppressor(m, w);
                 return m;
             }
 
