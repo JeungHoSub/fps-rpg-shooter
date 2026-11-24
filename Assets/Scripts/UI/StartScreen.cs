@@ -93,6 +93,15 @@ namespace Hunt.UI
             }
             UIKit.Alpha = appear;
             DrawFooter(gm, content);
+            // 맨 아래: 요령 한 줄 (9초마다 바뀌며 스르르)
+            {
+                var tips = GameText.DeathTips;
+                float tt = Time.unscaledTime / 9f;
+                int ti = (int)tt % tips.Length;
+                float ph = tt - Mathf.Floor(tt);
+                float ta = Mathf.Clamp01(ph * 6f) * Mathf.Clamp01((1f - ph) * 6f);
+                UIKit.Text(new Rect(0, H - 40, W, 26), "요령 — " + tips[ti], 15, new Color(0.75f, 0.72f, 0.65f, 0.85f * ta * appear), TextAnchor.MiddleCenter, serif: true);
+            }
             DrawWhatsNew();
             UIKit.Alpha = 1f;
 
