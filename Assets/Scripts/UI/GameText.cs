@@ -12,6 +12,20 @@ namespace Hunt.UI
         public const string TitleSub = "PROJECT : HUNT";
         public const string Tagline = "비는 그치지 않고, 무덤은 열렸다.";
 
+        /// <summary>시작 화면 '새로 바뀐 점' (최근 업데이트, 위가 최신). 큰 변화가 있을 때마다 위에 추가.</summary>
+        public static readonly string[] WhatsNew =
+        {
+            "망자가 땅을 헤치고 기어 나온다 · 물기 직전 동작이 보여 피할 수 있다",
+            "보스를 쓰러뜨리면 슬로 모션 · 밤 시작 때 큰 제목",
+            "저격 조준경 흔들림 + Shift 숨 참기 · 수류탄 길 미리 보기",
+            "Esc 설정: 밝기 · 시야각",
+            "E로 보급품 줍기 · 치유 부적(힐링룬) · 새 탄창 모양",
+            "머리를 맞히면 갓이 날아간다 · 벽에 튀는 피",
+            "다섯째 밤 최종 보스 '역병 대감' · 승리 화면",
+            "폭발 연출 · 귀 울림 · 망자가 폭발에 밀려난다",
+            "총 색(회색 총철) · UI 움직임 부드럽게",
+        };
+
         // ------------------------------------------------------------------ 스탯
         public static string StatName(StatType t)
         {

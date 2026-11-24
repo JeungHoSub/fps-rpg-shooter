@@ -93,6 +93,7 @@ namespace Hunt.UI
             }
             UIKit.Alpha = appear;
             DrawFooter(gm, content);
+            DrawWhatsNew();
             UIKit.Alpha = 1f;
 
             // 키보드: Enter = 다음 / 출정
@@ -103,6 +104,32 @@ namespace Hunt.UI
                 if (step < 3) GoTo(step + 1);
                 else TryDeploy(gm);
             }
+        }
+
+        // ------------------------------------------------------------------ 새로 바뀐 점 (오른쪽 위 단추 → 펼침)
+        bool whatsNewOpen;
+        float whatsNewT;
+
+        void DrawWhatsNew()
+        {
+            var btn = new Rect(W - 210, 18, 190, 40);
+            if (UIKit.Button(btn, whatsNewOpen ? "닫기" : "새로 바뀐 점", 17, whatsNewOpen)) whatsNewOpen = !whatsNewOpen;
+            if (UIKit.IsRepaint) whatsNewT = Mathf.MoveTowards(whatsNewT, whatsNewOpen ? 1f : 0f, Time.unscaledDeltaTime * 6f);
+            if (whatsNewT <= 0.01f) return;
+            float e = UIKit.EaseOut(whatsNewT);
+            float keep = UIKit.Alpha;
+            UIKit.Alpha = keep * e;
+            var list = GameText.WhatsNew;
+            var r = new Rect(W - 620, 66 + (1f - e) * 12f, 600, 70 + list.Length * 34);
+            UIKit.Panel(r);
+            UIKit.Text(new Rect(r.x, r.y + 14, r.width, 28), "새로 바뀐 점", 22, UITheme.GoldBright, TextAnchor.MiddleCenter, serif: true, bold: true);
+            float y = r.y + 54;
+            for (int i = 0; i < list.Length; i++)
+            {
+                UIKit.Text(new Rect(r.x + 28, y, r.width - 56, 30), "·  " + list[i], 16, i == 0 ? UITheme.Bone : UITheme.BoneDim, TextAnchor.MiddleLeft, serif: true);
+                y += 34;
+            }
+            UIKit.Alpha = keep;
         }
 
         // ------------------------------------------------------------------ 첫 제목 카드 · 빗줄기
