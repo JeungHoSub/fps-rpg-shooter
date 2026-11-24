@@ -224,6 +224,7 @@ namespace Hunt.Monsters
                 // 덤불을 헤치고 지나가면 바스락 (25m 안만) — 어둠 속에서 다가오는 걸 귀로 안다
                 bool bush = dist < 25f && Hiding.InBush(transform.position);
                 if (bush && !inBush) { SFX.PlayAt3D(SFX.Rustle, transform.position + Vector3.up * 0.6f, 0.7f, Random.Range(0.85f, 1.05f)); Hiding.Shake(transform.position); }
+                if (bush && burnTime > 0f) Hiding.Burn(transform.position, 0.5f); // 불붙은 망자가 덤불에 들어가면 덤불도 탄다
                 inBush = bush;
             }
             bool alerted = IsAlerted;
