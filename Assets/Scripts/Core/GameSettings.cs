@@ -88,6 +88,16 @@ namespace Hunt.Core
         public static float ShakeMult => Shake == 0 ? 1f : Shake == 1 ? 0.4f : 0f;
         public static string ShakeName(int i) => i == 1 ? "약하게" : i == 2 ? "끔" : "보통";
 
+        const string AmbKey = "hunt.ambvol";
+        static float? ambVol;
+
+        /// <summary>빗소리·주변 소리 크기 (0~1.5, 기본 1). 효과음과 따로.</summary>
+        public static float AmbientVolume
+        {
+            get { if (ambVol == null) ambVol = Mathf.Clamp(Load(AmbKey, 1f), 0f, 1.5f); return ambVol.Value; }
+            set { ambVol = Mathf.Clamp(value, 0f, 1.5f); Save(AmbKey, ambVol.Value); }
+        }
+
         const string GoreKey = "hunt.gore";
         static bool? gore;
 

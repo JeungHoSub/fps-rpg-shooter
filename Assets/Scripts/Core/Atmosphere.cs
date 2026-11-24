@@ -261,7 +261,7 @@ namespace Hunt.Core
                 moon.transform.rotation = Quaternion.Slerp(Quaternion.Euler(38f, -140f, 0f), Quaternion.Euler(14f, 70f, 0f), Dawn);
                 moon.color = Color.Lerp(MoonColor, SunColor, Dawn);
             }
-            if (rainAudio != null) rainAudio.volume = Mathf.Lerp(0.3f, 0.75f, RainIntensity) * Mathf.Lerp(1f, 0.35f, Dawn);
+            if (rainAudio != null) rainAudio.volume = Mathf.Lerp(0.3f, 0.75f, RainIntensity) * Mathf.Lerp(1f, 0.35f, Dawn) * GameSettings.AmbientVolume; // Esc '빗소리'
             // 안개는 날씨에 맞춰 천천히 짙어지거나 걷힌다
             fogNow = Mathf.MoveTowards(fogNow, fogMult, dt * 0.08f);
             RenderSettings.fogDensity = BaseFog * fogNow * Mathf.Lerp(1f, 0.55f, Dawn);

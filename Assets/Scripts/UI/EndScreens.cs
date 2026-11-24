@@ -32,7 +32,7 @@ namespace Hunt.UI
             UIKit.Fill(new Rect(0, 0, W, H), new Color(0.02f, 0.01f, 0.015f, 0.7f));
             UIKit.Vignette(W, H, new Color(0, 0, 0, 0.9f));
 
-            var r = new Rect(W / 2 - 320 - (GameInput.Mobile ? 0f : 200f), H / 2 - 450, 640, 900); // PC: 오른쪽 조작 표와 함께 가운데
+            var r = new Rect(W / 2 - 320 - (GameInput.Mobile ? 0f : 200f), H / 2 - 480, 640, 960); // PC: 오른쪽 조작 표와 함께 가운데
             UIKit.Panel(r, "숨  을  고 른 다");
             // 지금 판 요약 (제목 아래 한 줄)
             var pp = gm.Player;
@@ -63,6 +63,11 @@ namespace Hunt.UI
             UIKit.Text(new Rect(r.x + 60, y, 160, 30), "소리 크기", 18, UITheme.Bone, serif: true);
             GameSettings.Volume = UIKit.Slider(new Rect(r.x + 220, y, r.width - 340, 30), GameSettings.Volume, 0f, 1f, "vol");
             UIKit.Text(new Rect(r.xMax - 110, y, 60, 30), $"{GameSettings.Volume * 100:0}%", 18, UITheme.GoldBright, TextAnchor.MiddleRight, bold: true);
+            y += 52;
+
+            UIKit.Text(new Rect(r.x + 60, y, 160, 30), "빗소리 크기", 18, UITheme.Bone, serif: true);
+            GameSettings.AmbientVolume = UIKit.Slider(new Rect(r.x + 220, y, r.width - 340, 30), GameSettings.AmbientVolume, 0f, 1.5f, "ambvol");
+            UIKit.Text(new Rect(r.xMax - 110, y, 60, 30), $"{GameSettings.AmbientVolume * 100:0}%", 18, UITheme.GoldBright, TextAnchor.MiddleRight, bold: true);
             y += 52;
 
             UIKit.Text(new Rect(r.x + 60, y, 160, 30), "시야각", 18, UITheme.Bone, serif: true);
