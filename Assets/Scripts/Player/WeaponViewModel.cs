@@ -66,9 +66,9 @@ namespace Hunt.Player
                     float dx = (x - S / 2f + 0.5f) / (S / 2f), dy = (y - S / 2f + 0.5f) / (S / 2f);
                     float r = Mathf.Sqrt(dx * dx + dy * dy);
                     float ang = Mathf.Atan2(dy, dx);
-                    float spike = Mathf.Pow(Mathf.Abs(Mathf.Cos(ang * 3f)), 10f);        // 6갈래
-                    float core = Mathf.Clamp01(1f - r * 3.2f);
-                    float a = Mathf.Clamp01(core + spike * Mathf.Clamp01(1f - r) * 0.9f);
+                    float spike = Mathf.Pow(Mathf.Abs(Mathf.Cos(ang * 3f)), 5f);         // 6갈래 (굵게)
+                    float core = Mathf.Clamp01(1f - r * 2.4f);
+                    float a = Mathf.Clamp01(core * 1.3f + spike * Mathf.Clamp01(1f - r) * 1.3f);
                     a *= Mathf.Clamp01((1f - r) * 3f);
                     float w = Mathf.Clamp01(core * 1.5f);                                   // 심은 하얗게, 끝은 주황
                     px[y * S + x] = new Color32(255, (byte)(170 + 85 * w), (byte)(70 + 160 * w), (byte)(255 * a));
