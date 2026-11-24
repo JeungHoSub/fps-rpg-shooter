@@ -449,6 +449,15 @@ namespace Hunt.Monsters
         }
 
         /// <summary>폭발/지속피해/연쇄 등 부위 판정 없는 피해. 처치 시 true.</summary>
+        /// <summary>땅속에서 기어 나오기 (그동안 제자리). 모델이 있는 망자만.</summary>
+        public void Emerge(float seconds)
+        {
+            if (rig == null || rig.Pivot == null) return;
+            stagger = Mathf.Max(stagger, seconds);
+            RiseFromGround.Begin(rig.Pivot, seconds, 1.7f * Data.scale);
+            SFX.PlayAt3D(SFX.ZombieMoan, transform.position, 0.7f, VoicePitch);
+        }
+
         bool hatGone;
 
         /// <summary>머리를 맞으면 갓·상투 장식이 총알 방향으로 날아간다 (한 번만).</summary>

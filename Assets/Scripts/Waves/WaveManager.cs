@@ -485,6 +485,8 @@ namespace Hunt.Waves
             // 밤이 깊을수록 망자도 더 아프게 문다 (밤마다 +5%, 최대 +60%)
             if (m != null) m.DamageScale = Mathf.Min(1.6f, 1f + 0.05f * (Wave - 1));
             if (m != null && !placed && a != MonsterArchetype.Runner) m.Alert(4f); // 엘리트·보스는 찾아서 온다
+            // 무덤·논 끝에서 새로 나오는 망자는 땅을 헤치고 기어 나온다 (보스는 더 천천히)
+            if (m != null && !placed) m.Emerge(a == MonsterArchetype.Boss ? 2.4f : Random.Range(1.3f, 1.8f));
             return m;
         }
 
