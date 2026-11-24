@@ -16,6 +16,10 @@ namespace Hunt.Monsters
         PlayableGraph graph;
         AnimationClipPlayable deathPlayer;
         float deathLength = -1f;
+        float force = 1f;
+
+        /// <summary>센 한 방이면 뒤로 붕 떴다 떨어진다 (처음 0.5초).</summary>
+        float Hop() => force > 1.3f ? Mathf.Sin(Mathf.Clamp01(t / 0.5f) * Mathf.PI) * 0.35f * (force - 1f) * unit : 0f;
         bool sinking;
 
         /// <summary>가라앉기 시작하면 그림자를 끈다 (내장 그래픽 부담 줄이기).</summary>
@@ -34,12 +38,14 @@ namespace Hunt.Monsters
         {
             this.unit = unit;
             hitDir.y = 0f;
+            force = Mathf.Clamp(hitDir.magnitude, 1f, 3f); // Monster가 방향 길이에 세기를 담아 보낸다
             if (hitDir.sqrMagnitude < 0.0001f) hitDir = -transform.forward;
             hitDir.Normalize();
             axis = Vector3.Cross(Vector3.up, hitDir);
             startRot = transform.rotation;
             startPos = transform.position;
-            slide = hitDir * 0.9f * unit;
+            clampSlide = true;
+            slide = hitDir * 0.9f * unit * force;
 
             // 실제 쓰러지는 동작 (Mixamo Zombie Death)
             if (deathClip != null && animator != null)
@@ -53,8 +59,22 @@ namespace Hunt.Monsters
                 output.SetSourcePlayable(deathPlayer);
                 graph.Play();
                 deathLength = deathClip.length;
-                slide = hitDir * 0.3f * unit;
+                slide = hitDir * 0.3f * unit * (force > 1.3f ? force * 1.6f : 1f);
             }
+        }
+
+        bool clampSlide;
+
+        /// <summary>날아가는 길에 벽이 있으면 그 앞에서 멈추게 미끄러짐 길이를 줄인다.</summary>
+        void ClampSlideToWalls()
+        {
+            clampSlide = false;
+            float len = slide.magnitude;
+            if (len < 0.05f) return;
+            Vector3 from = startPos + Vector3.up * 0.5f * unit;
+            if (Physics.Raycast(from, slide / len, out var hit, len + 0.4f, ~((1 << 2) | (1 << 1)), QueryTriggerInteraction.Ignore)
+                && hit.collider.GetComponentInParent<Monster>() == null)
+                slide = slide / len * Mathf.Max(0f, hit.distance - 0.4f);
         }
 
         void OnDestroy()
@@ -66,12 +86,13 @@ namespace Hunt.Monsters
         {
             var gm = GameManager.Instance;
             if (gm != null && gm.Paused) return;
+            if (clampSlide) ClampSlideToWalls();
             t += Time.deltaTime;
             if (deathLength > 0f)
             {
                 // 동작 끝 프레임에서 멈춘 채 누워 있다가 가라앉는다
                 if (graph.IsValid() && deathPlayer.GetTime() >= deathLength) { deathPlayer.SetTime(deathLength); deathPlayer.SetSpeed(0); }
-                var p = startPos + slide * Mathf.Clamp01(t / 0.8f);
+                var p = startPos + slide * Mathf.Clamp01(t / 0.8f) + Vector3.up * Hop();
                 float sinkAt = deathLength + 2f;
                 if (t > sinkAt) { StartSink(); p.y -= (t - sinkAt) * 0.5f * unit; }
                 transform.position = p;
@@ -83,7 +104,7 @@ namespace Hunt.Monsters
             float ang = Mathf.Lerp(0f, 88f, fall * fall);
             if (t > 0.45f) ang = 88f - Mathf.Sin(Mathf.Clamp01((t - 0.45f) / 0.25f) * Mathf.PI) * 6f;
             transform.rotation = Quaternion.AngleAxis(ang, axis) * startRot;
-            var pos = startPos + slide * Mathf.Clamp01(t / 0.5f);
+            var pos = startPos + slide * Mathf.Clamp01(t / 0.5f) + Vector3.up * Hop();
             // 3초 뒤 가라앉기
             if (t > 3f) { StartSink(); pos.y -= (t - 3f) * 0.5f * unit; }
             transform.position = pos;

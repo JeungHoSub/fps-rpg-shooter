@@ -441,7 +441,8 @@ namespace Hunt.Monsters
                 part.TakePartDamage(0f); // 피격 플래시
             }
 
-            lastHitDir = info.direction;
+            // 맞은 방향 + 세기(길이 1~3): 산탄총·센 한 방으로 죽으면 시체가 더 멀리 날아간다
+            lastHitDir = info.direction.normalized * (1f + Mathf.Clamp(info.knockback * (1f - knockbackResist) / 3f, 0f, 2f));
             alertTime = Mathf.Max(alertTime, 8f); // 맞으면 확실히 알아챈다
 
             // 저지력 → 넉백
@@ -470,7 +471,6 @@ namespace Hunt.Monsters
             return result;
         }
 
-        /// <summary>폭발/지속피해/연쇄 등 부위 판정 없는 피해. 처치 시 true.</summary>
         /// <summary>땅속에서 기어 나오기 (그동안 제자리). 모델이 있는 망자만.</summary>
         public void Emerge(float seconds)
         {
@@ -565,10 +565,11 @@ namespace Hunt.Monsters
             knockVel += dir.normalized * 9f * k;
             if (knockVel.magnitude > 11f) knockVel = knockVel.normalized * 11f;
             stagger = Mathf.Max(stagger, 0.45f * k);
-            lastHitDir = dir.normalized;
+            lastHitDir = dir.normalized * (1f + 2f * Mathf.Clamp01(strength)); // 폭발: 세게 날아간다
             if (rig != null) rig.Flinch(dir.normalized, Mathf.Clamp01(0.4f + k), false);
         }
 
+        /// <summary>폭발/지속피해/연쇄 등 부위 판정 없는 피해. 처치 시 true.</summary>
         public bool ApplyDirectDamage(float amount, DamageType type, bool showNumber = true)
         {
             if (IsDead) return false;
