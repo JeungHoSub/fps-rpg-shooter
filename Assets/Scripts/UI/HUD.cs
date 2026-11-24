@@ -16,11 +16,14 @@ namespace Hunt.UI
         static readonly List<Note> notes = new List<Note>();
 
         /// <summary>화면 위쪽 알림 (어디서든 호출).</summary>
-        public static void Notify(string text, Color color)
+        public static void Notify(string text, Color color) => Notify(text, color, 4f);
+
+        /// <summary>오래 읽어야 하는 안내 (초 지정).</summary>
+        public static void Notify(string text, Color color, float seconds)
         {
             for (int i = 0; i < notes.Count; i++)
                 if (notes[i].text == text) { notes.RemoveAt(i); break; } // 같은 알림은 갱신
-            notes.Add(new Note { text = text, color = color, time = 4f, y = -1f });
+            notes.Add(new Note { text = text, color = color, time = seconds, y = -1f });
             if (notes.Count > 6) notes.RemoveAt(0);
         }
 
