@@ -337,6 +337,10 @@ namespace Hunt.Player
             meleePending = true;
             player.InterruptItem();
             SFX.Play(SFX.Swing, 0.7f, 0.1f);
+            // 휘두르기 시작할 때 나를 못 알아챈 망자들 (칼 소리에 알아채기 전 상태로 등 뒤 처치를 판정)
+            swingUnaware.Clear();
+            foreach (var um in Monster.Alive)
+                if (um != null && !um.IsDead && !um.IsAlerted && (um.transform.position - player.transform.position).sqrMagnitude < 16f) swingUnaware.Add(um);
             Noise.Emit(player.transform.position, 2f, true); // 칼은 조용하다
             // 앞쪽 3.2m 안(시야 35° 안)에 망자가 있으면 그쪽으로 한 걸음 파고든다 — 칼이 허공을 가르지 않게
             Vector3 fwd = Vector3.ProjectOnPlane(cam.transform.forward, Vector3.up).normalized;
@@ -366,6 +370,8 @@ namespace Hunt.Player
             if (meleeT >= 1f && quickMelee) { quickMelee = false; Mode = returnMode; swapTotal = swapTime = 0.2f; }
         }
 
+        readonly HashSet<Monster> swingUnaware = new HashSet<Monster>();
+
         void MeleeHit()
         {
             Vector3 center = cam.transform.position + cam.transform.forward * 1.2f;
@@ -389,7 +395,7 @@ namespace Hunt.Player
                 // 소리 없는 처치: 나를 못 알아챈 망자를 등 뒤(70° 안)에서 베면 한 번에 쓰러진다 (보스·엘리트 제외)
                 var mo = part.owner;
                 Vector3 toMo = mo.transform.position - player.transform.position; toMo.y = 0f;
-                bool backstab = !mo.IsAlerted && !mo.IsBoss && mo.Data.archetype == Hunt.Data.MonsterArchetype.Runner
+                bool backstab = swingUnaware.Contains(mo) && !mo.IsBoss && mo.Data.archetype == Hunt.Data.MonsterArchetype.Runner
                                 && toMo.sqrMagnitude > 0.01f && Vector3.Angle(mo.transform.forward, toMo) < 70f;
                 var info = new DamageInfo
                 {
