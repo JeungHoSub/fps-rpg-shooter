@@ -380,7 +380,7 @@ namespace Hunt.Player
         readonly HashSet<Monster> swingUnaware = new HashSet<Monster>();
 
         int impactFrame;
-        float fovKick;
+        float fovKick, lastAmbushNote = -100f;
         /// <summary>벽·땅 명중 소리 (한 프레임 한 번 — 산탄 여러 알이 겹치지 않게). 단단한 면은 가끔 도탄.</summary>
         void ImpactSound(Vector3 p, Vector3 n)
         {
@@ -786,6 +786,12 @@ namespace Hunt.Player
                     {
                         if (part.owner == lastMonster) { rayFrom = hit.point + dir * 0.05f; left -= 0.05f; continue; } // 같은 망자의 다른 판정체
                         info.baseDamage = pelletBase * dmgScale;
+                        // 기습: 나를 못 알아챈 망자에게 첫 탄은 ×1.5 (보스 제외) — 숨어서 노리는 보람
+                        if (!part.owner.IsAlerted && !part.owner.IsBoss && !part.owner.IsDead)
+                        {
+                            info.baseDamage *= 1.5f;
+                            if (Time.time - lastAmbushNote > 6f) { lastAmbushNote = Time.time; HUD.Notify("기습 — 피해 1.5배", new Color(0.75f, 0.85f, 1f)); }
+                        }
                         info.distance = range - left;
                         info.hitPoint = hit.point;
                         info.direction = dir;
