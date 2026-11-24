@@ -458,6 +458,14 @@ namespace Hunt.UI
                 float x = In(b) ? X(b) : (Mathf.DeltaAngle(yaw, b) > 0 ? r.xMax : r.x);
                 UIKit.Fill(new Rect(x - 4, r.y - 6, 8, 8), new Color(1f, 0.8f, 0.3f, In(b) ? 0.95f : 0.4f));
             }
+            // 망자 떼가 나온 쪽 (10초)
+            if (Time.time - WaveManager.HordeTime < 10f)
+            {
+                float b = Bearing(WaveManager.HordeFrom);
+                float x = In(b) ? X(b) : (Mathf.DeltaAngle(yaw, b) > 0 ? r.xMax : r.x);
+                float blink = Mathf.Repeat(Time.time, 0.6f) < 0.4f ? 1f : 0.45f;
+                UIKit.Text(new Rect(x - 14, r.y - 24, 28, 22), "떼", 16, new Color(1f, 0.3f, 0.25f, blink), TextAnchor.MiddleCenter, serif: true, bold: true);
+            }
             // 사이렌을 울린 탑: 망자들이 몰려가는 곳
             if (SirenTower.Instance != null && SirenTower.Instance.BeaconOn)
             {

@@ -346,6 +346,9 @@ namespace Hunt.Waves
 
         bool hordeDone = true;
         float hordeAt;
+        /// <summary>망자 떼가 나온 곳과 때 (나침반에 10초 동안 '떼').</summary>
+        public static Vector3 HordeFrom;
+        public static float HordeTime = -100f;
 
         /// <summary>망자 떼: 마을 한쪽 끝에서 나와 반대쪽 끝으로 지나간다 (소리를 쫓듯 뒤지며 걷는다 — 들키면 덮친다).</summary>
         void SpawnHorde()
@@ -367,6 +370,7 @@ namespace Hunt.Waves
             }
             SFX.PlayPitched(SFX.Drum, 0.6f, 0.6f);
             SFX.PlayAt3D(SFX.ZombieMoan, from, 1f, 0.8f);
+            HordeFrom = from; HordeTime = Time.time;
             string dir = Mathf.Abs(from.x) > Mathf.Abs(from.z) ? (from.x > 0 ? "동쪽" : "서쪽") : (from.z > 0 ? "북쪽" : "남쪽");
             HUD.Notify($"{dir}에서 망자 떼가 마을을 가로지른다 — 숨거나, 맞서거나", new Color(1f, 0.55f, 0.4f));
         }
