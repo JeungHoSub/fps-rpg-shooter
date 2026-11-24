@@ -201,6 +201,13 @@ namespace Hunt.UI
             if (p.Weapons.IsScoped) DrawScope(p);
             if (gm.State != GameState.GameOver && !gm.MenuOpen) DrawCrosshair(p, cam);
             if (gm.State == GameState.Playing && !gm.MenuOpen) DrawAmmoWarning(p);
+            if (p.Weapons.ChargingThrow)
+            {
+                // 던지기 힘 막대 (조준점 아래)
+                var tr = new Rect(W / 2 - 80, H / 2 + 60, 160, 6);
+                UIKit.Bar(tr, p.Weapons.ThrowCharge, Color.Lerp(UITheme.Gold, UITheme.BloodBright, p.Weapons.ThrowCharge));
+                UIKit.Text(new Rect(tr.x - 40, tr.y - 22, tr.width + 80, 20), "힘 모으는 중 — 떼면 던진다", 13, UITheme.Bone, TextAnchor.MiddleCenter, serif: true);
+            }
             if (!gm.MenuOpen && !GameInput.Mobile) DrawPickupPrompt();
 
             // ---- 생명 구슬 ----

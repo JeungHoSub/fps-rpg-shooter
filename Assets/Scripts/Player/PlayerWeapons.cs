@@ -143,7 +143,19 @@ namespace Hunt.Player
                 CurrentSpread = 0f;
                 bool click = input && GameInput.FireDown && swapTime <= 0f && !player.IsUsingItem;
                 if (click && Mode == Hand.Melee) StartSwing();
-                if (click && Mode == Hand.Gadget) UseGadget(Gadget);
+                bool throwable = Gadget == GadgetType.Grenade || Gadget == GadgetType.Molotov;
+                if (Mode == Hand.Gadget && throwable && !GameInput.Mobile)
+                {
+                    // 던지는 기기: 누르고 있으면 힘을 모으고(1초), 떼면 던진다 — 오래 누를수록 멀리
+                    if (click && gadgetCooldown <= 0f && GadgetCount[(int)Gadget] > 0) { charging = true; ThrowCharge = 0f; }
+                    if (charging)
+                    {
+                        ThrowCharge = Mathf.MoveTowards(ThrowCharge, 1f, dt);
+                        if (!GameInput.Fire || !input) { charging = false; if (input) UseGadget(Gadget); ThrowCharge = 0f; }
+                    }
+                }
+                else if (click && Mode == Hand.Gadget) UseGadget(Gadget);
+                if (Mode != Hand.Gadget) { charging = false; ThrowCharge = 0f; }
                 return;
             }
 
@@ -402,6 +414,14 @@ namespace Hunt.Player
             }
         }
 
+        // ---- 던지기 힘 (누르고 있는 동안 0→1) ----
+        bool charging;
+        /// <summary>던질 힘 0~1 (HUD 막대). 모으지 않을 때 던지면 중간 힘.</summary>
+        public float ThrowCharge { get; private set; }
+        public bool ChargingThrow => charging;
+        /// <summary>던지는 속도: 힘 0 = 가까이(9) · 1 = 멀리(19), 모으지 않으면 15.</summary>
+        float ThrowSpeed => charging ? Mathf.Lerp(9f, 19f, ThrowCharge) : 15f;
+
         // ---- 수류탄 던질 길 미리 보기 (5번 수류탄을 들고 있을 때) ----
         LineRenderer arcLine;
         Transform arcRing;
@@ -439,7 +459,7 @@ namespace Hunt.Player
             // ThrownGrenade.Throw와 같은 시작점·속도·끌림(0.2)으로 길을 따라가 본다
             var t = cam.transform;
             Vector3 pos = t.position + t.forward * 0.5f + t.right * 0.15f;
-            Vector3 vel = t.forward * 15f + Vector3.up * 3.5f;
+            Vector3 vel = t.forward * ThrowSpeed + Vector3.up * 3.5f;
             const float step = 0.05f;
             int n = 0;
             arcPts[n++] = pos;
@@ -527,11 +547,11 @@ namespace Hunt.Player
             switch (g)
             {
                 case GadgetType.Grenade:
-                    ThrownGrenade.Throw(t.position + t.forward * 0.5f + t.right * 0.15f, t.forward * 15f + Vector3.up * 3.5f, player, GrenadeDamage);
+                    ThrownGrenade.Throw(t.position + t.forward * 0.5f + t.right * 0.15f, t.forward * ThrowSpeed + Vector3.up * 3.5f, player, GrenadeDamage);
                     meleeT = 0f; // 던지는 팔 동작 재사용
                     break;
                 case GadgetType.Molotov:
-                    ThrownMolotov.Throw(t.position + t.forward * 0.5f + t.right * 0.15f, t.forward * 15f + Vector3.up * 3.5f, player, MolotovDps);
+                    ThrownMolotov.Throw(t.position + t.forward * 0.5f + t.right * 0.15f, t.forward * ThrowSpeed + Vector3.up * 3.5f, player, MolotovDps);
                     meleeT = 0f;
                     break;
                 case GadgetType.Mine:
