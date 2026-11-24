@@ -88,6 +88,7 @@ namespace Hunt.Player
         void Update()
         {
             var gm = GameManager.Instance;
+            if (player != null && player.IsDead) UpdateGrenadeArc(false);
             if (gm == null || !gm.IsWorldRunning || player == null || player.IsDead || Current == null) return;
             float dt = Time.deltaTime;
             bool input = gm.AcceptsGameplayInput;
@@ -127,6 +128,7 @@ namespace Hunt.Player
             if (gadgetCooldown > 0f) gadgetCooldown -= dt;
             UpdateMelee(dt);
 
+            UpdateGrenadeArc(input && Mode == Hand.Gadget && Gadget == GadgetType.Grenade && GadgetCount[(int)GadgetType.Grenade] > 0 && !player.IsUsingItem);
             if (Mode != Hand.Gun)
             {
                 aim = Mathf.MoveTowards(aim, 0f, dt * 6f);
@@ -360,6 +362,82 @@ namespace Hunt.Player
                 Noise.Emit(player.transform.position, 4f, true);
                 if (kill) GameManager.Instance.HitStop(0.07f);
             }
+        }
+
+        // ---- 수류탄 던질 길 미리 보기 (5번 수류탄을 들고 있을 때) ----
+        LineRenderer arcLine;
+        Transform arcRing;
+        static readonly Vector3[] arcPts = new Vector3[48];
+
+        void UpdateGrenadeArc(bool show)
+        {
+            if (!show)
+            {
+                if (arcLine != null && arcLine.enabled) { arcLine.enabled = false; arcRing.gameObject.SetActive(false); }
+                return;
+            }
+            if (arcLine == null)
+            {
+                var go = new GameObject("수류탄 길");
+                go.layer = 2;
+                arcLine = go.AddComponent<LineRenderer>();
+                arcLine.sharedMaterial = FX.UnlitMaterial(Color.white);
+                arcLine.useWorldSpace = true;
+                arcLine.startWidth = 0.035f;
+                arcLine.endWidth = 0.02f;
+                arcLine.startColor = new Color(1f, 0.85f, 0.55f, 0.15f);
+                arcLine.endColor = new Color(1f, 0.6f, 0.35f, 0.8f);
+                arcLine.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                arcLine.receiveShadows = false;
+                var ring = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                Destroy(ring.GetComponent<Collider>());
+                ring.layer = 2;
+                var rr = ring.GetComponent<Renderer>();
+                rr.sharedMaterial = FX.UnlitMaterial(new Color(1f, 0.35f, 0.2f, 0.16f));
+                rr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                arcRing = ring.transform;
+            }
+            arcLine.enabled = true;
+            // ThrownGrenade.Throw와 같은 시작점·속도·끌림(0.2)으로 길을 따라가 본다
+            var t = cam.transform;
+            Vector3 pos = t.position + t.forward * 0.5f + t.right * 0.15f;
+            Vector3 vel = t.forward * 15f + Vector3.up * 3.5f;
+            const float step = 0.05f;
+            int n = 0;
+            arcPts[n++] = pos;
+            bool landed = false;
+            Vector3 land = pos;
+            int mask = ~((1 << 2) | (1 << 1));
+            for (int i = 0; i < arcPts.Length - 1 && !landed; i++)
+            {
+                vel += Physics.gravity * step;
+                vel *= 1f - 0.2f * step;
+                Vector3 next = pos + vel * step;
+                if (Physics.Linecast(pos, next, out var hit, mask, QueryTriggerInteraction.Ignore) && !(hit.collider is CharacterController))
+                {
+                    next = hit.point;
+                    landed = true;
+                    land = hit.point;
+                }
+                arcPts[n++] = next;
+                pos = next;
+            }
+            arcLine.positionCount = n;
+            arcLine.SetPositions(arcPts);
+            // 터질 곳: 폭발 범위(6m)를 옅은 원으로
+            arcRing.gameObject.SetActive(landed);
+            if (landed)
+            {
+                Vector3 g = FX.FloorUnder(land + Vector3.up * 0.3f);
+                arcRing.position = g + Vector3.up * 0.03f;
+                arcRing.localScale = new Vector3(12f * 0.6f, 0.005f, 12f * 0.6f); // 피해가 큰 안쪽(약 3.6m)만
+            }
+        }
+
+        void OnDestroy()
+        {
+            if (arcLine != null) Destroy(arcLine.gameObject);
+            if (arcRing != null) Destroy(arcRing.gameObject);
         }
 
         // ---- 특수 기기 ----
