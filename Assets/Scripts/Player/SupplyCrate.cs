@@ -15,6 +15,7 @@ namespace Hunt.Player
         public static readonly List<SupplyCrate> Active = new List<SupplyCrate>();
 
         bool opened;
+        public bool Opened => opened;
         Transform lid, beam;
         float openT;
 

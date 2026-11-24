@@ -192,6 +192,7 @@ namespace Hunt.UI
                 14, UITheme.BoneDim, TextAnchor.MiddleCenter);
 
             DrawNoise(gm);
+            if (gm.State == GameState.Playing) DrawCompass(cam);
 
             // ---- 위쪽: 밤 표식 / 남은 망자 ----
             DrawNightPlaque(gm);
@@ -263,6 +264,58 @@ namespace Hunt.UI
                 UIKit.Tex(new Rect(d.x - d.r, d.y - d.r, d.r * 2f, d.r * 2f), UITheme.Circle, new Color(0.75f, 0.8f, 0.9f, a * 0.5f));
                 UIKit.Tex(new Rect(d.x - d.r * 0.35f, d.y + d.r * 0.2f, d.r * 0.7f, d.r * 0.45f), UITheme.Circle, new Color(1f, 1f, 1f, a));
             }
+        }
+
+        /// <summary>
+        /// 아래 가운데 나침반 띠: 앞쪽 ±75°를 보여 준다. 북·동·남·서 + 보급 상자(노랑)·보스(대)·위치가 드러난 망자(붉은 점).
+        /// </summary>
+        void DrawCompass(Camera cam)
+        {
+            if (cam == null) return;
+            const float span = 75f;
+            var r = new Rect(W / 2 - 260, H - 160, 520, 26);
+            UIKit.Tex(r, UITheme.LineFade, new Color(0f, 0f, 0f, 0.5f));
+            float yaw = cam.transform.eulerAngles.y;
+            float X(float bearing) => r.center.x + Mathf.DeltaAngle(yaw, bearing) / span * (r.width / 2f);
+            bool In(float bearing) => Mathf.Abs(Mathf.DeltaAngle(yaw, bearing)) < span;
+            // 눈금 15°마다
+            for (int a = 0; a < 360; a += 15)
+            {
+                if (!In(a)) continue;
+                float x = X(a);
+                float edge = 1f - Mathf.Abs(Mathf.DeltaAngle(yaw, a)) / span;
+                bool major = a % 90 == 0;
+                UIKit.Fill(new Rect(x - 0.5f, r.y + (major ? 2 : 8), 1f, major ? 10 : 5), new Color(0.9f, 0.86f, 0.78f, 0.5f * edge));
+                if (major)
+                {
+                    string n = a == 0 ? "북" : a == 90 ? "동" : a == 180 ? "남" : "서";
+                    UIKit.Text(new Rect(x - 20, r.y + 9, 40, 18), n, 14, new Color(0.95f, 0.9f, 0.8f, edge), TextAnchor.MiddleCenter, serif: true, bold: true);
+                }
+            }
+            Vector3 me = cam.transform.position;
+            float Bearing(Vector3 p) { Vector3 d = p - me; return Mathf.Atan2(d.x, d.z) * Mathf.Rad2Deg; }
+            // 보급 상자
+            foreach (var c in SupplyCrate.Active)
+            {
+                if (c == null || !c.isActiveAndEnabled || c.Opened) continue;
+                float b = Bearing(c.transform.position);
+                float x = In(b) ? X(b) : (Mathf.DeltaAngle(yaw, b) > 0 ? r.xMax : r.x);
+                UIKit.Fill(new Rect(x - 4, r.y - 6, 8, 8), new Color(1f, 0.8f, 0.3f, In(b) ? 0.95f : 0.4f));
+            }
+            // 드러난 망자·보스
+            foreach (var m in Monster.Alive)
+            {
+                if (m == null || m.IsDead || !(m.Revealed || m.IsBoss)) continue;
+                float b = Bearing(m.transform.position);
+                bool inside = In(b);
+                float x = inside ? X(b) : (Mathf.DeltaAngle(yaw, b) > 0 ? r.xMax : r.x);
+                if (m.IsBoss)
+                    UIKit.Text(new Rect(x - 14, r.y - 24, 28, 22), "대", 17, new Color(1f, 0.3f, 0.25f, inside ? 1f : 0.6f), TextAnchor.MiddleCenter, serif: true, bold: true);
+                else
+                    UIKit.Tex(new Rect(x - 4, r.y - 6, 8, 8), UITheme.Circle, new Color(0.9f, 0.15f, 0.1f, inside ? 0.9f : 0.4f));
+            }
+            // 가운데 표시
+            UIKit.Fill(new Rect(r.center.x - 1, r.y - 2, 2, r.height + 4), new Color(1f, 0.9f, 0.7f, 0.7f));
         }
 
         /// <summary>깔아 둔 기관총 머리 위: 남은 시간 막대 + 남은 탄 (30m 안, 화면에 보일 때만).</summary>
