@@ -177,6 +177,7 @@ namespace Hunt.Monsters
                 float t = rig.PlayScream();
                 SFX.PlayAt3D(SFX.ZombieScream, transform.position + Vector3.up * 1.6f, 1f, VoicePitch);
                 if (t > 0f) stagger = Mathf.Max(stagger, Mathf.Min(t, 1.6f));
+                if (Data.id == "z_shriek") Wail();
             }
             wasAlerted = alerted;
 
@@ -511,6 +512,24 @@ namespace Hunt.Monsters
                     p.Controller.AddShake(2f * k + 0.5f);
                 }
             }
+        }
+
+        /// <summary>곡하는 망자: 처음 발견하면 길게 곡을 해 28m 안 망자를 모두 깨워 플레이어 쪽으로 부른다.</summary>
+        void Wail()
+        {
+            stagger = Mathf.Max(stagger, 2.2f); // 곡하는 동안은 멈춰 있다 — 그 사이 잡으면 된다
+            SFX.PlayAt3D(SFX.ZombieScream, transform.position + Vector3.up * 1.6f, 1f, VoicePitch * 0.75f);
+            SFX.PlayAt3D(SFX.ZombieMoan, transform.position + Vector3.up * 1.6f, 1f, VoicePitch * 0.6f);
+            int called = 0;
+            foreach (var m in Alive)
+            {
+                if (m == null || m == this || m.IsDead) continue;
+                if ((m.transform.position - transform.position).sqrMagnitude > 28f * 28f) continue;
+                m.Alert(20f);
+                called++;
+            }
+            Noise.Emit(transform.position, 28f, true);
+            if (called > 0) HUD.Notify($"곡하는 망자가 울부짖는다 — 망자 {called}이(가) 몰려온다", new Color(1f, 0.55f, 0.4f));
         }
 
         bool hatGone;

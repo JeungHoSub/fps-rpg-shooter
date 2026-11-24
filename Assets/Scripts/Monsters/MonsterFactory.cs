@@ -344,6 +344,7 @@ namespace Hunt.Monsters
                 case "tank": eye = new Color(0.6f, 0.9f, 0.3f); break;                      // 부은: 병든 초록
                 case "wall": eye = new Color(0.55f, 0.5f, 0.45f); eyeSize = 0.028f; break;  // 돌덩이: 흐릿
                 case "bloat": eye = new Color(0.85f, 1f, 0.2f); break;                       // 터지는: 누런 초록
+                case "shriek": eye = new Color(0.95f, 0.95f, 1f); eyeSize = 0.042f; break;  // 곡하는: 허연 눈
                 default: eye = new Color(1f, 0.15f, 0.08f); break;
             }
             foreach (var sx in new[] { -0.045f, 0.045f })
@@ -510,6 +511,13 @@ namespace Hunt.Monsters
                         Cosmetic(PrimitiveType.Sphere, rig.Spine, rig.Spine.position + R.forward * 0.38f * u + R.right * 0.1f * u + up * 0.06f * u, Quaternion.identity, new Vector3(0.1f, 0.1f, 0.1f) * u, new Color(0.75f, 0.85f, 0.25f), true);
                         Cosmetic(PrimitiveType.Sphere, rig.Spine, rig.Spine.position + R.forward * 0.33f * u - R.right * 0.14f * u - up * 0.08f * u, Quaternion.identity, new Vector3(0.08f, 0.08f, 0.08f) * u, new Color(0.75f, 0.85f, 0.25f), true);
                     }
+                    break;
+                case "shriek":
+                    // 소복 입은 듯 창백한 몸에 늘어진 긴 머리 (뒤통수에서 등까지)
+                    if (rig.Head != null)
+                        Cosmetic(PrimitiveType.Cube, rig.Head, rig.Head.position - R.forward * 0.09f * u - up * 0.22f * u, R.rotation * Quaternion.Euler(8f, 0f, 0f),
+                            new Vector3(0.22f, 0.5f, 0.05f) * u, new Color(0.03f, 0.03f, 0.035f), false);
+                    Cosmetic(PrimitiveType.Cube, rig.Spine2, chest + R.forward * 0.13f * u - up * 0.1f * u, R.rotation, new Vector3(0.36f, 0.5f, 0.02f) * u, new Color(0.82f, 0.8f, 0.74f), false);
                     break;
                 case "stalker":
                     // 앞으로 쏠린 해진 천 조각 (그림자처럼 어둡게)
