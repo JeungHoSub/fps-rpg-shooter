@@ -655,6 +655,10 @@ namespace Hunt.UI
             int size = Mathf.RoundToInt(Mathf.Min(44f + p.KillStreak * 4f, 76f) * pop);
             Color c = p.KillStreak >= 5 ? new Color(1f, 0.35f, 0.25f, alpha) : new Color(0.97f, 0.94f, 0.86f, alpha);
             UIKit.Text(new Rect(0, H * 0.27f - size, W, size * 2f), $"{p.KillStreak}연속!", size, c, TextAnchor.MiddleCenter, serif: true, bold: true);
+            // 길게 이어지면 이름이 붙는다
+            string title = p.KillStreak >= 12 ? "저승사자" : p.KillStreak >= 8 ? "아수라" : p.KillStreak >= 5 ? "피바람" : null;
+            if (title != null)
+                UIKit.Text(new Rect(0, H * 0.27f + size * 0.75f, W, 30), title, 22, new Color(1f, 0.85f, 0.6f, alpha), TextAnchor.MiddleCenter, serif: true, bold: true);
         }
 
         /// <summary>마지막 남은 망자 위치 표시 (화면 밖이면 가장자리에 화살표처럼).</summary>
