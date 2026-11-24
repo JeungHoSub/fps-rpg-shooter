@@ -74,7 +74,7 @@ namespace Hunt.Core
                 && (gm.Player.transform.position - transform.position).sqrMagnitude < 14f * 14f)
             {
                 told = true;
-                HUD.Notify("확성기 탑 — 밑에서 E를 누르면 사이렌이 울려 망자들을 이쪽으로 꾄다 (밤마다 한 번)", new Color(1f, 0.75f, 0.45f));
+                HUD.Notify("확성기 탑 — 밑에서 E, 또는 꼭대기 확성기를 쏘면 사이렌이 울려 망자들을 꾄다 (밤마다 한 번)", new Color(1f, 0.75f, 0.45f));
             }
             if (gm == null || !gm.AcceptsGameplayInput || !GameInput.PickupDown) return;
             if (!ReferenceEquals(NearPlayer(), this)) return;
