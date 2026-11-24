@@ -125,6 +125,11 @@ namespace Hunt.Player
                     StartSwing();
                 }
                 if (GameInput.GrenadeDown) QuickGrenade();
+                if (GameInput.StoneDown)
+                {
+                    if (ThrownStone.Ready) ThrownStone.Throw(cam.transform);
+                    else HUD.Notify($"돌을 다시 줍는 중 ({Mathf.CeilToInt(ThrownStone.ReadyAt - Time.time)}초)", UITheme.BoneDim);
+                }
             }
             if (swapTime > 0f) swapTime -= dt;
             if (meleeCooldown > 0f) meleeCooldown -= dt;

@@ -57,6 +57,8 @@ namespace Hunt.Core
         /// <summary>다음 무기(아래로 굴림 = 음수). 휴대폰은 '교체' 버튼.</summary>
         public static float Scroll => Mobile ? (touchSwap ? -1f : 0f) : Input.GetAxis("Mouse ScrollWheel");
         public static bool MeleeDown => Mobile ? touchMelee : Input.GetKeyDown(KeyCode.V);
+        /// <summary>B: 돌 던지기 (소리로 망자 꾀기). 휴대폰은 아직 없음.</summary>
+        public static bool StoneDown => !Mobile && Input.GetKeyDown(KeyCode.B);
         public static bool GrenadeDown => Mobile ? touchGrenade : Input.GetKeyDown(KeyCode.G);
 
         // ---- 도구 / 능력 ----
