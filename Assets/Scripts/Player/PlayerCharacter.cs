@@ -215,6 +215,24 @@ namespace Hunt.Player
                     heartTimer = Mathf.Lerp(0.55f, 1.1f, ratio / 0.35f);
                 }
             }
+            else if (!IsDead && Controller != null && Controller.IsCrouching && Hiding.InBush(transform.position))
+            {
+                // 덤불에 숨었는데 망자가 6m 안을 어슬렁거리면 숨죽인 심장 소리 (가까울수록 크고 빠르게)
+                heartTimer -= dt;
+                if (heartTimer <= 0f)
+                {
+                    float near = 99f;
+                    foreach (var m in Monster.Alive)
+                        if (m != null && !m.IsDead) near = Mathf.Min(near, Vector3.Distance(m.transform.position, transform.position));
+                    if (near < 6f)
+                    {
+                        float k = 1f - near / 6f;
+                        SFX.Play(SFX.Heartbeat, 0.25f + 0.45f * k, 0f);
+                        heartTimer = Mathf.Lerp(1.0f, 0.6f, k);
+                    }
+                    else heartTimer = 0.4f;
+                }
+            }
         }
 
         public void OnKill(Monster m)
