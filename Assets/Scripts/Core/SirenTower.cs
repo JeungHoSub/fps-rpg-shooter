@@ -46,6 +46,7 @@ namespace Hunt.Core
             SFX.PlayAt3D(SFX.Siren, top, 1f, 1f);
             SFX.Play(SFX.Siren, 0.35f, 0f); // 가까이서도 귀가 울리게
             Noise.Emit(transform.position, 110f, false); // 폭우에도 마을 끝까지 들린다
+            Crows.Startle(transform.position); // 까마귀가 날아오른다
             HUD.Notify("사이렌이 울린다 — 망자들이 확성기 탑으로 몰려온다", new Color(1f, 0.7f, 0.35f));
         }
     }
