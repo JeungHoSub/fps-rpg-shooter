@@ -232,6 +232,7 @@ namespace Hunt.Player
                 Pickup.Spawn(PickupKind.Rune, m.transform.position + Vector3.right * 0.6f, m.transform.parent);
                 Pickup.Spawn(PickupKind.Ammo, m.transform.position - Vector3.right * 0.6f, m.transform.parent);
                 HUD.Notify($"현상금 망자를 쓰러뜨렸다 — 엽전 +{bounty}", new Color(1f, 0.85f, 0.4f));
+                Achievements.Add("bounty10");
                 SFX.PlayPitched(SFX.LevelUp, 0.6f, 0.9f);
             }
 
