@@ -43,6 +43,9 @@ namespace Hunt.Core
                 }
                 if (t < offUntil) k *= Random.value < 0.5f ? 0.05f : 0.4f;
             }
+            // 보스가 가까우면 마을 불빛이 모두 떨린다 (Flashlight가 0.25초마다 잰 값)
+            float bn = Hunt.Player.Flashlight.BossNear;
+            if (bn > 0f && GameSettings.ShakeMult > 0f && Mathf.PerlinNoise(seed + t * (7f + bn * 12f), 1.7f) < 0.15f + bn * 0.2f) k *= 0.25f;
             lt.intensity = baseIntensity * k;
         }
     }

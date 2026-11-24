@@ -72,6 +72,7 @@ namespace Hunt.Player
                     if (d < 25f) bossNear = Mathf.Max(bossNear, 1f - d / 25f);
                 }
             }
+            BossNear = bossNear;
             if (bossNear > 0f && Hunt.Core.GameSettings.ShakeMult > 0f) // 흔들림 끔이면 깜빡임도 끔
             {
                 float n = Mathf.PerlinNoise(Time.time * (9f + bossNear * 14f), 7.1f);
@@ -81,5 +82,7 @@ namespace Hunt.Player
         }
 
         float bossCheck, bossNear;
+        /// <summary>보스가 얼마나 가까운가 0~1 (25m 밖 0). 가로등 떨림도 이 값을 쓴다.</summary>
+        public static float BossNear;
     }
 }
