@@ -406,6 +406,7 @@ namespace Hunt.Player
             Vector3 center = player.transform.position + Vector3.up * 1f + Vector3.ProjectOnPlane(cam.transform.forward, Vector3.up).normalized * 1.3f;
             var hits = Physics.OverlapSphere(center, 1.3f, RaycastMask, QueryTriggerInteraction.Ignore);
             var done = new HashSet<Monster>();
+            KickLeg.Show(cam.transform);
             foreach (var h in hits)
             {
                 var part = h.GetComponent<MonsterPart>();
