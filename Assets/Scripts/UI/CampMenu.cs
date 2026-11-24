@@ -609,12 +609,20 @@ namespace Hunt.UI
             UIKit.Text(new Rect(right.x, right.y + 12, right.width, 30), "보급", 22, UITheme.Gold, TextAnchor.MiddleCenter, serif: true, bold: true);
             float y = right.y + 54;
             const int buyRows = 3 + Gadgets.Count + 5; // 키트·회복제·폭죽 + 기기 + 부적 4 + 향
-            float rowStep = Mathf.Min(74f, (right.height - 54f - 64f) / buyRows);
+            // 칸이 많아 두 줄(왼쪽·오른쪽)로 나눈다 — 한 칸이 너무 납작해지지 않게
+            int perCol = (buyRows + 1) / 2;
+            float rowStep = Mathf.Min(74f, (right.height - 54f - 64f) / perCol);
             float buyH = rowStep - 6f;
+            float colW = (right.width - 32f - 10f) / 2f;
+            float y0 = y;
+            int buyIdx = 0;
             void Buy(HudIcons.Icon icon, Color tint, string name, string desc, int have, int max, int price, System.Action give)
             {
                 // 보급 칸: 그림 + 이름·설명 + 개수 칸 + 가격 (누르면 산다)
-                var r = new Rect(right.x + 16, y, right.width - 32, buyH);
+                int col = buyIdx / perCol, row = buyIdx % perCol;
+                buyIdx++;
+                y = y0 + row * rowStep;
+                var r = new Rect(right.x + 16 + col * (colW + 10f), y, colW, buyH);
                 bool full = have >= max;
                 bool can = !full && p.Gold >= price;
                 bool click = UIKit.HitArea(r, "buy" + name, out float hv, can);
@@ -624,7 +632,7 @@ namespace Hunt.UI
                 float ic = Mathf.Min(40f, buyH - 16f);
                 UIKit.Tex(new Rect(r.x + 12, r.y + (buyH - ic) / 2f, ic, ic), HudIcons.Get(icon), can || full ? tint : new Color(0.45f, 0.43f, 0.4f));
                 UIKit.Text(new Rect(r.x + 64, r.y + 3, r.width - 170, 24), name, 16, UITheme.Bone, serif: true, bold: true);
-                UIKit.Text(new Rect(r.x + 64, r.y + buyH * 0.48f, r.width - 170, 20), desc, 12, UITheme.BoneDim);
+                UIKit.Text(new Rect(r.x + 64, r.y + buyH * 0.42f, r.width - 170, buyH * 0.58f - 2f), desc, 12, UITheme.BoneDim, wrap: true); // 칸이 좁아 두 줄까지
                 UIKit.StatCells(new Rect(r.xMax - 100, r.y + 12, 88, 10), max, 0, have, 0);
                 UIKit.Text(new Rect(r.xMax - 110, r.y + 30, 98, 26), full ? "가득" : $"엽전 {price}", 15, full ? UITheme.Ash : p.Gold >= price ? UITheme.Good : UITheme.BloodBright, TextAnchor.MiddleRight, bold: true);
                 if (click && p.SpendGold(price)) { give(); SFX.Play(SFX.MagIn, 0.8f); }
