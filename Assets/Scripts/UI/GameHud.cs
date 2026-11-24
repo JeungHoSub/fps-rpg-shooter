@@ -341,6 +341,7 @@ namespace Hunt.UI
             DrawPickups(dt);
             DrawTargetTag(cam);
             DrawTurretTags(cam);
+            DrawGrenadeWarnings(p, cam);
         }
 
         /// <summary>조준점 아래 탄약 경고: 적으면 'R 장전', 탄창이 비면 강하게, 예비탄까지 없으면 무기 바꾸라고.</summary>
@@ -468,6 +469,28 @@ namespace Hunt.UI
             }
             // 가운데 표시
             UIKit.Fill(new Rect(r.center.x - 1, r.y - 2, 2, r.height + 4), new Color(1f, 0.9f, 0.7f, 0.7f));
+        }
+
+        /// <summary>내 발 근처(7m)에 터지기 직전 수류탄이 있으면 그 위에 붉은 '!' — 화면 밖이면 가장자리에.</summary>
+        void DrawGrenadeWarnings(PlayerCharacter p, Camera cam)
+        {
+            if (cam == null || ThrownGrenade.Live.Count == 0) return;
+            float k = W / Screen.width;
+            foreach (var g in ThrownGrenade.Live)
+            {
+                if (g == null) continue;
+                float dist = Vector3.Distance(g.transform.position, p.transform.position);
+                if (dist > 7f) continue;
+                Vector3 sp = cam.WorldToScreenPoint(g.transform.position + Vector3.up * 0.3f);
+                bool behind = sp.z < 0f;
+                float x = sp.x * k, y = (Screen.height - sp.y) * k;
+                if (behind) { x = W - x; y = H - 80f; }
+                x = Mathf.Clamp(x, 50f, W - 50f); y = Mathf.Clamp(y, 50f, H - 50f);
+                float pulse = 0.6f + 0.4f * Mathf.Sin(Time.unscaledTime * (g.Fuse < 1f ? 22f : 12f));
+                UIKit.Tex(new Rect(x - 26, y - 26, 52, 52), UITheme.Circle, new Color(0f, 0f, 0f, 0.55f));
+                UIKit.Text(new Rect(x - 26, y - 26, 52, 52), "!", 34, new Color(1f, 0.3f, 0.2f, pulse), TextAnchor.MiddleCenter, bold: true);
+                UIKit.Text(new Rect(x - 60, y + 24, 120, 20), $"수류탄 {dist:0}m", 13, new Color(1f, 0.8f, 0.7f, pulse), TextAnchor.MiddleCenter);
+            }
         }
 
         /// <summary>깔아 둔 기관총 머리 위: 남은 시간 막대 + 남은 탄 (30m 안, 화면에 보일 때만).</summary>

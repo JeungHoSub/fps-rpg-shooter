@@ -77,6 +77,11 @@ namespace Hunt.Player
     /// <summary>던진 수류탄: 굴러가다 터진다.</summary>
     public class ThrownGrenade : MonoBehaviour
     {
+        /// <summary>날아가거나 굴러다니는 수류탄들 (HUD가 가까우면 경고).</summary>
+        public static readonly List<ThrownGrenade> Live = new List<ThrownGrenade>();
+        void OnEnable() { Live.Add(this); }
+        void OnDisable() { Live.Remove(this); }
+        public float Fuse => fuse;
         float fuse = 2.5f;
         PlayerCharacter owner;
         float damage;
