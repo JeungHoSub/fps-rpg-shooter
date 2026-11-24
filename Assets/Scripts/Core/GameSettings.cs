@@ -32,6 +32,16 @@ namespace Hunt.Core
             set { fov = Mathf.Clamp(Mathf.Round(value), 65f, 95f); Save(FovKey, fov.Value); }
         }
 
+        const string BrightKey = "hunt.brightness";
+        static float? brightness;
+
+        /// <summary>밝기 (0.6~1.8, 기본 1). 어두운 화면·모니터에서 망자가 안 보이면 올린다 (주변광·달빛에 곱함).</summary>
+        public static float Brightness
+        {
+            get { if (brightness == null) brightness = Mathf.Clamp(Load(BrightKey, 1f), 0.6f, 1.8f); return brightness.Value; }
+            set { brightness = Mathf.Clamp(value, 0.6f, 1.8f); Save(BrightKey, brightness.Value); }
+        }
+
         // ---- 모바일 ----
         // PreviewKey2: 예전 키에 '켜짐'이 저장돼 있어도 PC 기본(꺼짐)으로 시작하도록 새 키 사용
         const string AutoFireKey = "hunt.autofire", AssistKey = "hunt.aimassist", PreviewKey2 = "hunt.mobilepreview2";

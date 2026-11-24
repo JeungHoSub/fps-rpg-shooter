@@ -289,13 +289,13 @@ namespace Hunt.Core
                 // 두 번 번쩍
                 float f = flash > 0.7f ? 1f : flash > 0.55f ? 0.1f : flash > 0.4f ? 0.8f : flash * 0.5f;
                 if (moon != null) moon.intensity = Mathf.Lerp(baseMoon * moonMult, 0.75f, Dawn) + f * 2.4f;
-                RenderSettings.ambientLight = Color.Lerp(baseAmbient, DawnAmbient, Dawn) + new Color(0.35f, 0.4f, 0.5f) * f;
+                RenderSettings.ambientLight = (Color.Lerp(baseAmbient, DawnAmbient, Dawn) + new Color(0.35f, 0.4f, 0.5f) * f) * GameSettings.Brightness;
                 RenderSettings.fogColor = Color.Lerp(FogColor, DawnFog, Dawn) + new Color(0.12f, 0.14f, 0.18f) * f;
             }
             else if (moon != null)
             {
-                moon.intensity = Mathf.Lerp(baseMoon * moonMult, 0.75f, Dawn);
-                RenderSettings.ambientLight = Color.Lerp(baseAmbient, DawnAmbient, Dawn);
+                moon.intensity = Mathf.Lerp(baseMoon * moonMult, 0.75f, Dawn) * Mathf.Sqrt(GameSettings.Brightness);
+                RenderSettings.ambientLight = Color.Lerp(baseAmbient, DawnAmbient, Dawn) * GameSettings.Brightness; // Esc '밝기'
                 RenderSettings.fogColor = Color.Lerp(FogColor, DawnFog, Dawn);
             }
             if (cam != null)

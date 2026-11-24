@@ -56,6 +56,11 @@ namespace Hunt.UI
             UIKit.Text(new Rect(r.x + 60, y, 160, 30), "시야각", 18, UITheme.Bone, serif: true);
             GameSettings.Fov = UIKit.Slider(new Rect(r.x + 220, y, r.width - 340, 30), GameSettings.Fov, 65f, 95f, "fov");
             UIKit.Text(new Rect(r.xMax - 110, y, 60, 30), $"{GameSettings.Fov:0}°", 18, UITheme.GoldBright, TextAnchor.MiddleRight, bold: true);
+            y += 52;
+
+            UIKit.Text(new Rect(r.x + 60, y, 160, 30), "밝기", 18, UITheme.Bone, serif: true);
+            GameSettings.Brightness = UIKit.Slider(new Rect(r.x + 220, y, r.width - 340, 30), GameSettings.Brightness, 0.6f, 1.8f, "bright");
+            UIKit.Text(new Rect(r.xMax - 110, y, 60, 30), $"{GameSettings.Brightness * 100:0}%", 18, UITheme.GoldBright, TextAnchor.MiddleRight, bold: true);
             y += 54;
 
             // 그래픽 품질 (PC가 멈추거나 끊기면 '하')
