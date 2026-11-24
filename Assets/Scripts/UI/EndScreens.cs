@@ -222,7 +222,7 @@ namespace Hunt.UI
                 // 새 기록이면 해당 칸 위에 붉은 낙관
                 if (newWave) Seal(new Rect(r.x + 120, r.y + 6, 46, 46));
                 if (newKills) Seal(new Rect(r.x + 430, r.y + 6, 46, 46));
-                string best = $"머리로 {p.RunHeadKills} · 소리 없이 {p.RunSilent} · 현상금 {p.RunBounties} · 보급 상자 {p.RunCrates}     ·     지난 최고 — 밤 {Mathf.Max(bestWave, 0)} · 망자 {Mathf.Max(bestKills, 0)}";
+                string best = $"머리 {p.RunHeadKills} · 소리 없이 {p.RunSilent} · 현상금 {p.RunBounties} · 상자 {p.RunCrates}    |    지난 최고 밤 {Mathf.Max(bestWave, 0)} · 망자 {Mathf.Max(bestKills, 0)}";
                 UIKit.Text(new Rect(r.x, r.yMax + 8, r.width, 22), best, 14, UITheme.Ash, TextAnchor.MiddleCenter);
             }
 
