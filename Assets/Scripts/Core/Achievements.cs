@@ -49,7 +49,7 @@ namespace Hunt.Core
             try { PlayerPrefs.SetInt(Key(id), now); if (now >= def.goal) PlayerPrefs.Save(); } catch { }
             if (now >= def.goal)
             {
-                Hunt.UI.HUD.Notify($"업적 — {def.name}  ·  {def.desc}", new Color(1f, 0.85f, 0.45f));
+                Hunt.UI.HUD.ShowAchievement(def.name, def.desc);
                 SFX.Play(SFX.Gong, 0.45f, 0f);
             }
         }

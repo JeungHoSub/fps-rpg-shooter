@@ -136,9 +136,33 @@ namespace Hunt.UI
             if (gm.Paused) ends.DrawPause(gm, W, H);
 
             DrawNotes(W);
+            DrawAchievementCard(W);
             DrawFps(gm);
             TryScreenshot();
             UIKit.DrawTooltip(W, H);
+        }
+
+        // ---- 업적 달성 카드 (오른쪽 위, 4.5초) ----
+        static string achName, achDesc;
+        static float achAt = -100f;
+
+        public static void ShowAchievement(string name, string desc) { achName = name; achDesc = desc; achAt = Time.unscaledTime; }
+
+        static void DrawAchievementCard(float W)
+        {
+            float age = Time.unscaledTime - achAt;
+            if (achName == null || age > 4.5f) return;
+            float a = UIKit.EaseOut(age * 3f) * Mathf.Clamp01((4.5f - age) / 0.6f);
+            float keep = UIKit.Alpha;
+            UIKit.Alpha = keep * a;
+            var r = new Rect(W - 430 + (1f - a) * 40f, 110, 400, 92);
+            UIKit.Panel(r);
+            var seal = new Rect(r.x + 16, r.y + 18, 56, 56);
+            UIKit.Tex(seal, UITheme.Seal, UITheme.Blood);
+            UIKit.Text(seal, "업적", 16, UITheme.GoldBright, TextAnchor.MiddleCenter, serif: true, bold: true);
+            UIKit.Text(new Rect(r.x + 86, r.y + 16, r.width - 100, 30), achName, 22, UITheme.GoldBright, TextAnchor.MiddleLeft, serif: true, bold: true);
+            UIKit.Text(new Rect(r.x + 86, r.y + 48, r.width - 100, 30), achDesc, 14, UITheme.BoneDim, TextAnchor.MiddleLeft, wrap: true);
+            UIKit.Alpha = keep;
         }
 
         static bool showFps;
