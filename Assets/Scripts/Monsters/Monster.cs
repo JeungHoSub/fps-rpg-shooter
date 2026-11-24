@@ -200,6 +200,7 @@ namespace Hunt.Monsters
                     if (lurkEyes != null)
                     {
                         if (lurkEyes.activeSelf != lit) lurkEyes.SetActive(lit);
+                        if (lit && !eyesGrowled) { eyesGrowled = true; SFX.PlayAt3D(SFX.Growl, transform.position + Vector3.up * 0.6f, 0.5f, VoicePitch * 0.8f); } // 처음 비췄을 때 낮게 으르렁
                         // 잎에 가리지 않게 덤불 바깥쪽(플레이어 쪽) 가장자리에 두고 플레이어를 본다
                         if (lit)
                         {
@@ -699,6 +700,7 @@ namespace Hunt.Monsters
         bool lurking, hpLostWhileLurking;
         Vector3 lurkBase;
         GameObject lurkEyes;
+        bool eyesGrowled;
         public bool Lurking => lurking;
 
         /// <summary>덤불 속 매복으로 만든다 (모델이 있는 망자만): 몸을 땅 밑에 숨기고 기다린다.</summary>
