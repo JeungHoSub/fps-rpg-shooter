@@ -257,7 +257,9 @@ namespace Hunt.Monsters
                 growlTimer -= dt;
                 if (growlTimer <= 0f)
                 {
-                    SFX.PlayAt3D(SFX.Growl, transform.position + Vector3.up * 1.5f, Mathf.Lerp(0.9f, 0.45f, dist / 9f), VoicePitch);
+                    // 벽 너머면 소리가 줄어든다 (어디 있는지 귀로 가늠하게)
+                    bool walled = Flashlight.Eye != null && !CanSee(Flashlight.Eye.position, transform.position + Vector3.up * 1.5f * Data.scale);
+                    SFX.PlayAt3D(SFX.Growl, transform.position + Vector3.up * 1.5f, Mathf.Lerp(0.9f, 0.45f, dist / 9f) * (walled ? 0.55f : 1f), VoicePitch * (walled ? 0.92f : 1f));
                     growlTimer = Random.Range(2.2f, 4.2f);
                 }
             }
