@@ -262,8 +262,13 @@ namespace Hunt.Waves
         public void DamageDefendPoint(float dmg)
         {
             if (Rule != RoundRule.Defense || Stage == RoundStage.Cleared) return;
+            float before = DefendHp / DefendMaxHp;
             DefendHp = Mathf.Max(0f, DefendHp - dmg);
             SFX.PlayAt(SFX.FleshHit, DefendPos, 0.5f);
+            // 돌무더기가 반·4분의 1 아래로 내려가면 경고 (어디서 공격받는지 모를 때 돌아가라고)
+            float now = DefendHp / DefendMaxHp;
+            if (before > 0.5f && now <= 0.5f) { HUD.Notify("돌무더기가 반쯤 무너졌다 — 서낭당으로 돌아가라 (나침반 '지')", new Color(1f, 0.55f, 0.35f)); SFX.Play(SFX.Gong, 0.5f, 0f); }
+            if (before > 0.25f && now <= 0.25f) { HUD.Notify("돌무더기가 곧 무너진다!", new Color(1f, 0.3f, 0.25f)); SFX.Play(SFX.Gong, 0.7f, 0f); }
             if (DefendHp <= 0f) FailRound("서낭당 돌무더기가 무너졌다");
         }
 
