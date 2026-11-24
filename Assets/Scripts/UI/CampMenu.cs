@@ -19,6 +19,7 @@ namespace Hunt.UI
         int weaponIdx;
         Vector2 invScroll, historyScroll, notesScroll;
         bool showNotes;
+        int rightView; // 역병 일지 오른쪽: 0 기록 · 1 쪽지 · 2 망자 도감
         StatType? hoverStat;
         readonly RadarChart radar = new RadarChart();
         float appear, tabAppear = 1f;
@@ -685,10 +686,34 @@ namespace Hunt.UI
             // 오른쪽: 기록 / 찢어진 쪽지 (단추로 바꿔 본다)
             int notesRead = 0;
             try { notesRead = Mathf.Clamp(PlayerPrefs.GetInt("hunt.lore.read", 0), 0, GameText.LoreNotes.Length); } catch { }
-            float hb = (right.width - 60) / 2f;
-            if (UIKit.Button(new Rect(right.x + 20, right.y + 14, hb, 38), "지난 밤들의 기록", 16, !showNotes)) showNotes = false;
-            if (UIKit.Button(new Rect(right.x + 40 + hb, right.y + 14, hb, 38), $"찢어진 쪽지  {notesRead} / {GameText.LoreNotes.Length}", 16, showNotes)) showNotes = true;
+            float hb = (right.width - 60) / 3f;
+            if (UIKit.Button(new Rect(right.x + 20, right.y + 14, hb, 38), "기록", 16, rightView == 0)) rightView = 0;
+            if (UIKit.Button(new Rect(right.x + 30 + hb, right.y + 14, hb, 38), $"쪽지 {notesRead}/{GameText.LoreNotes.Length}", 16, rightView == 1)) rightView = 1;
+            if (UIKit.Button(new Rect(right.x + 40 + hb * 2f, right.y + 14, hb, 38), "망자 도감", 16, rightView == 2)) rightView = 2;
+            showNotes = rightView == 1;
             var view = new Rect(right.x + 20, right.y + 64, right.width - 30, right.height - 80);
+            if (rightView == 2)
+            {
+                // 망자 도감: 본 적 있는 유형은 이름·특징·쓰러뜨린 수, 아직 못 본 유형은 '???'
+                var kinds = DefaultContent.ZombieKinds;
+                float rowH = 64f;
+                var inn = new Rect(0, 0, view.width - 18, Mathf.Max(view.height, kinds.Length * rowH));
+                notesScroll = GUI.BeginScrollView(view, notesScroll, inn, GUIStyle.none, GUI.skin.verticalScrollbar);
+                for (int i = 0; i < kinds.Length; i++)
+                {
+                    var k = kinds[i];
+                    int kills = 0; bool seen = k.id == "basic";
+                    try { kills = PlayerPrefs.GetInt("hunt.kills.z_" + k.id, 0); seen |= kills > 0 || PlayerPrefs.GetInt("hunt.seen.z_" + k.id, 0) == 1; } catch { }
+                    var rr = new Rect(0, i * rowH, inn.width - 6, rowH - 6);
+                    UIKit.Fill(rr, new Color(0.04f, 0.038f, 0.04f, 0.85f));
+                    UIKit.Fill(new Rect(rr.x, rr.y, 6, rr.height), seen ? new Color(k.tint.r, k.tint.g, k.tint.b, 1f) : new Color(0.2f, 0.2f, 0.2f));
+                    UIKit.Text(new Rect(rr.x + 16, rr.y + 4, rr.width - 140, 26), seen ? k.name : "???", 17, seen ? UITheme.Bone : UITheme.Ash, serif: true, bold: true);
+                    UIKit.Text(new Rect(rr.x + 16, rr.y + 30, rr.width - 140, 24), seen ? k.desc : $"{k.fromWave}째 밤부터 나온다", 13, UITheme.BoneDim, wrap: true);
+                    UIKit.Text(new Rect(rr.xMax - 120, rr.y + 4, 110, 26), seen ? $"{kills}마리" : "", 16, UITheme.GoldBright, TextAnchor.MiddleRight, bold: true);
+                }
+                GUI.EndScrollView();
+                return;
+            }
             if (showNotes)
             {
                 float rowH = 92f;

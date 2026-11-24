@@ -217,6 +217,7 @@ namespace Hunt.Player
             if (KillStreak >= 2) SFX.PlayPitched(SFX.KillTick, 0.7f, 1f + Mathf.Min(KillStreak - 1, 8) * 0.08f);
             Kills++;
             Achievements.Add("kills1000");
+            try { string kk = "hunt.kills." + m.Data.id; PlayerPrefs.SetInt(kk, PlayerPrefs.GetInt(kk, 0) + 1); } catch { } // 망자 도감
             if (KillStreak >= 10) Achievements.Unlock("streak10");
             if (KillStreak > BestStreak) BestStreak = KillStreak;
             var evo = EvolutionDirector.Instance != null ? EvolutionDirector.Instance.Profile : null;
