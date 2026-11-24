@@ -386,9 +386,14 @@ namespace Hunt.Player
                 if (n++ >= 2) break; // 한 번에 둘까지
                 var part = kv.Value;
                 Vector3 hp = part.GetComponent<Collider>().ClosestPoint(center);
+                // 소리 없는 처치: 나를 못 알아챈 망자를 등 뒤(70° 안)에서 베면 한 번에 쓰러진다 (보스·엘리트 제외)
+                var mo = part.owner;
+                Vector3 toMo = mo.transform.position - player.transform.position; toMo.y = 0f;
+                bool backstab = !mo.IsAlerted && !mo.IsBoss && mo.Data.archetype == Hunt.Data.MonsterArchetype.Runner
+                                && toMo.sqrMagnitude > 0.01f && Vector3.Angle(mo.transform.forward, toMo) < 70f;
                 var info = new DamageInfo
                 {
-                    baseDamage = MeleeDamage, type = DamageType.Physical, weaponClass = WeaponClass.Melee,
+                    baseDamage = backstab ? Mathf.Max(MeleeDamage * 12f, mo.MaxHp * 3f) : MeleeDamage, type = DamageType.Physical, weaponClass = WeaponClass.Melee,
                     critChance = player.Stats.CritChance, critMultiplier = player.Stats.CritMultiplier,
                     weakPointBonus = player.Stats.WeakPointBonus, penetration = 0.5f, knockback = 3.5f * player.Stats.KnockbackMult,
                     distance = 1f, falloffStart = 100f, falloffEnd = 200f, minFalloffMultiplier = 1f,
@@ -397,6 +402,11 @@ namespace Hunt.Player
                 var res = part.ReceiveHit(info);
                 if (!res.hit) continue;
                 kill |= res.killed;
+                if (backstab && res.killed)
+                {
+                    HUD.Notify("소리 없이 쓰러뜨렸다", new Color(0.75f, 0.85f, 1f));
+                    Achievements.Add("silent10");
+                }
                 // 칼로 쓰러뜨리면 35% 확률로 치유 부적 (가까이 붙는 위험의 보상)
                 if (res.killed && Random.value < 0.35f)
                     Pickup.Spawn(PickupKind.Rune, part.owner.transform.position + Vector3.up * 0.2f, part.owner.transform.parent);
