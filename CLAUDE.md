@@ -94,7 +94,9 @@ Unity 1인칭 싱글플레이 좀비 슈터 + RPG. **비 오는 밤의 한국 �
     던지기 힘 `PlayerWeapons.ThrowCharge` · 총성 메아리 `SFX.Echo` · 별 총구 불꽃 `WeaponViewModel.StarMaterial` · 망자 도감(역병 일지) · 빠른 출정 · 하늘의 달·번개 `Atmosphere.UpdateMoonDisc/SpawnBolt` ·
     소리 없는 처치(등 뒤 칼, `swingUnaware`) · 이름표 알아챔 · 보급품 바닥 고리 · 지킴/소탕 경고 · 돌진 연출 `GameHud.RushAt` · 갑옷 '팅' · 판 통계(사망 화면) · 흔들림 설정 `GameSettings.Shake` ·
     부적 `PlayerCharacter.CharmGuard/Swift/Aim` · 숨은 장승 `Player/Jangseung.cs`(`Blessings`, 풍경 소리) · 혼잣말 `GameHud.Mutter` · 툴팁 페이드 · 핏빛 달 · 문 두드림 `SFX.Knock` ·
-    기관총 거두기 `SentryTurret.NearestToPlayer` · 수류탄 경고 `ThrownGrenade.Live` · 청심환 `PickupKind.Pill` · 숙련 진행 선 · 도깨비불 `Core/Dokkaebi.cs`.
+    기관총 거두기 `SentryTurret.NearestToPlayer` · 수류탄 경고 `ThrownGrenade.Live` · 청심환 `PickupKind.Pill` · 숙련 진행 선 · 도깨비불 `Core/Dokkaebi.cs` · 상자 함정 · 현상금 도망 ·
+    밤 제목 날씨 · 사망 슬로 · 일시정지 먹먹 · 쫓는 망자 수(소리 막대 둘째 줄) · 회복제·키트 화면 빛 · 보급 도움(탄·부적) · 빗소리 크기 `GameSettings.AmbientVolume` · 들킴 '!' `Monster.SpottedAt` ·
+    연속 처치 이름 · 열째 밤 문구 · 혼불 `SoulWisp`.
   - 2026-11-24 05:55~10:20 작업 서버 재시작으로 멈춤 → 10:22 재개. 커밋 전 컴파일 확인은 scratchpad `ship.sh "메시지"` (오류면 커밋 안 함).
   - 보류: 망자 모델 다양화 (Mixamo — 사용자 토큰 다시 필요, 토큰은 하루쯤 지나면 만료).
   - 이후 작은 후보: 사용자 피드백 반영 → 성능(실기기 확인 필요) · 버그 점검 · 소리/연출 다듬기.
