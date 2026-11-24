@@ -717,7 +717,7 @@ namespace Hunt.Player
             int pellets = Mathf.Max(1, w.data.pellets);
             float tracerWidth = pellets > 1 ? 0.012f : 0.025f;
 
-            bool anyHit = false, anyWeak = false, anyKill = false, anyArmor = false;
+            bool anyHit = false, anyWeak = false, anyKill = false, anyArmor = false, anyEliteKill = false;
             Vector3 killPos = Vector3.zero, hurtPos = Vector3.zero;
 
             // 유탄·로켓: 날아가서 터지는 탄
@@ -768,6 +768,7 @@ namespace Hunt.Player
                             if (res.killed)
                             {
                                 anyKill = true;
+                                if (!part.owner.IsBoss && part.owner.Data.archetype != Hunt.Data.MonsterArchetype.Runner) anyEliteKill = true;
                                 killPos = hit.point;
                                 // 머리·급소로 끝내면 크게 터진다
                                 if (res.zone == HitZone.Head || res.zone == HitZone.WeakPoint)
@@ -825,7 +826,9 @@ namespace Hunt.Player
             {
                 SFX.Play(SFX.KillTick, 0.6f, 0f);
                 SFX.PlayAt(SFX.MonsterDie, killPos, 0.9f);
-                GameManager.Instance.HitStop(0.06f); // 처치 순간 멈칫
+                bool eliteKill = anyEliteKill;
+                GameManager.Instance.HitStop(eliteKill ? 0.13f : 0.06f); // 처치 순간 멈칫 (엘리트는 더 길게)
+                if (eliteKill) player.Controller.AddShake(1.4f);
             }
             else if (anyHit)
             {
