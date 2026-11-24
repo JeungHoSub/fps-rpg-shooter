@@ -62,6 +62,7 @@ namespace Hunt.Player
                 float pd = Vector3.Distance(point, owner.transform.position + Vector3.up);
                 if (pd < radius * 0.6f) owner.TakeDamage(damage * 0.12f * (1f - pd / (radius * 0.6f)), 0f);
                 if (pd < radius * 3f) owner.Controller.AddShake(Mathf.Lerp(3f, 0.5f, pd / (radius * 3f)));
+                if (pd < radius * 1.6f) EarRing.Hit(1f - pd / (radius * 1.6f)); // 가까우면 귀가 먹먹
             }
         }
 

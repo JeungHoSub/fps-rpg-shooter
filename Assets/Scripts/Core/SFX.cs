@@ -691,6 +691,24 @@ namespace Hunt.Core
             return Clip("rack", d);
         }
 
+        /// <summary>폭발 뒤 귀 울림: 높은 '삐—' 소리가 서서히 사라진다.</summary>
+        public static AudioClip EarRing => Get("earring", () =>
+        {
+            const float len = 2.4f;
+            int n = (int)(Rate * len);
+            var d = new float[n];
+            float ph = 0f, ph2 = 0f;
+            for (int i = 0; i < n; i++)
+            {
+                float t = (float)i / Rate;
+                ph += 2f * Mathf.PI * 3600f / Rate;
+                ph2 += 2f * Mathf.PI * 3640f / Rate; // 살짝 맥놀이
+                float env = Mathf.Clamp01(t / 0.08f) * Mathf.Pow(1f - t / len, 1.6f);
+                d[i] = (Mathf.Sin(ph) * 0.6f + Mathf.Sin(ph2) * 0.4f) * env * 0.22f;
+            }
+            return Clip("earring", d);
+        });
+
         static AudioClip MakeTone(float len, float hzStart, float hzEnd, float amp)
         {
             int n = (int)(Rate * len);
