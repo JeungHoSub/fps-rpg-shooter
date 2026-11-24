@@ -580,6 +580,33 @@ namespace Hunt.Core
             return Clip("siren", d);
         });
 
+        /// <summary>흐느낌 '흑… 흑…' (다친 마을 사람): 숨 섞인 짧은 소리 셋.</summary>
+        public static AudioClip Sob => Get("sob", () =>
+        {
+            const float len = 1.6f;
+            int n = (int)(Rate * len);
+            var d = new float[n];
+            var rnd = new System.Random(11);
+            float[] at = { 0.05f, 0.45f, 0.95f };
+            float lp = 0f;
+            foreach (float a0 in at)
+            {
+                int s0 = (int)(a0 * Rate);
+                float ph = 0f;
+                for (int i = 0; i < (int)(0.32f * Rate) && s0 + i < n; i++)
+                {
+                    float t = (float)i / Rate;
+                    float env = Mathf.Sin(Mathf.Clamp01(t / 0.32f) * Mathf.PI) * Mathf.Exp(-t * 4f);
+                    ph += 2f * Mathf.PI * (230f - 90f * t / 0.32f) / Rate;          // 떨리며 내려가는 목소리
+                    float voice = Mathf.Sin(ph) * 0.5f + Mathf.Sin(ph * 2f) * 0.2f;
+                    float breath = (float)(rnd.NextDouble() * 2.0 - 1.0);
+                    lp += (breath - lp) * 0.2f;                                        // 숨소리는 부드럽게
+                    d[s0 + i] += (voice * 0.45f + lp * 0.8f) * env * 0.5f;
+                }
+            }
+            return Clip("sob", d);
+        });
+
         /// <summary>까마귀 '까악' 두 번 (거친 톱니파 + 떨림).</summary>
         public static AudioClip Caw => Get("caw", () =>
         {

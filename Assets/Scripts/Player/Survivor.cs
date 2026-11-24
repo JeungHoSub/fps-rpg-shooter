@@ -15,7 +15,7 @@ namespace Hunt.Player
         public const float Range = 2.6f;
         public static readonly List<Survivor> Active = new List<Survivor>();
         bool saved, lost, called, warned;
-        float rushT;
+        float rushT, sobClock = 2f;
         float shiver, leaveT;
         Transform body;
         Renderer glow;
@@ -133,6 +133,13 @@ namespace Hunt.Player
             var p = gm.Player;
             if (p == null) return;
             float dist = Vector3.Distance(p.transform.position, transform.position);
+            // 가까이(25m) 오면 가끔 흐느끼는 소리가 그쪽에서 들린다 — 찾는 실마리
+            sobClock -= Time.deltaTime;
+            if (sobClock <= 0f)
+            {
+                sobClock = Random.Range(5f, 8f);
+                if (dist < 25f) SFX.PlayAt3D(SFX.Sob, transform.position + Vector3.up * 0.9f, 0.6f, Random.Range(0.95f, 1.08f));
+            }
             if (!called && dist < 12f)
             {
                 called = true;
