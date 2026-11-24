@@ -160,6 +160,7 @@ namespace Hunt.Monsters
 
             float dt = Time.deltaTime;
             TickStatus(dt);
+            if (bountyLamp != null) bountyLamp.localPosition = Vector3.up * (2.35f * Data.scale + Mathf.Sin(Time.time * 3f) * 0.08f);
             if (IsBoss) TickBossAffix(dt, target != null ? Vector3.Distance(transform.position, target.transform.position) : 99f);
             if (IsDead) return;
 
@@ -534,6 +535,30 @@ namespace Hunt.Monsters
             }
             Noise.Emit(transform.position, 28f, true);
             if (called > 0) HUD.Notify($"곡하는 망자가 울부짖는다 — 망자 {called}이(가) 몰려온다", new Color(1f, 0.55f, 0.4f));
+        }
+
+        // ---- 현상금 망자: 머리 위에 노란 등불, 쓰러뜨리면 엽전·치유 부적 ----
+        public bool IsBounty { get; private set; }
+        Transform bountyLamp;
+
+        public void MakeBounty()
+        {
+            IsBounty = true;
+            var l = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            Destroy(l.GetComponent<Collider>());
+            l.layer = 2;
+            l.transform.SetParent(transform, false);
+            l.transform.localPosition = Vector3.up * 2.35f * Data.scale;
+            l.transform.localScale = Vector3.one * 0.22f;
+            var r = l.GetComponent<Renderer>();
+            r.sharedMaterial = FX.UnlitMaterial(new Color(1f, 0.82f, 0.3f));
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            bountyLamp = l.transform;
+            if (QualityManager.Level != GfxLevel.Low)
+            {
+                var lt = l.AddComponent<Light>();
+                lt.type = LightType.Point; lt.color = new Color(1f, 0.75f, 0.3f); lt.range = 4f; lt.intensity = 1.6f; lt.shadows = LightShadows.None;
+            }
         }
 
         // ---- 매 밤 보스('대감의 그림자')의 성질: 0 없음 · 1 날랜 · 2 단단한 · 3 부르는 · 4 불타는 ----

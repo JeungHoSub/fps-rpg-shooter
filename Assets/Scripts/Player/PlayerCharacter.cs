@@ -223,6 +223,18 @@ namespace Hunt.Player
 
             if (Stats.Has(Trait.Bloodlust)) Heal(4f);
 
+            // 현상금 망자
+            if (m.IsBounty)
+            {
+                int wave = GameManager.Instance != null && GameManager.Instance.Waves != null ? GameManager.Instance.Waves.Wave : 1;
+                int bounty = 60 + 25 * wave;
+                AddGold(bounty);
+                Pickup.Spawn(PickupKind.Rune, m.transform.position + Vector3.right * 0.6f, m.transform.parent);
+                Pickup.Spawn(PickupKind.Ammo, m.transform.position - Vector3.right * 0.6f, m.transform.parent);
+                HUD.Notify($"현상금 망자를 쓰러뜨렸다 — 엽전 +{bounty}", new Color(1f, 0.85f, 0.4f));
+                SFX.PlayPitched(SFX.LevelUp, 0.6f, 0.9f);
+            }
+
             // 연속 처치 보상: 5연속마다 엽전 보너스, 10연속마다 치유 부적이 발밑에 떨어진다 (마구 쏘는 맛)
             if (KillStreak >= 5 && KillStreak % 5 == 0)
             {

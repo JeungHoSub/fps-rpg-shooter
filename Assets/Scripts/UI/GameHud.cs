@@ -406,10 +406,18 @@ namespace Hunt.UI
                 float x = inside ? X(b) : (Mathf.DeltaAngle(yaw, b) > 0 ? r.xMax : r.x);
                 UIKit.Text(new Rect(x - 14, r.y - 24, 28, 22), "지", 16, new Color(1f, 0.85f, 0.45f, inside ? 1f : 0.6f), TextAnchor.MiddleCenter, serif: true, bold: true);
             }
-            // 드러난 망자·보스
+            // 드러난 망자·보스·현상금
             foreach (var m in Monster.Alive)
             {
-                if (m == null || m.IsDead || !(m.Revealed || m.IsBoss)) continue;
+                if (m == null || m.IsDead || !(m.Revealed || m.IsBoss || m.IsBounty)) continue;
+                if (m.IsBounty && !m.Revealed)
+                {
+                    float bb = Bearing(m.transform.position);
+                    bool ins = In(bb);
+                    float bx = ins ? X(bb) : (Mathf.DeltaAngle(yaw, bb) > 0 ? r.xMax : r.x);
+                    UIKit.Tex(new Rect(bx - 6, r.y - 8, 12, 12), UITheme.Circle, new Color(1f, 0.82f, 0.3f, ins ? 1f : 0.45f));
+                    continue;
+                }
                 float b = Bearing(m.transform.position);
                 bool inside = In(b);
                 float x = inside ? X(b) : (Mathf.DeltaAngle(yaw, b) > 0 ? r.xMax : r.x);

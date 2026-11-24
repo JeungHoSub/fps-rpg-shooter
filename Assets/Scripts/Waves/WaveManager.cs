@@ -154,7 +154,18 @@ namespace Hunt.Waves
 
             // 기본 망자 절반은 처음부터 마을 곳곳에 서성이고 있다
             int scatter = Mathf.Min(queue.Count, Mathf.Max(3, QualityManager.MaxAliveMonsters - 2));
-            for (int i = 0; i < scatter; i++) Spawn(queue.Dequeue(), ScatterPoint(), placed: true);
+            Monster bountyPick = null;
+            for (int i = 0; i < scatter; i++)
+            {
+                var sm = Spawn(queue.Dequeue(), ScatterPoint(), placed: true);
+                if (sm != null && (bountyPick == null || Random.value < 0.3f)) bountyPick = sm;
+            }
+            // 현상금 망자 하나 (머리 위 노란 등불)
+            if (bountyPick != null)
+            {
+                bountyPick.MakeBounty();
+                if (n <= 3) HUD.Notify("오늘 밤 현상금 망자가 있다 — 머리 위 노란 등불, 쓰러뜨리면 엽전과 부적", new Color(1f, 0.85f, 0.45f));
+            }
         }
 
         /// <summary>룰과 난이도 변형을 고른다. 첫째 밤과 5번째 밤(대감)은 사냥.</summary>
