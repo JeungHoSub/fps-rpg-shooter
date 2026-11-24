@@ -247,8 +247,9 @@ namespace Hunt.UI
                 // 새 기록이면 해당 칸 위에 붉은 낙관
                 if (newWave) Seal(new Rect(r.x + 120, r.y + 6, 46, 46));
                 if (newKills) Seal(new Rect(r.x + 430, r.y + 6, 46, 46));
-                string best = $"머리 {p.RunHeadKills} · 소리 없이 {p.RunSilent} · 숨어 보냄 {p.RunHidden} · 현상금 {p.RunBounties} · 상자 {p.RunCrates}    |    지난 최고 밤 {Mathf.Max(bestWave, 0)} · 망자 {Mathf.Max(bestKills, 0)}";
-                UIKit.Text(new Rect(r.x, r.yMax + 8, r.width, 22), best, 14, UITheme.Ash, TextAnchor.MiddleCenter);
+                string runLine = $"머리 {p.RunHeadKills} · 소리 없이 {p.RunSilent} · 숨어 보냄 {p.RunHidden} · 현상금 {p.RunBounties} · 상자 {p.RunCrates}";
+                UIKit.Text(new Rect(r.x - 60, r.yMax + 8, r.width + 120, 22), runLine, 14, UITheme.Ash, TextAnchor.MiddleCenter);
+                UIKit.Text(new Rect(r.x, r.yMax - 24, r.width, 20), $"지난 최고 밤 {Mathf.Max(bestWave, 0)} · 망자 {Mathf.Max(bestKills, 0)}", 13, UITheme.Ash, TextAnchor.MiddleCenter); // 칸 안 아래쪽
             }
 
             // 요령 한 줄 (쓰러질 때마다 다른 것)
