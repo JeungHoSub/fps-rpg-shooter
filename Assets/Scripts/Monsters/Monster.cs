@@ -185,7 +185,19 @@ namespace Hunt.Monsters
             if (lurking)
             {
                 if (dist < 4.5f || GlobalRush || Revealed || hpLostWhileLurking) WakeLurk();
-                else return;
+                else
+                {
+                    // 손전등으로 비추면 덤불 속에서 붉은 눈 두 개가 번뜩인다 (15m 안, 빛줄기 안)
+                    bool lit = false;
+                    var eye = Flashlight.Eye;
+                    if (Flashlight.Active && eye != null && dist < 15f)
+                    {
+                        Vector3 toMe = (transform.position + Vector3.up * 0.7f - eye.position).normalized;
+                        lit = Vector3.Dot(eye.forward, toMe) > 0.9f;
+                    }
+                    if (lurkEyes != null && lurkEyes.activeSelf != lit) lurkEyes.SetActive(lit);
+                    return;
+                }
             }
 
             if (alertTime > 0f) alertTime -= dt;
@@ -675,6 +687,7 @@ namespace Hunt.Monsters
         bool inBush, passedHidden;
         bool lurking, hpLostWhileLurking;
         Vector3 lurkBase;
+        GameObject lurkEyes;
         public bool Lurking => lurking;
 
         /// <summary>덤불 속 매복으로 만든다 (모델이 있는 망자만): 몸을 땅 밑에 숨기고 기다린다.</summary>
@@ -685,11 +698,28 @@ namespace Hunt.Monsters
             lurkBase = rig.Pivot.localPosition;
             float s = Mathf.Max(0.01f, transform.lossyScale.y);
             rig.Pivot.localPosition = lurkBase - Vector3.up * (2.2f * Data.scale / s);
+            // 손전등에만 보이는 눈 (평소엔 꺼 둠)
+            lurkEyes = new GameObject("LurkEyes");
+            lurkEyes.transform.SetParent(transform, false);
+            lurkEyes.transform.localPosition = Vector3.up * 0.75f / s;
+            foreach (float sx in new[] { -0.07f, 0.07f })
+            {
+                var e = FX.LowSphere();
+                e.layer = 2;
+                e.transform.SetParent(lurkEyes.transform, false);
+                e.transform.localPosition = new Vector3(sx / s, 0f, 0.35f / s);
+                e.transform.localScale = Vector3.one * 0.045f / s;
+                var r = e.GetComponent<Renderer>();
+                r.sharedMaterial = FX.UnlitMaterial(new Color(1f, 0.15f, 0.08f));
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            }
+            lurkEyes.SetActive(false);
         }
 
         void WakeLurk()
         {
             lurking = false;
+            if (lurkEyes != null) Destroy(lurkEyes);
             if (rig != null && rig.Pivot != null) rig.Pivot.localPosition = lurkBase;
             Emerge(0.55f); // 덤불 속에서 확 솟구친다
             Alert(10f);
