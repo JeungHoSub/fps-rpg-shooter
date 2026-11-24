@@ -238,7 +238,16 @@ namespace Hunt.Player
                 float pop = Mathf.Clamp01(age / 0.45f);
                 float hop = Mathf.Sin(pop * Mathf.PI) * 0.55f * (1f - pop * 0.4f);
                 float grow = pop < 1f ? Mathf.LerpUnclamped(0.2f, 1f, 1f - (1f - pop) * (1f - pop) * (1f - 2.2f * pop)) : 1f;
-                visual.localScale = Vector3.one * grow;
+                // 빨려 들어올 때 몸 가까이에서 작아지며 쏙 들어간다
+                var pl = gm.Player;
+                float suck = 1f;
+                if (pl != null)
+                {
+                    Vector3 dd = pl.transform.position - transform.position; dd.y = 0f;
+                    float dist = dd.magnitude;
+                    if (dist < 1.6f && (grabbed || CanTake(pl))) suck = Mathf.Lerp(0.35f, 1f, Mathf.InverseLerp(0.9f, 1.6f, dist));
+                }
+                visual.localScale = Vector3.one * grow * suck;
                 visual.localPosition = Vector3.up * ((kind == PickupKind.Rune ? 0.55f : 0.3f) + hop + Mathf.Sin(Time.time * 2.5f + bobSeed) * (kind == PickupKind.Rune ? 0.1f : 0.06f));
                 visual.Rotate(0f, 90f * dt, 0f, Space.World);
                 if (runeRingA != null) runeRingA.Rotate(0f, 0f, 160f * dt, Space.Self);
