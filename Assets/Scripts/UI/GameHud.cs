@@ -722,13 +722,13 @@ namespace Hunt.UI
                 "기본 망자 → 엘리트 망자 → <color=#" + UIKit.Hex(UITheme.BloodBright) + ">보스 망자</color>.\n보스를 쓰러뜨리면 밤이 끝난다.", 17, UITheme.Bone, TextAnchor.UpperLeft, serif: true, wrap: true);
             string keys =
                 "<b>F</b>   손전등 (켜면 망자가 빛을 보고 온다)\n" +
-                "총성·달리기·장전 소리에 망자가 모인다\n" +
-                "<b>우클릭</b>   조준  ·  <b>R</b> 재장전\n" +
-                "<b>Shift</b>   달리기 (기운 소모)  ·  <b>1 2</b> 주무기  <b>3</b> 권총\n" +
-                "<b>4</b> 마체테 (<b>V</b> 빠른 칼질)  ·  <b>5</b> 특수 기기 (<b>G</b> 수류탄)\n" +
-                "<b>X</b>   치료 키트  ·  <b>C</b> 스태미너 회복제\n" +
-                "<b>Q / E</b>   역병의 힘 (맞으면 차오른다)\n" +
-                "<b>H</b>   청심환 (폭주 해제)\n" +
+                "총성·달리기 소리에 망자가 모인다 · 가로등 불빛도 눈에 띈다\n" +
+                "<b>E</b>   줍기 · 보급 상자(노란 빛기둥) 열기\n" +
+                "<b>M</b>   마을 지도 · 아래 나침반에 상자·보스 방향\n" +
+                "<b>V</b>   칼 — 못 알아챈 망자 등 뒤면 한 번에\n" +
+                "<b>5</b>   특수 기기 (<b>G</b> 수류탄 · 누르고 있으면 멀리)\n" +
+                "<b>X</b> 치료 키트 · <b>C</b> 회복제 · <b>H</b> 청심환\n" +
+                "머리를 맞혀 쓰러뜨려야 다시 못 일어난다\n" +
                 "주황빛 <color=#" + UIKit.Hex(new Color(1f, 0.6f, 0.1f)) + ">급소</color>를 노려라 — 피해 3배";
             UIKit.Text(new Rect(r.x + 24, r.y + 136, r.width - 48, 250), keys, 16, UITheme.BoneDim, TextAnchor.UpperLeft, wrap: true);
             UIKit.Alpha = 1f;
