@@ -55,6 +55,16 @@ namespace Hunt.Core
         public static float DiffDamage => Difficulty == 0 ? 0.65f : Difficulty == 2 ? 1.3f : 1f;
         public static string DifficultyName(int d) => d == 0 ? "쉬움" : d == 2 ? "어려움" : "보통";
 
+        const string AdsKey = "hunt.adssens";
+        static float? adsSens;
+
+        /// <summary>조준(우클릭) 중 감도 배율 (0.4~1.6, 기본 1).</summary>
+        public static float AdsSensitivity
+        {
+            get { if (adsSens == null) adsSens = Mathf.Clamp(Load(AdsKey, 1f), 0.4f, 1.6f); return adsSens.Value; }
+            set { adsSens = Mathf.Clamp(value, 0.4f, 1.6f); Save(AdsKey, adsSens.Value); }
+        }
+
         const string GoreKey = "hunt.gore";
         static bool? gore;
 

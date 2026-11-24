@@ -49,6 +49,11 @@ namespace Hunt.UI
             UIKit.Text(new Rect(r.xMax - 110, y, 60, 30), GameSettings.MouseSensitivity.ToString("0.0"), 18, UITheme.GoldBright, TextAnchor.MiddleRight, bold: true);
             y += 52;
 
+            UIKit.Text(new Rect(r.x + 60, y, 160, 30), "조준 감도", 18, UITheme.Bone, serif: true);
+            GameSettings.AdsSensitivity = UIKit.Slider(new Rect(r.x + 220, y, r.width - 340, 30), GameSettings.AdsSensitivity, 0.4f, 1.6f, "adssens");
+            UIKit.Text(new Rect(r.xMax - 110, y, 60, 30), $"×{GameSettings.AdsSensitivity:0.00}", 18, UITheme.GoldBright, TextAnchor.MiddleRight, bold: true);
+            y += 52;
+
             UIKit.Text(new Rect(r.x + 60, y, 160, 30), "소리 크기", 18, UITheme.Bone, serif: true);
             GameSettings.Volume = UIKit.Slider(new Rect(r.x + 220, y, r.width - 340, 30), GameSettings.Volume, 0f, 1f, "vol");
             UIKit.Text(new Rect(r.xMax - 110, y, 60, 30), $"{GameSettings.Volume * 100:0}%", 18, UITheme.GoldBright, TextAnchor.MiddleRight, bold: true);

@@ -187,7 +187,7 @@ namespace Hunt.Player
             float adsSpeed = stats.AdsSpeedMult * ctrl.WeightPenalty / Mathf.Max(0.05f, w.data.adsTime);
             aim = Mathf.MoveTowards(aim, wantAim ? 1f : 0f, adsSpeed * dt);
             cam.fieldOfView = Mathf.Lerp(PlayerController.BaseFov, w.data.adsFov, aim);
-            ctrl.LookMultiplier = Mathf.Lerp(1f, w.data.adsFov / PlayerController.BaseFov, aim);
+            ctrl.LookMultiplier = Mathf.Lerp(1f, w.data.adsFov / PlayerController.BaseFov * GameSettings.AdsSensitivity, aim); // Esc '조준 감도'
             ctrl.MoveMultiplier = Mathf.Lerp(1f, 0.6f, aim);
 
             // ---- 탄퍼짐 ----
