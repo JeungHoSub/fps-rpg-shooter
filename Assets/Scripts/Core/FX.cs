@@ -125,6 +125,33 @@ namespace Hunt.Core
             return poolMat;
         }
 
+        static readonly RaycastHit[] floorHits = new RaycastHit[16];
+
+        /// <summary>
+        /// pos 바로 아래 땅(바닥·기단·논두렁)의 점. 망자 판정체·시체·플레이어·장식 없는 층은 무시한다.
+        /// 땅을 못 찾으면 높이 0.
+        /// </summary>
+        public static Vector3 FloorUnder(Vector3 pos)
+        {
+            Vector3 from = new Vector3(pos.x, pos.y + 1.2f, pos.z);
+            int n = Physics.RaycastNonAlloc(from, Vector3.down, floorHits, 4f, ~((1 << 2) | (1 << 1)), QueryTriggerInteraction.Ignore);
+            float best = float.MaxValue;
+            Vector3 result = new Vector3(pos.x, 0f, pos.z);
+            for (int i = 0; i < n; i++)
+            {
+                var h = floorHits[i];
+                if (h.collider == null || h.distance >= best) continue;
+                if (h.normal.y < 0.6f) continue; // 벽·비탈 면 말고 바닥만
+                if (h.collider.GetComponentInParent<Hunt.Monsters.Monster>() != null) continue;
+                if (h.collider.GetComponent<Hunt.Monsters.MonsterPart>() != null) continue;
+                if (h.collider is CharacterController) continue;
+                if (h.collider.attachedRigidbody != null && !h.collider.attachedRigidbody.isKinematic) continue; // 굴러가는 수류탄 등
+                best = h.distance;
+                result = h.point;
+            }
+            return result;
+        }
+
         public static void BloodPool(Vector3 pos, float size)
         {
             if (root == null) return;
@@ -150,10 +177,8 @@ namespace Hunt.Core
                 poolIndex = (poolIndex + 1) % MaxPools;
                 if (t == null) return;
             }
-            // 바닥 높이에 맞춤 (논두렁·기단 위도)
-            Vector3 p = pos + Vector3.up * 1.5f;
-            if (Physics.Raycast(p, Vector3.down, out var hit, 3f, ~((1 << 2) | (1 << 1)), QueryTriggerInteraction.Ignore)) p = hit.point;
-            else p.y = 0f;
+            // 바닥 높이에 맞춤 (논두렁·기단 위도). 망자 몸·플레이어는 건너뛴다 — 안 그러면 쓰러지는 망자 가슴에 맞아 피가 공중에 떴다
+            Vector3 p = FloorUnder(pos);
             t.position = p + Vector3.up * (0.012f + Random.value * 0.006f);
             t.rotation = Quaternion.Euler(90f, Random.Range(0f, 360f), 0f);
             t.GetComponent<BloodPoolFx>().Begin(size * Random.Range(1.5f, 2.2f));
@@ -195,9 +220,7 @@ namespace Hunt.Core
                 scorchIndex = (scorchIndex + 1) % MaxScorch;
                 if (t == null) return;
             }
-            Vector3 p = pos + Vector3.up * 1.5f;
-            if (Physics.Raycast(p, Vector3.down, out var hit, 3.5f, ~((1 << 2) | (1 << 1)), QueryTriggerInteraction.Ignore)) p = hit.point;
-            else p.y = 0f;
+            Vector3 p = FloorUnder(pos);
             t.position = p + Vector3.up * 0.01f;
             t.rotation = Quaternion.Euler(90f, Random.Range(0f, 360f), 0f);
             t.GetComponent<BloodPoolFx>().Begin(size * 2f);
