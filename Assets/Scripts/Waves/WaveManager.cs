@@ -158,11 +158,16 @@ namespace Hunt.Waves
         }
 
         /// <summary>룰과 난이도 변형을 고른다. 첫째 밤과 5번째 밤(대감)은 사냥.</summary>
+        /// <summary>n번째 밤의 룰 (서낭당에서 다음 밤 미리 보기에도 쓴다).</summary>
+        public static RoundRule RuleFor(int n)
+        {
+            if (n == 1 || (n > 0 && n % BossEvery == 0)) return RoundRule.Hunt;
+            return n % 3 == 2 ? RoundRule.Defense : n % 3 == 0 ? RoundRule.Mission : RoundRule.Hunt;
+        }
+
         void ChooseRule()
         {
-            int n = Wave;
-            if (n == 1 || IsBossWave) Rule = RoundRule.Hunt;
-            else Rule = n % 3 == 2 ? RoundRule.Defense : n % 3 == 0 ? RoundRule.Mission : RoundRule.Hunt;
+            Rule = RuleFor(Wave);
 
             Modifiers.Clear();
             GameRules.Reset();

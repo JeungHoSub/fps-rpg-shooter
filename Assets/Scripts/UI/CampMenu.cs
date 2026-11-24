@@ -80,7 +80,14 @@ namespace Hunt.UI
             // 아래
             float by = win.yMax - 78;
             if (UIKit.Button(new Rect(win.center.x - 190, by, 380, 60), "밤을 맞이한다", 26, false, true, "Enter")) gm.StartNextWave();
-            UIKit.Text(new Rect(win.x + 30, by, 400, 60), "Tab — 서낭당을 떠나 마을을 둘러본다", 15, UITheme.Ash);
+            UIKit.Text(new Rect(win.x + 30, by, 400, 30), "Tab — 서낭당을 떠나 마을을 둘러본다", 15, UITheme.Ash);
+            // 다음 밤 미리 보기
+            int nextN = gm.Waves.Wave + 1;
+            var nextRule = Hunt.Waves.WaveManager.RuleFor(nextN);
+            bool nextBoss = nextN % Hunt.Waves.WaveManager.BossEvery == 0;
+            UIKit.Text(new Rect(win.x + 30, by + 28, 520, 30),
+                $"다음 밤: {GameHud.NightName(nextN)}  ·  {Hunt.Waves.WaveManager.RuleName(nextRule)}" + (nextBoss ? $"  ·  <color=#{UIKit.Hex(UITheme.BloodBright)}>대감의 밤</color>" : ""),
+                15, UITheme.BoneDim, serif: true);
             UIKit.Text(new Rect(win.xMax - 430, by, 400, 60), $"엽전 <color=#{UIKit.Hex(UITheme.GoldBright)}>{Mathf.RoundToInt(UIKit.Smooth("camp.gold", p.Gold, 9f))}</color>   ·   청심환 ×{p.Infection.Antidotes}", 18, UITheme.BoneDim, TextAnchor.MiddleRight, serif: true);
             UIKit.Alpha = 1f;
         }
