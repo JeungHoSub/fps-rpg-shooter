@@ -378,6 +378,8 @@ namespace Hunt.Waves
             float lane = Random.Range(-h * 0.6f, h * 0.6f);
             Vector3 from = alongX ? new Vector3(-h * side, 0f, lane) : new Vector3(lane, 0f, -h * side);
             Vector3 to = alongX ? new Vector3(h * side, 0f, lane + Random.Range(-8f, 8f)) : new Vector3(lane + Random.Range(-8f, 8f), 0f, h * side);
+            // 내가 나올 자리 가까이(16m) 있으면 반대쪽에서 나오게 (코앞에서 갑자기 생기지 않게)
+            if (player != null && (player.transform.position - from).sqrMagnitude < 16f * 16f) { var tmp = from; from = to; to = tmp; }
             horde.Clear(); hordeJudged = false;
             int room = QualityManager.MaxAliveMonsters + 1 - Monster.Alive.Count; // 내장 그래픽 '하'(10마리)를 크게 넘지 않게
             int count = Mathf.Clamp(Mathf.Min(4 + Wave / 3, room), 2, 6);
