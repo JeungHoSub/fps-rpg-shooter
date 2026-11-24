@@ -154,6 +154,9 @@ namespace Hunt.Waves
             // 보급 상자 3개 (지난 밤 남은 상자는 치운다)
             SupplyCrate.PlaceForNight(root, player != null ? player.transform.position : Vector3.zero, 3);
             Survivor.PlaceForNight(root, player != null ? player.transform.position : Vector3.zero, n); // 다친 마을 사람 (둘째 밤부터 40%)
+            // 셋째 밤부터: 밤마다 한 번 망자 떼가 마을을 가로질러 지나간다 (숨거나 싸우거나)
+            hordeDone = n < 3 || Rule == RoundRule.Defense;
+            hordeAt = Time.time + Random.Range(35f, 75f);
             if (n <= 2) HUD.Notify("마을 곳곳에 보급 상자 3개 — 노란 빛기둥을 찾아 E로 연다 (아래 나침반에 노란 점)", new Color(1f, 0.85f, 0.45f));
 
             // 기본 망자 절반은 처음부터 마을 곳곳에 서성이고 있다
@@ -341,11 +344,40 @@ namespace Hunt.Waves
             Monster.GlobalRush = false;
         }
 
+        bool hordeDone = true;
+        float hordeAt;
+
+        /// <summary>망자 떼: 마을 한쪽 끝에서 나와 반대쪽 끝으로 지나간다 (소리를 쫓듯 뒤지며 걷는다 — 들키면 덮친다).</summary>
+        void SpawnHorde()
+        {
+            float h = VillageBuilder.Half - 5f;
+            bool alongX = Random.value < 0.5f;
+            float side = Random.value < 0.5f ? -1f : 1f;
+            float lane = Random.Range(-h * 0.6f, h * 0.6f);
+            Vector3 from = alongX ? new Vector3(-h * side, 0f, lane) : new Vector3(lane, 0f, -h * side);
+            Vector3 to = alongX ? new Vector3(h * side, 0f, lane + Random.Range(-8f, 8f)) : new Vector3(lane + Random.Range(-8f, 8f), 0f, h * side);
+            int room = QualityManager.MaxAliveMonsters + 3 - Monster.Alive.Count;
+            int count = Mathf.Clamp(Mathf.Min(4 + Wave / 3, room), 2, 6);
+            for (int i = 0; i < count; i++)
+            {
+                Vector2 off = Random.insideUnitCircle * 3f;
+                var m = Spawn(MonsterArchetype.Runner, from + new Vector3(off.x, 0f, off.y), placed: true);
+                if (m == null) continue;
+                m.HearNoise(to + new Vector3(off.x, 0f, off.y) * 2f, false);
+            }
+            SFX.PlayPitched(SFX.Drum, 0.6f, 0.6f);
+            SFX.PlayAt3D(SFX.ZombieMoan, from, 1f, 0.8f);
+            string dir = Mathf.Abs(from.x) > Mathf.Abs(from.z) ? (from.x > 0 ? "동쪽" : "서쪽") : (from.z > 0 ? "북쪽" : "남쪽");
+            HUD.Notify($"{dir}에서 망자 떼가 마을을 가로지른다 — 숨거나, 맞서거나", new Color(1f, 0.55f, 0.4f));
+        }
+
         void Update()
         {
             var gm = GameManager.Instance;
             if (!Spawning || gm == null || !gm.IsWorldRunning) return;
             float dt = Time.deltaTime;
+
+            if (!hordeDone && Time.time > hordeAt && !Monster.GlobalRush) { hordeDone = true; SpawnHorde(); }
 
             // 시간이 지나면 모두 몰려온다
             if (!Monster.GlobalRush)
