@@ -21,6 +21,8 @@ namespace Hunt.Player
         Renderer glow;
 
         public bool Saved => saved;
+        /// <summary>새벽 기록용: 이번 밤 다친 사람이 있었나 / 구했나 / 잃었나.</summary>
+        public static bool PresentThisNight, SavedThisNight, LostThisNight;
 
         void OnEnable() { Active.Add(this); }
         void OnDisable() { Active.Remove(this); }
@@ -29,7 +31,9 @@ namespace Hunt.Player
         public static void PlaceForNight(Transform parent, Vector3 player, int night)
         {
             foreach (var s in Active.ToArray()) if (s != null) Destroy(s.gameObject);
+            PresentThisNight = SavedThisNight = LostThisNight = false;
             if (night < 2 || Random.value > 0.4f) return;
+            PresentThisNight = true;
             Vector3 p = Vector3.zero;
             for (int k = 0; k < 20; k++)
             {
@@ -138,6 +142,7 @@ namespace Hunt.Player
             if (rushT > 20f)
             {
                 lost = true;
+                LostThisNight = true;
                 FX.BloodBurst(transform.position + Vector3.up * 0.7f, new Color(0.4f, 0.03f, 0.04f), 1f);
                 SFX.PlayAt3D(SFX.ZombieScream, transform.position + Vector3.up, 0.9f, 1.5f); // 비명
                 body.localRotation = Quaternion.Euler(0f, 0f, 80f);
@@ -149,6 +154,7 @@ namespace Hunt.Player
             if (p.Kits <= 0) { HUD.Notify("치료 키트가 있어야 상처를 감아 줄 수 있다 (X 키트, 서낭당에서 산다)", UITheme.BoneDim); return; }
             p.Kits--;
             saved = true;
+            SavedThisNight = true;
             int wave = gm.Waves != null ? gm.Waves.Wave : 1;
             int gold = 60 + 12 * wave;
             p.AddGold(gold);
