@@ -81,6 +81,12 @@ Unity 1인칭 싱글플레이 좀비 슈터 + RPG. **비 오는 밤의 한국 �
     **피드백 "죽으면 피가 화면 중간에 떠 있다 · 최종보스 안 나오나"** → 피 웅덩이 바닥 찾기 `FX.FloorUnder`(망자 판정 건너뜀) · 보스 등장 큰 이름 `GameHud.DrawBossIntro`, 매 밤 '대감의 그림자'/다섯째 밤 최종 '역병 대감'(`GameHud.BossName`, 붉은 기운 빛), 밤 표식 '대감의 밤까지 N밤' ·
     **요청 "몹 잡으면 힐링룬·탄창"** → `PickupKind.Rune` 치유 부적(즉시 생명 15%, ~20%, 보스 3개, 옥빛 화면 `GameHud.HealFlash`) · 탄창 모양(휜 탄창+탄알)·확률 ~22% · 보급품 빛 동시 4개 제한 ·
     **요청 "E로 둘 다 먹게"** → E = 3.5m 안 보급품 줍기(`Pickup.GrabRange`, `GameInput.PickupDown`), 없으면 재생(`GameInput.RegenDown`이 `Pickup.AnyNearPlayer` 확인) · 발밑 안내 `GameHud.DrawPickupPrompt`. 자동 자석 줍기도 유지(가득 차면 안 끌림 → 안내 문구) · 뒤쪽 벽 피 자국 `FX.BloodSplat` · 보급품 빨려 들어올 때 작아짐 · 머리 맞으면 갓 날아감 `Monster.KnockOffHat`/`HatFly` · 탄약 가득하면 탄창→수류탄 · 망자 조준 시 조준선 붉게 (`GameHud.aimOnMonster`).
+  - 2026-11-24 연속 작업 (05:25~): 밝기 `GameSettings.Brightness` · 난이도 `GameSettings.Difficulty`(Esc) · 보스 '대' 표식·나침반 띠 `GameHud.DrawCompass` · 지도 M `UI/MapView.cs` ·
+    수류탄 길·설치 자리 미리 보기 `PlayerWeapons.UpdateGrenadeArc/UpdatePlacePreview` · 기관총 남은 시간 `SentryTurret.Active` · 헐떡임 `SFX.Breath` · 보스 처치 슬로 `GameManager.SlowMo`+`WaveManager.BossFallThenDawn` ·
+    밤 시작 제목 `GameHud.DrawNightBanner` · 땅에서 기어 나옴 `Monsters/RiseFromGround.cs` · 피해 숫자 다듬기 · 조준경 흔들림+Shift 숨 참기 `PlayerController.BreathHold` · 연속 처치 보상 ·
+    공격 예고 `Monster.windup` · 저체력 먹먹 `EarRing.lowHp` · 무기고 비교 금 · 새로 바뀐 점 `GameText.WhatsNew` · 칼 파고들기 · 화면 빗방울 `GameHud.DrawLensRain` · 사망 요령 `GameText.DeathTips` ·
+    새 망자 `bloat`(터짐, `Monster.BloatBurst`)·`shriek`(곡, `Monster.Wail`) · 새 기질 화약쟁이·약초꾼·머리 사냥꾼(`DamageCalculator.PlayerHeadBonus`) · 미끄러지기 `PlayerController.IsSliding` ·
+    보급 상자 `Player/SupplyCrate.cs` · 보스 북 `SFX.Drum`.
   - 보류: 망자 모델 다양화 (Mixamo — 사용자 토큰 다시 필요, 토큰은 하루쯤 지나면 만료).
   - 이후 작은 후보: 사용자 피드백 반영 → 성능(실기기 확인 필요) · 버그 점검 · 소리/연출 다듬기.
 - 환경 '2번째'에 Poly Haven 호스트(api.polyhaven.com, dl.polyhaven.org) 허용됨. API는 User-Agent 필요.
