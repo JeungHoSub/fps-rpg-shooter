@@ -117,6 +117,7 @@ namespace Hunt.Player
             p.Blessings++;
             p.Heal(p.MaxHp - before + p.MaxHp * 0.15f);
             SFX.Play(SFX.Gong, 0.7f, 0f);
+            if (p.Controller != null) p.Controller.AddPunch(-5f, 0f); // 고개 숙여 절하듯 시점이 내려갔다 올라온다
             HUD.Notify($"장승에게 절했다 — 이번 판 최대 생명 +8% (찾은 장승 {p.Blessings} / 3)", new Color(1f, 0.85f, 0.55f));
             if (p.Blessings >= 3) Achievements.Unlock("jangseung");
         }
