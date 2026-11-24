@@ -26,6 +26,9 @@ namespace Hunt.UI
         static float kitFlash, drinkFlash;
 
         /// <param name="gained">false면 알림만 (가득 참 등) — 칸을 반짝이지 않는다.</param>
+        /// <summary>치유 순간 화면 가장자리 옥빛 (0~1).</summary>
+        public static float HealFlash;
+
         public static void OnPickup(HudIcons.Icon icon, Color color, string text, bool gained = true)
         {
             toasts.Add(new PickupToast { icon = icon, color = color, text = text, time = Time.unscaledTime });
@@ -88,6 +91,12 @@ namespace Hunt.UI
                 UIKit.Vignette(W, H, new Color(0.55f, 0f, 0f, (0.35f - hpRatio) * 2.2f * (0.6f + 0.4f * pulse)));
             }
             if (p.HurtFlash > 0f) UIKit.Vignette(W, H, new Color(0.8f, 0f, 0f, p.HurtFlash * 2.5f));
+            // 치유 부적을 먹으면 가장자리가 잠깐 옥빛으로
+            if (HealFlash > 0f)
+            {
+                UIKit.Vignette(W, H, new Color(0.25f, 0.9f, 0.45f, HealFlash * 0.55f));
+                HealFlash = Mathf.Max(0f, HealFlash - dt * 1.8f);
+            }
             if (p.Infection.IsFrenzy)
             {
                 UIKit.Vignette(W, H, new Color(0.35f, 0f, 0.5f, 0.85f));

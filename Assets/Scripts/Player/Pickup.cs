@@ -266,6 +266,7 @@ namespace Hunt.Player
                     p.Heal(p.MaxHp * RuneHeal);
                     GameHud.OnPickup(HudIcons.Icon.Heart, c, $"치유 부적  생명 +{p.Hp - before:0}");
                     SFX.PlayPitched(SFX.LevelUp, 0.35f, 1.35f); // 맑은 방울 소리
+                    GameHud.HealFlash = 1f;
                     return;
                 }
                 case PickupKind.Drink:
