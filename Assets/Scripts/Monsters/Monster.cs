@@ -39,7 +39,16 @@ namespace Hunt.Monsters
         {
             get
             {
-                if (voicePitch < 0f) voicePitch = Mathf.Clamp(1.12f - (Data != null ? Data.scale - 1f : 0f) * 0.55f, 0.6f, 1.25f) * Random.Range(0.92f, 1.08f);
+                if (voicePitch < 0f)
+                {
+                    voicePitch = Mathf.Clamp(1.12f - (Data != null ? Data.scale - 1f : 0f) * 0.55f, 0.6f, 1.25f) * Random.Range(0.92f, 1.08f);
+                    // 유형마다 목소리 색: 터지는 망자는 꾸르륵 낮게, 곡하는 망자는 가늘고 높게, 날랜·미친 망자는 조금 높게
+                    string id = Data != null ? Data.id : "";
+                    if (id == "z_bloat") voicePitch *= 0.72f;
+                    else if (id == "z_shriek") voicePitch *= 1.3f;
+                    else if (id == "z_fast" || id == "z_frenzy") voicePitch *= 1.1f;
+                    else if (id == "z_butcher" || id == "z_wall") voicePitch *= 0.85f;
+                }
                 return voicePitch;
             }
         }
