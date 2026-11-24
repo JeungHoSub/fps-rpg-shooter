@@ -21,6 +21,8 @@ namespace Hunt.Player
         Renderer glow;
 
         public bool Saved => saved;
+        /// <summary>구했거나 잃었다 (지도·나침반에서 지운다).</summary>
+        public bool Done => saved || lost;
         /// <summary>새벽 기록용: 이번 밤 다친 사람이 있었나 / 구했나 / 잃었나.</summary>
         public static bool PresentThisNight, SavedThisNight, LostThisNight;
 

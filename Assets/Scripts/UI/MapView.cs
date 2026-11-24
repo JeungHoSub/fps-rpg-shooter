@@ -91,7 +91,7 @@ namespace Hunt.UI
             // 다친 마을 사람
             foreach (var sv in Survivor.Active)
             {
-                if (sv == null || sv.Saved) continue;
+                if (sv == null || sv.Done) continue;
                 var svp = ToMap(sv.transform.position, r);
                 UIKit.Emblem(new Rect(svp.x - 12, svp.y - 12, 24, 24), "사", new Color(0.9f, 0.88f, 0.75f), true);
             }
