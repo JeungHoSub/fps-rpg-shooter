@@ -156,6 +156,7 @@ namespace Hunt.Waves
             Survivor.PlaceForNight(root, player != null ? player.transform.position : Vector3.zero, n); // 다친 마을 사람 (둘째 밤부터 40%)
             // 셋째 밤부터: 밤마다 한 번 망자 떼가 마을을 가로질러 지나간다 (숨거나 싸우거나)
             hordeDone = n < 3 || Rule == RoundRule.Defense;
+            hordeJudged = true; horde.Clear();
             hordeAt = Time.time + Random.Range(35f, 75f);
             if (n <= 2) HUD.Notify("마을 곳곳에 보급 상자 3개 — 노란 빛기둥을 찾아 E로 연다 (아래 나침반에 노란 점)", new Color(1f, 0.85f, 0.45f));
 
