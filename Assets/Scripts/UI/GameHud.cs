@@ -954,8 +954,8 @@ namespace Hunt.UI
             float mask = Noise.RainMask;
             string rain = mask < 0.75f ? "  ·  빗소리가 소리를 덮는다" : mask < 0.95f ? "  ·  빗소리" : "";
             float sightK = Atmosphere.SightMult;
-            if (sightK < 0.8f) rain += "  ·  안개 — 망자 눈이 어둡다";
-            else if (sightK > 1.05f) rain += "  ·  달빛 — 멀리서 보인다";
+            if (sightK < 0.8f) rain += "  ·  안개(덜 보임)";
+            else if (sightK > 1.05f) rain += "  ·  달빛(잘 보임)";
             string light = Flashlight.Disabled ? "  ·  손전등 금지" : Flashlight.Active ? $"  ·  <color=#{UIKit.Hex(UITheme.GoldBright)}>손전등 켜짐 — 망자가 빛을 본다</color>" : "  ·  손전등 꺼짐 (F)";
             UIKit.Text(new Rect(r.x - 160, r.y - 22, r.width + 320, 20), "소 리" + rain + light, 13, UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true);
             // 둘째 줄: 가로등 불빛 · 쫓는 망자 수 · 부적 (있을 때만)
