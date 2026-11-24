@@ -10,6 +10,7 @@ namespace Hunt.Monsters
     public class RiseFromGround : MonoBehaviour
     {
         Vector3 baseLocal;
+        Transform owner; // 처음 부모 (망자 본체). 죽어서 시체로 떨어져 나가면 바로 멈춘다
         float t, dur, depth, nextClod;
 
         public static void Begin(Transform pivot, float duration, float depth)
@@ -17,6 +18,7 @@ namespace Hunt.Monsters
             if (pivot == null) return;
             var r = pivot.gameObject.AddComponent<RiseFromGround>();
             r.baseLocal = pivot.localPosition;
+            r.owner = pivot.parent;
             r.dur = duration;
             r.depth = depth;
             pivot.localPosition = r.baseLocal - Vector3.up * depth / Mathf.Max(0.01f, pivot.parent != null ? pivot.parent.lossyScale.y : 1f);
@@ -36,6 +38,7 @@ namespace Hunt.Monsters
 
         void Update()
         {
+            if (transform.parent != owner || owner == null) { Destroy(this); return; } // 올라오다 죽음 → 시체는 그 자리에서 쓰러진다
             var gm = GameManager.Instance;
             if (gm != null && gm.Paused) return;
             t += Time.deltaTime;
