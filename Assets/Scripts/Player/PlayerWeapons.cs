@@ -88,7 +88,7 @@ namespace Hunt.Player
         void Update()
         {
             var gm = GameManager.Instance;
-            if (player != null && player.IsDead) UpdateGrenadeArc(false);
+            if (player != null && player.IsDead) { UpdateGrenadeArc(false); UpdatePlacePreview(false); }
             if (gm == null || !gm.IsWorldRunning || player == null || player.IsDead || Current == null) return;
             float dt = Time.deltaTime;
             bool input = gm.AcceptsGameplayInput;
@@ -128,7 +128,9 @@ namespace Hunt.Player
             if (gadgetCooldown > 0f) gadgetCooldown -= dt;
             UpdateMelee(dt);
 
-            UpdateGrenadeArc(input && Mode == Hand.Gadget && Gadget == GadgetType.Grenade && GadgetCount[(int)GadgetType.Grenade] > 0 && !player.IsUsingItem);
+            bool gadgetReady = input && Mode == Hand.Gadget && GadgetCount[(int)Gadget] > 0 && !player.IsUsingItem;
+            UpdateGrenadeArc(gadgetReady && Gadget == GadgetType.Grenade);
+            UpdatePlacePreview(gadgetReady && Gadget != GadgetType.Grenade);
             if (Mode != Hand.Gun)
             {
                 aim = Mathf.MoveTowards(aim, 0f, dt * 6f);
@@ -434,8 +436,38 @@ namespace Hunt.Player
             }
         }
 
+        // ---- 지뢰·기관총 놓을 자리 미리 보기 ----
+        Transform placeMark;
+
+        void UpdatePlacePreview(bool show)
+        {
+            if (!show) { if (placeMark != null && placeMark.gameObject.activeSelf) placeMark.gameObject.SetActive(false); return; }
+            if (placeMark == null)
+            {
+                var ring = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                Destroy(ring.GetComponent<Collider>());
+                ring.name = "놓을 자리";
+                ring.layer = 2;
+                var rr = ring.GetComponent<Renderer>();
+                rr.sharedMaterial = FX.UnlitMaterial(new Color(0.55f, 1f, 0.6f, 0.22f));
+                rr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                placeMark = ring.transform;
+            }
+            placeMark.gameObject.SetActive(true);
+            // UseGadget과 같은 자리: 지뢰 1.1m 앞(작동 범위 1.6m), 기관총 1.6m 앞
+            Vector3 flatFwd = Vector3.ProjectOnPlane(cam.transform.forward, Vector3.up).normalized;
+            bool mine = Gadget == GadgetType.Mine;
+            Vector3 at = player.transform.position + flatFwd * (mine ? 1.1f : 1.6f);
+            at = FX.FloorUnder(at + Vector3.up * 0.5f);
+            placeMark.position = at + Vector3.up * 0.03f;
+            float r = mine ? 1.6f : 0.6f;
+            float pulse = 1f + 0.04f * Mathf.Sin(Time.time * 6f);
+            placeMark.localScale = new Vector3(r * 2f * pulse, 0.004f, r * 2f * pulse);
+        }
+
         void OnDestroy()
         {
+            if (placeMark != null) Destroy(placeMark.gameObject);
             if (arcLine != null) Destroy(arcLine.gameObject);
             if (arcRing != null) Destroy(arcRing.gameObject);
         }
