@@ -100,7 +100,7 @@ namespace Hunt.UI
             if (nextN >= 2) ev += $"덤불 매복 {(nextN >= 4 ? 2 : 1)}";
             if (nextN >= 3 && nextRule != Hunt.Waves.RoundRule.Defense) ev += (ev.Length > 0 ? " · " : "") + "망자 떼";
             if (nextN >= 3) ev += (ev.Length > 0 ? " · " : "") + "벼락 정전";
-            if (nextN >= 2) ev += (ev.Length > 0 ? " · " : "") + "다친 사람(가끔)";
+            if (nextN >= 2) ev += (ev.Length > 0 ? " · " : "") + (nextN >= 4 ? "다친 사람(가끔, 가짜일 수도)" : "다친 사람(가끔)");
             if (ev.Length > 0) UIKit.Text(new Rect(win.x + 30, by + 50, 520, 22), "있을 수 있는 일: " + ev, 13, UITheme.Ash, serif: true);
             UIKit.Text(new Rect(win.xMax - 430, by, 400, 60), $"엽전 <color=#{UIKit.Hex(UITheme.GoldBright)}>{Mathf.RoundToInt(UIKit.Smooth("camp.gold", p.Gold, 9f))}</color>   ·   청심환 ×{p.Infection.Antidotes}", 18, UITheme.BoneDim, TextAnchor.MiddleRight, serif: true);
             UIKit.Alpha = 1f;
