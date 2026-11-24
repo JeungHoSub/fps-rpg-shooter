@@ -1306,6 +1306,12 @@ namespace Hunt.UI
                 Vector3 sp = cam.WorldToScreenPoint(e.pos);
                 if (sp.z <= 0f) continue;
                 float x = sp.x / scale, y = (Screen.height - sp.y) / scale;
+                if (e.gold)
+                {
+                    float ga = 1f - e.t / DamageNumbers.Life;
+                    UIKit.Text(new Rect(x - 80, y - 60, 160, 30), $"+{Mathf.RoundToInt(e.amount)} 엽전", 16, new Color(0.98f, 0.82f, 0.4f, ga), TextAnchor.MiddleCenter, serif: true, bold: true);
+                    continue;
+                }
                 float u = e.t / DamageNumbers.Life;
                 float a = 1f - u * u; // 끝에 가서 빠르게 사라진다
                 // 숫자마다 살짝 옆으로 흩어진다 (겹쳐서 안 읽히지 않게)

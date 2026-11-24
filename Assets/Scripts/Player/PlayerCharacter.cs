@@ -233,7 +233,9 @@ namespace Hunt.Player
             float reward = evo != null ? evo.RewardMultiplier : 1f;
             AddXp(Mathf.RoundToInt(m.Data.xp * reward));
             bool scavenger = Stats.Has(Trait.Scavenger);
-            AddGold(Mathf.RoundToInt(m.Data.gold * reward * (scavenger ? 1.3f : 1f)));
+            int goldGain = Mathf.RoundToInt(m.Data.gold * reward * (scavenger ? 1.3f : 1f));
+            AddGold(goldGain);
+            DamageNumbers.SpawnGold(m.transform.position + Vector3.up * 1.6f * m.Data.scale, goldGain); // 처치 자리에 '+N 엽전'
 
             if (Stats.Has(Trait.Bloodlust)) Heal(4f);
 

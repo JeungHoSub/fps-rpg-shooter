@@ -17,6 +17,7 @@ namespace Hunt.UI
             public HitZone zone;
             public DamageType type;
             public float t;
+            public bool gold; // 엽전 획득 표시
         }
 
         public static readonly List<Entry> Entries = new List<Entry>();
@@ -27,6 +28,14 @@ namespace Hunt.UI
             if (Entries.Count > 80) Entries.RemoveAt(0);
             pos += Random.insideUnitSphere * 0.15f;
             Entries.Add(new Entry { pos = pos, amount = amount, crit = crit, zone = zone, type = type, t = 0f });
+        }
+
+        /// <summary>처치 자리에 '+N 엽전'이 떠오른다.</summary>
+        public static void SpawnGold(Vector3 pos, int amount)
+        {
+            if (amount <= 0) return;
+            if (Entries.Count > 80) Entries.RemoveAt(0);
+            Entries.Add(new Entry { pos = pos + Vector3.up * 0.4f, amount = amount, gold = true, t = 0f });
         }
 
         public static void Tick(float dt)
