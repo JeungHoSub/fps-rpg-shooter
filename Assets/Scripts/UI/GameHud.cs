@@ -458,6 +458,14 @@ namespace Hunt.UI
                 float x = In(b) ? X(b) : (Mathf.DeltaAngle(yaw, b) > 0 ? r.xMax : r.x);
                 UIKit.Fill(new Rect(x - 4, r.y - 6, 8, 8), new Color(1f, 0.8f, 0.3f, In(b) ? 0.95f : 0.4f));
             }
+            // 다친 마을 사람: '사'
+            foreach (var sv in Survivor.Active)
+            {
+                if (sv == null || sv.Saved) continue;
+                float b = Bearing(sv.transform.position);
+                float x = In(b) ? X(b) : (Mathf.DeltaAngle(yaw, b) > 0 ? r.xMax : r.x);
+                UIKit.Text(new Rect(x - 14, r.y - 24, 28, 22), "사", 15, new Color(0.92f, 0.9f, 0.78f, In(b) ? 1f : 0.55f), TextAnchor.MiddleCenter, serif: true, bold: true);
+            }
             // 지킴 밤: 돌무더기 방향
             var gmw = GameManager.Instance != null ? GameManager.Instance.Waves : null;
             if (gmw != null && gmw.Rule == RoundRule.Defense)
