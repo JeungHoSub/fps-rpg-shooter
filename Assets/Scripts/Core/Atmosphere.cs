@@ -280,6 +280,7 @@ namespace Hunt.Core
             {
                 flash = 1f;
                 thunderDelay = Random.Range(0.6f, 2.5f);
+                SpawnBolt(cam); // 먼 하늘에 번개 줄기
                 nextThunder = Time.time + Random.Range(thunderLo, thunderHi);
             }
             if (thunderDelay > 0f)
@@ -308,6 +309,38 @@ namespace Hunt.Core
                 cam.farClipPlane = QualityManager.FarClip;
                 UpdateMoonDisc(cam);
             }
+        }
+
+        /// <summary>번개 줄기: 먼 하늘에서 땅으로 지그재그로 떨어지는 선 (0.25초). 천둥이 늦게 올수록 멀리.</summary>
+        void SpawnBolt(Camera cam)
+        {
+            if (cam == null) return;
+            float dist = cam.farClipPlane * 0.8f;
+            Vector2 d2 = Random.insideUnitCircle.normalized;
+            Vector3 baseP = cam.transform.position + new Vector3(d2.x, 0f, d2.y) * dist;
+            baseP.y = 0f;
+            var go = new GameObject("번개");
+            go.transform.SetParent(transform, false);
+            var lr = go.AddComponent<LineRenderer>();
+            lr.sharedMaterial = FX.UnlitMaterial(Color.white);
+            lr.useWorldSpace = true;
+            const int n = 9;
+            lr.positionCount = n;
+            float top = dist * 0.55f;
+            for (int i = 0; i < n; i++)
+            {
+                float t = i / (float)(n - 1);
+                Vector3 p = baseP + Vector3.up * Mathf.Lerp(top, 0f, t);
+                if (i > 0 && i < n - 1) p += new Vector3(Random.Range(-1f, 1f), 0f, Random.Range(-1f, 1f)) * dist * 0.035f;
+                lr.SetPosition(i, p);
+            }
+            lr.startWidth = dist * 0.006f;
+            lr.endWidth = dist * 0.003f;
+            lr.startColor = new Color(0.85f, 0.9f, 1f, 0.95f);
+            lr.endColor = new Color(0.75f, 0.82f, 1f, 0.7f);
+            lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            lr.receiveShadows = false;
+            Destroy(go, 0.25f);
         }
 
         // ---- 하늘의 달: 비구름 사이로 흐릿하게 비친다 (빛 방향과 같은 쪽, 늘 멀리) ----
