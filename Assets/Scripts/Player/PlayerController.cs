@@ -53,6 +53,7 @@ namespace Hunt.Player
 
         // ---- 스태미너: 달리기·점프·칼질에 쓰고, 쉬면 찬다. 바닥나면 25까지 회복해야 다시 달린다 ----
         public float Stamina { get; private set; } = 100f;
+        float breathTimer;
         public float MaxStamina => 100f + player.Stats.Agility * 1.5f + player.Armor.BonusStamina;
         public bool Exhausted { get; private set; }
         /// <summary>스태미너 회복제: 남은 시간 동안 소모 절반, 회복 두 배.</summary>
@@ -221,6 +222,18 @@ namespace Hunt.Player
                 else Stamina = Mathf.Min(MaxStamina, Stamina + (22f + player.Stats.Vitality * 0.4f) * (BoostTime > 0f ? 2f : 1f) * dt);
             }
             if (Exhausted && Stamina >= 25f) Exhausted = false;
+            // 지치면 헐떡인다 (점점 느려지다 숨이 돌아오면 멈춤)
+            if (Exhausted || Stamina < MaxStamina * 0.12f)
+            {
+                breathTimer -= dt;
+                if (breathTimer <= 0f)
+                {
+                    float tired = 1f - Mathf.Clamp01(Stamina / 25f);
+                    SFX.PlayPitched(SFX.Breath, 0.25f + 0.25f * tired, Random.Range(0.95f, 1.08f));
+                    breathTimer = Mathf.Lerp(1.35f, 0.95f, tired);
+                }
+            }
+            else breathTimer = 0f;
             IsSprinting = sprint;
             float speed = player.Stats.MoveSpeed * WeightPenalty * player.Infection.MoveMultiplier * MoveMultiplier * (sprint ? 1.45f : 1f)
                 * player.Armor.MoveMult * (player.IsUsingItem ? 0.45f : 1f) * (Exhausted ? 0.85f : 1f) * GameRules.MoveMult * Mathf.Lerp(1f, 0.5f, CrouchBlend);

@@ -433,6 +433,29 @@ namespace Hunt.Core
             return Clip("boom", d);
         }
 
+        /// <summary>지쳐서 헐떡이는 숨: 들숨(짧고 높게) + 날숨(길고 낮게) 한 번.</summary>
+        public static AudioClip Breath => Get("breath", () =>
+        {
+            const float len = 0.95f;
+            int n = (int)(Rate * len);
+            var d = new float[n];
+            var rnd = new System.Random(4242);
+            float f = 0f, f2 = 0f;
+            for (int i = 0; i < n; i++)
+            {
+                float t = (float)i / Rate;
+                float noise = (float)(rnd.NextDouble() * 2.0 - 1.0);
+                bool inhale = t < 0.32f;
+                float u = inhale ? t / 0.32f : (t - 0.38f) / (len - 0.38f);
+                float env = t >= 0.32f && t < 0.38f ? 0f : Mathf.Sin(Mathf.Clamp01(u) * Mathf.PI) * (inhale ? 0.7f : 1f);
+                float cut = inhale ? 0.35f : 0.16f; // 들숨은 쉭(밝게), 날숨은 후(어둡게)
+                f += cut * (noise - f);
+                f2 += 0.5f * (f - f2);
+                d[i] = (f - f2 * 0.6f) * env * 0.9f;
+            }
+            return Clip("breath", d);
+        });
+
         static AudioClip MakeWhoosh(float len, float amp, float rustle = 0f)
         {
             int n = (int)(Rate * len);
