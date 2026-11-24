@@ -25,6 +25,7 @@ namespace Hunt.Core
             if (litFrame == Time.frameCount) return litCache;
             litFrame = Time.frameCount;
             litCache = false;
+            if (LampFlicker.Blackout) return false; // 정전
             var gm = GameManager.Instance;
             var p = gm != null ? gm.Player : null;
             if (p == null) return false;

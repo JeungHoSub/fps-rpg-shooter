@@ -302,6 +302,14 @@ namespace Hunt.Core
                 thunderDelay = Random.Range(0.6f, 2.5f);
                 SpawnBolt(cam); // 먼 하늘에 번개 줄기
                 nextThunder = Time.time + Random.Range(thunderLo, thunderHi);
+                // 셋째 밤부터 가끔 벼락에 마을 전기가 나간다 (가로등 20초 꺼짐 — 불빛 아래 들킬 걱정은 없지만 앞이 안 보인다)
+                var gmB = GameManager.Instance;
+                if (gmB != null && gmB.State == GameState.Playing && gmB.Waves != null && gmB.Waves.Wave >= 3 && Time.time > LampFlicker.BlackoutUntil + 60f && Random.value < 0.25f)
+                {
+                    LampFlicker.BlackoutUntil = Time.time + 20f + thunderDelay;
+                    LampFlicker.BlackoutFrom = Time.time + thunderDelay; // 천둥과 함께 꺼진다
+                    Hunt.UI.HUD.Notify("벼락에 전기가 나갔다 — 가로등이 꺼진다", new Color(0.8f, 0.85f, 1f));
+                }
             }
             if (thunderDelay > 0f)
             {
