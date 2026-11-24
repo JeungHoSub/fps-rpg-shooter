@@ -49,7 +49,7 @@ namespace Hunt.Monsters
             float s = transform.parent != null ? transform.parent.lossyScale.y : 1f;
             transform.localPosition = baseLocal + new Vector3(shake, -(1f - rise) * depth / Mathf.Max(0.01f, s), 0f);
             nextClod -= Time.deltaTime;
-            if (nextClod <= 0f && k < 0.85f) { Clods(QualityManager.Level == GfxLevel.Low ? 1 : 2); nextClod = 0.35f; }
+            if (nextClod <= 0f && k < 0.85f && !QualityManager.Emergency) { Clods(QualityManager.Level == GfxLevel.Low ? 1 : 2); nextClod = 0.35f; }
             if (k >= 1f)
             {
                 transform.localPosition = baseLocal;

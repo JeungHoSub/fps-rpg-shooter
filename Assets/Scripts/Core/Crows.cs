@@ -12,7 +12,7 @@ namespace Hunt.Core
 
         public static void Startle(Vector3 near)
         {
-            if (Time.time - lastFlock < 40f || QualityManager.Level == GfxLevel.Low && Random.value < 0.5f) return;
+            if (Time.time - lastFlock < 40f || QualityManager.Emergency || QualityManager.Level == GfxLevel.Low && Random.value < 0.5f) return;
             lastFlock = Time.time;
             Vector2 off = Random.insideUnitCircle.normalized * Random.Range(12f, 22f);
             Vector3 at = near + new Vector3(off.x, 0f, off.y);

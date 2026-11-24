@@ -381,7 +381,7 @@ namespace Hunt.UI
         void DrawLensRain(GameManager gm, Camera cam, float dt)
         {
             var atm = Atmosphere.Instance;
-            if (cam == null || atm == null || gm.State != GameState.Playing) { drops.Clear(); return; }
+            if (cam == null || atm == null || gm.State != GameState.Playing || QualityManager.Emergency) { drops.Clear(); return; }
             float up = Mathf.Clamp01((-Mathf.DeltaAngle(0f, cam.transform.eulerAngles.x) - 5f) / 40f); // 위로 볼수록
             float rate = atm.RainIntensity * (0.4f + 4f * up); // 초당 맺히는 수
             if (dt > 0f)

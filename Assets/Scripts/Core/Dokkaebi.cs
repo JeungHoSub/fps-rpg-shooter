@@ -16,7 +16,7 @@ namespace Hunt.Core
         /// <summary>Atmosphere가 매 프레임 부른다.</summary>
         public static void Tick(Transform parent, Camera cam, float dawn)
         {
-            if (cam == null || dawn > 0.2f || Time.time < next) return;
+            if (cam == null || dawn > 0.2f || Time.time < next || QualityManager.Emergency) return;
             next = Time.time + Random.Range(180f, 300f);
             Vector2 d2 = Random.insideUnitCircle.normalized;
             float far = Mathf.Clamp(cam.farClipPlane * 0.7f, 45f, 90f);
@@ -75,7 +75,7 @@ namespace Hunt.Core
 
         public static void Spawn(Vector3 at)
         {
-            if (QualityManager.Level == GfxLevel.Low && Random.value < 0.5f) return;
+            if (QualityManager.Emergency || (QualityManager.Level == GfxLevel.Low && Random.value < 0.5f)) return; // 끊길 땐 생략
             var o = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             Object.Destroy(o.GetComponent<Collider>());
             o.name = "혼불";
