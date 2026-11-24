@@ -545,7 +545,7 @@ namespace Hunt.Monsters
                 m.Alert(20f);
                 called++;
             }
-            Noise.Emit(transform.position, 28f, true);
+            Noise.Emit(transform.position, 28f, false); // 플레이어가 낸 소리가 아니다 (소리 막대·까마귀에 안 잡히게)
             WailRing.Spawn(transform.position, 28f); // 부르는 범위가 바닥에 물결로
             if (called > 0) HUD.Notify($"곡하는 망자가 울부짖는다 — 망자 {called}이(가) 몰려온다", new Color(1f, 0.55f, 0.4f));
         }
