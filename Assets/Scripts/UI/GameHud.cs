@@ -233,6 +233,10 @@ namespace Hunt.UI
                 UIKit.Vignette(W, H, new Color(0.25f, 0.9f, 0.45f, HealFlash * 0.55f));
                 HealFlash = Mathf.Max(0f, HealFlash - dt * 1.8f);
             }
+            // 덤불 속에 숨어 있으면 화면 가장자리가 잎 그늘처럼 어둡고 푸르스름
+            bool hiddenNow = !Flashlight.Active && p.Controller != null && p.Controller.IsCrouching && Hiding.InBush(p.transform.position);
+            float leaf = UIKit.Smooth("hud.leaf", hiddenNow ? 1f : 0f, 4f);
+            if (leaf > 0.01f) UIKit.Vignette(W, H, new Color(0.03f, 0.08f, 0.03f, 0.75f * leaf));
             if (AcidFlash > 0f)
             {
                 UIKit.Vignette(W, H, new Color(0.5f, 0.85f, 0.1f, AcidFlash * 0.6f));
