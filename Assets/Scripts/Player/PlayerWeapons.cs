@@ -412,6 +412,7 @@ namespace Hunt.Player
                 {
                     HUD.Notify("소리 없이 쓰러뜨렸다", new Color(0.75f, 0.85f, 1f));
                     Achievements.Add("silent10");
+                    player.RunSilent++;
                 }
                 // 칼로 쓰러뜨리면 35% 확률로 치유 부적 (가까이 붙는 위험의 보상)
                 if (res.killed && Random.value < 0.35f)
@@ -873,7 +874,7 @@ namespace Hunt.Player
             HitMarker = 0.12f;
             LastHitWeak = res.zone == HitZone.WeakPoint || res.zone == HitZone.Head;
             LastHitKill = res.killed;
-            if (res.killed && res.zone == HitZone.Head) Achievements.Add("head100");
+            if (res.killed && res.zone == HitZone.Head) { Achievements.Add("head100"); player.RunHeadKills++; }
             if (res.killed && w != null)
             {
                 int before = w.Mastery;

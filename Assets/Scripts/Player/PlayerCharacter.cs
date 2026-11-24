@@ -30,6 +30,8 @@ namespace Hunt.Player
         public bool BountyThisNight { get; set; }
         /// <summary>이번 밤이 시작될 때의 받은 피해 합계 (상처 없는 새벽 판정).</summary>
         public float NightStartDamage { get; set; }
+        /// <summary>이번 판 통계 (사망 화면): 머리 처치 · 연 보급 상자 · 현상금 · 소리 없는 처치.</summary>
+        public int RunHeadKills, RunCrates, RunBounties, RunSilent;
         /// <summary>마지막으로 나를 문 망자 이름 (사망 화면용).</summary>
         public string LastAttacker { get; set; }
         public float HurtFlash { get; private set; }
@@ -239,6 +241,7 @@ namespace Hunt.Player
                 HUD.Notify($"현상금 망자를 쓰러뜨렸다 — 엽전 +{bounty}", new Color(1f, 0.85f, 0.4f));
                 Achievements.Add("bounty10");
                 BountyThisNight = true;
+                RunBounties++;
                 SFX.PlayPitched(SFX.LevelUp, 0.6f, 0.9f);
             }
 
