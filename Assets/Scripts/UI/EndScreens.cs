@@ -137,6 +137,8 @@ namespace Hunt.UI
                     { "Q", "광폭화" }, { "E", "줍기 (가까이 있으면) · 재생" }, { "H", "청심환" }, { "M", "마을 지도 (누르는 동안)" }, { "F3", "FPS 표시" }, { "F12", "사진 찍기 (바탕화면)" }, { "Tab", "서낭당 (밤 사이)" }, { "Esc", "숨 고르기" },
                 };
                 float ky = k.y + 84;
+                // 줄이 많아지면 간격을 줄여 아래 '다시 보기' 단추와 겹치지 않게
+                float rowStep = Mathf.Min(36f, (k.height - 84f - 100f) / keys.GetLength(0));
                 for (int i = 0; i < keys.GetLength(0); i++)
                 {
                     float kw = Mathf.Max(40f, UIKit.TextWidth(keys[i, 0], 14, false, true) + 16f);
@@ -144,7 +146,7 @@ namespace Hunt.UI
                     UIKit.Fill(kr, new Color(0.86f, 0.82f, 0.72f, 0.92f));
                     UIKit.Text(kr, keys[i, 0], 14, new Color(0.06f, 0.05f, 0.05f), TextAnchor.MiddleCenter, bold: true);
                     UIKit.Text(new Rect(kr.xMax + 12, ky, k.width - kw - 60, 28), keys[i, 1], 15, UITheme.Bone, serif: true);
-                    ky += 36;
+                    ky += rowStep;
                 }
                 if (UIKit.Button(new Rect(k.x + 30, k.yMax - 84, k.width - 60, 52), "조작 안내 다시 보기", 17, false, true, "닫으면 왼쪽 위에 한 단계씩"))
                 {
