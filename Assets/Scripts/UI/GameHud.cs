@@ -120,6 +120,7 @@ namespace Hunt.UI
         }
 
         bool lowHpMuttered, surroundMuttered;
+        static bool bushMuttered;
 
         /// <summary>마지막으로 단계가 오른 시각 (금빛 연출).</summary>
         public static float LevelUpAt = -100f;
@@ -1031,6 +1032,7 @@ namespace Hunt.UI
             if (hp0 != null && hp0.Controller != null && Hiding.InBush(hp0.transform.position))
             {
                 bool hid = !Flashlight.Active && hp0.Controller.IsCrouching;
+                if (!hid && !bushMuttered) { bushMuttered = true; Mutter("여기 앉아 숨으면 안 보이겠다"); }
                 string tip = hid ? (hp0.Controller.HoldingBreath ? "숨 참는 중" : "덤불에 숨음 (Shift 숨 참기)") : Flashlight.Active ? "덤불 — 손전등을 끄면 숨는다" : "덤불 — 앉으면(Ctrl) 숨는다";
                 st += (st.Length > 0 ? "  ·  " : "") + $"<color=#{UIKit.Hex(hid ? new Color(0.6f, 0.85f, 0.55f) : new Color(0.55f, 0.65f, 0.5f))}>{tip}</color>";
             }
@@ -1062,7 +1064,7 @@ namespace Hunt.UI
 
         void TrackNight(GameManager gm, PlayerCharacter p)
         {
-            if (!ReferenceEquals(p, nightPlayer)) { nightPlayer = p; nightLastState = GameState.CharacterSelect; dawnLines = null; surroundMuttered = false; } // 새 판
+            if (!ReferenceEquals(p, nightPlayer)) { nightPlayer = p; nightLastState = GameState.CharacterSelect; dawnLines = null; surroundMuttered = false; bushMuttered = false; } // 새 판
             if (gm.State == nightLastState) return;
             if (gm.State == GameState.Playing)
             {
