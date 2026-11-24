@@ -349,6 +349,7 @@ namespace Hunt.Waves
         bool hordeDone = true, hordeJudged = true, secondHorde;
         float hordeAt;
         readonly List<Monster> horde = new List<Monster>();
+        float hordeThump;
 
         /// <summary>망자 떼가 나오고 45초 뒤: 한 마리도 나를 알아채지 못했으면 '몰래 보냈다' 보상.</summary>
         void JudgeHorde()
@@ -415,6 +416,14 @@ namespace Hunt.Waves
                 else hordeDone = true;
             }
             if (!hordeJudged && Time.time > HordeTime + 45f) JudgeHorde();
+            // 떼가 가까이(14m) 지나가면 발밑이 둥둥 울린다 (0.6초마다 살짝 흔들림)
+            if (Time.time - HordeTime < 60f && player != null && (hordeThump -= dt) <= 0f)
+            {
+                hordeThump = 0.6f;
+                int nearH = 0;
+                foreach (var hm in horde) if (hm != null && !hm.IsDead && (hm.transform.position - player.transform.position).sqrMagnitude < 14f * 14f) nearH++;
+                if (nearH >= 2 && player.Controller != null) player.Controller.AddShake(0.12f * nearH);
+            }
 
             // 시간이 지나면 모두 몰려온다
             if (!Monster.GlobalRush)
