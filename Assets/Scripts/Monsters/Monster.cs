@@ -441,6 +441,8 @@ namespace Hunt.Monsters
             bool low = target != null && target.Controller != null && target.Controller.IsCrouching;
             // 앉아서 덤불 속이면 코앞(어둠 2.5m)에 와야 안다. 손전등을 켜면 소용없다
             bool hidden = low && !lit && Hiding.InBush(target.transform.position);
+            // 그림자 망자(추적형)는 냄새로 찾는다: 덤불에 숨어도 앉은 사람 보듯 본다 (숨 참으면 조금 덜)
+            if (hidden && Data.id == "z_stalker") hidden = false;
             // 어슬렁대는 망자는 등 뒤(110° 밖)를 잘 못 본다 → 몰래 다가가 칼질할 수 있다
             float back = 1f;
             if (!IsAlerted && target != null)
