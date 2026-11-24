@@ -517,7 +517,7 @@ namespace Hunt.UI
         /// <summary>망자가 나를 알아챈 순간 머리 위에 붉은 '!' (1.2초) — 들켰다는 걸 바로 알게.</summary>
         void DrawSpotted(Camera cam)
         {
-            if (cam == null || GlobalRushActive()) return;
+            if (cam == null || GlobalRushActive() || !GameSettings.Marks) return;
             float k = W / Screen.width;
             foreach (var m in Monster.Alive)
             {

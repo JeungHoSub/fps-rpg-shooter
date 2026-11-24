@@ -98,8 +98,15 @@ namespace Hunt.Core
             set { ambVol = Mathf.Clamp(value, 0f, 1.5f); Save(AmbKey, ambVol.Value); }
         }
 
-        const string GoreKey = "hunt.gore", CrouchKey = "hunt.crouchtoggle";
-        static bool? crouchToggle;
+        const string GoreKey = "hunt.gore", CrouchKey = "hunt.crouchtoggle", MarksKey = "hunt.marks";
+        static bool? crouchToggle, marks;
+
+        /// <summary>망자 머리 위 '!'·'?'·'…' 표시 (끄면 소리·눈치로만 판단).</summary>
+        public static bool Marks
+        {
+            get { if (marks == null) marks = Load(MarksKey, 1f) > 0.5f; return marks.Value; }
+            set { marks = value; Save(MarksKey, value ? 1f : 0f); }
+        }
 
         /// <summary>앉기 키(Ctrl)를 한 번 눌러 앉고 다시 눌러 일어서기 (기본: 누르는 동안만).</summary>
         public static bool CrouchToggle
