@@ -121,7 +121,9 @@ namespace Hunt.Player
             var gm = GameManager.Instance;
             if (gm == null || !gm.IsWorldRunning) return;
             float dt = Time.deltaTime;
-            life -= dt;
+            // 새벽(정비 시간): 남은 보급품이 사라지지 않고 멀리서도 끌려온다
+            bool dawn = gm.State == GameState.Intermission;
+            if (!dawn) life -= dt;
             if (life <= 0f) { Destroy(gameObject); return; }
             if (visual != null)
             {
@@ -153,10 +155,12 @@ namespace Hunt.Player
                                  new Color(0.6f, 0.58f, 0.54f), full, false);
             }
             else if (d > 3f) toldFull = false;
-            if (d < 4f && can)
+            float reach = dawn ? 30f : 4f;
+            if (d < reach && can)
             {
                 // 자석처럼 끌려온다
-                transform.position = Vector3.MoveTowards(transform.position, new Vector3(p.transform.position.x, basePos.y, p.transform.position.z), (3f + (4f - d) * 3f) * dt);
+                float speed = dawn ? 9f + (reach - d) * 0.6f : 3f + (4f - d) * 3f;
+                transform.position = Vector3.MoveTowards(transform.position, new Vector3(p.transform.position.x, basePos.y, p.transform.position.z), speed * dt);
                 if (d < 0.9f) { Take(p); Destroy(gameObject); }
             }
         }
