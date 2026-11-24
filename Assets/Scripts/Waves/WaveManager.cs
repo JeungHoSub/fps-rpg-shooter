@@ -146,6 +146,9 @@ namespace Hunt.Waves
             if (Rule == RoundRule.Defense) SetupDefense();
             if (Timed) TimeLeft = TimeLimit = (Rule == RoundRule.Defense ? 120f : 150f + n * 4f) * GameRules.TimeMult;
 
+            // 보급 상자 3개 (지난 밤 남은 상자는 치운다)
+            SupplyCrate.PlaceForNight(root, player != null ? player.transform.position : Vector3.zero, 3);
+
             // 기본 망자 절반은 처음부터 마을 곳곳에 서성이고 있다
             int scatter = Mathf.Min(queue.Count, Mathf.Max(3, QualityManager.MaxAliveMonsters - 2));
             for (int i = 0; i < scatter; i++) Spawn(queue.Dequeue(), ScatterPoint(), placed: true);

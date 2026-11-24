@@ -834,6 +834,7 @@ namespace Hunt.UI
         void DrawPickupPrompt()
         {
             bool near = Pickup.NearestInfo(out string name, out bool can);
+            if (!near && SupplyCrate.NearestToPlayer() != null) { near = true; name = "보급 상자 열기"; can = true; }
             float a = UIKit.Smooth("hud.pickprompt", near ? 1f : 0f, 12f);
             if (a < 0.02f) return;
             if (near) { lastPromptName = name; lastPromptCan = can; }
@@ -842,7 +843,8 @@ namespace Hunt.UI
             var r = new Rect(W / 2 - 200, H / 2 + 92, 400, 34);
             UIKit.Tex(r, UITheme.LineFade, new Color(0f, 0f, 0f, 0.6f));
             string text = lastPromptCan
-                ? $"<color=#{UIKit.Hex(UITheme.GoldBright)}><b>[E]</b></color>  줍기  ·  {lastPromptName}"
+                ? (lastPromptName == "보급 상자 열기" ? $"<color=#{UIKit.Hex(UITheme.GoldBright)}><b>[E]</b></color>  보급 상자 열기"
+                   : $"<color=#{UIKit.Hex(UITheme.GoldBright)}><b>[E]</b></color>  줍기  ·  {lastPromptName}")
                 : $"{lastPromptName}  ·  <color=#{UIKit.Hex(UITheme.Ash)}>{(lastPromptName == Pickup.NameOf(PickupKind.Rune) ? "생명이 가득해 못 줍는다" : "가득 차서 못 줍는다")}</color>";
             UIKit.Text(r, text, 18, UITheme.Bone, TextAnchor.MiddleCenter, serif: true);
             UIKit.Alpha = keep;
