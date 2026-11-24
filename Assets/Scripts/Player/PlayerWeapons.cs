@@ -371,6 +371,9 @@ namespace Hunt.Player
                 var res = part.ReceiveHit(info);
                 if (!res.hit) continue;
                 kill |= res.killed;
+                // 칼로 쓰러뜨리면 35% 확률로 치유 부적 (가까이 붙는 위험의 보상)
+                if (res.killed && Random.value < 0.35f)
+                    Pickup.Spawn(PickupKind.Rune, part.owner.transform.position + Vector3.up * 0.2f, part.owner.transform.parent);
                 HitMarker = 0.12f;
                 LastHitWeak = res.zone == HitZone.WeakPoint || res.zone == HitZone.Head;
                 LastHitKill = res.killed;
