@@ -44,7 +44,7 @@ namespace Hunt.UI
 
             // 제목
             UIKit.BrushTitle(new Rect(win.x, win.y + 12, win.width, 48), "서낭당", 38, new Color(0f, 0f, 0f, 0.7f), UITheme.GoldBright);
-            UIKit.Text(new Rect(win.x, win.y + 56, win.width, 24), $"날이 밝았다. 망자들은 그늘로 숨었다. 서낭당 돌무더기 앞에서 숨을 고른다.  ·  다음 밤까지 {gm.IntermissionTime:0}초", 16, UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true);
+            UIKit.Text(new Rect(win.x, win.y + 56, win.width, 24), $"날이 밝았다. 망자들은 그늘로 숨었다. 서낭당 돌무더기 앞에서 숨을 고른다.  ·  다음 밤까지 {gm.IntermissionTime:0}초" + (p.Blessings > 0 ? $"  ·  장승의 축복 {p.Blessings}/3" : ""), 16, UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true);
             UIKit.Divider(new Rect(win.x + 200, win.y + 86, win.width - 400, 10));
 
             // 탭
