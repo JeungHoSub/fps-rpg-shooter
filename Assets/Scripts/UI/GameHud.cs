@@ -315,6 +315,16 @@ namespace Hunt.UI
                 x = Mathf.Clamp(x, 40f, W - 40f);
                 y = Mathf.Clamp(y, 40f, H - 40f);
                 float pulse = 0.7f + 0.3f * Mathf.Sin(Time.unscaledTime * 5f);
+                if (m.IsBoss)
+                {
+                    // 보스는 크게 '대'로, 거리도 항상 (화면 밖이어도 어느 쪽인지 바로 알게)
+                    float sz = 56f + 6f * pulse;
+                    UIKit.Tex(new Rect(x - sz, y - sz, sz * 2f, sz * 2f), UITheme.Glow, new Color(0.8f, 0.05f, 0.05f, 0.35f * pulse));
+                    UIKit.Emblem(new Rect(x - sz / 2f, y - sz / 2f, sz, sz), "대", UITheme.BloodBright, true);
+                    float d = Vector3.Distance(cam.transform.position, m.transform.position);
+                    UIKit.Text(new Rect(x - 50, y + sz / 2f, 100, 22), $"{d:0}m", 16, new Color(1f, 0.85f, 0.75f, 1f), TextAnchor.MiddleCenter, bold: true);
+                    continue;
+                }
                 UIKit.Emblem(new Rect(x - 22, y - 22, 44, 44), "망", UITheme.Blood, true);
                 if (!off)
                 {
