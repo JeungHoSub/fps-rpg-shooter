@@ -86,7 +86,10 @@ Unity 1인칭 싱글플레이 좀비 슈터 + RPG. **비 오는 밤의 한국 �
     밤 시작 제목 `GameHud.DrawNightBanner` · 땅에서 기어 나옴 `Monsters/RiseFromGround.cs` · 피해 숫자 다듬기 · 조준경 흔들림+Shift 숨 참기 `PlayerController.BreathHold` · 연속 처치 보상 ·
     공격 예고 `Monster.windup` · 저체력 먹먹 `EarRing.lowHp` · 무기고 비교 금 · 새로 바뀐 점 `GameText.WhatsNew` · 칼 파고들기 · 화면 빗방울 `GameHud.DrawLensRain` · 사망 요령 `GameText.DeathTips` ·
     새 망자 `bloat`(터짐, `Monster.BloatBurst`)·`shriek`(곡, `Monster.Wail`) · 새 기질 화약쟁이·약초꾼·머리 사냥꾼(`DamageCalculator.PlayerHeadBonus`) · 미끄러지기 `PlayerController.IsSliding` ·
-    보급 상자 `Player/SupplyCrate.cs` · 보스 북 `SFX.Drum`.
+    보급 상자 `Player/SupplyCrate.cs` · 보스 북 `SFX.Drum` · 무기 숙련 `WeaponInstance.kills/Mastery` · 찢어진 쪽지 `GameText.LoreNotes`(`GameHud.ShowNextLoreNote`, 역병 일지에서 다시 읽기) ·
+    업적 `Core/Achievements.cs` · 처음 보는 망자 알림 `GameHud.FirstSight` · 화면 피 `GameHud.ScreenBlood` · 피 표현 끄기 `GameSettings.Gore` · 까마귀 `Core/Crows.cs` · 조준 감도 `GameSettings.AdsSensitivity` ·
+    탄 떨어지면 자동 교체 · 다시 일어나는 망자 `WaveManager.Revive`(머리 처치 제외) · 다음 밤 미리 보기 `WaveManager.RuleFor` · 화염병 `GadgetType.Molotov`/`ThrownMolotov`/`FireZone` · 불붙은 망자 `Monster.Ignite`.
+  - 2026-11-24 05:55~10:20 작업 서버 재시작으로 멈춤 → 10:22 재개. 커밋 전 컴파일 확인은 scratchpad `ship.sh "메시지"` (오류면 커밋 안 함).
   - 보류: 망자 모델 다양화 (Mixamo — 사용자 토큰 다시 필요, 토큰은 하루쯤 지나면 만료).
   - 이후 작은 후보: 사용자 피드백 반영 → 성능(실기기 확인 필요) · 버그 점검 · 소리/연출 다듬기.
 - 환경 '2번째'에 Poly Haven 호스트(api.polyhaven.com, dl.polyhaven.org) 허용됨. API는 User-Agent 필요.
