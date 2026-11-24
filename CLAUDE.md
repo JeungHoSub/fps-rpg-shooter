@@ -79,7 +79,7 @@ Unity 1인칭 싱글플레이 좀비 슈터 + RPG. **비 오는 밤의 한국 �
     **사용자 피드백 (2026-11-24) "UI 매끄럽게 · 총은 까매야지" → 다시 "회색이 나아, 더 예쁘게"** → 총은 회색 총철(밝기 차이↑·푸른 기·금속광·호두나무 개머리, `PackGunModel.GetMaterial`·`RealGunModel` 색조) · UI 움직임 `UIKit.Smooth`/`EaseOut`(일시정지 등장·서낭당 탭 밑줄/전환·엽전·경험치·알림 줄·무기 칸 전환·탄 숫자 튐·조준선) · 새벽 기록 카드 `GameHud.DrawDawnCard`(서낭당 위 창, 클릭 닫힘 `DawnInput`, 대감 처치 시 '마을을 지켜냈다') · X자 적중 표시 ·
     **피드백 "죽으면 피가 화면 중간에 떠 있다 · 최종보스 안 나오나"** → 피 웅덩이 바닥 찾기 `FX.FloorUnder`(망자 판정 건너뜀) · 보스 등장 큰 이름 `GameHud.DrawBossIntro`, 매 밤 '대감의 그림자'/다섯째 밤 최종 '역병 대감'(`GameHud.BossName`, 붉은 기운 빛), 밤 표식 '대감의 밤까지 N밤' ·
     **요청 "몹 잡으면 힐링룬·탄창"** → `PickupKind.Rune` 치유 부적(즉시 생명 15%, ~20%, 보스 3개, 옥빛 화면 `GameHud.HealFlash`) · 탄창 모양(휜 탄창+탄알)·확률 ~22% · 보급품 빛 동시 4개 제한 ·
-    **요청 "E로 둘 다 먹게"** → E = 3.5m 안 보급품 줍기(`Pickup.GrabRange`, `GameInput.PickupDown`), 없으면 재생(`GameInput.RegenDown`이 `Pickup.AnyNearPlayer` 확인) · 발밑 안내 `GameHud.DrawPickupPrompt`. 자동 자석 줍기도 유지(가득 차면 안 끌림 → 안내 문구) · 뒤쪽 벽 피 자국 `FX.BloodSplat` · 보급품 빨려 들어올 때 작아짐.
+    **요청 "E로 둘 다 먹게"** → E = 3.5m 안 보급품 줍기(`Pickup.GrabRange`, `GameInput.PickupDown`), 없으면 재생(`GameInput.RegenDown`이 `Pickup.AnyNearPlayer` 확인) · 발밑 안내 `GameHud.DrawPickupPrompt`. 자동 자석 줍기도 유지(가득 차면 안 끌림 → 안내 문구) · 뒤쪽 벽 피 자국 `FX.BloodSplat` · 보급품 빨려 들어올 때 작아짐 · 머리 맞으면 갓 날아감 `Monster.KnockOffHat`/`HatFly` · 탄약 가득하면 탄창→수류탄 · 망자 조준 시 조준선 붉게 (`GameHud.aimOnMonster`).
   - 보류: 망자 모델 다양화 (Mixamo — 사용자 토큰 다시 필요, 토큰은 하루쯤 지나면 만료).
   - 이후 작은 후보: 사용자 피드백 반영 → 성능(실기기 확인 필요) · 버그 점검 · 소리/연출 다듬기.
 - 환경 '2번째'에 Poly Haven 호스트(api.polyhaven.com, dl.polyhaven.org) 허용됨. API는 User-Agent 필요.

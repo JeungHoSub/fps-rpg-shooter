@@ -227,16 +227,19 @@ namespace Hunt.UI
         Monster tagTarget;
         float tagTime;
 
+        bool aimOnMonster; // 조준점이 망자 위에 있나 (조준선이 붉게)
+
         void DrawTargetTag(Camera cam)
         {
             if (cam == null) return;
             if (UIKit.IsRepaint)
             {
                 var ray = new Ray(cam.transform.position, cam.transform.forward);
+                aimOnMonster = false;
                 if (Physics.Raycast(ray, out var hit, 40f, ~((1 << 2) | (1 << 1)), QueryTriggerInteraction.Ignore))
                 {
                     var part = hit.collider.GetComponent<MonsterPart>();
-                    if (part != null && part.owner != null && !part.owner.IsDead) { tagTarget = part.owner; tagTime = 1.2f; }
+                    if (part != null && part.owner != null && !part.owner.IsDead) { tagTarget = part.owner; tagTime = 1.2f; aimOnMonster = true; }
                 }
                 tagTime -= Time.unscaledDeltaTime;
             }
@@ -780,7 +783,9 @@ namespace Hunt.UI
                 float gap = Mathf.Tan(p.Weapons.CurrentSpread * Mathf.Deg2Rad) / Mathf.Tan(fov * 0.5f * Mathf.Deg2Rad) * (H / 2f);
                 gap = Mathf.Clamp(gap, 4f, 300f);
                 gap = UIKit.Smooth("hud.crossgap", gap, 22f); // 쏘거나 조준할 때 조준선이 툭 튀지 않고 벌어졌다 모인다
-                Color c = new Color(0.95f, 0.88f, 0.75f, alpha);
+                // 망자 위에 조준점이 올라가면 조준선이 붉게 물든다
+                float onM = UIKit.Smooth("hud.aimon", aimOnMonster ? 1f : 0f, 16f);
+                Color c = Color.Lerp(new Color(0.95f, 0.88f, 0.75f, alpha), new Color(1f, 0.32f, 0.25f, alpha), onM);
                 Color sh = new Color(0, 0, 0, alpha * 0.6f);
                 float len = 12;
                 Rect[] lines =
