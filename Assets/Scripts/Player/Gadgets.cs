@@ -31,7 +31,7 @@ namespace Hunt.Player
             {
                 case GadgetType.Grenade: return "던지면 2.5초 뒤 터진다 (반경 6m)";
                 case GadgetType.Mine: return "발밑에 묻는다. 망자가 밟으면 터진다";
-                case GadgetType.Molotov: return "던지면 깨져 7초 동안 불바다 (반경 3m) — 길목을 막는다";
+                case GadgetType.Molotov: return "던지면 깨져 7초쯤 불바다 (반경 3m, 비가 세면 빨리 꺼짐) — 길목을 막는다";
                 default: return "30초 동안 가까운 망자를 쏜다. 총성이 망자를 끌어들인다";
             }
         }
@@ -247,6 +247,9 @@ namespace Hunt.Player
             if (Effects.Root != null) go.transform.SetParent(Effects.Root, true);
             go.transform.position = at;
             var z = go.AddComponent<FireZone>();
+            // 빗줄기가 셀수록 불이 빨리 꺼진다 (폭우면 70%)
+            float rain = Atmosphere.Instance != null ? Atmosphere.Instance.RainIntensity : 0.5f;
+            seconds *= Mathf.Lerp(1.05f, 0.7f, Mathf.InverseLerp(0.3f, 1f, rain));
             z.radius = radius; z.life = z.maxLife = seconds; z.dps = dps; z.owner = owner;
             z.Build();
             Noise.Emit(at, 18f, true);
