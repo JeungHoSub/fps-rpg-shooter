@@ -198,6 +198,7 @@ namespace Hunt.UI
             TrackNight(gm, p);
             DrawNightBanner(gm);
             DrawLoreNote();
+            if (gm.State == GameState.Playing && !gm.MenuOpen) NightTask.Draw(p, W);
 
             // ---- 화면 효과 ----
             float hpRatio = p.Hp / p.MaxHp;
@@ -975,6 +976,7 @@ namespace Hunt.UI
                 p.BestStreak = 0;
                 p.BountyThisNight = false;
                 p.NightStartDamage = p.DamageTaken;
+                NightTask.Begin(p, gm.Waves != null ? gm.Waves.Wave : 1);
                 lowHpMuttered = false;
                 string[] nightLines = { "또 밤이 왔다", "비가 그치질 않는구나", "오늘 밤만 넘기자", "고분 쪽에서 또 소리가 난다" };
                 Mutter(nightLines[Random.Range(0, nightLines.Length)]);
@@ -999,6 +1001,7 @@ namespace Hunt.UI
                     SupplyCrate.PlacedThisNight > 0 ? $"연 보급 상자  <b>{SupplyCrate.OpenedThisNight} / {SupplyCrate.PlacedThisNight}</b>" : null,
                 };
                 dawnShown = Time.unscaledTime;
+                NightTask.End();
                 string[] dawnLines2 = { "살았다…", "날이 밝는다", "서낭당에서 숨 좀 돌리자" };
                 Mutter(dawnLines2[Random.Range(0, dawnLines2.Length)]);
             }
