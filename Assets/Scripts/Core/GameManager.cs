@@ -279,6 +279,23 @@ namespace Hunt.Core
             Time.timeScale = Paused ? 0f : 1f;
         }
 
+        // 창을 벗어나거나(Alt+Tab) 휴대폰에서 앱이 뒤로 가면 자동 일시정지 (싸우다 죽지 않게)
+        void OnApplicationFocus(bool focus)
+        {
+            if (!focus && !Application.isEditor) AutoPause();
+        }
+
+        void OnApplicationPause(bool paused)
+        {
+            if (paused) AutoPause();
+        }
+
+        void AutoPause()
+        {
+            if (Paused || State != GameState.Playing) return;
+            TogglePause();
+        }
+
         public void Restart()
         {
             Paused = false;
