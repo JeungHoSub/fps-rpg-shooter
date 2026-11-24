@@ -269,7 +269,7 @@ namespace Hunt.Player
                 else
                 {
                     string why = kind == PickupKind.Rune ? "생명이 가득하다 — 다쳤을 때 치유 부적을 주우세요"
-                               : kind == PickupKind.Ammo ? "예비 탄약이 가득하다"
+                               : kind == PickupKind.Ammo ? "탄약도 수류탄도 가득하다"
                                : $"{NameOf(kind)} 가득 참 — 쓰고 나서 주우세요";
                     GameHud.OnPickup(kind == PickupKind.Kit ? HudIcons.Icon.Kit : kind == PickupKind.Drink ? HudIcons.Icon.Bottle : kind == PickupKind.Rune ? HudIcons.Icon.Heart : HudIcons.Icon.Ammo,
                                      new Color(0.6f, 0.58f, 0.54f), why, false);
@@ -290,7 +290,7 @@ namespace Hunt.Player
                 string full = kind == PickupKind.Rune ? "생명이 가득 차 있다 — 다치면 치유 부적을 주우세요"
                             : kind == PickupKind.Kit ? $"치료 키트 가득 참 (최대 {PlayerCharacter.MaxKits}) — 쓰고 나서 주우세요"
                             : kind == PickupKind.Drink ? $"회복제 가득 참 (최대 {PlayerCharacter.MaxDrinks}) — 쓰고 나서 주우세요"
-                            : "예비 탄약 가득 참";
+                            : "탄약도 수류탄도 가득 참";
                 GameHud.OnPickup(kind == PickupKind.Kit ? HudIcons.Icon.Kit : kind == PickupKind.Drink ? HudIcons.Icon.Bottle : kind == PickupKind.Rune ? HudIcons.Icon.Heart : HudIcons.Icon.Ammo,
                                  new Color(0.6f, 0.58f, 0.54f), full, false);
             }
@@ -315,7 +315,8 @@ namespace Hunt.Player
                 default:
                     foreach (var w in p.Weapons.Slots)
                         if (w != null && w.reserve < w.MaxReserve) return true;
-                    return false;
+                    // 탄약이 다 가득하면 수류탄 한 개로 바꿔 준다 (탄창이 쓸모없이 남지 않게)
+                    return p.Weapons.GadgetCount[(int)GadgetType.Grenade] < Gadgets.MaxCarry(GadgetType.Grenade);
             }
         }
 
@@ -348,7 +349,13 @@ namespace Hunt.Player
                     if (w == null || w.reserve >= w.MaxReserve)
                         foreach (var s in p.Weapons.Slots)
                             if (s != null && s.reserve < s.MaxReserve) { w = s; break; }
-                    if (w == null) break;
+                    if (w == null || w.reserve >= w.MaxReserve)
+                    {
+                        int gi = (int)GadgetType.Grenade;
+                        p.Weapons.GadgetCount[gi] = Mathf.Min(Gadgets.MaxCarry(GadgetType.Grenade), p.Weapons.GadgetCount[gi] + 1);
+                        GameHud.OnPickup(HudIcons.Icon.Grenade, c, $"탄약이 가득해 수류탄으로  +1  (지닌 {p.Weapons.GadgetCount[gi]})");
+                        break;
+                    }
                     int add = Mathf.Max(w.data.magazine, 6);
                     int before = w.reserve;
                     w.reserve = Mathf.Min(w.MaxReserve, w.reserve + add);
