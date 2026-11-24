@@ -914,7 +914,7 @@ namespace Hunt.UI
             var pc = gm.Player;
             if (pc != null && (pc.CharmGuard || pc.CharmSwift || pc.CharmAim))
                 light += $"  ·  <color=#{UIKit.Hex(new Color(0.95f, 0.85f, 0.6f))}>부적: {(pc.CharmGuard ? "호신 " : "")}{(pc.CharmSwift ? "축지 " : "")}{(pc.CharmAim ? "명중" : "")}</color>";
-            UIKit.Text(new Rect(r.x - 160, r.y - 22, r.width + 320, 20), "소 리" + rain + light, 13, UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true);
+            UIKit.Text(new Rect(r.x - 460, r.y - 22, r.width + 920, 20), "소 리" + rain + light, 13, UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true);
         }
 
         // ---- 새벽 기록 카드: 그 밤에 한 일을 날이 밝을 때 잠깐 보여 준다 ----
