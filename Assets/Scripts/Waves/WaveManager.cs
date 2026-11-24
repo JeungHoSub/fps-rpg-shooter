@@ -525,6 +525,7 @@ namespace Hunt.Waves
             var m = MonsterFactory.Create(d, Navigation.Snap(at, 2f), evo, hpScale, player, root);
             if (m == null) yield break;
             m.revenant = true;
+            m.MarkRevenantLook(); // 검푸른 살빛 — 한 번 죽었다 일어난 놈
             m.AddDefense(DefenseBonus(MonsterArchetype.Runner));
             m.DamageScale = Mathf.Min(1.6f, 1f + 0.05f * (Wave - 1)) * GameSettings.DiffDamage;
             m.Alert(12f);

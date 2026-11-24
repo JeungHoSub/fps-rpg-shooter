@@ -337,6 +337,9 @@ namespace Hunt.Monsters
                 Head.rotation = Quaternion.AngleAxis(headJerk, flinchAxis) * Head.rotation;
         }
 
+        /// <summary>살빛을 바꾼다 (다시 일어난 망자는 검푸르게 등).</summary>
+        public void SetTint(Color c) { tint = c; ApplyTint(0f); }
+
         void ApplyTint(float flash)
         {
             if (renderers == null) return;

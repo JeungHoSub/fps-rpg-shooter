@@ -621,6 +621,9 @@ namespace Hunt.Monsters
         bool directKill;
         /// <summary>한 번 다시 일어난 망자 (두 번은 안 일어난다).</summary>
         public bool revenant;
+        /// <summary>다시 일어난 망자: 살빛을 검푸르게 (한눈에 알아보게).</summary>
+        public void MarkRevenantLook() { if (rig != null) rig.SetTint(new Color(0.45f, 0.5f, 0.62f)); }
+
         /// <summary>소리 없는 처치 등: 다시 일어나지 않는다.</summary>
         public bool NoRevive;
         /// <summary>나를 알아챈 시각 (HUD가 잠깐 머리 위에 '!'를 띄운다).</summary>
