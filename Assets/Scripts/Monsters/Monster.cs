@@ -447,7 +447,8 @@ namespace Hunt.Monsters
                 Vector3 tp = target.transform.position - transform.position; tp.y = 0f;
                 if (tp.sqrMagnitude > 0.01f && Vector3.Angle(transform.forward, tp) > 110f) back = 0.45f;
             }
-            float sightThr = Mathf.Max(2f, (hidden ? 2.5f : (lit ? SightLit : SightDark) * (low ? 0.7f : 1f) * Atmosphere.SightMult) * back);
+            float lowMult = low ? (target.CharmHide ? 0.5f : 0.7f) : 1f; // 은신부: 앉으면 더 안 띈다
+            float sightThr = Mathf.Max(2f, (hidden ? 2.5f : (lit ? SightLit : SightDark) * lowMult * Atmosphere.SightMult) * back);
             // 눈치챌락 말락 (알아채는 거리의 1.6배 안): 머리 위 '…' — 물러설 때를 알게
             Suspicion = IsAlerted ? 0f : Mathf.Clamp01((sightThr * 1.6f - dist) / (sightThr * 0.6f));
             if (dist < sightThr) { Alert(3f); Suspicion = 0f; return; }
