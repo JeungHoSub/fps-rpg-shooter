@@ -57,6 +57,10 @@ namespace Hunt.UI
                 if (n.time <= 0f) notes.RemoveAt(i); else notes[i] = n;
             }
             DamageNumbers.Tick(Time.deltaTime);
+            // 성능: 싸우는 동안(메뉴·일시정지 아님)은 IMGUI 'Layout' 단계를 건너뛴다 (GUILayout을 안 쓰므로) → 화면 그리기 CPU 약 절반.
+            // 스크롤 목록이 있는 메뉴 화면에서는 예전대로 켠다.
+            var gm = GameManager.Instance;
+            useGUILayout = gm == null || gm.State != GameState.Playing || gm.Paused || gm.MenuOpen;
         }
 
         void OnGUI()
