@@ -57,6 +57,7 @@ namespace Hunt.Monsters
         Vector3 lastHitDir;
         float stagger;
         float attackTimer;
+        float windup; // 물기 직전 남은 시간 (0이면 물려고 하지 않는 중)
         float spitTimer;
 
         // 상태이상
@@ -305,7 +306,27 @@ namespace Hunt.Monsters
 
             // 공격
             attackTimer -= dt;
-            if (attackTimer <= 0f && alerted && bossState == 0)
+            if (windup > 0f)
+            {
+                // 물기 직전: 세게 맞아 휘청이면 공격이 끊긴다 (쏴서 막는 맛)
+                if (stagger > 0.15f) { windup = 0f; attackTimer = 0.35f; }
+                else
+                {
+                    windup -= dt;
+                    if (windup <= 0f)
+                    {
+                        // 그 사이 물러났으면 헛물기
+                        if (dist <= Data.attackRange + 0.9f)
+                        {
+                            target.LastAttacker = Data.displayName;
+                            target.TakeDamage(Data.attackDamage * DamageScale, Data.infectionPerHit, transform.position);
+                        }
+                        else SFX.PlayAt3D(SFX.Swing, transform.position + Vector3.up * 1.3f, 0.5f, 0.8f);
+                        attackTimer = Data.attackInterval;
+                    }
+                }
+            }
+            else if (attackTimer <= 0f && alerted && bossState == 0)
             {
                 if (Data.archetype == MonsterArchetype.Spitter)
                 {
@@ -313,10 +334,10 @@ namespace Hunt.Monsters
                 }
                 else if (dist <= Data.attackRange + 0.4f)
                 {
-                    target.LastAttacker = Data.displayName;
-                    target.TakeDamage(Data.attackDamage * DamageScale, Data.infectionPerHit, transform.position);
-                    if (rig != null) rig.PlayBite(1.3f * Mathf.Clamp(0.9f / Mathf.Max(0.1f, Data.attackInterval), 0.7f, 2.4f)); // 공격이 빠른 유형은 동작도 빠르게
-                    attackTimer = Data.attackInterval;
+                    // 물기 동작을 먼저 시작하고, 잠깐 뒤(빠른 유형일수록 짧게) 실제로 문다 — 보고 피할 수 있게
+                    float speedUp = Mathf.Clamp(0.9f / Mathf.Max(0.1f, Data.attackInterval), 0.7f, 2.4f);
+                    windup = Mathf.Clamp(0.3f / speedUp, 0.14f, 0.32f);
+                    if (rig != null) rig.PlayBite(1.3f * speedUp); // 공격이 빠른 유형은 동작도 빠르게
                 }
             }
 
