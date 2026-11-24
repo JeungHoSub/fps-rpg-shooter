@@ -71,7 +71,7 @@ namespace Hunt.UI
             float size = Mathf.Min(H * 0.82f, W * 0.7f);
             var r = new Rect(W / 2 - size / 2, H / 2 - size / 2 + (1f - alpha) * 14f, size, size);
             UIKit.Fill(new Rect(0, 0, W, H), new Color(0f, 0f, 0f, 0.5f));
-            UIKit.Panel(new Rect(r.x - 18, r.y - 52, r.width + 36, r.height + 70));
+            UIKit.Panel(new Rect(r.x - 18, r.y - 52, r.width + 36, r.height + 90));
             UIKit.Text(new Rect(r.x, r.y - 46, r.width, 30), "마을 지도", 22, UITheme.GoldBright, TextAnchor.MiddleCenter, serif: true, bold: true);
             UIKit.Tex(r, rt, new Color(0.85f, 0.82f, 0.75f, 1f));
             UIKit.Outline(r, new Color(0.5f, 0.46f, 0.38f), 2f);
@@ -124,7 +124,8 @@ namespace Hunt.UI
                 GUI.matrix = m0;
                 UIKit.Tex(new Rect(p.x - 7, p.y - 7, 14, 14), UITheme.Circle, Color.white);
             }
-            UIKit.Text(new Rect(r.x, r.yMax + 2, r.width, 20), "흰 점 = 나  ·  노란 네모 = 보급 상자  ·  노란 동그라미 = 현상금  ·  대 = 보스  ·  지 = 지킬 곳  ·  붉은 점 = 망자  ·  초록 = 숨을 덤불", 13, UITheme.BoneDim, TextAnchor.MiddleCenter);
+            UIKit.Text(new Rect(r.x, r.yMax + 2, r.width, 18), "흰 점 = 나  ·  노란 네모 = 보급 상자  ·  노란 동그라미 = 현상금  ·  대 = 보스", 13, UITheme.BoneDim, TextAnchor.MiddleCenter);
+            UIKit.Text(new Rect(r.x, r.yMax + 20, r.width, 18), "지 = 지킬 곳  ·  붉은 점 = 망자  ·  초록 = 숨을 덤불 (앉으면 숨는다)", 13, UITheme.BoneDim, TextAnchor.MiddleCenter);
             UIKit.Alpha = keep;
         }
     }
