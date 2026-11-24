@@ -757,6 +757,7 @@ namespace Hunt.Player
                         continue;
                     }
 
+                    if (hit.collider.name == "LampHead") { var lampHit = hit.collider.GetComponentInParent<ShootableLamp>(); if (lampHit != null) lampHit.Hit(hit.point); }
                     var boom = hit.collider.GetComponentInParent<ExplosiveProp>();
                     if (boom != null) boom.Hit(w.Damage * dmgScale, flame);
                     if (!flame) FX.ImpactWorld(hit.point, hit.normal);

@@ -854,7 +854,13 @@ namespace Hunt.Core
                 Prim(PrimitiveType.Cube, new Vector3(0.7f, 5.55f, 0), new Vector3(1.5f, 0.08f, 0.08f), metal, g, collider: false);
             }
             // 불 켜진 등갓 (모델 위에도 겹쳐 빛나 보이게)
-            Prim(PrimitiveType.Cube, lightPos + new Vector3(0f, 0.15f, 0f), new Vector3(0.4f, 0.06f, 0.22f), EnvMaterials.Emissive(new Color(1f, 0.75f, 0.45f), 2.2f), g, collider: false, shadows: false);
+            var headGlow = Prim(PrimitiveType.Cube, lightPos + new Vector3(0f, 0.15f, 0f), new Vector3(0.4f, 0.06f, 0.22f), EnvMaterials.Emissive(new Color(1f, 0.75f, 0.45f), 2.2f), g, collider: false, shadows: false);
+            // 등갓 판정 (쏘면 깨진다)
+            var headHit = new GameObject("LampHead");
+            headHit.transform.SetParent(g, false);
+            headHit.transform.localPosition = lightPos + new Vector3(0f, 0.1f, 0f);
+            var hb = headHit.AddComponent<BoxCollider>();
+            hb.size = new Vector3(0.7f, 0.35f, 0.5f);
             var lg = new GameObject("LampLight");
             lg.transform.SetParent(g, false);
             lg.transform.localPosition = lightPos;
@@ -868,6 +874,8 @@ namespace Hunt.Core
             var f = lg.AddComponent<LampFlicker>();
             f.broken = flicker;
             f.minLevel = minLevel; // 저사양에서는 가로등 불빛을 절반만
+            var sl = g.gameObject.AddComponent<ShootableLamp>();
+            sl.lamp = l; sl.flicker = f; sl.glow = headGlow != null ? headGlow.GetComponent<Renderer>() : null;
         }
 
         // ================================================================ 소품
