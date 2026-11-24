@@ -60,6 +60,7 @@ namespace Hunt.Player
         Vector3 slideDir;
         bool prevCrouchKey;
         public bool IsSliding { get; private set; }
+        float slideTilt;
         /// <summary>조준경 숨 참기 (Shift): 남은 시간 · 참는 중인가.</summary>
         public const float BreathMax = 4f;
         public float BreathHold { get; private set; } = BreathMax;
@@ -220,6 +221,8 @@ namespace Hunt.Player
             // 화면 흔들림 (사격·피격): 짧은 롤 + 미세 피치
             shake *= Mathf.Exp(-12f * dt);
             float roll = (Mathf.PerlinNoise(Time.time * 40f, 7f) * 2f - 1f) * shake;
+            slideTilt = Mathf.MoveTowards(slideTilt, IsSliding ? 5f : 0f, dt * 30f); // 미끄러질 때 살짝 기운다
+            roll += slideTilt;
             float shakePitch = (Mathf.PerlinNoise(3f, Time.time * 40f) * 2f - 1f) * shake * 0.5f;
 
             transform.rotation = Quaternion.Euler(0f, yaw + recoil.x + jx, 0f);
