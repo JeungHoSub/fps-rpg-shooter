@@ -23,6 +23,9 @@ namespace Hunt.Player
         public int StatPoints { get; private set; }
         public int Gold { get; private set; }
         public int Kills { get; private set; }
+        /// <summary>지금까지 받은 피해 합계 · 가장 긴 연속 처치 (새벽 기록 카드용).</summary>
+        public float DamageTaken { get; private set; }
+        public int BestStreak { get; set; }
         /// <summary>마지막으로 나를 문 망자 이름 (사망 화면용).</summary>
         public string LastAttacker { get; set; }
         public float HurtFlash { get; private set; }
@@ -153,7 +156,9 @@ namespace Hunt.Player
         public void TakeDamage(float dmg, float infection)
         {
             if (IsDead) return;
-            Hp -= dmg * Infection.DamageTakenMultiplier * Armor.DamageTakenMult * Stats.DamageTakenMult;
+            float taken = dmg * Infection.DamageTakenMultiplier * Armor.DamageTakenMult * Stats.DamageTakenMult;
+            Hp -= taken;
+            DamageTaken += Mathf.Max(0f, taken);
             if (dmg > 3f) InterruptItem();
             HurtFlash = 0.25f;
             SFX.Play(SFX.PlayerHurt, 0.8f);
@@ -206,6 +211,7 @@ namespace Hunt.Player
             StreakTime = 0f;
             if (KillStreak >= 2) SFX.PlayPitched(SFX.KillTick, 0.7f, 1f + Mathf.Min(KillStreak - 1, 8) * 0.08f);
             Kills++;
+            if (KillStreak > BestStreak) BestStreak = KillStreak;
             var evo = EvolutionDirector.Instance != null ? EvolutionDirector.Instance.Profile : null;
             float reward = evo != null ? evo.RewardMultiplier : 1f;
             AddXp(Mathf.RoundToInt(m.Data.xp * reward));

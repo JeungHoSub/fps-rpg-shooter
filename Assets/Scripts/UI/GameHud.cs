@@ -78,6 +78,7 @@ namespace Hunt.UI
             float dt = UIKit.IsRepaint ? Time.unscaledDeltaTime : 0f;
 
             DrawDamageNumbers(cam, scale);
+            TrackNight(gm, p);
 
             // ---- 화면 효과 ----
             float hpRatio = p.Hp / p.MaxHp;
@@ -535,8 +536,73 @@ namespace Hunt.UI
             UIKit.Text(new Rect(r.x - 160, r.y - 22, r.width + 320, 20), "소 리" + rain + light, 13, UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true);
         }
 
+        // ---- 새벽 기록 카드: 그 밤에 한 일을 날이 밝을 때 잠깐 보여 준다 ----
+        GameState nightLastState = GameState.CharacterSelect;
+        int nightKills0, nightGold0, nightLevel0;
+        float nightDmg0, nightStart;
+        string[] dawnLines;
+        PlayerCharacter nightPlayer;
+        float dawnShown = -100f;
+
+        void TrackNight(GameManager gm, PlayerCharacter p)
+        {
+            if (!ReferenceEquals(p, nightPlayer)) { nightPlayer = p; nightLastState = GameState.CharacterSelect; dawnLines = null; } // 새 판
+            if (gm.State == nightLastState) return;
+            if (gm.State == GameState.Playing)
+            {
+                nightKills0 = p.Kills; nightGold0 = p.Gold; nightLevel0 = p.Level;
+                nightDmg0 = p.DamageTaken; nightStart = Time.time;
+                p.BestStreak = 0;
+                dawnShown = -100f;
+            }
+            else if (gm.State == GameState.Intermission && nightLastState == GameState.Playing)
+            {
+                float secs = Time.time - nightStart;
+                int lv = p.Level - nightLevel0;
+                dawnLines = new[]
+                {
+                    $"쓰러뜨린 망자  <b>{p.Kills - nightKills0}</b>",
+                    $"벌어들인 엽전  <b>{Mathf.Max(0, p.Gold - nightGold0)}</b>",
+                    $"버틴 시간  <b>{(int)(secs / 60)}분 {(int)(secs % 60):00}초</b>",
+                    $"받은 상처  <b>{p.DamageTaken - nightDmg0:0}</b>",
+                    p.BestStreak >= 3 ? $"가장 긴 연속 처치  <b>{p.BestStreak}</b>" : null,
+                    lv > 0 ? $"단계 상승  <b>+{lv}</b>" : null,
+                };
+                dawnShown = Time.unscaledTime;
+            }
+            nightLastState = gm.State;
+        }
+
+        void DrawDawnCard(GameManager gm)
+        {
+            if (dawnLines == null || gm.State != GameState.Intermission || gm.MenuOpen) return;
+            float age = Time.unscaledTime - dawnShown;
+            if (age < 0.6f || age > 10f) return; // 날이 밝는 연출 뒤에 나타나 9초쯤 머문다
+            float a = UIKit.EaseOut((age - 0.6f) * 2.5f) * Mathf.Clamp01((10f - age) / 1.2f);
+            int n = 0;
+            foreach (var l in dawnLines) if (l != null) n++;
+            var r = new Rect(W / 2 - 230, 118 + (1f - a) * 16f, 460, 64 + n * 30);
+            float keep = UIKit.Alpha;
+            UIKit.Alpha = keep * a;
+            UIKit.Panel(r);
+            UIKit.Text(new Rect(r.x, r.y + 12, r.width, 30), "지난 밤의 기록", 22, UITheme.GoldBright, TextAnchor.MiddleCenter, serif: true, bold: true);
+            float y = r.y + 50;
+            int i = 0;
+            foreach (var l in dawnLines)
+            {
+                if (l == null) continue;
+                // 한 줄씩 차례로 떠오른다
+                float la = UIKit.EaseOut((age - 0.8f - i * 0.12f) * 4f);
+                UIKit.Alpha = keep * a * la;
+                UIKit.Text(new Rect(r.x + 40 + (1f - la) * 10f, y, r.width - 80, 28), l, 18, UITheme.Bone, TextAnchor.MiddleCenter, serif: true);
+                y += 30; i++;
+            }
+            UIKit.Alpha = keep;
+        }
+
         void DrawNightPlaque(GameManager gm)
         {
+            DrawDawnCard(gm);
             var waves = gm.Waves;
             var r = new Rect(W / 2 - 240, 12, 480, 70);
             UIKit.NineSlice(r, UITheme.Panel, 12, new Color(1, 1, 1, 0.92f));
