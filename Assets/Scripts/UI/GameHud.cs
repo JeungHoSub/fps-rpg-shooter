@@ -511,6 +511,10 @@ namespace Hunt.UI
             var br = new Rect(r.x + 20, r.y + 21, r.width - 40, 6);
             UIKit.Fill(new Rect(br.x - 1, br.y - 1, br.width + 2, br.height + 2), new Color(0f, 0f, 0f, 0.7f * a));
             UIKit.Fill(new Rect(br.x, br.y, br.width * Mathf.Clamp01(m.Hp / m.MaxHp), br.height), new Color(0.75f, 0.1f, 0.08f, a));
+            // 알아챘나: 어슬렁(등 뒤로 다가가 칼로 한 번에) / 쫓는 중
+            if (!m.IsBoss)
+                UIKit.Text(new Rect(r.x - 40, r.y + 28, r.width + 80, 16), m.IsAlerted ? "쫓는 중" : "어슬렁 — 눈치 못 챔",
+                    12, m.IsAlerted ? new Color(1f, 0.45f, 0.35f, a * 0.9f) : new Color(0.7f, 0.8f, 0.95f, a * 0.9f), TextAnchor.MiddleCenter, serif: true);
         }
 
         /// <summary>맞은 방향을 화면 가장자리에 붉게 (휴대폰에서 뒤에서 맞아도 알 수 있게).</summary>
