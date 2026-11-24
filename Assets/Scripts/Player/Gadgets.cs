@@ -236,6 +236,7 @@ namespace Hunt.Player
     {
         float radius, life, maxLife, dps, tick;
         int kills;
+        float crackleClock;
         PlayerCharacter owner;
         Transform[] flames;
         Light glow;
@@ -299,6 +300,8 @@ namespace Hunt.Player
                 var lp = flames[i].localPosition; lp.y = h * 0.5f; flames[i].localPosition = lp;
             }
             if (glow != null) glow.intensity = (2f + Mathf.PerlinNoise(t * 6f, 1f)) * fade;
+            crackleClock -= dt;
+            if (crackleClock <= 0f && life > 0.5f) { crackleClock = 0.5f; SFX.PlayAt3D(SFX.Crackle, transform.position + Vector3.up * 0.5f, 0.8f, Random.Range(0.9f, 1.1f)); }
             tick -= dt;
             if (tick <= 0f && life > 0f)
             {

@@ -459,6 +459,27 @@ namespace Hunt.Core
             return Clip("boom", d);
         }
 
+        /// <summary>불 타닥거리는 소리: 낮은 '쉬익' 위에 잔가지 튀는 딱딱 소리 (0.6초).</summary>
+        public static AudioClip Crackle => Get("crackle", () =>
+        {
+            const float len = 0.6f;
+            int n = (int)(Rate * len);
+            var d = new float[n];
+            var rnd = new System.Random(91);
+            float f = 0f;
+            for (int i = 0; i < n; i++)
+            {
+                float noise = (float)(rnd.NextDouble() * 2.0 - 1.0);
+                f += 0.08f * (noise - f);
+                d[i] = f * 0.5f;                                           // 낮게 타오르는 소리
+                if (rnd.NextDouble() < 0.0016) // 가끔 딱!
+                    for (int j = 0; j < 220 && i + j < n; j++) d[i + j] += (float)(rnd.NextDouble() * 2.0 - 1.0) * Mathf.Exp(-j / 40f) * 0.7f;
+            }
+            float env = 0f;
+            for (int i = 0; i < n; i++) { env = Mathf.Min(1f, Mathf.Min(i, n - i) / (0.05f * Rate)); d[i] *= env; }
+            return Clip("crackle", d);
+        });
+
         /// <summary>멀리서 문 두드리는 소리: 나무문을 쿵·쿵·쿵 (간격이 조금씩 어긋나 사람 손 같다).</summary>
         public static AudioClip Knock => Get("knock", () =>
         {
