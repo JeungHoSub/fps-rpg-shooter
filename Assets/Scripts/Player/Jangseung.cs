@@ -92,9 +92,22 @@ namespace Hunt.Player
             return null;
         }
 
+        float chimeClock = 3f;
+
         void Update()
         {
             var gm = GameManager.Instance;
+            // 가까이(16m) 오면 가끔 풍경 소리가 그쪽에서 은은하게 들린다 — 찾는 실마리
+            if (!blessed && gm != null && gm.IsWorldRunning && gm.Player != null)
+            {
+                chimeClock -= Time.deltaTime;
+                if (chimeClock <= 0f)
+                {
+                    chimeClock = Random.Range(14f, 22f);
+                    if ((gm.Player.transform.position - transform.position).sqrMagnitude < 16f * 16f)
+                        SFX.PlayAt3D(SFX.LevelUp, transform.position + Vector3.up * 2f, 0.45f, 0.62f);
+                }
+            }
             if (blessed || gm == null || !gm.AcceptsGameplayInput || !GameInput.PickupDown) return;
             if (!ReferenceEquals(NearestToPlayer(), this)) return;
             blessed = true;
