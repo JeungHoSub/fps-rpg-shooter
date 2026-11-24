@@ -136,7 +136,22 @@ namespace Hunt.UI
             if (gm.Paused) ends.DrawPause(gm, W, H);
 
             DrawNotes(W);
+            DrawFps(gm);
             UIKit.DrawTooltip(W, H);
+        }
+
+        static bool showFps;
+
+        /// <summary>F3: 왼쪽 위에 FPS·품질 (내장 그래픽에서 끊김 확인용).</summary>
+        static void DrawFps(GameManager gm)
+        {
+            if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.F3 && !GameInput.Mobile) { showFps = !showFps; Event.current.Use(); }
+            if (!showFps) return;
+            float fps = QualityManager.Fps;
+            Color c = fps < 30f ? UITheme.BloodBright : fps < 50f ? UITheme.Warn : UITheme.Good;
+            string q = QualityManager.Level == GfxLevel.Low ? "하" : QualityManager.Level == GfxLevel.Medium ? "중" : "상";
+            UIKit.Fill(new Rect(8, 8, 190, 30), new Color(0f, 0f, 0f, 0.6f));
+            UIKit.Text(new Rect(16, 8, 180, 30), $"<color=#{UIKit.Hex(c)}><b>{fps:0} FPS</b></color>   그래픽 {q}  ·  망자 {Hunt.Monsters.Monster.Alive.Count}", 14, UITheme.Bone);
         }
 
         static void DrawNotes(float W)
