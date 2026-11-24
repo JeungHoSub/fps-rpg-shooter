@@ -566,8 +566,7 @@ namespace Hunt.Monsters
         public void MakeBounty()
         {
             IsBounty = true;
-            var l = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            Destroy(l.GetComponent<Collider>());
+            var l = FX.LowSphere(); // 가벼운 공 (판정 없음)
             l.layer = 2;
             l.transform.SetParent(transform, false);
             l.transform.localPosition = Vector3.up * 2.35f * Data.scale;
@@ -731,8 +730,7 @@ namespace Hunt.Monsters
                 burnFx = new Transform[3];
                 for (int i = 0; i < 3; i++)
                 {
-                    var f = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                    Destroy(f.GetComponent<Collider>());
+                    var f = FX.LowSphere(); // 가벼운 공 (판정 없음)
                     f.layer = 2;
                     f.transform.SetParent(transform, false);
                     f.transform.localPosition = new Vector3((i - 1) * 0.18f, (0.7f + i * 0.35f) * Data.scale, 0.05f);

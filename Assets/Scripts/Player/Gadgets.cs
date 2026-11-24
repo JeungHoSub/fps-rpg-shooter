@@ -98,8 +98,7 @@ namespace Hunt.Player
             var vis = PropModels.PlaceHeld("stick_grenade", go.transform, 0.36f, 2, new Color(0.7f, 0.7f, 0.65f));
             if (vis == null)
             {
-                var s = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                Destroy(s.GetComponent<Collider>());
+                var s = FX.LowSphere(); // 가벼운 공 (판정 없음)
                 s.transform.SetParent(go.transform, false);
                 s.transform.localScale = Vector3.one * 0.12f;
                 s.GetComponent<Renderer>().sharedMaterial = Gadgets.Dark;
@@ -123,8 +122,7 @@ namespace Hunt.Player
             var g = go.AddComponent<ThrownGrenade>();
             g.owner = owner;
             g.damage = damage;
-            var sp = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            Destroy(sp.GetComponent<Collider>());
+            var sp = FX.LowSphere(); // 가벼운 공 (판정 없음)
             sp.layer = 2;
             sp.transform.SetParent(go.transform, false);
             sp.transform.localScale = Vector3.one * 0.06f;
@@ -183,8 +181,7 @@ namespace Hunt.Player
             bottle.transform.SetParent(go.transform, false);
             bottle.transform.localScale = new Vector3(0.08f, 0.1f, 0.08f);
             bottle.GetComponent<Renderer>().sharedMaterial = FX.UnlitMaterial(new Color(0.35f, 0.5f, 0.3f, 0.85f));
-            var wick = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            Destroy(wick.GetComponent<Collider>());
+            var wick = FX.LowSphere(); // 가벼운 공 (판정 없음)
             wick.layer = 2;
             wick.transform.SetParent(go.transform, false);
             wick.transform.localPosition = new Vector3(0f, 0.13f, 0f);
@@ -263,8 +260,7 @@ namespace Hunt.Player
             flames = new Transform[n];
             for (int i = 0; i < n; i++)
             {
-                var f = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                Destroy(f.GetComponent<Collider>());
+                var f = FX.LowSphere(); // 가벼운 공 (판정 없음)
                 f.layer = 2;
                 f.transform.SetParent(transform, false);
                 Vector2 p = Random.insideUnitCircle * radius * 0.85f;
@@ -358,8 +354,7 @@ namespace Hunt.Player
             top.transform.localPosition = new Vector3(0f, 0.085f, 0f);
             top.transform.localScale = new Vector3(0.1f, 0.012f, 0.1f);
             top.GetComponent<Renderer>().sharedMaterial = Gadgets.Dark;
-            var l = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            Destroy(l.GetComponent<Collider>());
+            var l = FX.LowSphere(); // 가벼운 공 (판정 없음)
             l.transform.SetParent(go.transform, false);
             l.transform.localPosition = new Vector3(0.1f, 0.09f, 0f);
             l.transform.localScale = Vector3.one * 0.025f;

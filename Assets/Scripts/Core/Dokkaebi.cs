@@ -36,8 +36,7 @@ namespace Hunt.Core
             orbs = new Transform[n];
             for (int i = 0; i < n; i++)
             {
-                var o = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                Destroy(o.GetComponent<Collider>());
+                var o = FX.LowSphere(); // 가벼운 공 (판정 없음)
                 o.layer = 2;
                 o.transform.SetParent(transform, false);
                 o.transform.localPosition = -dir * i * 2.2f;
@@ -76,8 +75,7 @@ namespace Hunt.Core
         public static void Spawn(Vector3 at)
         {
             if (QualityManager.Emergency || (QualityManager.Level == GfxLevel.Low && Random.value < 0.5f)) return; // 끊길 땐 생략
-            var o = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            Object.Destroy(o.GetComponent<Collider>());
+            var o = FX.LowSphere(); // 가벼운 공 (판정 없음)
             o.name = "혼불";
             o.layer = 2;
             if (Effects.Root != null) o.transform.SetParent(Effects.Root, true);

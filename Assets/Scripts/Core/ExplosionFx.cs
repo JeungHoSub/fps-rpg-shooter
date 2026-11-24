@@ -32,8 +32,7 @@ namespace Hunt.Core
 
         static Transform Ball(Transform parent, Material m)
         {
-            var b = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            Object.Destroy(b.GetComponent<Collider>());
+            var b = FX.LowSphere(); // 가벼운 공 (판정 없음)
             b.layer = 2;
             b.transform.SetParent(parent, false);
             var r = b.GetComponent<Renderer>();

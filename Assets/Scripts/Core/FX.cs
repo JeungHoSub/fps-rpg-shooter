@@ -97,6 +97,44 @@ namespace Hunt.Core
         static int poolIndex;
         const int MaxPools = 18;
 
+        static Mesh lowSphere;
+
+        /// <summary>
+        /// 가벼운 공 (꼭짓점 ~60개, 판정 없음): 효과용. 기본 Sphere(515개)는 묶어 그리기가 안 돼 내장 그래픽에 무겁다.
+        /// </summary>
+        public static GameObject LowSphere()
+        {
+            if (lowSphere == null)
+            {
+                const int seg = 8, rings = 6;
+                var v = new List<Vector3>(); var n = new List<Vector3>(); var uv = new List<Vector2>(); var tri = new List<int>();
+                for (int r = 0; r <= rings; r++)
+                {
+                    float phi = Mathf.PI * r / rings;
+                    for (int s = 0; s <= seg; s++)
+                    {
+                        float th = 2f * Mathf.PI * s / seg;
+                        var p = new Vector3(Mathf.Sin(phi) * Mathf.Cos(th), Mathf.Cos(phi), Mathf.Sin(phi) * Mathf.Sin(th));
+                        v.Add(p * 0.5f); n.Add(p); uv.Add(new Vector2((float)s / seg, 1f - (float)r / rings));
+                    }
+                }
+                for (int r = 0; r < rings; r++)
+                    for (int s = 0; s < seg; s++)
+                    {
+                        int a = r * (seg + 1) + s, b = a + seg + 1;
+                        tri.Add(a); tri.Add(a + 1); tri.Add(b);
+                        tri.Add(b); tri.Add(a + 1); tri.Add(b + 1);
+                    }
+                lowSphere = new Mesh { name = "LowSphere" };
+                lowSphere.SetVertices(v); lowSphere.SetNormals(n); lowSphere.SetUVs(0, uv); lowSphere.SetTriangles(tri, 0);
+                lowSphere.RecalculateBounds();
+            }
+            var go = new GameObject("Sphere");
+            go.AddComponent<MeshFilter>().sharedMesh = lowSphere;
+            go.AddComponent<MeshRenderer>();
+            return go;
+        }
+
         /// <summary>피 얼룩 무늬 텍스처 (화면 피 튀김 UI에서도 쓴다).</summary>
         public static Texture2D BloodTexture { get { PoolMaterial(); return poolTex; } }
 

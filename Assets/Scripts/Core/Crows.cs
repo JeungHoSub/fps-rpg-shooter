@@ -42,8 +42,7 @@ namespace Hunt.Core
         void Build()
         {
             var mat = FX.UnlitMaterial(new Color(0.03f, 0.03f, 0.035f));
-            var body = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            Destroy(body.GetComponent<Collider>());
+            var body = FX.LowSphere(); // 가벼운 공 (판정 없음)
             body.layer = 2;
             body.transform.SetParent(transform, false);
             body.transform.localScale = new Vector3(0.12f, 0.1f, 0.3f);
