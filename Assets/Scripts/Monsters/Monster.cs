@@ -763,6 +763,9 @@ namespace Hunt.Monsters
             lurkEyes.SetActive(false);
         }
 
+        /// <summary>덤불을 건드렸다 (돌·폭죽이 떨어짐): 매복 중이면 다음 프레임에 튀어나온다.</summary>
+        public void Disturb() { if (lurking) hpLostWhileLurking = true; }
+
         void WakeLurk()
         {
             lurking = false;

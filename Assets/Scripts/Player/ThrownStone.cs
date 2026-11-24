@@ -62,7 +62,13 @@ namespace Hunt.Player
                 life = 1f;
                 return;
             }
-            if (Hiding.InBush(transform.position)) { SFX.PlayAt3D(SFX.Rustle, transform.position, 0.8f, 1f); Hiding.Shake(transform.position); } // 덤불에 떨어지면 바스락
+            if (Hiding.InBush(transform.position))
+            {
+                SFX.PlayAt3D(SFX.Rustle, transform.position, 0.8f, 1f); Hiding.Shake(transform.position); // 덤불에 떨어지면 바스락
+                // 덤불 떠보기: 그 덤불에 매복한 망자가 있으면 놀라 튀어나온다
+                foreach (var lm in Hunt.Monsters.Monster.Alive)
+                    if (lm != null && lm.Lurking && (lm.transform.position - transform.position).sqrMagnitude < 2.2f * 2.2f) lm.Disturb();
+            }
             else SFX.PlayAt(SFX.StoneClack, transform.position, 0.7f);
             Noise.Emit(transform.position, 14f, false);
             life = 2f;
