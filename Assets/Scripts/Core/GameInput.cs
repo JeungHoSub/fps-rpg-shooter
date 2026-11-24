@@ -41,7 +41,25 @@ namespace Hunt.Core
         public static bool Sprint => Mobile ? touchSprint : Input.GetKey(KeyCode.LeftShift);
         public static bool JumpDown => Mobile ? touchJump : Input.GetKeyDown(KeyCode.Space);
         /// <summary>앉기 (누르고 있는 동안). 휴대폰은 앉기 버튼 토글.</summary>
-        public static bool Crouch => Mobile ? touchCrouch : (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl));
+        public static bool Crouch
+        {
+            get
+            {
+                if (Mobile) return touchCrouch;
+                if (!GameSettings.CrouchToggle) return Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
+                // 전환식: 한 프레임에 한 번만 뒤집는다 (여러 곳에서 읽어도 같은 값)
+                if (crouchFrame != Time.frameCount)
+                {
+                    crouchFrame = Time.frameCount;
+                    if (Input.GetKeyDown(KeyCode.LeftControl) || Input.GetKeyDown(KeyCode.RightControl)) crouchLatched = !crouchLatched;
+                }
+                return crouchLatched;
+            }
+        }
+        static bool crouchLatched;
+        static int crouchFrame = -1;
+        /// <summary>달리기 시작하면 전환식 앉기를 푼다.</summary>
+        public static void ReleaseCrouch() { crouchLatched = false; }
         internal static bool touchCrouch;
 
         // ---- 사격 ----

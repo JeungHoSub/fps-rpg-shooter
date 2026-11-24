@@ -98,7 +98,15 @@ namespace Hunt.Core
             set { ambVol = Mathf.Clamp(value, 0f, 1.5f); Save(AmbKey, ambVol.Value); }
         }
 
-        const string GoreKey = "hunt.gore";
+        const string GoreKey = "hunt.gore", CrouchKey = "hunt.crouchtoggle";
+        static bool? crouchToggle;
+
+        /// <summary>앉기 키(Ctrl)를 한 번 눌러 앉고 다시 눌러 일어서기 (기본: 누르는 동안만).</summary>
+        public static bool CrouchToggle
+        {
+            get { if (crouchToggle == null) crouchToggle = Load(CrouchKey, 0f) > 0.5f; return crouchToggle.Value; }
+            set { crouchToggle = value; Save(CrouchKey, value ? 1f : 0f); }
+        }
         static bool? gore;
 
         /// <summary>피 표현 (피 웅덩이·벽 피·화면 피·살점). 끄면 흙먼지로 바뀐다.</summary>

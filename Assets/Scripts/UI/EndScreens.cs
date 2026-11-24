@@ -82,13 +82,16 @@ namespace Hunt.UI
 
             // 피 표현 · 조준점 모양 (한 줄에)
             UIKit.Text(new Rect(r.x + 60, y + 4, 160, 30), "보기", 18, UITheme.Bone, serif: true);
-            float cw3 = (r.width - 340) / 3f;
+            float cw3 = (r.width - 340 - 18) / 4f;
             if (UIKit.Button(new Rect(r.x + 220, y, cw3, 38), GameSettings.Gore ? "피 켜짐" : "피 꺼짐", 15, GameSettings.Gore))
                 GameSettings.Gore = !GameSettings.Gore;
             if (UIKit.Button(new Rect(r.x + 226 + cw3, y, cw3, 38), "조준 " + GameSettings.CrosshairName(GameSettings.Crosshair), 15, false))
                 GameSettings.Crosshair = (GameSettings.Crosshair + 1) % 3;
             if (UIKit.Button(new Rect(r.x + 232 + cw3 * 2f, y, cw3, 38), "흔들림 " + GameSettings.ShakeName(GameSettings.Shake), 13, false))
                 GameSettings.Shake = (GameSettings.Shake + 1) % 3;
+            // 앉기: 누르는 동안 / 한 번 눌러 전환 (덤불에 오래 숨을 때 편하게)
+            if (UIKit.Button(new Rect(r.x + 238 + cw3 * 3f, y, cw3, 38), GameSettings.CrouchToggle ? "앉기 전환" : "앉기 누름", 13, GameSettings.CrouchToggle))
+                GameSettings.CrouchToggle = !GameSettings.CrouchToggle;
             y += 48;
 
             // 난이도 (새로 나오는 망자부터 바뀐다)

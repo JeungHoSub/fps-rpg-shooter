@@ -253,6 +253,7 @@ namespace Hunt.Player
                 Noise.Emit(transform.position, 7f, true);
             }
             prevCrouchKey = crouchKey;
+            if (IsSprinting && !IsSliding && slideT <= 0f) GameInput.ReleaseCrouch(); // 전환식 앉기: 달리면 일어선다
             bool sliding = slideT > 0f;
             if (sliding) slideT -= dt;
             IsSliding = sliding;
