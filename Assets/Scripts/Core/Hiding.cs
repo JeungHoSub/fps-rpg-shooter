@@ -60,6 +60,12 @@ namespace Hunt.Core
                     mpb.SetColor("_Color", new Color(0.07f, 0.06f, 0.05f));
                     foreach (var rd in v.GetComponentsInChildren<Renderer>()) rd.SetPropertyBlock(mpb);
                 }
+                // 그을음 + 불티, 속에 숨어 있던 매복 망자는 뛰쳐나온다
+                var c = new Vector3(s.x, s.y, s.z);
+                FX.Scorch(FX.FloorUnder(c + Vector3.up * 0.5f), s.w);
+                Effects.Burst(c + Vector3.up * 0.6f, 0.9f, new Color(1f, 0.55f, 0.2f));
+                foreach (var lm in Hunt.Monsters.Monster.Alive)
+                    if (lm != null && lm.Lurking && (lm.transform.position - c).sqrMagnitude < (s.w + 0.8f) * (s.w + 0.8f)) lm.Disturb();
                 spots.RemoveAt(i);
                 visuals.RemoveAt(i);
                 Hunt.UI.HUD.Notify("덤불이 타 버렸다 — 이제 숨을 수 없다", new Color(1f, 0.6f, 0.35f));
