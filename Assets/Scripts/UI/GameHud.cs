@@ -204,6 +204,7 @@ namespace Hunt.UI
             DrawStragglers(cam, scale);
             DrawPickups(dt);
             DrawTargetTag(cam);
+            DrawTurretTags(cam);
         }
 
         /// <summary>조준점 아래 탄약 경고: 적으면 'R 장전', 탄창이 비면 강하게, 예비탄까지 없으면 무기 바꾸라고.</summary>
@@ -226,6 +227,29 @@ namespace Hunt.UI
         // ---- 조준한 망자 이름표 (유형 이름 + 체력) ----
         Monster tagTarget;
         float tagTime;
+
+        /// <summary>깔아 둔 기관총 머리 위: 남은 시간 막대 + 남은 탄 (30m 안, 화면에 보일 때만).</summary>
+        void DrawTurretTags(Camera cam)
+        {
+            if (cam == null || SentryTurret.Active.Count == 0) return;
+            float k = W / Screen.width;
+            foreach (var t in SentryTurret.Active)
+            {
+                if (t == null) continue;
+                Vector3 wp = t.transform.position + Vector3.up * 1.15f;
+                float dist = Vector3.Distance(cam.transform.position, wp);
+                if (dist > 30f) continue;
+                Vector3 sp = cam.WorldToScreenPoint(wp);
+                if (sp.z <= 0f) continue;
+                var c = new Vector2(sp.x * k, (Screen.height - sp.y) * k);
+                float a = Mathf.Clamp01((30f - dist) / 6f);
+                float lifeT = Mathf.Clamp01(t.Life / SentryTurret.MaxLife);
+                var br = new Rect(c.x - 40, c.y, 80, 5);
+                UIKit.Fill(new Rect(br.x - 1, br.y - 1, br.width + 2, br.height + 2), new Color(0f, 0f, 0f, 0.7f * a));
+                UIKit.Fill(new Rect(br.x, br.y, br.width * lifeT, br.height), new Color(0.55f, 0.9f, 0.55f, a));
+                UIKit.Text(new Rect(c.x - 70, c.y - 22, 140, 20), $"기관총  {t.Life:0}초  ·  탄 {t.Ammo}", 13, new Color(0.9f, 0.87f, 0.8f, a), TextAnchor.MiddleCenter, serif: true);
+            }
+        }
 
         bool aimOnMonster; // 조준점이 망자 위에 있나 (조준선이 붉게)
 

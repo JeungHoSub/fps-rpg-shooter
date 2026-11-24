@@ -219,6 +219,14 @@ namespace Hunt.Player
     {
         float life = 30f, fireTimer, seekTimer;
         int ammo = 240;
+        public const float MaxLife = 30f;
+        public const int MaxAmmo = 240;
+        /// <summary>깔려 있는 기관총들 (HUD가 머리 위에 남은 시간·탄을 그린다).</summary>
+        public static readonly System.Collections.Generic.List<SentryTurret> Active = new System.Collections.Generic.List<SentryTurret>();
+        public float Life => life;
+        public int Ammo => ammo;
+        void OnEnable() { Active.Add(this); }
+        void OnDisable() { Active.Remove(this); }
         float damage;
         Monster target;
         Transform head, muzzle;
