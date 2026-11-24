@@ -49,7 +49,16 @@ namespace Hunt.Player
             float mult = Mathf.Lerp(1f, 2.2f, (tough - 0.5f) / 5.5f);
             // 사용자 요청: 잡으면 힐링룬·탄창이 잘 나오게 — 부적 약 20%, 탄창 약 22% (따로 굴려서 둘 다 나올 수도)
             if (Random.value < 0.2f * mult) Spawn(PickupKind.Rune, at + RandomOffset(), parent);
-            if (Random.value < 0.22f * mult) Spawn(PickupKind.Ammo, at + RandomOffset(), parent);
+            // 탄약이 바닥나 가면 탄창이 더 잘 나온다 (예비탄 합계 30% 아래면 2배)
+            float ammoNeed = 1f;
+            var gmA = GameManager.Instance;
+            if (gmA != null && gmA.Player != null)
+            {
+                int have = 0, max = 0;
+                foreach (var w in gmA.Player.Weapons.Slots) if (w != null) { have += w.reserve; max += w.MaxReserve; }
+                if (max > 0 && have < max * 0.3f) ammoNeed = 2f;
+            }
+            if (Random.value < 0.22f * mult * ammoNeed) Spawn(PickupKind.Ammo, at + RandomOffset(), parent);
             float r = Random.value;
             float pKit = 0.035f * mult, pDrink = 0.045f * mult;
             if (Random.value < 0.03f * mult) Spawn(PickupKind.Pill, at + RandomOffset(), parent); // 드물게 청심환 (역병 기운을 씻는다, H)
