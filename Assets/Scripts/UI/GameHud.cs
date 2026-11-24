@@ -82,6 +82,7 @@ namespace Hunt.UI
 
             DrawDamageNumbers(cam, scale);
             TrackNight(gm, p);
+            DrawNightBanner(gm);
 
             // ---- 화면 효과 ----
             float hpRatio = p.Hp / p.MaxHp;
@@ -603,6 +604,7 @@ namespace Hunt.UI
                 nightDmg0 = p.DamageTaken; nightStart = Time.time;
                 p.BestStreak = 0;
                 dawnShown = -100f;
+                nightBanner = Time.unscaledTime; // 밤이 시작될 때 큰 제목
             }
             else if (gm.State == GameState.Intermission && nightLastState == GameState.Playing)
             {
@@ -622,6 +624,32 @@ namespace Hunt.UI
                 dawnShown = Time.unscaledTime;
             }
             nightLastState = gm.State;
+        }
+
+        float nightBanner = -100f;
+
+        /// <summary>밤이 시작되면 화면 가운데 위쪽에 붓글씨로 '셋째 밤' + 이번 밤 룰·목표·변고 (3.5초).</summary>
+        void DrawNightBanner(GameManager gm)
+        {
+            float age = Time.unscaledTime - nightBanner;
+            if (age > 4f || gm.State != GameState.Playing || gm.Waves == null) return;
+            float a = UIKit.EaseOut(age * 2.5f) * Mathf.Clamp01((4f - age) / 0.9f);
+            float keep = UIKit.Alpha;
+            UIKit.Alpha = keep * a;
+            var w = gm.Waves;
+            float y = H * 0.24f + (1f - UIKit.EaseOut(age * 2f)) * 14f;
+            bool final = w.IsBossWave;
+            UIKit.BrushTitle(new Rect(W / 2 - 340, y, 680, 104), NightName(w.Wave) + (final ? "  —  대감의 밤" : ""), final ? 58 : 64,
+                new Color(0.03f, 0.02f, 0.02f, 0.88f), final ? UITheme.BloodBright : UITheme.Bone);
+            string sub = $"{WaveManager.RuleName(w.Rule)}  ·  {WaveManager.RuleGoal(w.Rule)}";
+            UIKit.Text(new Rect(0, y + 106, W, 28), sub, 20, UITheme.Bone, TextAnchor.MiddleCenter, serif: true, bold: true);
+            if (w.Modifiers.Count > 0)
+            {
+                string mods = "변고: ";
+                for (int i = 0; i < w.Modifiers.Count; i++) mods += (i > 0 ? " · " : "") + WaveManager.ModifierName(w.Modifiers[i]);
+                UIKit.Text(new Rect(0, y + 136, W, 24), mods, 17, UITheme.BloodBright, TextAnchor.MiddleCenter, serif: true);
+            }
+            UIKit.Alpha = keep;
         }
 
         const float DawnLife = 9f;
