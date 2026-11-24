@@ -183,7 +183,14 @@ namespace Hunt.Monsters
 
             if (alertTime > 0f) alertTime -= dt;
             senseTimer -= dt;
-            if (senseTimer <= 0f) { senseTimer = 0.25f; Sense(dist); }
+            if (senseTimer <= 0f)
+            {
+                senseTimer = 0.25f; Sense(dist);
+                // 덤불을 헤치고 지나가면 바스락 (25m 안만) — 어둠 속에서 다가오는 걸 귀로 안다
+                bool bush = dist < 25f && Hiding.InBush(transform.position);
+                if (bush && !inBush) SFX.PlayAt3D(SFX.Rustle, transform.position + Vector3.up * 0.6f, 0.7f, Random.Range(0.85f, 1.05f));
+                inBush = bush;
+            }
             bool alerted = IsAlerted;
             // 처음 발견하면 멈춰 서서 비명을 지른 뒤 달려든다
             if (alerted && !wasAlerted && rig != null && dist > 6f && !IsBoss)
@@ -649,6 +656,7 @@ namespace Hunt.Monsters
         public float SpottedAt = -100f;
         /// <summary>쫓다가 놓친 순간 (머리 위 '?').</summary>
         public float LostAt = -100f;
+        bool inBush;
 
         /// <summary>머리를 맞으면 갓·상투 장식이 총알 방향으로 날아간다 (한 번만).</summary>
         public void KnockOffHat(Vector3 dir)
