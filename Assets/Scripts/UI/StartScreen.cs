@@ -231,7 +231,20 @@ namespace Hunt.UI
             // 지난 최고 기록 (사망 화면에서 저장)
             int bw = 0, bk = 0;
             try { bw = PlayerPrefs.GetInt("hunt.best.wave", 0); bk = PlayerPrefs.GetInt("hunt.best.kills", 0); } catch { }
-            if (bw > 0) UIKit.Text(new Rect(W - 330, y + 6, 300, 22), $"최고 기록  밤 {bw} · 망자 {bk}", 14, UITheme.Ash, TextAnchor.MiddleRight, serif: true);
+            // 오른쪽 위 단추(업적·새로 바뀐 점) 아래에: 최고 기록 + 최근 판들
+            if (bw > 0) UIKit.Text(new Rect(W - 430, 64, 410, 22), $"최고 기록  밤 {bw} · 망자 {bk}", 14, UITheme.Ash, TextAnchor.MiddleRight, serif: true);
+            string runs = "";
+            try { runs = PlayerPrefs.GetString("hunt.runs", ""); } catch { }
+            if (runs.Length > 0)
+            {
+                string line = "최근 판  ";
+                foreach (var r0 in runs.Split(','))
+                {
+                    var kv = r0.Split(':');
+                    if (kv.Length == 2) line += $"밤{kv[0]}·{kv[1]}   ";
+                }
+                UIKit.Text(new Rect(W - 430, 86, 410, 20), line.TrimEnd(), 12, UITheme.Ash, TextAnchor.MiddleRight, serif: true);
+            }
             UIKit.Divider(new Rect(W / 2 - 360, y + 138, 720, 12));
         }
 

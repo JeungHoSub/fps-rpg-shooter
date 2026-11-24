@@ -198,6 +198,12 @@ namespace Hunt.UI
                     newKills = p.Kills > bestKills;
                     if (newWave) PlayerPrefs.SetInt("hunt.best.wave", gm.Waves.Wave);
                     if (newKills) PlayerPrefs.SetInt("hunt.best.kills", p.Kills);
+                    // 최근 판 기록 (밤:망자, 최근 5판)
+                    string runs = PlayerPrefs.GetString("hunt.runs", "");
+                    runs = $"{gm.Waves.Wave}:{p.Kills}" + (runs.Length > 0 ? "," + runs : "");
+                    var parts = runs.Split(',');
+                    if (parts.Length > 5) runs = string.Join(",", parts, 0, 5);
+                    PlayerPrefs.SetString("hunt.runs", runs);
                     PlayerPrefs.Save();
                 }
                 catch { }
