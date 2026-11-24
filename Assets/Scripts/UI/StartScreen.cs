@@ -601,7 +601,7 @@ namespace Hunt.UI
             if (step == 0)
             {
                 bool prev = gm.StartPointsLeft == 0;
-                if (UIKit.Button(new Rect(c.xMax - 220, y - 70, 220, 54), "빠른 출정", 20, false, true, prev ? "지난 설정 그대로" : "기본 설정으로"))
+                if (UIKit.Button(new Rect(c.x, y, 200, 54), "빠른 출정", 20, false, true, prev ? "지난 설정 그대로" : "기본 설정으로")) // 첫 단계엔 '이전' 자리가 비어 있다
                 {
                     if (!prev) gm.ApplyStartPreset(Hunt.UI.GameText.Presets[0].alloc);
                     TryDeploy(gm);
