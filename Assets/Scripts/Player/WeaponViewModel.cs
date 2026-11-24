@@ -51,6 +51,34 @@ namespace Hunt.Player
             CreateFlash();
         }
 
+        static Material starMat;
+
+        /// <summary>총구 불꽃 별 무늬 (6갈래 가시 + 밝은 심, 코드로 한 번 만든다).</summary>
+        static Material StarMaterial()
+        {
+            if (starMat != null) return starMat;
+            const int S = 64;
+            var tex = new Texture2D(S, S, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, name = "MuzzleStar" };
+            var px = new Color32[S * S];
+            for (int y = 0; y < S; y++)
+                for (int x = 0; x < S; x++)
+                {
+                    float dx = (x - S / 2f + 0.5f) / (S / 2f), dy = (y - S / 2f + 0.5f) / (S / 2f);
+                    float r = Mathf.Sqrt(dx * dx + dy * dy);
+                    float ang = Mathf.Atan2(dy, dx);
+                    float spike = Mathf.Pow(Mathf.Abs(Mathf.Cos(ang * 3f)), 10f);        // 6갈래
+                    float core = Mathf.Clamp01(1f - r * 3.2f);
+                    float a = Mathf.Clamp01(core + spike * Mathf.Clamp01(1f - r) * 0.9f);
+                    a *= Mathf.Clamp01((1f - r) * 3f);
+                    float w = Mathf.Clamp01(core * 1.5f);                                   // 심은 하얗게, 끝은 주황
+                    px[y * S + x] = new Color32(255, (byte)(170 + 85 * w), (byte)(70 + 160 * w), (byte)(255 * a));
+                }
+            tex.SetPixels32(px);
+            tex.Apply(false, true);
+            starMat = new Material(Shader.Find("Sprites/Default")) { name = "MuzzleStar", mainTexture = tex };
+            return starMat;
+        }
+
         void CreateFlash()
         {
             flash = GameObject.CreatePrimitive(PrimitiveType.Sphere);
@@ -62,6 +90,24 @@ namespace Hunt.Player
             r.sharedMaterial = FX.UnlitMaterial(new Color(1f, 0.85f, 0.45f));
             r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             flash.layer = GunModelBuilder.ViewLayer;
+            // 별 모양 불꽃 두 장: 정면(총구를 마주 보는 별) + 옆면(총열 따라 뻗는 혀) — 공 하나보다 총구 불꽃처럼 보이게
+            var starMat = StarMaterial();
+            for (int i = 0; i < 2; i++)
+            {
+                var q = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                DestroyImmediate(q.GetComponent<Collider>());
+                q.name = i == 0 ? "FlashFront" : "FlashSide";
+                q.layer = GunModelBuilder.ViewLayer;
+                q.transform.SetParent(flash.transform, false);
+                // 부모(공)의 크기에 따라 함께 커진다 — 공보다 훨씬 넓게 퍼진 별
+                q.transform.localPosition = i == 0 ? Vector3.zero : new Vector3(0f, 0f, 0.35f);
+                q.transform.localRotation = i == 0 ? Quaternion.identity : Quaternion.Euler(0f, 90f, 0f);
+                q.transform.localScale = i == 0 ? new Vector3(4.2f, 4.2f, 1f) : new Vector3(3.4f, 1.6f, 1f);
+                var qr = q.GetComponent<Renderer>();
+                qr.sharedMaterial = starMat;
+                qr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                qr.receiveShadows = false;
+            }
             flashLight = flash.AddComponent<Light>();
             flashLight.type = LightType.Point;
             flashLight.color = new Color(1f, 0.7f, 0.35f);
