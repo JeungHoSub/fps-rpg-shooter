@@ -234,7 +234,11 @@ namespace Hunt.Core
             // 빗줄기 세기 변화 (가끔 거세졌다 잦아든다)
             if (Time.time > nextRainShift)
             {
-                rainTarget = Random.value < 0.25f ? Mathf.Min(1f, rainHi + 0.15f) : Random.Range(rainLo, rainHi); // 가끔 잠깐 거세진다
+                bool surge = Random.value < 0.25f;
+                rainTarget = surge ? Mathf.Min(1f, rainHi + 0.15f) : Random.Range(rainLo, rainHi); // 가끔 잠깐 거세진다
+                var gmr = GameManager.Instance;
+                if (surge && rainTarget > RainIntensity + 0.1f && gmr != null && gmr.State == GameState.Playing && Dawn < 0.1f)
+                    Hunt.UI.HUD.Notify("소나기가 쏟아진다 — 빗소리가 발소리·총소리를 덮는다", new Color(0.65f, 0.8f, 1f));
                 nextRainShift = Time.time + Random.Range(25f, 50f);
             }
             RainIntensity = Mathf.MoveTowards(RainIntensity, rainTarget, dt * 0.05f);
