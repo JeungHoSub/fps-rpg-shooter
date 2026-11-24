@@ -142,6 +142,7 @@ namespace Hunt.Core
             Navigation.Build(arena);
             world.gameObject.AddComponent<Atmosphere>().Init(world);
             Hunt.UI.MapView.Capture(); // M 지도용으로 마을을 위에서 한 번 찍어 둔다
+            Hunt.Player.Jangseung.PlaceForRun(world); // 숨은 장승 셋 (지도를 찍은 뒤라 지도에 안 나온다)
             Evolution = world.gameObject.AddComponent<EvolutionDirector>();
             Waves = world.gameObject.AddComponent<WaveManager>();
             LastEvolution = new List<string>();

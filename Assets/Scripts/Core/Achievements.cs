@@ -20,6 +20,7 @@ namespace Hunt.Core
             new Def { id = "crates20", name = "보급병",        desc = "보급 상자 20개를 연다",                goal = 20 },
             new Def { id = "lore",     name = "마을의 기억",   desc = "찢어진 쪽지를 모두 읽는다",            goal = 1 },
             new Def { id = "master",   name = "달인",          desc = "무기 하나를 '달인'까지 숙련한다",       goal = 1 },
+            new Def { id = "jangseung", name = "장승의 축복",  desc = "한 판에 숨은 장승 셋을 모두 찾아 절한다",  goal = 1 },
             new Def { id = "silent10", name = "그림자 칼",     desc = "못 알아챈 망자를 등 뒤에서 칼로 10마리 쓰러뜨린다", goal = 10 },
             new Def { id = "flawless", name = "상처 없는 새벽", desc = "한 밤을 거의 다치지 않고 버틴다 (받은 상처 10 미만)", goal = 1 },
             new Def { id = "bounty10", name = "현상금 사냥꾼", desc = "현상금 망자 10마리를 쓰러뜨린다",        goal = 10 },

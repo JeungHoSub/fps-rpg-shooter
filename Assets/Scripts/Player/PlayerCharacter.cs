@@ -54,7 +54,9 @@ namespace Hunt.Player
         public InfectionSystem Infection { get; private set; }
         /// <summary>방어구 5부위.</summary>
         public ArmorSet Armor { get; private set; } = new ArmorSet();
-        public float MaxHp => Stats.MaxHp * GameRules.HpMult + Armor.BonusHp;
+        public float MaxHp => (Stats.MaxHp * GameRules.HpMult + Armor.BonusHp) * (1f + 0.08f * Blessings);
+        /// <summary>이번 판에 절한 장승 수 (최대 생명 +8%씩).</summary>
+        public int Blessings;
 
         // 특성 선택 (3레벨마다 1회)
         public int PendingTraitPicks { get; private set; }
