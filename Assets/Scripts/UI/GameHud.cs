@@ -967,7 +967,7 @@ namespace Hunt.UI
             if (!Flashlight.Active && ShootableLamp.PlayerLit()) st += $"<color=#{UIKit.Hex(UITheme.GoldBright)}>가로등 불빛 아래 — 눈에 띈다</color>";
             var hp0 = gm.Player;
             if (hp0 != null && !Flashlight.Active && hp0.Controller != null && hp0.Controller.IsCrouching && Hiding.InBush(hp0.transform.position))
-                st += (st.Length > 0 ? "  ·  " : "") + $"<color=#{UIKit.Hex(new Color(0.6f, 0.85f, 0.55f))}>덤불 속 — 숨었다</color>";
+                st += (st.Length > 0 ? "  ·  " : "") + $"<color=#{UIKit.Hex(new Color(0.6f, 0.85f, 0.55f))}>덤불에 숨음</color>";
             int chasing = 0;
             foreach (var cm in Monster.Alive) if (cm != null && !cm.IsDead && cm.IsAlerted) chasing++;
             if (chasing > 0) st += (st.Length > 0 ? "  ·  " : "") + $"<color=#{UIKit.Hex(chasing >= 6 ? UITheme.BloodBright : UITheme.Warn)}>쫓는 망자 {chasing}</color>";
