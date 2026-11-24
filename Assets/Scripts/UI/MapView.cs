@@ -82,6 +82,12 @@ namespace Hunt.UI
                 var dp = ToMap(gm.Waves.DefendPos, r);
                 UIKit.Emblem(new Rect(dp.x - 15, dp.y - 15, 30, 30), "지", UITheme.GoldBright, true);
             }
+            // 숨을 덤불 (옅은 초록 동그라미)
+            foreach (var b in Hiding.Spots)
+            {
+                var bp = ToMap(new Vector3(b.x, 0f, b.z), r);
+                UIKit.Tex(new Rect(bp.x - 8, bp.y - 8, 16, 16), UITheme.Circle, new Color(0.45f, 0.75f, 0.4f, 0.55f));
+            }
             // 이미 절한 장승 (찾은 것만 — 못 찾은 장승은 끝까지 숨어 있다)
             foreach (var j in Jangseung.Active)
             {
@@ -118,7 +124,7 @@ namespace Hunt.UI
                 GUI.matrix = m0;
                 UIKit.Tex(new Rect(p.x - 7, p.y - 7, 14, 14), UITheme.Circle, Color.white);
             }
-            UIKit.Text(new Rect(r.x, r.yMax + 2, r.width, 20), "흰 점 = 나  ·  노란 네모 = 보급 상자  ·  노란 동그라미 = 현상금  ·  대 = 보스  ·  지 = 지킬 곳  ·  붉은 점 = 망자", 13, UITheme.BoneDim, TextAnchor.MiddleCenter);
+            UIKit.Text(new Rect(r.x, r.yMax + 2, r.width, 20), "흰 점 = 나  ·  노란 네모 = 보급 상자  ·  노란 동그라미 = 현상금  ·  대 = 보스  ·  지 = 지킬 곳  ·  붉은 점 = 망자  ·  초록 = 숨을 덤불", 13, UITheme.BoneDim, TextAnchor.MiddleCenter);
             UIKit.Alpha = keep;
         }
     }

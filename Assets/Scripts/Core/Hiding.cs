@@ -11,6 +11,8 @@ namespace Hunt.Core
     {
         static readonly List<Vector4> spots = new List<Vector4>(); // xyz = 중심, w = 반지름
 
+        public static IReadOnlyList<Vector4> Spots => spots;
+
         public static void Clear() { spots.Clear(); }
 
         public static void Add(Vector3 center, float radius) { spots.Add(new Vector4(center.x, center.y, center.z, radius)); }
