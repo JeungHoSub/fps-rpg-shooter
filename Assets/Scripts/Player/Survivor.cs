@@ -14,7 +14,7 @@ namespace Hunt.Player
     {
         public const float Range = 2.6f;
         public static readonly List<Survivor> Active = new List<Survivor>();
-        bool saved, lost, called, warned;
+        bool saved, lost, called, warned, trap;
         float rushT, sobClock = 2f;
         float shiver, leaveT;
         Transform body;
@@ -48,7 +48,9 @@ namespace Hunt.Player
             if (parent != null) go.transform.SetParent(parent, true);
             go.transform.position = p;
             go.transform.rotation = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
-            go.AddComponent<Survivor>().Build();
+            var sv = go.AddComponent<Survivor>();
+            sv.trap = night >= 4 && Random.value < 0.15f; // 넷째 밤부터 가끔: 사람이 아니다
+            sv.Build();
             HUD.Notify("어디선가 사람 목소리가 들린다 — 다친 마을 사람이 있다 (치료 키트를 가져가 E)", new Color(0.9f, 0.85f, 0.7f));
         }
 
@@ -147,7 +149,7 @@ namespace Hunt.Player
             if (sobClock <= 0f)
             {
                 sobClock = Random.Range(5f, 8f);
-                if (dist < 25f) SFX.PlayAt3D(SFX.Sob, transform.position + Vector3.up * 0.9f, 0.6f, Random.Range(0.95f, 1.08f));
+                if (dist < 25f) SFX.PlayAt3D(SFX.Sob, transform.position + Vector3.up * 0.9f, 0.6f, trap ? Random.Range(0.82f, 0.88f) : Random.Range(0.95f, 1.08f)); // 함정이면 목소리가 어딘가 낮다
             }
             if (!called && dist < 12f)
             {
@@ -169,6 +171,23 @@ namespace Hunt.Player
             }
             if (!gm.AcceptsGameplayInput || !GameInput.PickupDown || !ReferenceEquals(NearestToPlayer(), this)) return;
             if (Pickup.AnyNearPlayer()) return; // 보급품 줍기가 먼저
+            if (trap)
+            {
+                // 사람이 아니었다: 웅크린 몸이 일어서며 덤벼든다 (키트는 그대로)
+                lost = true;
+                var wm = Hunt.Waves.WaveManager.Instance;
+                if (wm != null)
+                {
+                    var z = wm.Spawn(Hunt.Data.MonsterArchetype.Runner, transform.position);
+                    if (z != null) z.Alert(10f);
+                }
+                SFX.PlayAt3D(SFX.ZombieScream, transform.position + Vector3.up, 1f, 0.9f);
+                if (p.Controller != null) p.Controller.AddShake(1.5f);
+                HUD.Notify("사람이 아니었다!", new Color(1f, 0.35f, 0.3f));
+                PresentThisNight = false; // 새벽 기록에 '다친 사람'으로 남기지 않는다
+                Destroy(gameObject);
+                return;
+            }
             if (p.Kits <= 0) { HUD.Notify("치료 키트가 있어야 상처를 감아 줄 수 있다 (X 키트, 서낭당에서 산다)", UITheme.BoneDim); return; }
             p.Kits--;
             saved = true;
