@@ -14,7 +14,8 @@ namespace Hunt.Player
     {
         public const float Range = 2.6f;
         public static readonly List<Survivor> Active = new List<Survivor>();
-        bool saved, lost, called;
+        bool saved, lost, called, warned;
+        float rushT;
         float shiver, leaveT;
         Transform body;
 
@@ -120,8 +121,10 @@ namespace Hunt.Player
                 called = true;
                 HUD.Notify("\"거기 누구 있소… 살려 주시오…\"", new Color(0.9f, 0.85f, 0.7f));
             }
-            // 망자들이 모두 몰려오면 (냄새를 맡으면) 먼저 당한다
-            if (Monster.GlobalRush && dist > 10f)
+            // 망자들이 모두 몰려오고 20초 안에 곁에 가지 못하면 먼저 당한다
+            if (Monster.GlobalRush && dist > 10f) rushT += Time.deltaTime;
+            if (rushT == 0f && Monster.GlobalRush && !warned) { warned = true; HUD.Notify("망자들이 몰려온다 — 다친 마을 사람이 위험하다 (20초)", new Color(1f, 0.6f, 0.45f)); }
+            if (rushT > 20f)
             {
                 lost = true;
                 FX.BloodBurst(transform.position + Vector3.up * 0.7f, new Color(0.4f, 0.03f, 0.04f), 1f);

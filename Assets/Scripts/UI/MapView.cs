@@ -88,6 +88,13 @@ namespace Hunt.UI
                 var sp = ToMap(SirenTower.Instance.transform.position, r);
                 UIKit.Emblem(new Rect(sp.x - 13, sp.y - 13, 26, 26), "탑", SirenTower.Instance.UsedThisNight ? new Color(0.45f, 0.43f, 0.4f) : new Color(1f, 0.7f, 0.35f), true);
             }
+            // 다친 마을 사람
+            foreach (var sv in Survivor.Active)
+            {
+                if (sv == null || sv.Saved) continue;
+                var svp = ToMap(sv.transform.position, r);
+                UIKit.Emblem(new Rect(svp.x - 12, svp.y - 12, 24, 24), "사", new Color(0.9f, 0.88f, 0.75f), true);
+            }
             // 숨을 덤불 (옅은 초록 동그라미)
             foreach (var b in Hiding.Spots)
             {
@@ -131,7 +138,7 @@ namespace Hunt.UI
                 UIKit.Tex(new Rect(p.x - 7, p.y - 7, 14, 14), UITheme.Circle, Color.white);
             }
             UIKit.Text(new Rect(r.x, r.yMax + 2, r.width, 18), "흰 점 = 나  ·  노란 네모 = 보급 상자  ·  노란 동그라미 = 현상금  ·  대 = 보스", 13, UITheme.BoneDim, TextAnchor.MiddleCenter);
-            UIKit.Text(new Rect(r.x, r.yMax + 20, r.width, 18), "지 = 지킬 곳  ·  탑 = 사이렌(E)  ·  붉은 점 = 망자  ·  초록 = 숨을 덤불", 13, UITheme.BoneDim, TextAnchor.MiddleCenter);
+            UIKit.Text(new Rect(r.x, r.yMax + 20, r.width, 18), "지 = 지킬 곳  ·  탑 = 사이렌(E)  ·  사 = 다친 사람  ·  붉은 점 = 망자  ·  초록 = 덤불", 13, UITheme.BoneDim, TextAnchor.MiddleCenter);
             UIKit.Alpha = keep;
         }
     }
