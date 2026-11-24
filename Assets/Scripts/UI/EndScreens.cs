@@ -34,6 +34,12 @@ namespace Hunt.UI
 
             var r = new Rect(W / 2 - 320 - (GameInput.Mobile ? 0f : 200f), H / 2 - 450, 640, 900); // PC: 오른쪽 조작 표와 함께 가운데
             UIKit.Panel(r, "숨  을  고 른 다");
+            // 지금 판 요약 (제목 아래 한 줄)
+            var pp = gm.Player;
+            if (pp != null && gm.Waves != null)
+                UIKit.Text(new Rect(r.x, r.y + 56, r.width, 22),
+                    $"{Hunt.UI.GameHud.NightName(gm.Waves.Wave)}  ·  쓰러뜨린 망자 {pp.Kills}  ·  엽전 {pp.Gold}  ·  Lv.{pp.Level}  ·  난이도 {GameSettings.DifficultyName(GameSettings.Difficulty)}",
+                    14, UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true);
 
             float y = r.y + 90;
             if (UIKit.Button(new Rect(r.x + 90, y, r.width - 180, 62), "계속 사냥한다", 24, false, true, "Esc")) gm.TogglePause();
