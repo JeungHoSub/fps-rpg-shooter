@@ -318,6 +318,19 @@ namespace Hunt.Waves
                     Boss = m;
                     m.Revealed = true; // 보스 위치는 항상 화면에 표시
                     m.Alert(999f);
+                    if (IsBossWave)
+                    {
+                        // 최종 보스 대감: 몸에서 붉은 기운이 일렁인다 (멀리서도 '저게 대감'이라고 알게)
+                        var aura = new GameObject("대감의 기운").AddComponent<Light>();
+                        aura.transform.SetParent(m.transform, false);
+                        aura.transform.localPosition = Vector3.up * 1.6f;
+                        aura.type = LightType.Point;
+                        aura.color = new Color(1f, 0.18f, 0.12f);
+                        aura.range = 7f;
+                        aura.intensity = 2.2f;
+                        aura.shadows = LightShadows.None;
+                        aura.gameObject.AddComponent<Hunt.Core.LampFlicker>().pulse = true; // 숨쉬듯 일렁임 ('하'에서도 보스 1개라 부담 적음)
+                    }
                 }
                 spawnTimer = Mathf.Max(0.3f, 1.2f - Wave * 0.05f);
             }
