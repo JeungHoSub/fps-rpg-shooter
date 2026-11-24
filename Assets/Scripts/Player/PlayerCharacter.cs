@@ -104,6 +104,7 @@ namespace Hunt.Player
                 if (kitTime <= 0f)
                 {
                     Heal(KitHeal);
+                    GameHud.HealFlash = 0.8f; // 상처를 감싸면 가장자리가 옥빛으로
                     HUD.Notify($"상처를 감쌌다 — 생명 +{KitHeal:0}", new Color(0.6f, 1f, 0.6f));
                 }
             }
