@@ -729,7 +729,7 @@ namespace Hunt.Player
                 reloadTotal = reloadTime = baseTime / speed;
             }
             reloadStage = 0;
-            Noise.Emit(player.transform.position, 6f, true); // 탄창 소리
+            Noise.Emit(player.transform.position, player.Controller.IsCrouching ? 3f : 6f, true); // 탄창 소리 (앉아서 조심히 갈면 3m)
         }
 
         void FinishReload(WeaponInstance w)
