@@ -235,7 +235,8 @@ namespace Hunt.UI
 
             // 요령 한 줄 (쓰러질 때마다 다른 것)
             UIKit.Text(new Rect(0, y + 506, W, 24), "요령 — " + GameText.DeathTips[tip % GameText.DeathTips.Length], 16, UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true);
-            if (a > 0.6f && UIKit.Button(new Rect(W / 2 - 170, y + 424, 340, 70), "다시 사냥한다", 28, false, true, "R")) gm.Restart();
+            if (a > 0.6f && UIKit.Button(new Rect(W / 2 - 350, y + 424, 340, 70), "다시 사냥한다", 26, false, true, "R — 처음 화면에서 다시 고르기")) gm.Restart();
+            if (a > 0.6f && UIKit.Button(new Rect(W / 2 + 10, y + 424, 340, 70), "곧장 다시", 26, false, gm.StartPointsLeft == 0, "같은 설정으로 바로 출정")) gm.QuickRestart();
             UIKit.Alpha = 1f;
         }
 

@@ -332,6 +332,19 @@ namespace Hunt.Core
             TogglePause();
         }
 
+        /// <summary>같은 설정으로 곧장 다시: 새 마을을 짓고 한 프레임 뒤(옛 마을이 치워진 뒤) 바로 출정.</summary>
+        public void QuickRestart()
+        {
+            Restart();
+            StartCoroutine(DeployNextFrame());
+        }
+
+        System.Collections.IEnumerator DeployNextFrame()
+        {
+            yield return null;
+            if (State == GameState.CharacterSelect && StartPointsLeft == 0) StartGame();
+        }
+
         public void Restart()
         {
             Paused = false;
