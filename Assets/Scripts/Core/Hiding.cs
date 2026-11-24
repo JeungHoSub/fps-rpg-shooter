@@ -89,6 +89,18 @@ namespace Hunt.Core
             }
         }
 
+        /// <summary>돌풍: 모든 덤불이 한꺼번에 흔들린다 (매복 덤불의 들썩임도 묻힌다).</summary>
+        public static void ShakeAll()
+        {
+            foreach (var v in visuals)
+            {
+                if (v == null) continue;
+                var sh = v.GetComponent<BushShake>();
+                if (sh == null) sh = v.AddComponent<BushShake>();
+                sh.Kick();
+            }
+        }
+
         /// <summary>이 위치가 덤불 안인가 (높이는 무시).</summary>
         public static bool InBush(Vector3 p)
         {

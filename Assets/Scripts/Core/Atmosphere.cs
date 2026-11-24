@@ -319,6 +319,8 @@ namespace Hunt.Core
             {
                 nextGust = Time.time + Random.Range(35f, 80f) * Mathf.Lerp(1.2f, 0.7f, RainIntensity);
                 SFX.Play(SFX.Wind, 0.45f * GameSettings.AmbientVolume, 0.15f);
+                Noise.GustUntil = Time.time + 3.5f; // 바람 소리가 발소리를 덮는다
+                Hiding.ShakeAll();
             }
             if (gm != null && gm.State == GameState.Playing && cam != null && Time.time > nextDistant)
             {

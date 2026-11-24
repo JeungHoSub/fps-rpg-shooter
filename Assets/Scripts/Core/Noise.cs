@@ -18,7 +18,11 @@ namespace Hunt.Core
 
         /// <summary>비가 소리를 가리는 배율 (1 = 그대로, 0.55 = 폭우).</summary>
         public static float RainMask =>
-            Atmosphere.Instance != null ? Mathf.Lerp(1f, 0.55f, Mathf.InverseLerp(0.4f, 1f, Atmosphere.Instance.RainIntensity)) : 1f;
+            (Atmosphere.Instance != null ? Mathf.Lerp(1f, 0.55f, Mathf.InverseLerp(0.4f, 1f, Atmosphere.Instance.RainIntensity)) : 1f)
+            * (Time.time < GustUntil ? 0.8f : 1f); // 돌풍이 부는 동안은 소리가 더 묻힌다
+
+        /// <summary>돌풍이 부는 동안 (Atmosphere가 정한다).</summary>
+        public static float GustUntil = -100f;
 
         /// <summary>HUD 표시용: 최근 플레이어가 낸 소리 크기 (0~1, 서서히 잦아든다).</summary>
         public static float PlayerLoudness => level * Mathf.Exp(-(Time.time - levelTime) * 1.6f);
