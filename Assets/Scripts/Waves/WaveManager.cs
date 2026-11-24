@@ -96,6 +96,8 @@ namespace Hunt.Waves
         float spawnTimer, stragglerTime, rushTimer, stageClock;
         bool defenseBossSent;
         bool bossSpawned;
+        float drumClock;
+        int drumStep;
         Vector3 bossLastPos;
         Transform root;
         PlayerCharacter player;
@@ -313,7 +315,22 @@ namespace Hunt.Waves
                 }
             }
 
-            if (Boss != null && !Boss.IsDead) bossLastPos = Boss.transform.position;
+            if (Boss != null && !Boss.IsDead)
+            {
+                bossLastPos = Boss.transform.position;
+                // 보스가 살아 있는 동안 북이 울린다: 둥 · 둥 · 둥둥 — 보스 생명이 줄수록 빨라진다
+                drumClock -= dt;
+                if (drumClock <= 0f)
+                {
+                    float hp = Mathf.Clamp01(Boss.Hp / Boss.MaxHp);
+                    float beat = Mathf.Lerp(0.42f, 0.75f, hp);
+                    bool accent = drumStep % 4 == 0;
+                    SFX.PlayPitched(SFX.Drum, (accent ? 0.55f : 0.38f) * (IsBossWave ? 1f : 0.8f), accent ? 0.9f : 1.05f);
+                    drumStep++;
+                    drumClock = drumStep % 4 == 3 ? beat * 0.5f : beat; // 마지막 두 번은 붙여 친다
+                }
+            }
+            else { drumClock = 0.6f; drumStep = 0; }
             spawnTimer -= dt;
             // 보스는 망자 수 제한과 상관없이 바로 나온다 (예전엔 남은 망자가 많으면 안 나올 수 있었다)
             bool bossNext = queue.Count > 0 && queue.Peek() == MonsterArchetype.Boss;

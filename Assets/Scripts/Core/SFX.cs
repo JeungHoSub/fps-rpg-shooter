@@ -433,6 +433,28 @@ namespace Hunt.Core
             return Clip("boom", d);
         }
 
+        /// <summary>북(큰북) 한 번: 낮게 울리며 음이 살짝 떨어지는 '둥' + 가죽 치는 소리.</summary>
+        public static AudioClip Drum => Get("drum", () =>
+        {
+            const float len = 0.9f;
+            int n = (int)(Rate * len);
+            var d = new float[n];
+            var rnd = new System.Random(77);
+            float ph = 0f, f = 0f;
+            for (int i = 0; i < n; i++)
+            {
+                float t = (float)i / Rate;
+                float hz = 62f + 38f * Mathf.Exp(-t * 18f);       // 처음 높았다가 낮게 가라앉는 울림
+                ph += 2f * Mathf.PI * hz / Rate;
+                float body = Mathf.Sin(ph) * Mathf.Exp(-t * 4.2f);
+                float noise = (float)(rnd.NextDouble() * 2.0 - 1.0);
+                f += 0.25f * (noise - f);
+                float skin = f * Mathf.Exp(-t * 40f) * 0.8f;       // 북채가 가죽을 치는 순간
+                d[i] = Mathf.Clamp(body * 0.95f + skin, -1f, 1f);
+            }
+            return Clip("drum", d);
+        });
+
         /// <summary>지쳐서 헐떡이는 숨: 들숨(짧고 높게) + 날숨(길고 낮게) 한 번.</summary>
         public static AudioClip Breath => Get("breath", () =>
         {
