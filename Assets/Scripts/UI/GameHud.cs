@@ -478,7 +478,7 @@ namespace Hunt.UI
             float k = W / Screen.width;
             foreach (var g in ThrownGrenade.Live)
             {
-                if (g == null) continue;
+                if (g == null || g.Fuse > 1.8f) continue; // 막 던진 건 날아가는 중이라 표시하지 않는다
                 float dist = Vector3.Distance(g.transform.position, p.transform.position);
                 if (dist > 7f) continue;
                 Vector3 sp = cam.WorldToScreenPoint(g.transform.position + Vector3.up * 0.3f);
