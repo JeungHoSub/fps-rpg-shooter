@@ -276,7 +276,9 @@ namespace Hunt.Weapons
             {
                 var diff = Resources.Load<Texture2D>("Guns/" + id + "_diff");
                 var nor = Resources.Load<Texture2D>("Guns/" + id + "_nor");
-                mat.color = Color.white;
+                // 텍스처 총도 검게: 회색 기 빼고 진하게 (총마다 텍스처 밝기가 달라 따로 맞춤)
+                float tint = id == "ar" ? 0.55f : id == "flamer" ? 0.8f : 0.9f;
+                mat.color = new Color(tint, tint, tint * 1.02f);
                 if (diff != null) mat.mainTexture = diff;
                 if (nor != null) { mat.SetTexture("_BumpMap", nor); mat.EnableKeyword("_NORMALMAP"); }
             }
@@ -285,12 +287,19 @@ namespace Hunt.Weapons
                 // 단색 나무 → 나뭇결 텍스처를 옅게 입혀 실감 있게
                 mat.color = col * 1.15f;
                 var wood = Resources.Load<Texture2D>("Props/painted_wooden_bench_diff");
-                if (wood != null) { mat.mainTexture = wood; mat.mainTextureScale = new Vector2(2f, 0.5f); mat.color = Color.Lerp(col, Color.white, 0.15f) * 1.6f; }
+                if (wood != null) { mat.mainTexture = wood; mat.mainTextureScale = new Vector2(2f, 0.5f); mat.color = col * 1.15f; } // 짙은 나무 개머리
             }
             else
             {
-                // 금속: 너무 새까맣지 않게 살짝 밝히고, 금속광
-                mat.color = Color.Lerp(col, new Color(0.22f, 0.22f, 0.24f), 0.35f);
+                // 금속: 검은 총철색 (사용자 요청 "총은 까매야지"). 원래 밝기 차이는 남겨 부품이 구분되게,
+                // 금속광은 조금 올려서 새까만 덩어리가 아니라 기름 먹은 쇠처럼 보이게
+                float l = (col.r + col.g + col.b) / 3f;
+                bool glass = name.IndexOf("Glass", System.StringComparison.OrdinalIgnoreCase) >= 0;
+                float v = Mathf.Lerp(0.03f, 0.11f, Mathf.InverseLerp(0.12f, 0.34f, l));
+                Color gun = new Color(v, v, v * 1.08f);
+                mat.color = glass ? new Color(0.03f, 0.05f, 0.08f) : Color.Lerp(gun, col * (v / Mathf.Max(0.01f, l)), 0.25f);
+                metal = glass ? 0.9f : Mathf.Max(metal, 0.65f);
+                gloss = glass ? 0.9f : Mathf.Max(gloss, 0.55f);
             }
             mat.SetFloat("_Metallic", metal);
             mat.SetFloat("_Glossiness", gloss);
