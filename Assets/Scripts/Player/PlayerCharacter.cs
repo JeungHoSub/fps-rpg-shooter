@@ -135,6 +135,7 @@ namespace Hunt.Player
             if (Drinks <= 0) { HUD.Notify("스태미너 회복제가 없다", new Color(1f, 0.6f, 0.4f)); return; }
             Drinks--;
             Controller.RestoreStamina(15f);
+            GameHud.DrinkFlash = 1f; // 화면 가장자리 푸르게
             SFX.Play(SFX.Drink, 0.8f);
             HUD.Notify("기운이 돈다 — 15초 동안 덜 지친다", new Color(0.6f, 0.9f, 1f));
         }

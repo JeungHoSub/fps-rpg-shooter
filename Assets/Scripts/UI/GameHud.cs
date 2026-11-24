@@ -140,6 +140,8 @@ namespace Hunt.UI
 
         /// <summary>치유 순간 화면 가장자리 옥빛 (0~1).</summary>
         public static float HealFlash;
+        /// <summary>회복제를 마신 순간 화면 가장자리 푸른빛 (0~1).</summary>
+        public static float DrinkFlash;
 
         public static void OnPickup(HudIcons.Icon icon, Color color, string text, bool gained = true)
         {
@@ -218,6 +220,11 @@ namespace Hunt.UI
             if (rushAge < 1.4f) UIKit.Vignette(W, H, new Color(0.6f, 0f, 0f, 0.55f * (1f - rushAge / 1.4f) * (0.7f + 0.3f * Mathf.Sin(rushAge * 18f))));
             DrawLevelUp(p);
             // 치유 부적을 먹으면 가장자리가 잠깐 옥빛으로
+            if (DrinkFlash > 0f)
+            {
+                UIKit.Vignette(W, H, new Color(0.3f, 0.6f, 1f, DrinkFlash * 0.5f));
+                DrinkFlash = Mathf.Max(0f, DrinkFlash - dt * 1.6f);
+            }
             if (HealFlash > 0f)
             {
                 UIKit.Vignette(W, H, new Color(0.25f, 0.9f, 0.45f, HealFlash * 0.55f));
