@@ -51,6 +51,7 @@ namespace Hunt.Player
             var sv = go.AddComponent<Survivor>();
             sv.trap = night >= 4 && Random.value < 0.15f; // 넷째 밤부터 가끔: 사람이 아니다
             sv.Build();
+            if (sv.trap) sv.BuildEyes();
             HUD.Notify("어디선가 사람 목소리가 들린다 — 다친 마을 사람이 있다 (치료 키트를 가져가 E)", new Color(0.9f, 0.85f, 0.7f));
         }
 
@@ -83,6 +84,28 @@ namespace Hunt.Player
             glow = phone.GetComponent<Renderer>();
             glow.sharedMaterial = FX.UnlitMaterial(new Color(0.75f, 0.85f, 1f));
             glow.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        }
+
+        GameObject eyes;
+
+        /// <summary>가짜(망자)만: 손전등에 비추면 눈이 붉게 번뜩인다.</summary>
+        void BuildEyes()
+        {
+            eyes = new GameObject("Eyes");
+            eyes.transform.SetParent(body, false);
+            eyes.transform.localPosition = new Vector3(0f, 1.03f, 0.11f);
+            foreach (float sx in new[] { -0.05f, 0.05f })
+            {
+                var e = FX.LowSphere();
+                e.layer = 2;
+                e.transform.SetParent(eyes.transform, false);
+                e.transform.localPosition = new Vector3(sx, 0f, 0f);
+                e.transform.localScale = Vector3.one * 0.035f;
+                var r = e.GetComponent<Renderer>();
+                r.sharedMaterial = FX.UnlitMaterial(new Color(1f, 0.15f, 0.08f));
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            }
+            eyes.SetActive(false);
         }
 
         void Part(PrimitiveType t, Vector3 pos, Vector3 scale, Quaternion rot, Material m, bool collider)
@@ -150,6 +173,13 @@ namespace Hunt.Player
             {
                 sobClock = Random.Range(5f, 8f);
                 if (dist < 25f) SFX.PlayAt3D(SFX.Sob, transform.position + Vector3.up * 0.9f, 0.6f, trap ? Random.Range(0.82f, 0.88f) : Random.Range(0.95f, 1.08f)); // 함정이면 목소리가 어딘가 낮다
+            }
+            if (eyes != null)
+            {
+                var eye = Flashlight.Eye;
+                bool litEyes = Flashlight.Active && eye != null && dist < 14f
+                    && Vector3.Dot(eye.forward, (transform.position + Vector3.up - eye.position).normalized) > 0.93f;
+                if (eyes.activeSelf != litEyes) eyes.SetActive(litEyes);
             }
             if (!called && dist < 12f)
             {
