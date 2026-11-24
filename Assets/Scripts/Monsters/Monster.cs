@@ -442,7 +442,16 @@ namespace Hunt.Monsters
             // 앉아서 덤불 속이면 코앞(어둠 2.5m)에 와야 안다. 손전등을 켜면 소용없다
             bool hidden = low && !lit && Hiding.InBush(target.transform.position);
             // 그림자 망자(추적형)는 냄새로 찾는다: 덤불에 숨어도 앉은 사람 보듯 본다
-            if (hidden && Data.id == "z_stalker") hidden = false;
+            if (hidden && Data.id == "z_stalker")
+            {
+                hidden = false;
+                if (dist < 12f && !sniffWarned && !IsAlerted)
+                {
+                    sniffWarned = true;
+                    SFX.PlayAt3D(SFX.Growl, transform.position + Vector3.up * 1.4f, 0.6f, VoicePitch * 0.7f);
+                    HUD.Notify("킁킁… 그림자 망자가 냄새를 맡는다 — 덤불도 소용없다", new Color(1f, 0.55f, 0.45f));
+                }
+            }
             // 어슬렁대는 망자는 등 뒤(110° 밖)를 잘 못 본다 → 몰래 다가가 칼질할 수 있다
             float back = 1f;
             if (!IsAlerted && target != null)
@@ -716,7 +725,7 @@ namespace Hunt.Monsters
         public bool EverAlerted { get; private set; }
         /// <summary>0~1: 나를 알아채기 직전인 정도 (HUD '…').</summary>
         public float Suspicion { get; private set; }
-        bool inBush, passedHidden;
+        bool inBush, passedHidden, sniffWarned;
         bool lurking, hpLostWhileLurking;
         Vector3 lurkBase;
         GameObject lurkEyes;
