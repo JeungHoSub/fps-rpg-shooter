@@ -178,6 +178,7 @@ namespace Hunt.Waves
                     lm.Lurk();
                     placedL++;
                 }
+                if (n == 2 && placedL > 0) HUD.Notify("덤불 속에서 무언가 숨죽이고 있다… (손전등으로 비춰 보라)", new Color(0.85f, 0.75f, 0.6f));
             }
             // 현상금 망자 하나 (머리 위 노란 등불)
             if (bountyPick != null)
