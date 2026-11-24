@@ -236,7 +236,12 @@ namespace Hunt.Monsters
                 {
                     hasInvestigate = false;
                     // 소리를 뒤진 자리를 새 거처로 삼는다
-                    if (g.sqrMagnitude < 2f * 2f && goal == investigatePos) home = investigatePos;
+                    if (g.sqrMagnitude < 2f * 2f && goal == investigatePos)
+                    {
+                        home = investigatePos;
+                        // 뒤지러 온 자리에서 킁킁 — 그르렁 (25m 안이면 들린다)
+                        if (dist < 25f && Random.value < 0.5f) SFX.PlayAt3D(SFX.ZombieMoan, transform.position + Vector3.up * 1.5f, 0.5f, VoicePitch * 0.95f);
+                    }
                     Vector2 off = Random.insideUnitCircle * 5f;
                     wanderGoal = home + new Vector3(off.x, 0f, off.y);
                     wanderTimer = Random.Range(5f, 10f);
