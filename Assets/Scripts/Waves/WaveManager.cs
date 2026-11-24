@@ -163,6 +163,22 @@ namespace Hunt.Waves
                 var sm = Spawn(queue.Dequeue(), ScatterPoint(), placed: true);
                 if (sm != null && (bountyPick == null || Random.value < 0.3f)) bountyPick = sm;
             }
+            // 둘째 밤부터: 큰 덤불 속 매복 망자 1~2 (가까이 가면 튀어나온다). 플레이어 15m 안 덤불은 피한다
+            if (n >= 2)
+            {
+                int lurkers = n >= 4 ? 2 : 1, placedL = 0;
+                var spots = Hiding.Spots;
+                for (int tries = 0; tries < 12 && placedL < lurkers && spots.Count > 0; tries++)
+                {
+                    var b = spots[Random.Range(0, spots.Count)];
+                    var bp = new Vector3(b.x, 0f, b.z);
+                    if (player != null && (bp - player.transform.position).sqrMagnitude < 15f * 15f) continue;
+                    var lm = Spawn(MonsterArchetype.Runner, bp, placed: true);
+                    if (lm == null) continue;
+                    lm.Lurk();
+                    placedL++;
+                }
+            }
             // 현상금 망자 하나 (머리 위 노란 등불)
             if (bountyPick != null)
             {

@@ -181,6 +181,13 @@ namespace Hunt.Monsters
             float dist = to.magnitude;
             Vector3 dir = dist > 0.01f ? to / dist : transform.forward;
 
+            // 매복: 덤불 속 땅바닥에 엎드려 있다가 4.5m 안에 오면 튀어나온다
+            if (lurking)
+            {
+                if (dist < 4.5f || GlobalRush || Revealed || hpLostWhileLurking) WakeLurk();
+                else return;
+            }
+
             if (alertTime > 0f) alertTime -= dt;
             senseTimer -= dt;
             if (senseTimer <= 0f)
@@ -666,6 +673,35 @@ namespace Hunt.Monsters
         /// <summary>쫓다가 놓친 순간 (머리 위 '?').</summary>
         public float LostAt = -100f;
         bool inBush, passedHidden;
+        bool lurking, hpLostWhileLurking;
+        Vector3 lurkBase;
+        public bool Lurking => lurking;
+
+        /// <summary>덤불 속 매복으로 만든다 (모델이 있는 망자만): 몸을 땅 밑에 숨기고 기다린다.</summary>
+        public void Lurk()
+        {
+            if (rig == null || rig.Pivot == null) return;
+            lurking = true;
+            lurkBase = rig.Pivot.localPosition;
+            float s = Mathf.Max(0.01f, transform.lossyScale.y);
+            rig.Pivot.localPosition = lurkBase - Vector3.up * (2.2f * Data.scale / s);
+        }
+
+        void WakeLurk()
+        {
+            lurking = false;
+            if (rig != null && rig.Pivot != null) rig.Pivot.localPosition = lurkBase;
+            Emerge(0.55f); // 덤불 속에서 확 솟구친다
+            Alert(10f);
+            SpottedAt = Time.time;
+            SFX.PlayAt3D(SFX.ZombieScream, transform.position + Vector3.up * 1.4f, 1f, VoicePitch * 1.05f);
+            SFX.PlayAt3D(SFX.Rustle, transform.position + Vector3.up * 0.6f, 1f, 0.8f);
+            if (target != null && Vector3.Distance(target.transform.position, transform.position) < 8f)
+            {
+                HUD.Notify("덤불 속에 망자가 숨어 있었다!", new Color(1f, 0.4f, 0.3f));
+                if (target.Controller != null) target.Controller.AddShake(1.2f);
+            }
+        }
 
         /// <summary>머리를 맞으면 갓·상투 장식이 총알 방향으로 날아간다 (한 번만).</summary>
         public void KnockOffHat(Vector3 dir)
@@ -715,6 +751,7 @@ namespace Hunt.Monsters
 
         bool TakeRawDamage(float amount)
         {
+            if (lurking) hpLostWhileLurking = true; // 폭발 등에 맞으면 튀어나온다
             Hp -= amount;
             if (IsBoss) CheckBossPhase();
             if (Hp <= 0f)
