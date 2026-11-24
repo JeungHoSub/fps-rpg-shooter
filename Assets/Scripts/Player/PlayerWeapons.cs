@@ -592,6 +592,9 @@ namespace Hunt.Player
                                 }
                             }
                             FX.ImpactFlesh(hit.point, dir, FleshColor(res.zone), res.crit ? 10 : 5);
+                            // 뒤쪽 벽·바닥에 피가 튄다 (처치·머리·치명타는 항상, 그 외 가끔 — 너무 많지 않게)
+                            if (res.killed || res.zone == HitZone.Head || res.crit || Random.value < 0.25f)
+                                FX.BloodSplat(hit.point + dir * 0.35f, (dir + Vector3.down * 0.25f).normalized, 2.8f, res.killed ? 0.75f : 0.5f);
                         }
                         OnHitResult(w, res, info, hit.point);
                         lastMonster = part.owner;

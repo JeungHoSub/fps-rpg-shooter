@@ -35,6 +35,8 @@ namespace Hunt.Core
             holes.Clear();
             scorches.Clear();
             scorchIndex = 0;
+            splats.Clear();
+            splatIndex = 0;
             holeIndex = 0;
             pools.Clear(); // 다시 시작하면 예전 피 웅덩이(파괴됨)를 버린다 — 안 그러면 웅덩이가 영영 안 생겼다
             poolIndex = 0;
@@ -224,6 +226,70 @@ namespace Hunt.Core
             t.position = p + Vector3.up * 0.01f;
             t.rotation = Quaternion.Euler(90f, Random.Range(0f, 360f), 0f);
             t.GetComponent<BloodPoolFx>().Begin(size * 2f);
+        }
+
+        // ---- 뒤쪽 벽·바닥에 튄 피 (망자를 맞히면 총알 방향 뒤로) ----
+        static Material splatMat;
+        static readonly List<Transform> splats = new List<Transform>();
+        static int splatIndex;
+        const int MaxSplats = 14;
+        static readonly RaycastHit[] splatHits = new RaycastHit[8];
+
+        /// <summary>
+        /// from에서 dir 방향 maxDist 안에 벽·바닥이 있으면 피 자국을 남긴다 (망자·플레이어는 건너뜀).
+        /// 피 웅덩이 무늬를 작게, 면에 붙여서. 14개를 돌려 쓴다.
+        /// </summary>
+        public static void BloodSplat(Vector3 from, Vector3 dir, float maxDist, float size)
+        {
+            if (root == null) return;
+            int n = Physics.RaycastNonAlloc(from, dir, splatHits, maxDist, ~((1 << 2) | (1 << 1)), QueryTriggerInteraction.Ignore);
+            float best = float.MaxValue;
+            RaycastHit found = default;
+            for (int i = 0; i < n; i++)
+            {
+                var h = splatHits[i];
+                if (h.collider == null || h.distance >= best) continue;
+                if (h.collider.GetComponentInParent<Hunt.Monsters.Monster>() != null) continue;
+                if (h.collider.GetComponent<Hunt.Monsters.MonsterPart>() != null) continue;
+                if (h.collider is CharacterController) continue;
+                if (h.collider.attachedRigidbody != null && !h.collider.attachedRigidbody.isKinematic) continue;
+                best = h.distance;
+                found = h;
+            }
+            if (best == float.MaxValue) return;
+
+            if (splatMat == null)
+            {
+                splatMat = new Material(PoolMaterial()) { name = "BloodSplat", color = new Color(0.32f, 0.02f, 0.03f, 0.85f) };
+                splatMat.renderQueue = 2461;
+            }
+            Transform t;
+            if (splats.Count < MaxSplats)
+            {
+                var go = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                Object.DestroyImmediate(go.GetComponent<Collider>());
+                go.name = "BloodSplat";
+                go.layer = 2;
+                go.transform.SetParent(root, false);
+                var r = go.GetComponent<Renderer>();
+                r.sharedMaterial = splatMat;
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                r.receiveShadows = false;
+                go.AddComponent<BloodPoolFx>();
+                t = go.transform;
+                splats.Add(t);
+            }
+            else
+            {
+                t = splats[splatIndex];
+                splatIndex = (splatIndex + 1) % MaxSplats;
+                if (t == null) return;
+            }
+            t.position = found.point + found.normal * 0.006f;
+            t.rotation = Quaternion.LookRotation(-found.normal) * Quaternion.Euler(0f, 0f, Random.Range(0f, 360f));
+            // 멀수록 옅고 작게 튄다
+            float k = 1f - best / maxDist;
+            t.GetComponent<BloodPoolFx>().Begin(size * Mathf.Lerp(0.6f, 1.2f, k) * Random.Range(0.8f, 1.2f));
         }
 
         /// <summary>벽·바닥 명중: 불꽃 + 먼지 + 탄흔.</summary>
