@@ -209,6 +209,7 @@ namespace Hunt.Player
                 var eye = Flashlight.Eye;
                 bool litEyes = Flashlight.Active && eye != null && dist < 14f
                     && Vector3.Dot(eye.forward, (transform.position + Vector3.up - eye.position).normalized) > 0.93f;
+                if (Atmosphere.Flash > 0.5f && dist < 22f) litEyes = true; // 번개가 번쩍이면 눈이 비친다
                 if (eyes.activeSelf != litEyes) eyes.SetActive(litEyes);
             }
             if (!called && dist < 12f)
