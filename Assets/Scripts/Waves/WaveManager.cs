@@ -342,6 +342,7 @@ namespace Hunt.Waves
             stragglerTime = 0f;
             stageClock = 0f;
             rushTimer = Rule == RoundRule.Mission ? 20f : RushDelay;
+            if (player != null && player.CharmIncense) rushTimer += 30f; // 향: 냄새를 감춰 몰려오기까지 더 걸린다
             Monster.GlobalRush = false;
         }
 

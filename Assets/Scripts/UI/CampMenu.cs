@@ -608,7 +608,7 @@ namespace Hunt.UI
             // ---- 보급: 소비 아이템 · 특수 기기 ----
             UIKit.Text(new Rect(right.x, right.y + 12, right.width, 30), "보급", 22, UITheme.Gold, TextAnchor.MiddleCenter, serif: true, bold: true);
             float y = right.y + 54;
-            const int buyRows = 3 + Gadgets.Count + 4; // 키트·회복제·폭죽 + 기기 + 부적 4
+            const int buyRows = 3 + Gadgets.Count + 5; // 키트·회복제·폭죽 + 기기 + 부적 4 + 향
             float rowStep = Mathf.Min(74f, (right.height - 54f - 64f) / buyRows);
             float buyH = rowStep - 6f;
             void Buy(HudIcons.Icon icon, Color tint, string name, string desc, int have, int max, int price, System.Action give)
@@ -647,6 +647,7 @@ namespace Hunt.UI
             Buy(HudIcons.Icon.Boot, new Color(0.95f, 0.85f, 0.6f), "축지부 — 다음 밤", "이동 속도 +12% (하룻밤)", p.CharmSwift ? 1 : 0, 1, 60, () => p.CharmSwift = true);
             Buy(HudIcons.Icon.Ammo, new Color(0.95f, 0.85f, 0.6f), "명중부 — 다음 밤", "탄퍼짐 -25% (하룻밤)", p.CharmAim ? 1 : 0, 1, 70, () => p.CharmAim = true);
             Buy(HudIcons.Icon.Crouch, new Color(0.95f, 0.85f, 0.6f), "은신부 — 다음 밤", "앉아 있으면 망자 눈에 더 안 띈다 (하룻밤)", p.CharmHide ? 1 : 0, 1, 50, () => p.CharmHide = true);
+            Buy(HudIcons.Icon.Flame, new Color(0.8f, 0.75f, 0.65f), "쑥 향 — 다음 밤", "냄새를 감춘다: 망자들이 몰려오기까지 +30초", p.CharmIncense ? 1 : 0, 1, 45, () => p.CharmIncense = true);
             UIKit.Text(new Rect(right.x + 20, right.yMax - 56, right.width - 40, 50), "밤을 넘길 때마다 키트·회복제·특수 기기가 하나씩 보급된다. 부적은 다음 밤 하루만 듣는다.", 13, UITheme.Ash, TextAnchor.MiddleCenter, serif: true, wrap: true);
         }
 
