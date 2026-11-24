@@ -119,7 +119,7 @@ namespace Hunt.UI
             UIKit.Alpha = keep;
         }
 
-        bool lowHpMuttered;
+        bool lowHpMuttered, surroundMuttered;
 
         /// <summary>마지막으로 단계가 오른 시각 (금빛 연출).</summary>
         public static float LevelUpAt = -100f;
@@ -218,6 +218,14 @@ namespace Hunt.UI
                 lowHpMuttered = true;
                 string[] lines = { "피가… 너무 많이 난다", "여기서 쓰러지면 안 돼", "키트… 키트가 있었지(X)", "숨이 넘어갈 것 같다" };
                 Mutter(lines[Random.Range(0, lines.Length)]);
+            }
+            // 망자 셋 이상에게 둘러싸이면 한마디 (판마다 한 번): 발차기 알려 주기
+            if (gm.State == GameState.Playing && !surroundMuttered && UIKit.IsRepaint && Time.frameCount % 15 == 0)
+            {
+                int near = 0;
+                foreach (var nm in Monster.Alive)
+                    if (nm != null && !nm.IsDead && (nm.transform.position - p.transform.position).sqrMagnitude < 3f * 3f) near++;
+                if (near >= 3) { surroundMuttered = true; Mutter("둘러싸였다… 달리면서 V로 걷어차고 빠져나가자"); }
             }
             float rushAge = Time.unscaledTime - RushAt;
             if (rushAge < 1.4f) UIKit.Vignette(W, H, new Color(0.6f, 0f, 0f, 0.55f * (1f - rushAge / 1.4f) * (0.7f + 0.3f * Mathf.Sin(rushAge * 18f))));
