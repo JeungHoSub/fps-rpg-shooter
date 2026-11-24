@@ -354,11 +354,12 @@ namespace Hunt.Player
         void StartSwing()
         {
             if (meleeCooldown > 0f) return;
-            if (!player.Controller.UseStamina(8f)) { SFX.Play(SFX.Empty, 0.5f); return; }
+            bool wantKick = player.Controller.IsSprinting || player.Controller.IsSliding;
+            if (!player.Controller.UseStamina(wantKick ? 16f : 8f)) { SFX.Play(SFX.Empty, 0.5f); return; } // 발차기는 기운이 두 배
             meleeCooldown = 0.55f / player.Stats.SwapSpeedMult;
             meleeT = 0f;
             meleePending = true;
-            kicking = player.Controller.IsSprinting || player.Controller.IsSliding; // 달리거나 미끄러지며 V = 발차기
+            kicking = wantKick; // 달리거나 미끄러지며 V = 발차기
             if (kicking) KickLeg.Show(cam.transform);
             player.InterruptItem();
             SFX.Play(SFX.Swing, 0.7f, 0.1f);
