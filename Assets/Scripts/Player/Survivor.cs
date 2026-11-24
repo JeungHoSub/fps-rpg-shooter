@@ -180,6 +180,7 @@ namespace Hunt.Player
             string extra = "";
             if (p.Firecrackers < PlayerCharacter.MaxFirecrackers) { p.Firecrackers++; extra = " · 폭죽 +1"; }
             SFX.Play(SFX.Bandage, 0.8f);
+            if (p.Controller != null) p.Controller.AddPunch(-3f, 0f); // 몸을 숙여 상처를 감는다
             SFX.PlayPitched(SFX.LevelUp, 0.6f, 1f);
             HUD.Notify($"\"고맙소… 이거라도 받으시오.\"  엽전 +{gold}{extra}", new Color(1f, 0.85f, 0.5f));
             GameHud.ShowNextLoreNote();
