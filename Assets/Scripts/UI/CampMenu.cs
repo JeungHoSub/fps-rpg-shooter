@@ -708,7 +708,7 @@ namespace Hunt.UI
                     UIKit.Fill(rr, new Color(0.04f, 0.038f, 0.04f, 0.85f));
                     UIKit.Fill(new Rect(rr.x, rr.y, 6, rr.height), seen ? new Color(k.tint.r, k.tint.g, k.tint.b, 1f) : new Color(0.2f, 0.2f, 0.2f));
                     UIKit.Text(new Rect(rr.x + 16, rr.y + 4, rr.width - 140, 26), seen ? k.name : "???", 17, seen ? UITheme.Bone : UITheme.Ash, serif: true, bold: true);
-                    UIKit.Text(new Rect(rr.x + 16, rr.y + 30, rr.width - 140, 24), seen ? k.desc : $"{k.fromWave}째 밤부터 나온다", 13, UITheme.BoneDim, wrap: true);
+                    UIKit.Text(new Rect(rr.x + 16, rr.y + 30, rr.width - 140, 24), seen ? k.desc : GameHud.NightName(k.fromWave) + "부터 나온다", 13, UITheme.BoneDim, wrap: true);
                     UIKit.Text(new Rect(rr.xMax - 120, rr.y + 4, 110, 26), seen ? $"{kills}마리" : "", 16, UITheme.GoldBright, TextAnchor.MiddleRight, bold: true);
                 }
                 GUI.EndScrollView();
