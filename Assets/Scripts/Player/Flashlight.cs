@@ -17,7 +17,7 @@ namespace Hunt.Player
         /// <summary>난이도 변형 '시야 감소': 손전등을 쓸 수 없음.</summary>
         public static bool Disabled;
 
-        void OnDestroy() { if (Eye == cam) { Eye = null; Active = false; } }
+        void OnDestroy() { if (Eye == cam) { Eye = null; Active = false; } BossNear = 0f; } // 판이 끝나면 마을 불빛 떨림도 멈춘다
 
         public void Init(Transform camera)
         {
@@ -84,5 +84,6 @@ namespace Hunt.Player
         float bossCheck, bossNear;
         /// <summary>보스가 얼마나 가까운가 0~1 (25m 밖 0). 가로등 떨림도 이 값을 쓴다.</summary>
         public static float BossNear;
+
     }
 }
