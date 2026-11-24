@@ -197,6 +197,7 @@ namespace Hunt.Core
             cam.backgroundColor = RenderSettings.fogColor;
             cam.clearFlags = CameraClearFlags.SolidColor;
             camGo.AddComponent<AudioListener>();
+            camGo.AddComponent<EarRing>(); // 폭발 귀 울림 · 생명이 낮을 때 먹먹함
             cam.cullingMask &= ~(1 << GunModelBuilder.ViewLayer);
             ActiveCamera = cam;
 

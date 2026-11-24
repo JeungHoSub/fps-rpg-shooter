@@ -11,6 +11,7 @@ namespace Hunt.Core
         AudioLowPassFilter filter;
         AudioSource ring; // 먹먹함 필터를 건너뛰는 귀 울림 전용 (안 그러면 '삐' 소리까지 먹먹해진다)
         float amount; // 0~1
+        float lowHp;  // 생명이 낮을 때 먹먹함 (0~0.55)
 
         public static void Hit(float strength)
         {
@@ -46,9 +47,15 @@ namespace Hunt.Core
             var gm = GameManager.Instance;
             if (gm != null && gm.Paused) return;
             amount = Mathf.MoveTowards(amount, 0f, Time.deltaTime * 0.55f);
+            // 생명이 20% 아래면 소리가 조금씩 멀어진다 (심장 소리와 함께 긴장감)
+            var p = gm != null ? gm.Player : null;
+            float low = 0f;
+            if (p != null && !p.IsDead && p.MaxHp > 0f) low = Mathf.Clamp01((0.2f - p.Hp / p.MaxHp) / 0.2f) * 0.55f;
+            lowHp = Mathf.MoveTowards(lowHp, low, Time.deltaTime * 0.8f);
+            float k = Mathf.Max(amount, lowHp);
             // 22000Hz(평소) ↔ 700Hz(먹먹)
-            filter.cutoffFrequency = Mathf.Lerp(22000f, 700f, amount * amount * (3f - 2f * amount));
-            filter.enabled = amount > 0.001f;
+            filter.cutoffFrequency = Mathf.Lerp(22000f, 700f, k * k * (3f - 2f * k));
+            filter.enabled = k > 0.001f;
         }
     }
 }
