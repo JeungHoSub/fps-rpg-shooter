@@ -66,4 +66,38 @@ namespace Hunt.Core
             if (t >= life) Destroy(gameObject);
         }
     }
+
+    /// <summary>혼불: 망자가 쓰러지면 푸르스름한 작은 불이 몸에서 빠져나와 흔들리며 떠오르다 사라진다 (1.6초).</summary>
+    public class SoulWisp : MonoBehaviour
+    {
+        float t;
+        Vector3 drift;
+
+        public static void Spawn(Vector3 at)
+        {
+            if (QualityManager.Level == GfxLevel.Low && Random.value < 0.5f) return;
+            var o = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            Object.Destroy(o.GetComponent<Collider>());
+            o.name = "혼불";
+            o.layer = 2;
+            if (Effects.Root != null) o.transform.SetParent(Effects.Root, true);
+            o.transform.position = at;
+            o.transform.localScale = Vector3.one * 0.15f;
+            var r = o.GetComponent<Renderer>();
+            r.sharedMaterial = FX.UnlitMaterial(new Color(0.55f, 0.8f, 1f, 0.7f));
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            r.receiveShadows = false;
+            var w = o.AddComponent<SoulWisp>();
+            w.drift = new Vector3(Random.Range(-0.3f, 0.3f), 0f, Random.Range(-0.3f, 0.3f));
+        }
+
+        void Update()
+        {
+            t += Time.deltaTime;
+            float k = t / 1.6f;
+            transform.position += (Vector3.up * 1.1f + drift + new Vector3(Mathf.Sin(t * 6f) * 0.4f, 0f, 0f)) * Time.deltaTime;
+            transform.localScale = Vector3.one * 0.15f * (1f - k) * (0.8f + 0.2f * Mathf.Sin(t * 20f));
+            if (k >= 1f) Destroy(gameObject);
+        }
+    }
 }

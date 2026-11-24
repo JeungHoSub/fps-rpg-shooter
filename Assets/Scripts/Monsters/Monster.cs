@@ -884,6 +884,7 @@ namespace Hunt.Monsters
             if (GameManager.Instance != null) GameManager.Instance.OnMonsterKilled(this);
             FX.BloodBurst(transform.position + Vector3.up * Data.scale, new Color(0.4f, 0.05f, 0.08f), Data.scale);
             if (Data.id == "z_bloat") BloatBurst();
+            SoulWisp.Spawn(transform.position + Vector3.up * 1.2f * Data.scale); // 혼불이 빠져나간다
             FX.BloodPool(transform.position, Data.scale); // 쓰러진 자리에 피가 번진다
             // 머리를 맞히지 않고 쓰러뜨린 평범한 망자는 가끔(12%) 4초 뒤 다시 일어난다 — "망자는 머리를 날려야 눕는다"
             if (!IsBoss && !directKill && !NoRevive && lastZone != HitZone.Head && Data.archetype == MonsterArchetype.Runner && !revenant
