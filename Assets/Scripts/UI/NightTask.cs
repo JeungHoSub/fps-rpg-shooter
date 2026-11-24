@@ -31,6 +31,8 @@ namespace Hunt.UI
         }
 
         public static void End() { active = false; }
+        /// <summary>새벽 기록용: 이번 밤 의뢰 이름과 이뤘는지.</summary>
+        public static string Summary => goal > 0 ? $"의뢰 ({Text})  <b>{(done ? "이뤘다" : "못 이뤘다")}</b>" : null;
 
         static int Progress(PlayerCharacter p)
         {
