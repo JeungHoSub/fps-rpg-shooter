@@ -136,7 +136,7 @@ namespace Hunt.Stats
         /// <summary>벽 관통 깊이(m): 총의 관통력 × 기술. 저격총(0.8)+기본 기술이면 약 0.7m (돌담 0.6m를 뚫음).</summary>
         public float WallPenetration(float weaponPenetration) => (0.1f + weaponPenetration * 0.75f) * Mathf.Max(0.7f, 1f + (TEC - 8f) * 0.03f);
         /// <summary>수류탄·지뢰·설치물 피해: 기본보다 1 높을 때마다 +3%.</summary>
-        public float GadgetDamageMult => Mathf.Max(0.8f, 1f + (TEC - 8f) * 0.03f);
+        public float GadgetDamageMult => Mathf.Max(0.8f, 1f + (TEC - 8f) * 0.03f) * (Has(Trait.Demolitionist) ? 1.35f : 1f);
         public float AbilityDurationMult => (1f + TEC * 0.01f) * (Has(Trait.MutantAffinity) ? 1.25f : 1f);
 
         /// <summary>총 장비 무게가 허용치를 넘으면 0.5까지 감소하는 배율.</summary>

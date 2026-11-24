@@ -78,7 +78,7 @@ namespace Hunt.Player
         float kitTime;
 
         /// <summary>치료 키트 회복량: 최대 체력의 45% + 25.</summary>
-        public float KitHeal => MaxHp * 0.45f + 25f;
+        public float KitHeal => (MaxHp * 0.45f + 25f) * (Stats.Has(Trait.Herbalist) ? 1.4f : 1f);
 
         void Update()
         {

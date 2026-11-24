@@ -17,6 +17,9 @@ namespace Hunt.Stats
         Scavenger,      // 수집가
         QuickHands,     // 빠른 손
         Heavyweight,    // 장사
+        Demolitionist,  // 화약쟁이
+        Herbalist,      // 약초꾼
+        Headhunter,     // 머리 사냥꾼
     }
 
     public static class Traits
@@ -36,6 +39,9 @@ namespace Hunt.Stats
                 case Trait.MutantAffinity: return "역병 친화";
                 case Trait.Scavenger: return "넝마주이";
                 case Trait.QuickHands: return "빠른 손";
+                case Trait.Demolitionist: return "화약쟁이";
+                case Trait.Herbalist: return "약초꾼";
+                case Trait.Headhunter: return "머리 사냥꾼";
                 default: return "장사";
             }
         }
@@ -51,6 +57,9 @@ namespace Hunt.Stats
                 case Trait.MutantAffinity: return "역병 능력 비용 -25%, 지속 시간 +25%";
                 case Trait.Scavenger: return "엽전 +30%, 부품 줍는 확률 +40%";
                 case Trait.QuickHands: return "장전·무기 교체 25% 빨라짐";
+                case Trait.Demolitionist: return "수류탄·지뢰·설치형 기관총 피해 +35%";
+                case Trait.Herbalist: return "치료 키트 회복 +40%, 치유 부적 회복 +50%";
+                case Trait.Headhunter: return "머리 피해 ×2 → ×2.6";
                 default: return "소지 무게 한도 +40%, 칼 피해 +25%";
             }
         }

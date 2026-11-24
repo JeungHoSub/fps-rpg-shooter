@@ -92,6 +92,7 @@ namespace Hunt.Player
             if (gm == null || !gm.IsWorldRunning || player == null || player.IsDead || Current == null) return;
             float dt = Time.deltaTime;
             bool input = gm.AcceptsGameplayInput;
+            Hunt.Combat.DamageCalculator.PlayerHeadBonus = player.Stats.Has(Hunt.Stats.Trait.Headhunter) ? 0.6f : 0f; // 기질 '머리 사냥꾼'
             // 자동 사격 (터치 조작): 조준점에 망자가 있으면 방아쇠를 당긴 것으로 친다
             GameInput.AutoTarget = input && GameInput.Mobile && GameSettings.AutoFire && Mode == Hand.Gun
                                    && !player.IsUsingItem && AutoFireTarget();

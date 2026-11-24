@@ -33,6 +33,7 @@ namespace Hunt.UI
 
         public static readonly string[] WhatsNew =
         {
+            "새 기질 3가지: 화약쟁이(폭발물 +35%) · 약초꾼(키트·부적 회복↑) · 머리 사냥꾼(머리 피해 ×2.6)",
             "새 망자 '곡하는 망자'(셋째 밤~) — 발견하면 울부짖어 주변 망자를 부른다, 먼저 쏴라",
             "새 망자 '터지는 망자' — 죽으면 터져서 주변 망자까지 다치게 한다 (가까이서 잡지 말 것)",
             "망자가 땅을 헤치고 기어 나온다 · 물기 직전 동작이 보여 피할 수 있다",
@@ -42,7 +43,6 @@ namespace Hunt.UI
             "E로 보급품 줍기 · 치유 부적(힐링룬) · 새 탄창 모양",
             "머리를 맞히면 갓이 날아간다 · 벽에 튀는 피",
             "다섯째 밤 최종 보스 '역병 대감' · 승리 화면",
-            "폭발 연출 · 귀 울림 · 망자가 폭발에 밀려난다",
         };
 
         // ------------------------------------------------------------------ 스탯
@@ -125,6 +125,9 @@ namespace Hunt.UI
                 case Trait.MutantAffinity: return "병";
                 case Trait.Scavenger: return "줍";
                 case Trait.QuickHands: return "손";
+                case Trait.Demolitionist: return "화";
+                case Trait.Herbalist: return "약";
+                case Trait.Headhunter: return "머";
                 default: return "짐";
             }
         }
@@ -140,6 +143,9 @@ namespace Hunt.UI
                 case Trait.MutantAffinity: return "\"내 피에도 그것이 섞여 있다. 그렇다면 쓰겠다.\"";
                 case Trait.Scavenger: return "\"죽은 이웃의 주머니를 뒤지는 건… 살기 위해서다.\"";
                 case Trait.QuickHands: return "\"탄창은 손이 먼저 기억한다.\"";
+                case Trait.Demolitionist: return "\"광산에서 남은 화약이 아직 창고에 있다.\"";
+                case Trait.Herbalist: return "\"뒷산 약초는 내 손바닥 보듯 안다.\"";
+                case Trait.Headhunter: return "\"망자는 머리를 날려야 눕는다. 할머니 말씀이다.\"";
                 default: return "\"쌀가마니 두 개쯤이야.\"";
             }
         }

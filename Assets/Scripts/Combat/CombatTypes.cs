@@ -70,6 +70,8 @@ namespace Hunt.Combat
     public static class DamageCalculator
     {
         public const float HeadMultiplier = 2f;
+        /// <summary>플레이어 기질 '머리 사냥꾼'이면 머리 배율에 더해진다 (PlayerWeapons가 쏘기 전에 맞춘다).</summary>
+        public static float PlayerHeadBonus;
         public const float WeakPointMultiplier = 3f;
         public const float LegMultiplier = 0.75f;
 
@@ -77,7 +79,7 @@ namespace Hunt.Combat
         {
             switch (zone)
             {
-                case HitZone.Head: return HeadMultiplier;
+                case HitZone.Head: return HeadMultiplier + PlayerHeadBonus;
                 case HitZone.WeakPoint: return WeakPointMultiplier * (1f + weakPointBonus);
                 case HitZone.Leg: return LegMultiplier;
                 default: return 1f;

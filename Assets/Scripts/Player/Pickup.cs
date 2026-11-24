@@ -332,7 +332,7 @@ namespace Hunt.Player
                 case PickupKind.Rune:
                 {
                     float before = p.Hp;
-                    p.Heal(p.MaxHp * RuneHeal);
+                    p.Heal(p.MaxHp * RuneHeal * (p.Stats.Has(Hunt.Stats.Trait.Herbalist) ? 1.5f : 1f));
                     GameHud.OnPickup(HudIcons.Icon.Heart, c, $"치유 부적  생명 +{p.Hp - before:0}");
                     SFX.PlayPitched(SFX.LevelUp, 0.35f, 1.35f); // 맑은 방울 소리
                     GameHud.HealFlash = 1f;
