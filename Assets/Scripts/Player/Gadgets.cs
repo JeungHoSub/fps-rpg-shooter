@@ -301,6 +301,7 @@ namespace Hunt.Player
                     Vector3 d = m.transform.position - transform.position; d.y = 0f;
                     if (d.sqrMagnitude > r2) continue;
                     m.ApplyDirectDamage(dps * 0.4f, DamageType.Fire);
+                    m.Ignite(dps * 0.35f); // 불바다를 빠져나가도 잠깐 더 탄다
                     m.Alert(5f);
                 }
                 if (owner != null && !owner.IsDead)

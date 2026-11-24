@@ -628,8 +628,45 @@ namespace Hunt.Monsters
             }
         }
 
+        /// <summary>불을 붙인다 (화염병 불바다 등): 3초 동안 타오른다.</summary>
+        public void Ignite(float dps) { burnDps = Mathf.Max(burnDps, dps); burnTime = Mathf.Max(burnTime, 3f); }
+
+        // 타는 동안 몸에 붙는 불꽃 (도형 3개, 처음 탈 때 만든다)
+        Transform[] burnFx;
+
+        void UpdateBurnFx()
+        {
+            bool on = burnTime > 0f && !IsDead;
+            if (!on && burnFx == null) return;
+            if (burnFx == null)
+            {
+                burnFx = new Transform[3];
+                for (int i = 0; i < 3; i++)
+                {
+                    var f = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                    Destroy(f.GetComponent<Collider>());
+                    f.layer = 2;
+                    f.transform.SetParent(transform, false);
+                    f.transform.localPosition = new Vector3((i - 1) * 0.18f, (0.7f + i * 0.35f) * Data.scale, 0.05f);
+                    var r = f.GetComponent<Renderer>();
+                    r.sharedMaterial = FX.UnlitMaterial(i == 1 ? new Color(1f, 0.8f, 0.3f, 0.7f) : new Color(1f, 0.4f, 0.1f, 0.6f));
+                    r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                    burnFx[i] = f.transform;
+                }
+            }
+            for (int i = 0; i < burnFx.Length; i++)
+            {
+                if (burnFx[i] == null) continue;
+                if (burnFx[i].gameObject.activeSelf != on) burnFx[i].gameObject.SetActive(on);
+                if (!on) continue;
+                float h = (0.25f + 0.3f * Mathf.PerlinNoise(i * 2.3f, Time.time * 5f)) * Data.scale;
+                burnFx[i].localScale = new Vector3(0.22f * Data.scale, h, 0.22f * Data.scale);
+            }
+        }
+
         void TickStatus(float dt)
         {
+            UpdateBurnFx();
             if (slowTime > 0f) slowTime -= dt;
             if (burnTime <= 0f && poisonTime <= 0f) return;
 
