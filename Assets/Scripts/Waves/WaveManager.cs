@@ -156,7 +156,7 @@ namespace Hunt.Waves
             Survivor.PlaceForNight(root, player != null ? player.transform.position : Vector3.zero, n); // 다친 마을 사람 (둘째 밤부터 40%)
             // 셋째 밤부터: 밤마다 한 번 망자 떼가 마을을 가로질러 지나간다 (숨거나 싸우거나)
             hordeDone = n < 3 || Rule == RoundRule.Defense;
-            hordeJudged = true; horde.Clear(); secondHorde = false;
+            hordeJudged = true; horde.Clear(); secondHorde = false; HordeResult = null;
             hordeAt = Time.time + Random.Range(35f, 75f);
             if (n <= 2) HUD.Notify("마을 곳곳에 보급 상자 3개 — 노란 빛기둥을 찾아 E로 연다 (아래 나침반에 노란 점)", new Color(1f, 0.85f, 0.45f));
 
@@ -353,8 +353,9 @@ namespace Hunt.Waves
         void JudgeHorde()
         {
             hordeJudged = true;
-            if (horde.Count == 0 || Monster.GlobalRush || player == null || player.IsDead) return;
-            foreach (var m in horde) if (m != null && m.EverAlerted) return;
+            if (horde.Count == 0 || Monster.GlobalRush || player == null || player.IsDead) { HordeResult = "지나갔다"; return; }
+            foreach (var m in horde) if (m != null && m.EverAlerted) { HordeResult = "들켰다"; return; }
+            HordeResult = "몰래 보냈다";
             int gold = 30 + 5 * Wave;
             player.AddGold(gold);
             HUD.Notify($"망자 떼를 들키지 않고 보냈다 — 엽전 +{gold}", new Color(0.75f, 0.9f, 0.65f));
@@ -363,6 +364,8 @@ namespace Hunt.Waves
         }
         /// <summary>망자 떼가 나온 곳과 때 (나침반에 10초 동안 '떼').</summary>
         public static Vector3 HordeFrom;
+        /// <summary>새벽 기록용: 이번 밤 망자 떼 결과 (없으면 null).</summary>
+        public static string HordeResult;
         public static float HordeTime = -100f;
 
         /// <summary>망자 떼: 마을 한쪽 끝에서 나와 반대쪽 끝으로 지나간다 (소리를 쫓듯 뒤지며 걷는다 — 들키면 덮친다).</summary>

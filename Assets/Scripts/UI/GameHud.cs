@@ -1087,6 +1087,7 @@ namespace Hunt.UI
                     lv > 0 ? $"단계 상승  <b>+{lv}</b>" : null,
                     $"현상금 망자  <b>{(p.BountyThisNight ? "잡았다" : "놓쳤다")}</b>",
                     NightTask.Summary,
+                    WaveManager.HordeResult != null ? $"망자 떼  <b>{WaveManager.HordeResult}</b>" : null,
                     Survivor.PresentThisNight ? $"다친 마을 사람  <b>{(Survivor.SavedThisNight ? "구했다" : Survivor.LostThisNight ? "잃었다" : "못 찾았다")}</b>" : null,
                     p.RunSilent > nightSilent0 || p.RunHidden > nightHidden0 ? $"몰래  소리 없는 처치 <b>{p.RunSilent - nightSilent0}</b> · 숨어 보낸 망자 <b>{p.RunHidden - nightHidden0}</b>" : null,
                     SupplyCrate.PlacedThisNight > 0 ? $"연 보급 상자  <b>{SupplyCrate.OpenedThisNight} / {SupplyCrate.PlacedThisNight}</b>" : null,
