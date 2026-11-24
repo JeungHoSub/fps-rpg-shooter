@@ -52,6 +52,9 @@ namespace Hunt.Player
             var done = new HashSet<Monster>();
             foreach (var h in hits)
             {
+                // 근처 가스통·드럼통도 불붙어 연쇄로 터진다
+                var prop = h.GetComponentInParent<ExplosiveProp>();
+                if (prop != null) prop.Hit(9999f, true);
                 var part = h.GetComponent<MonsterPart>();
                 if (part == null || part.owner == null || part.owner.IsDead || !done.Add(part.owner)) continue;
                 float d = Vector3.Distance(point, part.owner.transform.position);
