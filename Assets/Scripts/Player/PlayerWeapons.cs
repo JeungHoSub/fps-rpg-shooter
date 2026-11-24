@@ -311,6 +311,24 @@ namespace Hunt.Player
             player.InterruptItem();
             SFX.Play(SFX.Swing, 0.7f, 0.1f);
             Noise.Emit(player.transform.position, 2f, true); // 칼은 조용하다
+            // 앞쪽 3.2m 안(시야 35° 안)에 망자가 있으면 그쪽으로 한 걸음 파고든다 — 칼이 허공을 가르지 않게
+            Vector3 fwd = Vector3.ProjectOnPlane(cam.transform.forward, Vector3.up).normalized;
+            Monster lungeTo = null;
+            float bestD = 3.2f;
+            foreach (var m in Monster.Alive)
+            {
+                if (m == null || m.IsDead) continue;
+                Vector3 to = m.transform.position - player.transform.position; to.y = 0f;
+                float d = to.magnitude;
+                if (d < 1.4f || d > bestD) continue; // 이미 닿는 거리면 그대로
+                if (Vector3.Angle(fwd, to) > 35f) continue;
+                bestD = d; lungeTo = m;
+            }
+            if (lungeTo != null)
+            {
+                Vector3 to = lungeTo.transform.position - player.transform.position; to.y = 0f;
+                player.Controller.Knock(to.normalized * Mathf.Clamp((bestD - 1.1f) * 5f, 3f, 10f));
+            }
         }
 
         void UpdateMelee(float dt)
