@@ -1081,6 +1081,18 @@ namespace Hunt.UI
                 Mutter(nightLines[Random.Range(0, nightLines.Length)]);
                 dawnShown = -100f;
                 nightBanner = Time.unscaledTime; // 밤이 시작될 때 큰 제목
+                // 둘째 밤 처음 한 번: 몰래 하는 법 (판을 여러 번 해도 한 번만)
+                if (gm.Waves != null && gm.Waves.Wave == 2 && !GameInput.Mobile)
+                {
+                    bool told = false;
+                    try { told = PlayerPrefs.GetInt("hunt.tut.stealth", 0) == 1; } catch { }
+                    if (!told)
+                    {
+                        try { PlayerPrefs.SetInt("hunt.tut.stealth", 1); PlayerPrefs.Save(); } catch { }
+                        HUD.Notify("몰래 하기: 큰 덤불에서 Ctrl로 앉고 손전등(F)을 끄면 숨는다 · Shift = 숨 참기", new Color(0.75f, 0.85f, 0.65f));
+                        HUD.Notify("B로 돌을 던져 망자를 꾀고, 등 뒤로 다가가 V로 한 번에 · 머리 위 '…'이 뜨면 물러서라", new Color(0.75f, 0.85f, 0.65f));
+                    }
+                }
             }
             else if (gm.State == GameState.Intermission && nightLastState == GameState.Playing)
             {
