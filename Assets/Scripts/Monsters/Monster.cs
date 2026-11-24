@@ -421,6 +421,7 @@ namespace Hunt.Monsters
             if (IsDead) return default;
 
             HitZone zone = part.zone;
+            lastZone = zone; directKill = false;
             HitZone calcZone = zone == HitZone.Armor ? HitZone.Body : zone;
             float dmg = DamageCalculator.Calculate(info, calcZone, resist[(int)info.type], defense, out bool crit);
 
@@ -535,6 +536,10 @@ namespace Hunt.Monsters
         }
 
         bool hatGone;
+        HitZone lastZone = HitZone.Body;
+        bool directKill;
+        /// <summary>한 번 다시 일어난 망자 (두 번은 안 일어난다).</summary>
+        public bool revenant;
 
         /// <summary>머리를 맞으면 갓·상투 장식이 총알 방향으로 날아간다 (한 번만).</summary>
         public void KnockOffHat(Vector3 dir)
@@ -575,6 +580,7 @@ namespace Hunt.Monsters
         public bool ApplyDirectDamage(float amount, DamageType type, bool showNumber = true)
         {
             if (IsDead) return false;
+            directKill = true; // 폭발·불 등으로 죽으면 다시 일어나지 않는다
             amount *= 1f - Mathf.Clamp(resist[(int)type], -1f, 0.9f);
             alertTime = Mathf.Max(alertTime, 8f);
             if (showNumber) DamageNumbers.Spawn(transform.position + Vector3.up * 1.5f * Data.scale, amount, false, HitZone.Body, type);
@@ -767,6 +773,10 @@ namespace Hunt.Monsters
             FX.BloodBurst(transform.position + Vector3.up * Data.scale, new Color(0.4f, 0.05f, 0.08f), Data.scale);
             if (Data.id == "z_bloat") BloatBurst();
             FX.BloodPool(transform.position, Data.scale); // 쓰러진 자리에 피가 번진다
+            // 머리를 맞히지 않고 쓰러뜨린 평범한 망자는 가끔(12%) 4초 뒤 다시 일어난다 — "망자는 머리를 날려야 눕는다"
+            if (!IsBoss && !directKill && lastZone != HitZone.Head && Data.archetype == MonsterArchetype.Runner && !revenant
+                && (Data.id == "z_basic" || Data.id == "z_tank" || Data.id == "z_gnaw") && Random.value < 0.12f && WaveManager.Instance != null)
+                WaveManager.Instance.Revive(Data, transform.position);
             if (rig != null && rig.Pivot != null)
             {
                 // 판정체·급소 제거 후 그 자세로 쓰러진다

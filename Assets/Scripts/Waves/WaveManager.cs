@@ -477,6 +477,27 @@ namespace Hunt.Waves
             else gm.OnWaveCleared();
         }
 
+        static bool toldRevive;
+
+        /// <summary>쓰러진 망자가 4초 뒤 그 자리에서 다시 일어난다 (체력 절반). 그 사이 밤이 끝나면 없던 일.</summary>
+        public void Revive(MonsterData d, Vector3 at) { StartCoroutine(ReviveLater(d, at)); }
+
+        System.Collections.IEnumerator ReviveLater(MonsterData d, Vector3 at)
+        {
+            yield return new WaitForSeconds(4f);
+            if (!Spawning || Stage == RoundStage.Cleared) yield break;
+            var evo = EvolutionDirector.Instance != null ? EvolutionDirector.Instance.Profile : new EvolutionProfile();
+            float hpScale = (1f + 0.12f * (Wave - 1)) * 0.5f * GameSettings.DiffHp;
+            var m = MonsterFactory.Create(d, Navigation.Snap(at, 2f), evo, hpScale, player, root);
+            if (m == null) yield break;
+            m.revenant = true;
+            m.AddDefense(DefenseBonus(MonsterArchetype.Runner));
+            m.DamageScale = Mathf.Min(1.6f, 1f + 0.05f * (Wave - 1)) * GameSettings.DiffDamage;
+            m.Alert(12f);
+            m.Emerge(1.1f); // 땅에서 몸을 일으킨다
+            if (!toldRevive) { toldRevive = true; HUD.Notify("쓰러졌던 망자가 다시 일어난다 — 머리를 맞혀 쓰러뜨리면 다시 못 일어난다", new Color(1f, 0.55f, 0.4f)); }
+        }
+
         /// <summary>보스를 쓰러뜨리면: 잠깐 느려지며 쓰러지는 걸 보여 준 뒤(2.5초) 날이 밝는다.</summary>
         System.Collections.IEnumerator BossFallThenDawn(GameManager gm, Vector3 at)
         {
