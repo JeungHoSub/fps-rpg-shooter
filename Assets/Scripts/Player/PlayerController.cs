@@ -102,7 +102,7 @@ namespace Hunt.Player
             Vector3 eye = cam.transform.position, fwd = cam.transform.forward;
             foreach (var m in Monster.Alive)
             {
-                if (m == null || m.IsDead) continue;
+                if (m == null || m.IsDead || m.Lurking) continue; // 덤불 속 매복은 조준 보조 대상 아님
                 Vector3 p = m.transform.position + Vector3.up * 1.25f * m.Data.scale;
                 Vector3 d = p - eye;
                 float dist = d.magnitude;
