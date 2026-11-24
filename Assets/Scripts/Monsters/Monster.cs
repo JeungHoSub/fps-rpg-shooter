@@ -601,6 +601,7 @@ namespace Hunt.Monsters
                 {
                     float k = 1f - d / radius;
                     p.LastAttacker = Data.displayName;
+                    p.DeathCause = "터진 망자의 고름을 뒤집어쓰고 쓰러짐";
                     p.TakeDamage(Data.attackDamage * DamageScale * (0.6f + 1.4f * k), Data.infectionPerHit * 2f, at);
                     p.Controller.AddShake(2f * k + 0.5f);
                 }
