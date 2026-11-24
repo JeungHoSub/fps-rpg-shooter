@@ -711,13 +711,13 @@ namespace Hunt.Monsters
             lurkEyes = new GameObject("LurkEyes");
             lurkEyes.transform.SetParent(transform, false);
             lurkEyes.transform.localPosition = Vector3.up * 0.75f / s;
-            foreach (float sx in new[] { -0.07f, 0.07f })
+            foreach (float sx in new[] { -0.09f, 0.09f })
             {
                 var e = FX.LowSphere();
                 e.layer = 2;
                 e.transform.SetParent(lurkEyes.transform, false);
                 e.transform.localPosition = new Vector3(sx / s, 0f, 0f);
-                e.transform.localScale = Vector3.one * 0.045f / s;
+                e.transform.localScale = Vector3.one * 0.07f / s;
                 var r = e.GetComponent<Renderer>();
                 r.sharedMaterial = FX.UnlitMaterial(new Color(1f, 0.15f, 0.08f));
                 r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
