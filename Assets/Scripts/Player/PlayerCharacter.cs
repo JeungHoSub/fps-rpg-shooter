@@ -28,6 +28,8 @@ namespace Hunt.Player
         public int BestStreak { get; set; }
         /// <summary>이번 밤 현상금 망자를 잡았나 (새벽 기록).</summary>
         public bool BountyThisNight { get; set; }
+        /// <summary>이번 밤이 시작될 때의 받은 피해 합계 (상처 없는 새벽 판정).</summary>
+        public float NightStartDamage { get; set; }
         /// <summary>마지막으로 나를 문 망자 이름 (사망 화면용).</summary>
         public string LastAttacker { get; set; }
         public float HurtFlash { get; private set; }

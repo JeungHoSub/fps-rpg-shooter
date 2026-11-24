@@ -255,6 +255,13 @@ namespace Hunt.Core
                 if (Waves.Wave >= 1) Achievements.Unlock("night1");
                 if (Waves.Wave >= 10) Achievements.Unlock("night10");
                 if (Waves.IsBossWave) Achievements.Unlock("daegam");
+                if (Player.DamageTaken - Player.NightStartDamage < 10f)
+                {
+                    int bonus = 30 + 10 * Waves.Wave;
+                    Player.AddGold(bonus);
+                    HUD.Notify($"상처 없이 밤을 넘겼다 — 엽전 +{bonus}", new Color(0.7f, 1f, 0.75f));
+                    Achievements.Unlock("flawless");
+                }
             }
             if (!failed) HUD.Notify($"{GameHud.NightName(Waves.Wave)}을 버텼다 — 날이 밝는다" + (reward > 1f ? $"  (변고 보상 ×{reward:0.00})" : ""), new Color(0.5f, 1f, 0.6f));
             if (LastEvolution.Count > 0) HUD.Notify("망자들이 당신의 사냥법을 배웠다… (서낭당 · 역병 일지)", new Color(0.85f, 0.4f, 1f));

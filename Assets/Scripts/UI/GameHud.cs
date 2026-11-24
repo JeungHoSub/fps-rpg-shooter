@@ -852,6 +852,7 @@ namespace Hunt.UI
                 nightDmg0 = p.DamageTaken; nightStart = Time.time;
                 p.BestStreak = 0;
                 p.BountyThisNight = false;
+                p.NightStartDamage = p.DamageTaken;
                 dawnShown = -100f;
                 nightBanner = Time.unscaledTime; // 밤이 시작될 때 큰 제목
             }
