@@ -394,6 +394,21 @@ namespace Hunt.Player
         public static readonly System.Collections.Generic.List<SentryTurret> Active = new System.Collections.Generic.List<SentryTurret>();
         public float Life => life;
         public int Ammo => ammo;
+
+        /// <summary>플레이어 2m 안의 기관총 (E로 거두기).</summary>
+        public static SentryTurret NearestToPlayer()
+        {
+            var gm = GameManager.Instance;
+            var p = gm != null ? gm.Player : null;
+            if (p == null || p.IsDead) return null;
+            foreach (var t in Active)
+            {
+                if (t == null) continue;
+                Vector3 d = t.transform.position - p.transform.position; d.y = 0f;
+                if (d.sqrMagnitude < 4f) return t;
+            }
+            return null;
+        }
         void OnEnable() { Active.Add(this); }
         void OnDisable() { Active.Remove(this); }
         float damage;
@@ -455,6 +470,21 @@ namespace Hunt.Player
             float dt = Time.deltaTime;
             life -= dt;
             if (life <= 0f || ammo <= 0) { FX.ImpactWorld(head.position, Vector3.up); Destroy(gameObject); return; }
+            // E: 가까이서 거둬 다시 가방에 넣는다 (반 넘게 남았을 때만 — 아니면 고장 나서 못 쓴다)
+            if (gm.AcceptsGameplayInput && GameInput.PickupDown && ReferenceEquals(NearestToPlayer(), this))
+            {
+                var pl = gm.Player;
+                int gi = (int)GadgetType.Turret;
+                if (life > MaxLife * 0.5f && ammo > MaxAmmo / 2 && pl.Weapons.GadgetCount[gi] < Gadgets.MaxCarry(GadgetType.Turret))
+                {
+                    pl.Weapons.GadgetCount[gi]++;
+                    Hunt.UI.HUD.Notify("설치형 기관총을 거뒀다", new Color(0.8f, 0.9f, 1f));
+                    SFX.Play(SFX.Rack, 0.7f);
+                    Destroy(gameObject);
+                    return;
+                }
+                Hunt.UI.HUD.Notify("너무 오래 써서 거둘 수 없다 (반 넘게 남았을 때만)", new Color(0.7f, 0.68f, 0.64f));
+            }
 
             seekTimer -= dt;
             if (seekTimer <= 0f || target == null || target.IsDead)
