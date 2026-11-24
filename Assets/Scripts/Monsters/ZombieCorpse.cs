@@ -16,6 +16,19 @@ namespace Hunt.Monsters
         PlayableGraph graph;
         AnimationClipPlayable deathPlayer;
         float deathLength = -1f;
+        bool sinking;
+
+        /// <summary>가라앉기 시작하면 그림자를 끈다 (내장 그래픽 부담 줄이기).</summary>
+        void StartSink()
+        {
+            if (sinking) return;
+            sinking = true;
+            foreach (var r in GetComponentsInChildren<Renderer>())
+            {
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                r.receiveShadows = false;
+            }
+        }
 
         public void Begin(Vector3 hitDir, float unit, AnimationClip deathClip = null, Animator animator = null)
         {
@@ -60,7 +73,7 @@ namespace Hunt.Monsters
                 if (graph.IsValid() && deathPlayer.GetTime() >= deathLength) { deathPlayer.SetTime(deathLength); deathPlayer.SetSpeed(0); }
                 var p = startPos + slide * Mathf.Clamp01(t / 0.8f);
                 float sinkAt = deathLength + 2f;
-                if (t > sinkAt) p.y -= (t - sinkAt) * 0.5f * unit;
+                if (t > sinkAt) { StartSink(); p.y -= (t - sinkAt) * 0.5f * unit; }
                 transform.position = p;
                 if (t > sinkAt + 2f) Destroy(gameObject);
                 return;
@@ -72,7 +85,7 @@ namespace Hunt.Monsters
             transform.rotation = Quaternion.AngleAxis(ang, axis) * startRot;
             var pos = startPos + slide * Mathf.Clamp01(t / 0.5f);
             // 3초 뒤 가라앉기
-            if (t > 3f) pos.y -= (t - 3f) * 0.5f * unit;
+            if (t > 3f) { StartSink(); pos.y -= (t - 3f) * 0.5f * unit; }
             transform.position = pos;
             if (t > 5f) Destroy(gameObject);
         }
