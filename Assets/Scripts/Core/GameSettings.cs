@@ -22,6 +22,16 @@ namespace Hunt.Core
             set { volume = Mathf.Clamp01(value); AudioListener.volume = volume.Value; Save(VolKey, volume.Value); }
         }
 
+        const string FovKey = "hunt.fov";
+        static float? fov;
+
+        /// <summary>시야각 (65~95, 기본 75). 넓히면 주변이 잘 보이지만 멀리 있는 망자가 작아진다.</summary>
+        public static float Fov
+        {
+            get { if (fov == null) fov = Mathf.Clamp(Load(FovKey, 75f), 65f, 95f); return fov.Value; }
+            set { fov = Mathf.Clamp(Mathf.Round(value), 65f, 95f); Save(FovKey, fov.Value); }
+        }
+
         // ---- 모바일 ----
         // PreviewKey2: 예전 키에 '켜짐'이 저장돼 있어도 PC 기본(꺼짐)으로 시작하도록 새 키 사용
         const string AutoFireKey = "hunt.autofire", AssistKey = "hunt.aimassist", PreviewKey2 = "hunt.mobilepreview2";

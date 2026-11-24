@@ -9,7 +9,8 @@ namespace Hunt.Player
     public class PlayerController : MonoBehaviour
     {
         public const float EyeHeight = 1.65f;
-        public const float BaseFov = 75f;
+        /// <summary>기본 시야각 — Esc 메뉴 '시야각' 설정.</summary>
+        public static float BaseFov => GameSettings.Fov;
 
         public float jumpSpeed = 5.5f;
 
