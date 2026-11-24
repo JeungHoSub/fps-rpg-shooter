@@ -1,0 +1,9 @@
+역병의 마을 — 최신 버전으로 업데이트하는 방법 (Windows PowerShell)
+
+1. 유니티를 켜 둔 채로, Windows 키 → powershell 입력 → Enter
+2. 아래 한 줄을 통째로 복사 → PowerShell 창에 우클릭(붙여넣기) → Enter
+3. "업데이트 완료"가 뜨면 유니티 창을 클릭 → 불러오기(진행 막대)가 끝날 때까지 기다린 뒤 ▶
+
+$desk = [Environment]::GetFolderPath('Desktop'); $dest = Join-Path $desk 'fps-rpg-shooter'; $zip = Join-Path $env:TEMP 'fps-rpg-shooter.zip'; $tmp = Join-Path $env:TEMP 'fps-extract'; Invoke-WebRequest 'https://github.com/JeungHoSub/fps-rpg-shooter/archive/refs/heads/main.zip' -OutFile $zip; if (Test-Path $tmp) { Remove-Item $tmp -Recurse -Force }; Expand-Archive $zip -DestinationPath $tmp; robocopy (Join-Path $tmp 'fps-rpg-shooter-main') $dest /E /NFL /NDL /NJH /NJS | Out-Null; Write-Host "업데이트 완료: $dest"
+
+참고: 덮어쓰기 방식이라 예전에 지워진 파일은 남아 있어도 괜찮습니다.
