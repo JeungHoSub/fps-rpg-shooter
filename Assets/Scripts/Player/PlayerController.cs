@@ -208,6 +208,16 @@ namespace Hunt.Player
                 jx += (Mathf.PerlinNoise(tt * 0.45f, 11f) * 2f - 1f) * scopeSwayAmp * 1.4f;
                 jy += (Mathf.PerlinNoise(23f, tt * 0.5f) * 2f - 1f) * scopeSwayAmp + Mathf.Sin(tt * 1.6f) * scopeSwayAmp * 0.35f;
             }
+            else if (IsCrouching && !GameInput.Mobile && Hiding.InBush(transform.position))
+            {
+                // 덤불에 숨어 Shift: 숨을 참는다 (망자가 더 가까이 와야 안다, 4초)
+                bool hold = GameInput.Sprint && BreathHold > 0f && !breathSpent;
+                if (hold) { BreathHold = Mathf.Max(0f, BreathHold - dt); if (BreathHold <= 0f) { breathSpent = true; SFX.Play(SFX.Breath, 0.5f, 0f); } } // 참다 못해 헐떡
+                else BreathHold = Mathf.Min(BreathMax, BreathHold + dt * 0.7f);
+                if (breathSpent && !GameInput.Sprint && BreathHold > BreathMax * 0.35f) breathSpent = false;
+                HoldingBreath = hold;
+                scopeSwayAmp = 0f;
+            }
             else
             {
                 HoldingBreath = false;

@@ -232,7 +232,7 @@ namespace Hunt.Player
                     if (near < 6f)
                     {
                         float k = 1f - near / 6f;
-                        SFX.Play(SFX.Heartbeat, 0.25f + 0.45f * k, 0f);
+                        SFX.Play(SFX.Heartbeat, (0.25f + 0.45f * k) * (Controller.HoldingBreath ? 1.3f : 1f), 0f); // 숨을 참으면 심장 소리가 더 크게 들린다
                         heartTimer = Mathf.Lerp(1.0f, 0.6f, k);
                     }
                     else heartTimer = 0.4f;
