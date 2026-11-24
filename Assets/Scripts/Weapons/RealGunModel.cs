@@ -67,10 +67,10 @@ namespace Hunt.Weapons
             foreach (var cam in inst.GetComponentsInChildren<Camera>(true)) Object.Destroy(cam.gameObject);
             foreach (var l in inst.GetComponentsInChildren<Light>(true)) Object.Destroy(l);
 
-            // 사용자 요청 "총은 까매야지": 회색 텍스처를 검은 총철색으로 눌러 준다 (권총은 더 진하게)
-            Color body = spec.id == "service_pistol" ? new Color(0.36f, 0.36f, 0.38f) : new Color(0.62f, 0.6f, 0.6f);
-            var main = PropModels.Material(spec.id, body, 0.6f, false);
-            var acc = PropModels.Material(spec.id + "_acc", new Color(0.45f, 0.45f, 0.47f), 0.45f, false);
+            // 회색 총철 (사용자: 회색이 낫다) — 권총만 살짝 푸른 기를 더해 깔끔하게
+            Color body = spec.id == "service_pistol" ? new Color(0.88f, 0.9f, 0.95f) : Color.white;
+            var main = PropModels.Material(spec.id, body, 0.62f, false);
+            var acc = PropModels.Material(spec.id + "_acc", new Color(0.85f, 0.86f, 0.9f), 0.45f, false);
 
             Renderer triggerR = null, topR = null, actionR = null, magR = null;
             Bounds b = default;
