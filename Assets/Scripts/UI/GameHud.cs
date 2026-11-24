@@ -458,6 +458,13 @@ namespace Hunt.UI
                 float x = In(b) ? X(b) : (Mathf.DeltaAngle(yaw, b) > 0 ? r.xMax : r.x);
                 UIKit.Fill(new Rect(x - 4, r.y - 6, 8, 8), new Color(1f, 0.8f, 0.3f, In(b) ? 0.95f : 0.4f));
             }
+            // 사이렌을 울린 탑: 망자들이 몰려가는 곳
+            if (SirenTower.Instance != null && SirenTower.Instance.BeaconOn)
+            {
+                float b = Bearing(SirenTower.Instance.transform.position);
+                float x = In(b) ? X(b) : (Mathf.DeltaAngle(yaw, b) > 0 ? r.xMax : r.x);
+                UIKit.Text(new Rect(x - 14, r.y - 24, 28, 22), "탑", 15, new Color(1f, 0.4f, 0.3f, In(b) ? 1f : 0.55f), TextAnchor.MiddleCenter, serif: true, bold: true);
+            }
             // 다친 마을 사람: '사'
             foreach (var sv in Survivor.Active)
             {

@@ -36,6 +36,8 @@ namespace Hunt.Core
 
         Renderer beacon;
         float beaconT;
+        /// <summary>사이렌 뒤 붉은 등이 깜빡이는 중 (나침반에 '탑').</summary>
+        public bool BeaconOn => beaconT > 0f;
 
         void Update()
         {
