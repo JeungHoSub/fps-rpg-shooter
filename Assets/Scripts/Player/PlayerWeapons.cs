@@ -862,6 +862,8 @@ namespace Hunt.Player
                             if (res.killed)
                             {
                                 anyKill = true;
+                                // 코앞(2.5m)에서 쓰러뜨리면 피가 화면에 튄다 (피 표현 켰을 때)
+                                if (hit.distance + (range - left - hit.distance) < 2.5f && Random.value < 0.6f) GameHud.ScreenBlood(0.12f);
                                 if (!part.owner.IsBoss && part.owner.Data.archetype != Hunt.Data.MonsterArchetype.Runner) anyEliteKill = true;
                                 killPos = hit.point;
                                 // 머리·급소로 끝내면 크게 터진다
