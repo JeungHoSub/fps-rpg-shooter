@@ -137,10 +137,28 @@ namespace Hunt.UI
 
             DrawNotes(W);
             DrawFps(gm);
+            TryScreenshot();
             UIKit.DrawTooltip(W, H);
         }
 
         static bool showFps;
+
+        /// <summary>F12: 바탕화면 '역병의마을_사진' 폴더에 화면을 저장한다 (게임 화면을 보내 줄 때).</summary>
+        static void TryScreenshot()
+        {
+            if (Event.current.type != EventType.KeyDown || Event.current.keyCode != KeyCode.F12 || GameInput.Mobile) return;
+            Event.current.Use();
+            try
+            {
+                string dir = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.DesktopDirectory), "역병의마을_사진");
+                System.IO.Directory.CreateDirectory(dir);
+                string file = System.IO.Path.Combine(dir, "사진_" + System.DateTime.Now.ToString("MMdd_HHmmss") + ".png");
+                ScreenCapture.CaptureScreenshot(file);
+                Notify("사진을 찍었다 — 바탕화면 '역병의마을_사진' 폴더", new Color(0.8f, 0.9f, 1f));
+                SFX.Play(SFX.FlashlightClick, 0.6f);
+            }
+            catch (System.Exception e) { Notify("사진 저장 실패: " + e.Message, new Color(1f, 0.5f, 0.4f)); }
+        }
 
         /// <summary>F3: 왼쪽 위에 FPS·품질 (내장 그래픽에서 끊김 확인용).</summary>
         static void DrawFps(GameManager gm)
