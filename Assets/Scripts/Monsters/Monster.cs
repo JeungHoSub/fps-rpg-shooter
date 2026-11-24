@@ -243,6 +243,17 @@ namespace Hunt.Monsters
             {
                 move = PathDirection(target.transform.position, dir, dt);
             }
+            // 현상금 망자는 알아채면 도망친다 (16m 안) — 쫓아가 잡는 맛. 구석에 몰리면(가까우면) 덤빈다
+            if (IsBounty && alerted && dist < 16f && dist > 2.5f && target != null)
+            {
+                Vector3 away = transform.position - target.transform.position; away.y = 0f;
+                if (away.sqrMagnitude > 0.01f)
+                {
+                    Vector3 fleeTo = transform.position + away.normalized * 10f;
+                    move = PathDirection(fleeTo, away.normalized, dt);
+                    spd *= 1.15f;
+                }
+            }
             if (stagger > 0f) { stagger -= dt; move = Vector3.zero; }
             if (IsBoss && alerted) BossPattern(dt, dist, dir, ref move, ref spd);
 
