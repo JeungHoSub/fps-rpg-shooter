@@ -795,6 +795,15 @@ namespace Hunt.Monsters
             if (IsBoss) CheckBossPhase();
             if (Hp <= 0f)
             {
+                if (lurking)
+                {
+                    // 튀어나오기 전에 잡았다 (수류탄·화염병으로 덤불째)
+                    Achievements.Unlock("spotlurk");
+                    HUD.Notify("덤불 속 매복 망자를 먼저 잡았다", new Color(0.75f, 0.9f, 0.6f));
+                    lurking = false;
+                    if (lurkEyes != null) Destroy(lurkEyes);
+                    if (rig != null && rig.Pivot != null) rig.Pivot.localPosition = lurkBase;
+                }
                 Die();
                 return true;
             }
