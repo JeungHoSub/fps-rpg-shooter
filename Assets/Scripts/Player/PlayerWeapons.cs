@@ -400,7 +400,8 @@ namespace Hunt.Player
         bool kicking;
 
         int impactFrame;
-        float fovKick, lastAmbushNote = -100f;
+        float fovKick, lastAmbushNote = -100f, lastHeadKill = -100f;
+        int headChain;
         /// <summary>벽·땅 명중 소리 (한 프레임 한 번 — 산탄 여러 알이 겹치지 않게). 단단한 면은 가끔 도탄.</summary>
         /// <summary>발차기: 앞 2m 안 망자 셋까지 크게 밀쳐 비틀거리게 (피해는 칼의 절반). 무리에서 빠져나갈 때.</summary>
         void Kick()
@@ -975,7 +976,18 @@ namespace Hunt.Player
             HitMarker = 0.12f;
             LastHitWeak = res.zone == HitZone.WeakPoint || res.zone == HitZone.Head;
             LastHitKill = res.killed;
-            if (res.killed && res.zone == HitZone.Head) { Achievements.Add("head100"); player.RunHeadKills++; fovKick = 2.6f; } // 머리 처치: 화면이 순간 앞으로 '훅'
+            if (res.killed && res.zone == HitZone.Head)
+            {
+                Achievements.Add("head100"); player.RunHeadKills++; fovKick = 2.6f; // 머리 처치: 화면이 순간 앞으로 '훅'
+                // 3초 안에 머리 처치 셋: 잠깐 느려진다 (명사수의 순간)
+                headChain = Time.time - lastHeadKill < 3f ? headChain + 1 : 1;
+                lastHeadKill = Time.time;
+                if (headChain == 3 && GameManager.Instance != null)
+                {
+                    GameManager.Instance.SlowMo(0.35f, 0.6f);
+                    HUD.Notify("머리 셋 — 명사수", new Color(1f, 0.9f, 0.6f));
+                }
+            }
             if (res.killed && w != null)
             {
                 int before = w.Mastery;
