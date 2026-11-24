@@ -654,8 +654,18 @@ namespace Hunt.UI
             UIKit.Fill(new Rect(br.x, br.y, br.width * Mathf.Clamp01(m.Hp / m.MaxHp), br.height), new Color(0.75f, 0.1f, 0.08f, a));
             // 알아챘나: 어슬렁(등 뒤로 다가가 칼로 한 번에) / 쫓는 중
             if (!m.IsBoss)
-                UIKit.Text(new Rect(r.x - 40, r.y + 28, r.width + 80, 16), m.Crippled ? "절뚝임 — V 칼로 마무리" : m.IsAlerted ? "쫓는 중" : "어슬렁 — 눈치 못 챔",
-                    12, m.Crippled ? new Color(1f, 0.75f, 0.4f, a * 0.95f) : m.IsAlerted ? new Color(1f, 0.45f, 0.35f, a * 0.9f) : new Color(0.7f, 0.8f, 0.95f, a * 0.9f), TextAnchor.MiddleCenter, serif: true);
+            {
+                // 등 뒤 4m 안이고 못 알아챘으면: 칼로 한 번에 (PlayerWeapons 등 뒤 처치와 같은 조건 — 기본 망자만)
+                bool backstab = false;
+                var pl = GameManager.Instance != null ? GameManager.Instance.Player : null;
+                if (!m.IsAlerted && pl != null && m.Data.archetype == Hunt.Data.MonsterArchetype.Runner)
+                {
+                    Vector3 toM = m.transform.position - pl.transform.position; toM.y = 0f;
+                    backstab = toM.magnitude < 4f && Vector3.Angle(m.transform.forward, toM) < 70f;
+                }
+                UIKit.Text(new Rect(r.x - 40, r.y + 28, r.width + 80, 16), m.Crippled ? "절뚝임 — V 칼로 마무리" : backstab ? "등 뒤 — V 칼로 한 번에" : m.IsAlerted ? "쫓는 중" : "어슬렁 — 눈치 못 챔",
+                    12, m.Crippled || backstab ? new Color(1f, 0.75f, 0.4f, a * 0.95f) : m.IsAlerted ? new Color(1f, 0.45f, 0.35f, a * 0.9f) : new Color(0.7f, 0.8f, 0.95f, a * 0.9f), TextAnchor.MiddleCenter, serif: true);
+            }
         }
 
         /// <summary>맞은 방향을 화면 가장자리에 붉게 (휴대폰에서 뒤에서 맞아도 알 수 있게).</summary>
