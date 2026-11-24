@@ -1067,7 +1067,8 @@ namespace Hunt.UI
             if (dawnFinal)
             {
                 UIKit.BrushTitle(new Rect(r.x + 20, y, r.width - 40, 60), "마을을 지켜냈다", 40, new Color(0.03f, 0.02f, 0.02f, 0.9f), UITheme.GoldBright);
-                UIKit.Text(new Rect(r.x, y + 60, r.width, 26), dawnWave <= WaveManager.BossEvery ? "역병 대감이 쓰러졌다 — 이제 끝없는 밤이 이어진다" : "역병 대감이 또 쓰러졌다", 17, UITheme.Bone, TextAnchor.MiddleCenter, serif: true);
+                UIKit.Text(new Rect(r.x, y + 60, r.width, 26), dawnWave <= WaveManager.BossEvery ? "역병 대감이 쓰러졌다 — 이제 끝없는 밤이 이어진다"
+                    : dawnWave == WaveManager.BossEvery * 2 ? "고분이 다시 닫혔다 — 장마 뒤 첫 맑은 아침이 온다" : "역병 대감이 또 쓰러졌다", 17, UITheme.Bone, TextAnchor.MiddleCenter, serif: true);
                 // 붉은 낙관
                 var seal = new Rect(r.xMax - 70, r.y + 14, 50, 50);
                 UIKit.Tex(seal, UITheme.Seal, UITheme.Blood);
