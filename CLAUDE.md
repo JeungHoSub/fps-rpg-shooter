@@ -65,6 +65,7 @@ Unity 1인칭 싱글플레이 좀비 슈터 + RPG. **비 오는 밤의 한국 �
 - **자동 진행 (사용자 요청 2026-11-19): "그만"이라고 할 때까지 예약 작업(3시간마다, trigger `trig_01CsfMcvJFCBg6SvvCs8uaSu`)으로 계속 업그레이드.**
   매번: git pull → 작게 수정 → 컴파일 확인 → 한국어 커밋 → main 푸시 → 이 목록 갱신 → 바뀐 점을 짧게 보고(미리보기 이미지 있으면 보냄).
   클라우드에선 게임 화면 캡처 불가 (유니티 실행 불가).
+  **보고 방식 (2026-11-24 사용자 요청): "많이 작업한 다음에 알려줘, 너무 자주 묻지 말고"** → 한 번에 3~5개 묶어 작업, 보고는 묶어서 한 번, 선택지 질문 나열 금지.
   **사용자 피드백이 오면 그게 최우선.** "모바일 시작" → 휴대폰 단계(`Docs/MOBILE_READINESS.md` 할 일), "그만" → 예약 작업 삭제.
   - 완료된 큰 작업 (2026-11-19~23): 맵(굽은 길 `VillageBuilder.Ribbon`/`RoadX`·`RollingGround`·경계 수풀·`Half` 44) · 초가집 `ThatchRoof` ·
     능력 칸 `UI/HudIcons.cs`·`GameHud.AbilitySlot` · 기질 카드 · 보급품 알림 `GameHud.OnPickup` · 앉기 표시 ·
@@ -73,7 +74,8 @@ Unity 1인칭 싱글플레이 좀비 슈터 + RPG. **비 오는 밤의 한국 �
     망자 소리 `Sounds/Zombie`(`SFX.Rec`·`PlayAt3D`·`Monster.VoicePitch`) · 발소리 `Sounds/Steps`(`SFX.Footstep`, 망자 발소리) · 착지 ·
     게임오버 `PlayerController.DeathCam`·최고 기록 `hunt.best.*` · 시작 제목 카드 `StartScreen.DrawIntroCard` · 첫 밤 조작 안내 `UI/TutorialHints.cs`(Esc에서 다시 보기) ·
     피 웅덩이 `FX.BloodPool`·살점 `MonsterGib.Chunk` · 날씨 `Atmosphere.SetWeather` · 서낭당 새벽 `Atmosphere.Dawn` · 보스 돌진·내려치기 `Monster.BossPattern`(약한 보스 ×0.6) ·
-    총 모델 이진화 `Resources/GunsBin` + 메시 캐시 · 보급품 가득 참 알림 `Pickup.toldFull`·종류별 줍는 소리·떨어질 때 튀어 오름·새벽엔 30m에서 모여듦 · 탄약 경고 `GameHud.DrawAmmoWarning` · 터치 앉기 버튼 · 작은 장식 그림자 끔 · 사망 화면 카메라 검색 1회로 · 새 판에 지난 알림 지움 `GameHud.ClearToasts` · 창 벗어나면 자동 일시정지 `GameManager.AutoPause` · 수류탄 불씨 깜빡임·째깍 `ThrownGrenade.spark`.
+    총 모델 이진화 `Resources/GunsBin` + 메시 캐시 · 보급품 가득 참 알림 `Pickup.toldFull`·종류별 줍는 소리·떨어질 때 튀어 오름·새벽엔 30m에서 모여듦 · 탄약 경고 `GameHud.DrawAmmoWarning` · 터치 앉기 버튼 · 작은 장식 그림자 끔 · 사망 화면 카메라 검색 1회로 · 새 판에 지난 알림 지움 `GameHud.ClearToasts` · 창 벗어나면 자동 일시정지 `GameManager.AutoPause` · 수류탄 불씨 깜빡임·째깍 `ThrownGrenade.spark` ·
+    시야각 설정 `GameSettings.Fov` · 폭발 연출 `Core/ExplosionFx.cs`·그을음 `FX.Scorch`·밀려남 `Monster.Blast`·귀 울림 `Core/EarRing.cs` · 가라앉는 시체 그림자 끔.
   - 보류: 망자 모델 다양화 (Mixamo — 사용자 토큰 다시 필요, 토큰은 하루쯤 지나면 만료).
   - 이후 작은 후보: 사용자 피드백 반영 → 성능(실기기 확인 필요) · 버그 점검 · 소리/연출 다듬기.
 - 환경 '2번째'에 Poly Haven 호스트(api.polyhaven.com, dl.polyhaven.org) 허용됨. API는 User-Agent 필요.
