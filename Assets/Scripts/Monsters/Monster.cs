@@ -337,7 +337,9 @@ namespace Hunt.Monsters
             // 멀리 있을 땐 가는 방향을, 가까우면 플레이어를 바라본다
             Vector3 faceDir = move.sqrMagnitude > 0.01f && dist > Data.attackRange + 1.5f ? move : dir;
             faceDir.y = 0f;
-            if (faceDir.sqrMagnitude > 0.0001f)
+            // 나를 모르는 채 멈춰 있을 땐(두리번·비틀) 나를 쳐다보지 않는다 — 등 뒤로 다가갈 수 있게
+            bool idleUnaware = !alerted && move.sqrMagnitude <= 0.01f;
+            if (faceDir.sqrMagnitude > 0.0001f && !idleUnaware)
                 transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(faceDir), dt * 8f);
 
             if (rig != null)
