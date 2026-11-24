@@ -265,7 +265,8 @@ namespace Hunt.Monsters
             }
 
             float phaseSpeed = IsBoss ? 1f + BossPhase * 0.2f : 1f;
-            float spd = speed * legSlow * (slowTime > 0f ? 0.55f : 1f) * (hobble > 0f ? 0.6f : 1f) * phaseSpeed;
+            float spd = speed * legSlow * (slowTime > 0f ? 0.55f : 1f) * (hobble > 0f ? 0.6f : 1f) * phaseSpeed
+                * (!IsBoss && Hiding.InPaddy(transform.position) ? 0.85f : 1f); // 논물에 발이 빠진다
 
             Vector3 move = Vector3.zero;
             if (!alerted)
