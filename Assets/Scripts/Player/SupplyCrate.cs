@@ -13,6 +13,8 @@ namespace Hunt.Player
     {
         public const float OpenRange = 2.4f;
         public static readonly List<SupplyCrate> Active = new List<SupplyCrate>();
+        /// <summary>이번 밤 놓은 수 · 연 수 (새벽 기록 카드용).</summary>
+        public static int PlacedThisNight, OpenedThisNight;
 
         bool opened;
         public bool Opened => opened;
@@ -26,6 +28,8 @@ namespace Hunt.Player
         public static void PlaceForNight(Transform parent, Vector3 player, int n)
         {
             foreach (var c in Active.ToArray()) if (c != null) Destroy(c.gameObject);
+            PlacedThisNight = n;
+            OpenedThisNight = 0;
             for (int i = 0; i < n; i++)
             {
                 Vector3 p = Vector3.zero;
@@ -129,6 +133,7 @@ namespace Hunt.Player
         {
             opened = true;
             openT = 0f;
+            OpenedThisNight++;
             SFX.PlayAt(SFX.Rack, transform.position, 0.8f);
             SFX.PlayPitched(SFX.LevelUp, 0.3f, 1.1f);
             Vector3 c = transform.position;
