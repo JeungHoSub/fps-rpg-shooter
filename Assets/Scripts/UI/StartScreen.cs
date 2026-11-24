@@ -118,7 +118,8 @@ namespace Hunt.UI
             float keep = UIKit.Alpha;
             UIKit.Alpha = keep * e;
             var list = Achievements.All;
-            var r = new Rect(W - 620, 66 + (1f - e) * 12f, 600, 70 + list.Length * 46);
+            float rowH = Mathf.Min(46f, (H - 66f - 90f) / Mathf.Max(1, list.Length)); // 업적이 늘어도 화면 안에
+            var r = new Rect(W - 620, 66 + (1f - e) * 12f, 600, 70 + list.Length * rowH);
             UIKit.Panel(r);
             UIKit.Text(new Rect(r.x, r.y + 14, r.width, 28), "업적", 22, UITheme.GoldBright, TextAnchor.MiddleCenter, serif: true, bold: true);
             float y = r.y + 54;
@@ -133,7 +134,7 @@ namespace Hunt.UI
                 UIKit.Text(new Rect(r.x + 70, y + 22, r.width - 200, 20), d.desc, 13, UITheme.BoneDim, TextAnchor.MiddleLeft);
                 if (d.goal > 1 && !done)
                     UIKit.Text(new Rect(r.xMax - 130, y + 8, 110, 24), $"{prog} / {d.goal}", 15, UITheme.BoneDim, TextAnchor.MiddleRight);
-                y += 46;
+                y += rowH;
             }
             UIKit.Alpha = keep;
         }
