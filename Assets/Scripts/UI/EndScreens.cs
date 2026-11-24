@@ -38,7 +38,7 @@ namespace Hunt.UI
             var pp = gm.Player;
             if (pp != null && gm.Waves != null)
                 UIKit.Text(new Rect(r.x, r.y + 56, r.width, 22),
-                    $"{Hunt.UI.GameHud.NightName(gm.Waves.Wave)}  ·  쓰러뜨린 망자 {pp.Kills}  ·  엽전 {pp.Gold}  ·  Lv.{pp.Level}  ·  난이도 {GameSettings.DifficultyName(GameSettings.Difficulty)}",
+                    $"{Hunt.UI.GameHud.NightName(gm.Waves.Wave)}  ·  쓰러뜨린 망자 {pp.Kills}  ·  엽전 {pp.Gold}  ·  Lv.{pp.Level}  ·  장승 {pp.Blessings}/3  ·  난이도 {GameSettings.DifficultyName(GameSettings.Difficulty)}",
                     14, UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true);
 
             float y = r.y + 90;
