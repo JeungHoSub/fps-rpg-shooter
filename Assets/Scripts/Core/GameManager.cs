@@ -237,6 +237,13 @@ namespace Hunt.Core
             LastEvolution = Evolution.Evolve();
             State = GameState.Intermission;
             if (Player != null) Player.ClearCharms(); // 부적은 하룻밤만
+            // 어젯밤 구한 마을 사람이 서낭당에 고마움을 두고 갔다
+            if (Player != null && Hunt.Player.Survivor.SavedThisNight)
+            {
+                Player.Drinks = Mathf.Min(PlayerCharacter.MaxDrinks, Player.Drinks + 1);
+                Player.Infection.Antidotes++;
+                HUD.Notify("구해 준 마을 사람이 서낭당 돌무더기에 회복제와 청심환을 두고 갔다", new Color(1f, 0.85f, 0.55f));
+            }
             IntermissionTime = IntermissionDuration;
             MenuOpen = true;
 
