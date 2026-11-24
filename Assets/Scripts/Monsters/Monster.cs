@@ -335,6 +335,30 @@ namespace Hunt.Monsters
                 if (away.sqrMagnitude > 0.01f)
                 {
                     Vector3 fleeTo = transform.position + away.normalized * 10f;
+                    // 근처(20m)에 나보다 먼 쪽 큰 덤불이 있으면 그리로 숨으러 간다 (등불은 덤불 위로 비친다)
+                    if (bountyBushSearch <= 0f)
+                    {
+                        bountyBushSearch = 1f; bountyBush = null;
+                        float bestB = 20f * 20f;
+                        foreach (var b in Hiding.Spots)
+                        {
+                            var bp = new Vector3(b.x, transform.position.y, b.z);
+                            float dMe = (bp - transform.position).sqrMagnitude;
+                            if (dMe < bestB && (bp - target.transform.position).sqrMagnitude > (transform.position - target.transform.position).sqrMagnitude)
+                            { bestB = dMe; bountyBush = bp; }
+                        }
+                    }
+                    bountyBushSearch -= dt;
+                    if (bountyBush.HasValue)
+                    {
+                        fleeTo = bountyBush.Value;
+                        if ((fleeTo - transform.position).sqrMagnitude < 1.2f * 1.2f && dist > 9f && rig != null)
+                        {
+                            alertTime = 0f; Lurk(); // 덤불 속에 엎드렸다 — 가까이 가면 다시 튀어나온다
+                            HUD.Notify("현상금 망자가 덤불 속에 숨었다 — 등불을 찾아라", new Color(1f, 0.85f, 0.45f));
+                            return;
+                        }
+                    }
                     move = PathDirection(fleeTo, away.normalized, dt);
                     spd *= 1.15f;
                 }
@@ -754,7 +778,8 @@ namespace Hunt.Monsters
         /// <summary>0~1: 나를 알아채기 직전인 정도 (HUD '…').</summary>
         public float Suspicion { get; private set; }
         bool inBush, passedHidden, sniffWarned;
-        float lookAround;
+        float lookAround, bountyBushSearch;
+        Vector3? bountyBush;
         bool lurking, hpLostWhileLurking;
         Vector3 lurkBase;
         GameObject lurkEyes;
