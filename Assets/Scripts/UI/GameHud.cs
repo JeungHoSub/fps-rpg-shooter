@@ -898,16 +898,23 @@ namespace Hunt.UI
                 Vector3 sp = cam.WorldToScreenPoint(e.pos);
                 if (sp.z <= 0f) continue;
                 float x = sp.x / scale, y = (Screen.height - sp.y) / scale;
-                float a = 1f - e.t / DamageNumbers.Life;
+                float u = e.t / DamageNumbers.Life;
+                float a = 1f - u * u; // 끝에 가서 빠르게 사라진다
+                // 숫자마다 살짝 옆으로 흩어진다 (겹쳐서 안 읽히지 않게)
+                float side = (Mathf.Repeat(e.pos.x * 13.7f + e.pos.z * 7.3f, 1f) - 0.5f) * 60f * UIKit.EaseOut(u * 2f);
+                x += side;
                 Color c = e.zone == HitZone.WeakPoint ? new Color(1f, 0.55f, 0.1f)
                     : e.zone == HitZone.Head ? new Color(1f, 0.92f, 0.45f)
                     : e.zone == HitZone.Armor ? new Color(0.65f, 0.62f, 0.58f)
                     : e.type != DamageType.Physical ? CombatNames.ColorOf(e.type) : UITheme.Bone;
                 c.a = a;
-                float pop = e.t < 0.08f ? 1f + (0.08f - e.t) * 6f : 1f;
-                int size = Mathf.RoundToInt((e.crit ? 32 : e.zone == HitZone.WeakPoint ? 27 : 21) * pop);
+                // 치명타는 크게 튀었다가 줄어든다
+                float pop = e.crit ? (e.t < 0.14f ? 1f + (0.14f - e.t) * 5f : 1f) : (e.t < 0.08f ? 1f + (0.08f - e.t) * 6f : 1f);
+                int size = Mathf.RoundToInt((e.crit ? 34 : e.zone == HitZone.WeakPoint ? 27 : 21) * pop);
                 string s = Mathf.RoundToInt(e.amount) + (e.crit ? "!" : "");
-                UIKit.Text(new Rect(x - 80, y - 25, 160, 50), s, size, c, TextAnchor.MiddleCenter, serif: true, bold: e.crit || e.zone == HitZone.WeakPoint);
+                UIKit.Text(new Rect(x - 80, y - 25, 160, 50), s, size, c, TextAnchor.MiddleCenter, serif: true, bold: e.crit || e.zone == HitZone.WeakPoint, shadow: true);
+                if (e.zone == HitZone.Head && e.t < 0.5f)
+                    UIKit.Text(new Rect(x - 60, y - 44, 120, 22), "머리", 14, new Color(1f, 0.92f, 0.6f, a), TextAnchor.MiddleCenter, serif: true, bold: true, shadow: true);
             }
         }
 
