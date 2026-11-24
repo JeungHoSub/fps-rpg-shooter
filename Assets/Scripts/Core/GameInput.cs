@@ -71,6 +71,8 @@ namespace Hunt.Core
 
         // ---- 메뉴 ----
         public static bool PauseDown => Input.GetKeyDown(KeyCode.Escape) || (Mobile && touchPause); // 안드로이드 뒤로가기 = Escape
+        /// <summary>M을 누르고 있는 동안 마을 지도.</summary>
+        public static bool MapHeld => !Mobile && Input.GetKey(KeyCode.M);
         public static bool MenuDown => Mobile ? touchMenu : Input.GetKeyDown(KeyCode.Tab);
         public static bool ConfirmDown => !Mobile && (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter));
         public static bool RestartDown => !Mobile && Input.GetKeyDown(KeyCode.R);

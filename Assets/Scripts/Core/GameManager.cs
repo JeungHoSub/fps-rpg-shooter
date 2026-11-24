@@ -141,6 +141,7 @@ namespace Hunt.Core
             var arena = VillageBuilder.Build(world);
             Navigation.Build(arena);
             world.gameObject.AddComponent<Atmosphere>().Init(world);
+            Hunt.UI.MapView.Capture(); // M 지도용으로 마을을 위에서 한 번 찍어 둔다
             Evolution = world.gameObject.AddComponent<EvolutionDirector>();
             Waves = world.gameObject.AddComponent<WaveManager>();
             LastEvolution = new List<string>();
