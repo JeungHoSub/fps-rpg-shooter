@@ -96,7 +96,7 @@ namespace Hunt.Core
         float nextThunder, flash, thunderDelay = -1f;
         /// <summary>번개가 번쩍인 정도 0~1 (매복 망자 눈이 순간 비친다).</summary>
         public static float Flash => Instance != null ? Instance.flash : 0f;
-        float rainTarget = 0.7f, nextRainShift, nextDistant = 20f;
+        float rainTarget = 0.7f, nextRainShift, nextDistant = 20f, nextGust = 40f;
         Color baseAmbient;
 
         void Awake()
@@ -314,6 +314,12 @@ namespace Hunt.Core
             RenderSettings.fogDensity = BaseFog * fogNow * (1f + 0.25f * bossFog) * Mathf.Lerp(1f, 0.55f, Dawn);
 
             // 멀리서 들려오는 소리: 어딘가의 그르렁, 개 짖는 듯한 울음, 징 — 위치가 들리는 3D (긴장감)
+            // 가끔 돌풍 (빗줄기가 셀수록 자주)
+            if (gm != null && gm.State == GameState.Playing && Time.time > nextGust)
+            {
+                nextGust = Time.time + Random.Range(35f, 80f) * Mathf.Lerp(1.2f, 0.7f, RainIntensity);
+                SFX.Play(SFX.Wind, 0.45f * GameSettings.AmbientVolume, 0.15f);
+            }
             if (gm != null && gm.State == GameState.Playing && cam != null && Time.time > nextDistant)
             {
                 nextDistant = Time.time + Random.Range(14f, 28f);

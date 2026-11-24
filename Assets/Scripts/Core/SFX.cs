@@ -625,6 +625,26 @@ namespace Hunt.Core
             return Clip("chasedrone", d);
         });
 
+        /// <summary>돌풍: 4초 동안 낮게 '우우우' 불어왔다 잦아드는 바람.</summary>
+        public static AudioClip Wind => Get("wind", () =>
+        {
+            const float len = 4f;
+            int n = (int)(Rate * len);
+            var d = new float[n];
+            var rnd = new System.Random(44);
+            float a = 0f, b = 0f;
+            for (int i = 0; i < n; i++)
+            {
+                float t = (float)i / Rate, u = t / len;
+                float noise = (float)(rnd.NextDouble() * 2.0 - 1.0);
+                float cut = Mathf.Lerp(0.004f, 0.03f, Mathf.Sin(u * Mathf.PI) * (0.7f + 0.3f * Mathf.Sin(t * 5f)));
+                a += cut * (noise - a); b += cut * (a - b);       // 두 번 거른 낮은 바람
+                float env = Mathf.Pow(Mathf.Sin(u * Mathf.PI), 1.5f);
+                d[i] = b * env * 9f;
+            }
+            return Clip("wind", d);
+        });
+
         /// <summary>까마귀 '까악' 두 번 (거친 톱니파 + 떨림).</summary>
         public static AudioClip Caw => Get("caw", () =>
         {
