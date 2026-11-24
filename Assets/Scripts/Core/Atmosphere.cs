@@ -306,7 +306,58 @@ namespace Hunt.Core
             {
                 cam.backgroundColor = RenderSettings.fogColor;
                 cam.farClipPlane = QualityManager.FarClip;
+                UpdateMoonDisc(cam);
             }
+        }
+
+        // ---- 하늘의 달: 비구름 사이로 흐릿하게 비친다 (빛 방향과 같은 쪽, 늘 멀리) ----
+        Transform moonDisc;
+        Material moonMat;
+
+        void UpdateMoonDisc(Camera cam)
+        {
+            if (moon == null) return;
+            if (moonDisc == null)
+            {
+                const int S = 128;
+                var tex = new Texture2D(S, S, TextureFormat.RGBA32, true) { wrapMode = TextureWrapMode.Clamp, name = "MoonDisc" };
+                var px = new Color32[S * S];
+                for (int y = 0; y < S; y++)
+                    for (int x = 0; x < S; x++)
+                    {
+                        float dx = (x - S / 2f + 0.5f) / (S / 2f), dy = (y - S / 2f + 0.5f) / (S / 2f);
+                        float r = Mathf.Sqrt(dx * dx + dy * dy);
+                        float disc = Mathf.Clamp01((0.42f - r) * 40f);                       // 달 몸
+                        float halo = Mathf.Clamp01(1f - r) * Mathf.Clamp01(1f - r) * 0.35f;   // 둘레 빛무리
+                        float spots = 0.82f + 0.18f * Mathf.PerlinNoise(x * 0.09f + 3f, y * 0.09f); // 얼룩
+                        float a = Mathf.Max(disc, halo);
+                        float v = disc > 0f ? spots : 1f;
+                        px[y * S + x] = new Color32((byte)(225 * v), (byte)(232 * v), (byte)(245 * v), (byte)(255 * a));
+                    }
+                tex.SetPixels32(px);
+                tex.Apply(true, true);
+                moonMat = new Material(Shader.Find("Sprites/Default")) { name = "MoonDisc", mainTexture = tex };
+                var q = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                Destroy(q.GetComponent<Collider>());
+                q.name = "MoonDisc";
+                q.layer = 2;
+                q.transform.SetParent(transform, false);
+                var r2 = q.GetComponent<Renderer>();
+                r2.sharedMaterial = moonMat;
+                r2.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                r2.receiveShadows = false;
+                moonDisc = q.transform;
+            }
+            float dist = cam.farClipPlane * 0.85f;
+            Vector3 dir = -moon.transform.forward;              // 달빛이 오는 쪽
+            if (dir.y < 0.15f) dir = (dir + Vector3.up * 0.4f).normalized;
+            moonDisc.position = cam.transform.position + dir * dist;
+            moonDisc.rotation = Quaternion.LookRotation(moonDisc.position - cam.transform.position);
+            moonDisc.localScale = Vector3.one * dist * 0.16f;
+            // 구름이 지나가며 흐려졌다 밝아진다 · 날씨(맑아짐은 또렷, 폭우·안개는 거의 안 보임) · 새벽엔 사라짐
+            float cloud = Mathf.Lerp(0.35f, 1f, Mathf.PerlinNoise(Time.time * 0.05f, 7.3f));
+            float a2 = Mathf.Clamp01((moonMult - 0.6f) * 1.1f) * cloud * (1f - Dawn) * (1f - RainIntensity * 0.45f);
+            moonMat.color = new Color(1f, 1f, 1f, a2);
         }
     }
 }
