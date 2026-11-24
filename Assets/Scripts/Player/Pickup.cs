@@ -123,6 +123,19 @@ namespace Hunt.Player
                 default: BuildMagazine(); break;
             }
 
+            // 바닥에 은은한 빛 고리 (조명이 없는 '하' 품질에서도 어디 떨어졌는지 보이게)
+            var ring = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            Destroy(ring.GetComponent<Collider>());
+            ring.layer = 2;
+            ring.transform.SetParent(transform, false);
+            ring.transform.localPosition = Vector3.up * 0.03f;
+            ring.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+            ring.transform.localScale = Vector3.one * 1.1f;
+            var rr = ring.GetComponent<Renderer>();
+            rr.sharedMaterial = GlowMaterial(c);
+            rr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            rr.receiveShadows = false;
+
             // 어둠 속에서도 보이게 아래에서 위로 옅은 빛기둥
             var beam = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             Destroy(beam.GetComponent<Collider>());
@@ -217,6 +230,34 @@ namespace Hunt.Player
         }
 
         Transform runeRingA, runeRingB;
+        static Texture2D glowTex;
+        static readonly System.Collections.Generic.Dictionary<Color, Material> glowMats = new System.Collections.Generic.Dictionary<Color, Material>();
+
+        /// <summary>바닥 빛 고리 재질 (색마다 하나, 텍스처는 처음 쓸 때 만든다).</summary>
+        static Material GlowMaterial(Color c)
+        {
+            if (glowMats.TryGetValue(c, out var m) && m != null) return m;
+            if (glowTex == null)
+            {
+                const int S = 64;
+                glowTex = new Texture2D(S, S, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, name = "PickupGlow" };
+                var px = new Color32[S * S];
+                for (int y = 0; y < S; y++)
+                    for (int x = 0; x < S; x++)
+                    {
+                        float dx = (x - S / 2f + 0.5f) / (S / 2f), dy = (y - S / 2f + 0.5f) / (S / 2f);
+                        float r = Mathf.Sqrt(dx * dx + dy * dy);
+                        float ringA = Mathf.Clamp01(1f - Mathf.Abs(r - 0.7f) * 9f) * 0.9f;   // 고리
+                        float fill = Mathf.Clamp01(1f - r) * 0.35f;                          // 안쪽 은은하게
+                        px[y * S + x] = new Color32(255, 255, 255, (byte)(255 * Mathf.Clamp01(Mathf.Max(ringA, fill))));
+                    }
+                glowTex.SetPixels32(px);
+                glowTex.Apply(false, true);
+            }
+            m = new Material(Shader.Find("Sprites/Default")) { name = "PickupGlow", mainTexture = glowTex, color = new Color(c.r, c.g, c.b, 0.55f) };
+            glowMats[c] = m;
+            return m;
+        }
         static int activeLights;
         bool hasLight;
 
