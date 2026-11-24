@@ -100,4 +100,43 @@ namespace Hunt.Core
             if (k >= 1f) Destroy(gameObject);
         }
     }
+
+    /// <summary>곡소리 물결: 바닥에 붉은 고리가 반경까지 퍼지며 옅어진다 (곡하는 망자가 부르는 범위를 보여 준다).</summary>
+    public class WailRing : MonoBehaviour
+    {
+        float t, radius;
+        Material mat;
+
+        public static void Spawn(Vector3 at, float radius)
+        {
+            var tex = Hunt.UI.UITheme.DiamondHollow;
+            if (tex == null) return;
+            var q = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            Object.Destroy(q.GetComponent<Collider>());
+            q.name = "곡소리";
+            q.layer = 2;
+            if (Effects.Root != null) q.transform.SetParent(Effects.Root, true);
+            q.transform.position = at + Vector3.up * 0.15f;
+            q.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+            var w = q.AddComponent<WailRing>();
+            w.radius = radius;
+            w.mat = new Material(Shader.Find("Sprites/Default")) { mainTexture = tex, color = new Color(1f, 0.3f, 0.25f, 0.8f) };
+            var r = q.GetComponent<Renderer>();
+            r.sharedMaterial = w.mat;
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            r.receiveShadows = false;
+        }
+
+        void Update()
+        {
+            t += Time.deltaTime;
+            float k = Mathf.Clamp01(t / 1.4f);
+            float size = Mathf.Lerp(1f, radius * 2.2f, 1f - (1f - k) * (1f - k));
+            transform.localScale = new Vector3(size, size, 1f);
+            mat.color = new Color(1f, 0.3f, 0.25f, 0.8f * (1f - k));
+            if (k >= 1f) Destroy(gameObject);
+        }
+
+        void OnDestroy() { if (mat != null) Destroy(mat); }
+    }
 }
