@@ -46,26 +46,27 @@ namespace Hunt.Core
         // ------------------------------------------------------------------ 실제 녹음 총성
         // Resources/Sounds/Guns/<이름>_1..3.ogg — The Free Firearm Sound Library (CC0, 실총 녹음)
         // 무기 id → (녹음 이름, 음높이). 음높이를 낮추면 더 묵직한 총이 된다.
-        static readonly Dictionary<string, (string file, float pitch, float vol)> GunRec = new Dictionary<string, (string, float, float)>
+        // 같은 녹음을 쓰는 총은 음높이 + 그 총만의 합성 층(mix)을 섞어 서로 다르게 들리게 한다.
+        static readonly Dictionary<string, (string file, float pitch, float vol, float mix)> GunRec = new Dictionary<string, (string, float, float, float)>
         {
-            { "pistol",      ("ppq", 1.0f, 0.8f) },
-            { "pistol2",     ("m1911", 1.0f, 0.85f) },
-            { "revolver",    ("sw642", 0.82f, 1f) },
-            { "ar",          ("ar15", 1.0f, 0.85f) },
-            { "k2c",         ("ak47", 1.04f, 0.85f) },
-            { "br762",       ("sks", 0.92f, 0.95f) },
-            { "smg",         ("m45", 1.06f, 0.75f) },
-            { "ump",         ("m45", 0.94f, 0.8f) },
-            { "vector",      ("ppsh", 1.08f, 0.75f) },
-            { "shotgun",     ("nova", 1.0f, 1f) },
-            { "autoshotgun", ("model12", 1.05f, 0.95f) },
-            { "doublebarrel",("cd", 0.9f, 1f) },
-            { "sniper",      ("tikka", 1.0f, 1f) },
-            { "dmr",         ("savage", 1.0f, 0.95f) },
-            { "antimat",     ("m1917", 0.72f, 1f) },
-            { "lmg",         ("ak47", 0.9f, 0.85f) },
-            { "k3",          ("ar15", 0.88f, 0.85f) },
-            { "hmg",         ("mosin", 0.85f, 0.8f) },
+            { "pistol",      ("ppq", 1.0f, 0.8f, 0f) },
+            { "pistol2",     ("m1911", 0.96f, 0.85f, 0f) },
+            { "revolver",    ("sw642", 0.82f, 1f, 0f) },
+            { "ar",          ("ar15", 1.0f, 0.85f, 0f) },
+            { "k2c",         ("ar15", 1.13f, 0.85f, 0.35f) },   // 짧은 총열 — 더 날카롭게
+            { "br762",       ("ak47", 0.97f, 0.95f, 0f) },      // AK 모양 → AK 녹음
+            { "smg",         ("m45", 1.06f, 0.75f, 0f) },
+            { "ump",         ("m45", 0.86f, 0.8f, 0.3f) },      // .45 — 둔하고 묵직하게
+            { "vector",      ("ppsh", 1.1f, 0.75f, 0f) },
+            { "shotgun",     ("nova", 1.0f, 1f, 0f) },
+            { "autoshotgun", ("model12", 1.05f, 0.95f, 0f) },
+            { "doublebarrel",("cd", 0.9f, 1f, 0f) },
+            { "sniper",      ("tikka", 1.0f, 1f, 0f) },
+            { "dmr",         ("savage", 1.0f, 0.95f, 0f) },
+            { "antimat",     ("m1917", 0.72f, 1f, 0f) },
+            { "lmg",         ("sks", 0.92f, 0.9f, 0f) },
+            { "k3",          ("ak47", 1.1f, 0.85f, 0.35f) },    // 5.56 경기관총 — 가볍고 빠르게
+            { "hmg",         ("mosin", 0.8f, 0.85f, 0f) },
         };
         static readonly Dictionary<string, AudioClip[]> recCache = new Dictionary<string, AudioClip[]>();
 
@@ -118,6 +119,16 @@ namespace Hunt.Core
             s.clip = clip;
             s.Play();
             Echo(clip, pitch, vol, d.weaponClass);
+            // 녹음을 같이 쓰는 총: 그 총만의 합성음을 살짝 섞어 '다른 총'으로 들리게
+            if (rec.mix > 0f)
+            {
+                var m = gunVoices[nextGun];
+                nextGun = (nextGun + 1) % GunVoices;
+                m.pitch = 1f + UnityEngine.Random.Range(-0.03f, 0.03f);
+                m.volume = volume * rec.mix;
+                m.clip = ShotFor(d);
+                m.Play();
+            }
 
             // 저음 층: 무거운 총일수록 크게
             float thump;

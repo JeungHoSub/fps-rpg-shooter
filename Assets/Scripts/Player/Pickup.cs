@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Hunt.Player
 {
-    public enum PickupKind { Kit, Drink, Ammo, Rune, Pill }
+    public enum PickupKind { Kit, Drink, Ammo, Rune, Pill, Gear }
 
     /// <summary>
     /// 망자가 떨어뜨리는 보급품: 치료 키트 · 스태미너 회복제 · 탄창 · 치유 부적(힐링룬, 먹으면 바로 회복).
@@ -22,9 +22,13 @@ namespace Hunt.Player
 
         public static Color ColorOf(PickupKind k) =>
             k == PickupKind.Kit ? new Color(1f, 0.3f, 0.25f) : k == PickupKind.Drink ? new Color(0.35f, 0.75f, 1f)
-            : k == PickupKind.Rune ? new Color(0.4f, 1f, 0.55f) : k == PickupKind.Pill ? new Color(0.85f, 0.55f, 1f) : new Color(1f, 0.78f, 0.3f);
+            : k == PickupKind.Rune ? new Color(1f, 0.86f, 0.45f) : k == PickupKind.Gear ? new Color(0.45f, 0.65f, 1f) : k == PickupKind.Pill ? new Color(0.85f, 0.55f, 1f) : new Color(1f, 0.78f, 0.3f);
 
-        public static string NameOf(PickupKind k) => k == PickupKind.Kit ? "치료 키트" : k == PickupKind.Drink ? "스태미너 회복제" : k == PickupKind.Rune ? "치유 부적" : k == PickupKind.Pill ? "청심환" : "탄창";
+        public static string NameOf(PickupKind k) => k == PickupKind.Kit ? "치료 키트" : k == PickupKind.Drink ? "스태미너 회복제" : k == PickupKind.Rune ? "치유 부적" : k == PickupKind.Pill ? "청심환" : k == PickupKind.Gear ? "장비 꾸러미" : "탄약";
+
+        public static HudIcons.Icon IconOf(PickupKind k) =>
+            k == PickupKind.Kit ? HudIcons.Icon.Kit : k == PickupKind.Drink ? HudIcons.Icon.Bottle : k == PickupKind.Rune ? HudIcons.Icon.Heart
+            : k == PickupKind.Pill ? HudIcons.Icon.Pill : k == PickupKind.Gear ? HudIcons.Icon.Vest : HudIcons.Icon.Ammo;
 
         /// <summary>치유 부적 하나가 바로 채워 주는 생명 (최대 생명의 비율).</summary>
         public const float RuneHeal = 0.15f;
@@ -41,6 +45,7 @@ namespace Hunt.Player
                 Spawn(PickupKind.Drink, at - Vector3.right * 0.8f, parent);
                 Spawn(PickupKind.Ammo, at + Vector3.forward * 0.8f, parent);
                 Spawn(PickupKind.Ammo, at - Vector3.forward * 0.8f, parent);
+                Spawn(PickupKind.Gear, at + Vector3.up * 0.1f, parent);
                 for (int i = 0; i < 3; i++)
                     Spawn(PickupKind.Rune, at + Quaternion.Euler(0f, 45f + i * 120f, 0f) * Vector3.forward * 1.3f, parent);
                 return;
@@ -61,6 +66,9 @@ namespace Hunt.Player
                 if (max > 0 && have < max * 0.3f) ammoNeed = 2f;
             }
             if (Random.value < 0.22f * mult * ammoNeed) Spawn(PickupKind.Ammo, at + RandomOffset(), parent);
+            // 장비 꾸러미: 단단한 망자(거구·침쟁이 등) 약 22%, 보통 망자 2%
+            bool tough2 = m.Data != null && m.Data.archetype != Hunt.Data.MonsterArchetype.Runner;
+            if (Random.value < (tough2 ? 0.22f : 0.02f)) Spawn(PickupKind.Gear, at + RandomOffset(), parent);
             float r = Random.value;
             float pKit = 0.035f * mult, pDrink = 0.045f * mult;
             if (Random.value < 0.03f * mult) Spawn(PickupKind.Pill, at + RandomOffset(), parent); // 드물게 청심환 (역병 기운을 씻는다, H)
@@ -69,7 +77,10 @@ namespace Hunt.Player
         }
 
         // ---- E로 줍기 ----
-        public const float GrabRange = 3.5f;
+        public const float GrabRange = 5f;
+        public static System.Collections.Generic.List<Pickup> All => all;
+        public PickupKind Kind => kind;
+        public bool Takeable => GameManager.Instance != null && GameManager.Instance.Player != null && CanTake(GameManager.Instance.Player);
         static readonly System.Collections.Generic.List<Pickup> all = new System.Collections.Generic.List<Pickup>();
         bool grabbed; // E로 집어서 거리와 상관없이 날아오는 중
 
@@ -133,6 +144,7 @@ namespace Hunt.Player
                 case PickupKind.Drink: BuildBottle(c); break;
                 case PickupKind.Rune: BuildRune(c); break;
                 case PickupKind.Pill: BuildPill(); break;
+                case PickupKind.Gear: BuildBundle(); break;
                 default: BuildMagazine(); break;
             }
 
@@ -148,16 +160,6 @@ namespace Hunt.Player
             rr.sharedMaterial = GlowMaterial(c);
             rr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             rr.receiveShadows = false;
-
-            // 어둠 속에서도 보이게 아래에서 위로 옅은 빛기둥
-            var beam = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            Destroy(beam.GetComponent<Collider>());
-            beam.transform.SetParent(transform, false);
-            beam.transform.localPosition = new Vector3(0f, 0.9f, 0f);
-            beam.transform.localScale = new Vector3(0.05f, 0.9f, 0.05f);
-            var br = beam.GetComponent<Renderer>();
-            br.sharedMaterial = FX.UnlitMaterial(new Color(c.r, c.g, c.b, 0.28f));
-            br.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 
             // 작은 빛: '하'에서는 없음, 동시에 4개까지만 (보급품이 많이 떨어져도 조명 부담 제한)
             if (QualityManager.Level != GfxLevel.Low && activeLights < 4)
@@ -205,32 +207,39 @@ namespace Hunt.Player
             Part(PrimitiveType.Cylinder, new Vector3(0f, 0.19f, 0f), new Vector3(0.05f, 0.05f, 0.05f), FX.UnlitMaterial(new Color(0.85f, 0.8f, 0.7f)));
         }
 
-        /// <summary>탄창: 살짝 휜 검은 탄창 하나 + 위로 보이는 놋쇠 탄알 (도형 8개 — 많이 떨어져도 가볍게).</summary>
+        /// <summary>탄약: 국방색 철제 탄약통 (손잡이·잠금쇠·노란 글씨 띠) + 뚜껑 위 놋쇠 탄알. 멀리서도 '탄약'으로 읽힌다.</summary>
         void BuildMagazine()
         {
-            var body = EnvMaterials.Plain(new Color(0.16f, 0.17f, 0.19f), 0.6f, 0.55f);
-            var brass = FX.UnlitMaterial(new Color(0.95f, 0.72f, 0.3f));
-            var tip = FX.UnlitMaterial(new Color(0.8f, 0.45f, 0.25f));
-            for (int k = 0; k < 1; k++)
+            var olive = EnvMaterials.Plain(new Color(0.24f, 0.27f, 0.18f), 0.45f, 0.35f);
+            var dark = EnvMaterials.Plain(new Color(0.12f, 0.13f, 0.12f), 0.5f, 0.6f);
+            var stripe = FX.UnlitMaterial(new Color(0.85f, 0.7f, 0.25f));
+            var brass = EnvMaterials.Plain(new Color(0.85f, 0.62f, 0.28f), 0.8f, 0.9f);
+            Part(PrimitiveType.Cube, Vector3.zero, new Vector3(0.3f, 0.17f, 0.13f), olive);
+            Part(PrimitiveType.Cube, new Vector3(0f, 0.093f, 0f), new Vector3(0.315f, 0.02f, 0.14f), dark);          // 뚜껑 테
+            Part(PrimitiveType.Cube, new Vector3(0f, 0.125f, 0f), new Vector3(0.12f, 0.015f, 0.025f), dark);         // 손잡이
+            Part(PrimitiveType.Cube, new Vector3(-0.055f, 0.11f, 0f), new Vector3(0.012f, 0.03f, 0.02f), dark);
+            Part(PrimitiveType.Cube, new Vector3(0.055f, 0.11f, 0f), new Vector3(0.012f, 0.03f, 0.02f), dark);
+            Part(PrimitiveType.Cube, new Vector3(0.155f, 0.03f, 0f), new Vector3(0.015f, 0.06f, 0.05f), dark);       // 잠금쇠
+            Part(PrimitiveType.Cube, new Vector3(0f, -0.01f, 0.066f), new Vector3(0.2f, 0.035f, 0.002f), stripe);    // 글씨 띠 (앞)
+            Part(PrimitiveType.Cube, new Vector3(0f, -0.01f, -0.066f), new Vector3(0.2f, 0.035f, 0.002f), stripe);   // (뒤)
+            for (int b = 0; b < 3; b++)
             {
-                float x = 0f;
-                float tilt = 4f;
-                // 아래로 갈수록 앞으로 휘는 탄창: 세 마디
-                for (int seg = 0; seg < 3; seg++)
-                {
-                    float y = -seg * 0.085f;
-                    float z = seg * seg * 0.012f;
-                    Part(PrimitiveType.Cube, new Vector3(x, y, z), new Vector3(0.06f, 0.09f, 0.13f), body, new Vector3(-seg * 7f + tilt, 0f, 0f));
-                }
-                Part(PrimitiveType.Cube, new Vector3(x, -0.25f, 0.045f), new Vector3(0.07f, 0.025f, 0.15f), body, new Vector3(-18f, 0f, 0f)); // 바닥판
-                // 맨 위 탄알 두 발 (놋쇠 + 탄두)
-                for (int b = 0; b < 2; b++)
-                {
-                    float bx = x + (b == 0 ? -0.012f : 0.012f), bz = b == 0 ? -0.015f : 0.02f;
-                    Part(PrimitiveType.Cylinder, new Vector3(bx, 0.055f, bz), new Vector3(0.022f, 0.035f, 0.022f), brass, new Vector3(90f, 0f, 0f));
-                    Part(PrimitiveType.Sphere, new Vector3(bx, 0.055f, bz + 0.045f), new Vector3(0.02f, 0.02f, 0.03f), tip);
-                }
+                float bx = -0.07f + b * 0.035f;
+                Part(PrimitiveType.Cylinder, new Vector3(bx, 0.13f, 0.035f), new Vector3(0.018f, 0.03f, 0.018f), brass, new Vector3(0f, 0f, 90f - b * 6f));
             }
+        }
+
+        /// <summary>장비 꾸러미: 쪽빛 보자기로 싸맨 보따리 + 위로 묶은 매듭.</summary>
+        void BuildBundle()
+        {
+            var cloth = EnvMaterials.Plain(new Color(0.18f, 0.27f, 0.5f), 0.15f, 0f);
+            var knot = EnvMaterials.Plain(new Color(0.22f, 0.33f, 0.6f), 0.15f, 0f);
+            var trim = FX.UnlitMaterial(new Color(0.85f, 0.8f, 0.68f));
+            Part(PrimitiveType.Sphere, Vector3.zero, new Vector3(0.36f, 0.24f, 0.32f), cloth);
+            Part(PrimitiveType.Sphere, new Vector3(0f, 0.13f, 0f), new Vector3(0.11f, 0.08f, 0.09f), knot);
+            Part(PrimitiveType.Cube, new Vector3(-0.06f, 0.17f, 0f), new Vector3(0.09f, 0.02f, 0.05f), knot, new Vector3(0f, 0f, 35f));
+            Part(PrimitiveType.Cube, new Vector3(0.06f, 0.17f, 0f), new Vector3(0.09f, 0.02f, 0.05f), knot, new Vector3(0f, 0f, -35f));
+            Part(PrimitiveType.Cube, new Vector3(0f, 0f, 0f), new Vector3(0.37f, 0.012f, 0.012f), trim, new Vector3(0f, 25f, 0f));
         }
 
         /// <summary>청심환: 금박 싼 동그란 환약 + 비단 끈.</summary>
@@ -240,13 +249,51 @@ namespace Hunt.Player
             Part(PrimitiveType.Cube, Vector3.zero, new Vector3(0.16f, 0.025f, 0.03f), FX.UnlitMaterial(new Color(0.7f, 0.25f, 0.6f)), new Vector3(0f, 0f, 35f));
         }
 
-        /// <summary>치유 부적(힐링룬): 빛나는 옥빛 구슬 + 그 둘레를 도는 가는 고리 두 개.</summary>
+        /// <summary>치유 부적: 누런 한지에 붉은 글씨를 쓴 부적 한 장이 은은한 빛무리 앞에서 하늘거린다.</summary>
         void BuildRune(Color c)
         {
-            Part(PrimitiveType.Sphere, Vector3.zero, Vector3.one * 0.16f, FX.UnlitMaterial(Color.Lerp(c, Color.white, 0.35f)));
-            Part(PrimitiveType.Sphere, Vector3.zero, Vector3.one * 0.26f, FX.UnlitMaterial(new Color(c.r, c.g, c.b, 0.22f))); // 은은한 빛무리
-            runeRingA = Part(PrimitiveType.Cylinder, Vector3.zero, new Vector3(0.36f, 0.004f, 0.36f), FX.UnlitMaterial(new Color(c.r, c.g, c.b, 0.55f)), new Vector3(70f, 0f, 0f));
-            runeRingB = Part(PrimitiveType.Cylinder, Vector3.zero, new Vector3(0.3f, 0.004f, 0.3f), FX.UnlitMaterial(new Color(c.r, c.g, c.b, 0.45f)), new Vector3(-60f, 40f, 0f));
+            if (talismanMat == null)
+            {
+                const int TW = 32, TH = 64;
+                var tex = new Texture2D(TW, TH, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, name = "Talisman" };
+                var px = new Color32[TW * TH];
+                var rnd = new System.Random(77);
+                for (int y = 0; y < TH; y++)
+                    for (int x = 0; x < TW; x++)
+                    {
+                        float n = (float)rnd.NextDouble() * 0.06f;
+                        Color col = new Color(0.93f - n, 0.8f - n, 0.42f - n);
+                        bool border = x == 2 || x == TW - 3 || y == 2 || y == TH - 3;
+                        // 세로 붓글씨 획 (가운데 굵은 줄 + 가로 획 몇 개 + 아래 동그라미)
+                        bool stroke = (Mathf.Abs(x - TW / 2) <= 1 && y > 10 && y < 54)
+                                   || ((y == 46 || y == 47 || y == 36 || y == 26 || y == 27) && x > 8 && x < TW - 8)
+                                   || (Mathf.Abs(Mathf.Sqrt((x - 16f) * (x - 16f) + (y - 15f) * (y - 15f)) - 6f) < 1.1f);
+                        if (border || stroke) col = new Color(0.72f, 0.12f, 0.1f);
+                        px[y * TW + x] = col;
+                    }
+                tex.SetPixels32(px);
+                tex.Apply(false, true);
+                tex.filterMode = FilterMode.Point;
+                talismanMat = FX.UnlitMaterial(Color.white);
+                talismanMat = new Material(talismanMat) { mainTexture = tex, name = "Talisman" };
+            }
+            // 앞뒤로 한 장씩 (양면)
+            Part(PrimitiveType.Quad, Vector3.zero, new Vector3(0.16f, 0.32f, 1f), talismanMat);
+            Part(PrimitiveType.Quad, Vector3.zero, new Vector3(0.16f, 0.32f, 1f), talismanMat, new Vector3(0f, 180f, 0f));
+            var halo = Part(PrimitiveType.Quad, new Vector3(0f, 0f, 0.01f), Vector3.one * 0.55f, GlowMaterial(c));
+            halo.gameObject.AddComponent<FaceCamera>();
+        }
+
+        static Material talismanMat;
+
+        /// <summary>빛무리 판이 항상 카메라를 보게.</summary>
+        class FaceCamera : MonoBehaviour
+        {
+            void LateUpdate()
+            {
+                var cam = Camera.main;
+                if (cam != null) transform.rotation = Quaternion.LookRotation(transform.position - cam.transform.position);
+            }
         }
 
         Transform runeRingA, runeRingB;
@@ -310,7 +357,8 @@ namespace Hunt.Player
                 }
                 visual.localScale = Vector3.one * grow * suck;
                 visual.localPosition = Vector3.up * ((kind == PickupKind.Rune ? 0.55f : 0.3f) + hop + Mathf.Sin(Time.time * 2.5f + bobSeed) * (kind == PickupKind.Rune ? 0.1f : 0.06f));
-                visual.Rotate(0f, 90f * dt, 0f, Space.World);
+                if (kind == PickupKind.Rune) visual.localRotation = Quaternion.Euler(Mathf.Sin(Time.time * 1.7f + bobSeed) * 8f, Time.time * 40f + bobSeed * 30f, Mathf.Sin(Time.time * 2.3f + bobSeed) * 10f);
+                else visual.Rotate(0f, 90f * dt, 0f, Space.World);
                 if (runeRingA != null) runeRingA.Rotate(0f, 0f, 160f * dt, Space.Self);
                 if (runeRingB != null) runeRingB.Rotate(0f, 0f, -120f * dt, Space.Self);
                 // 사라지기 직전 깜빡임
@@ -366,6 +414,34 @@ namespace Hunt.Player
             }
         }
 
+        /// <summary>장비 꾸러미: 방어구 한 부위 강화 +1 또는 든 총 강화 +1 (꽉 찼으면 등급 올림, 그것도 끝이면 엽전).</summary>
+        static void TakeGear(PlayerCharacter p)
+        {
+            Color c = ColorOf(PickupKind.Gear);
+            var w = p.Weapons.Current;
+            bool gun = w != null && Random.value < 0.45f;
+            if (gun && w.upgradeLevel < Hunt.Weapons.WeaponInstance.MaxUpgrade)
+            {
+                w.upgradeLevel++;
+                GameHud.OnPickup(HudIcons.Icon.Ammo, c, $"장비 꾸러미 — {w.data.displayName} 강화 +{w.upgradeLevel}");
+                return;
+            }
+            // 방어구: 가장 약한 부위부터
+            Hunt.Player.ArmorPiece best = null;
+            foreach (var pc in p.Armor.pieces)
+                if (pc.upgrade < Grades.MaxUpgrade && (best == null || pc.Power < best.Power)) best = pc;
+            if (best != null)
+            {
+                best.upgrade++;
+                p.Heal(0f);
+                var icon = best.slot == ArmorSlot.Head ? HudIcons.Icon.Helmet : best.slot == ArmorSlot.Body ? HudIcons.Icon.Vest : best.slot == ArmorSlot.Hands ? HudIcons.Icon.Glove : best.slot == ArmorSlot.Legs ? HudIcons.Icon.Greave : HudIcons.Icon.Boot;
+                GameHud.OnPickup(icon, Grades.Color(best.grade), $"장비 꾸러미 — {best.Name}");
+                return;
+            }
+            p.AddGold(120);
+            GameHud.OnPickup(HudIcons.Icon.Vest, c, "장비 꾸러미 — 모두 다 강화돼 엽전 120");
+        }
+
         bool CanTake(PlayerCharacter p)
         {
             switch (kind)
@@ -374,6 +450,7 @@ namespace Hunt.Player
                 case PickupKind.Drink: return p.Drinks < PlayerCharacter.MaxDrinks;
                 case PickupKind.Rune: return p.Hp < p.MaxHp - 0.5f;
                 case PickupKind.Pill: return p.Infection.Antidotes < 3;
+                case PickupKind.Gear: return true;
                 default:
                     foreach (var w in p.Weapons.Slots)
                         if (w != null && w.reserve < w.MaxReserve) return true;
@@ -404,6 +481,11 @@ namespace Hunt.Player
                     p.Infection.Antidotes++;
                     GameHud.OnPickup(HudIcons.Icon.Pill, c, $"청심환 +1  (지닌 {p.Infection.Antidotes}, H로 먹는다)");
                     break;
+                case PickupKind.Gear:
+                    TakeGear(p);
+                    SFX.PlayPitched(SFX.Bandage, 0.4f, 1.3f);
+                    SFX.PlayPitched(SFX.LevelUp, 0.5f, 1.1f);
+                    return;
                 case PickupKind.Drink:
                     p.Drinks++;
                     GameHud.OnPickup(HudIcons.Icon.Bottle, c, $"회복제 +1  (지닌 {p.Drinks})");

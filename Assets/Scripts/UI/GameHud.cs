@@ -376,6 +376,7 @@ namespace Hunt.UI
             DrawTargetTag(cam);
             DrawTurretTags(cam);
             DrawGrenadeWarnings(p, cam);
+            DrawPickupLabels(p, cam);
             DrawSpotted(cam);
         }
 
@@ -571,6 +572,47 @@ namespace Hunt.UI
         }
 
         static bool GlobalRushActive() => Monster.GlobalRush; // 모두 몰려올 땐 너무 많아 생략
+
+        /// <summary>
+        /// 떨어진 보급품 위 작은 이름표 (12m 안, 화면 안): 색 점 + 이름, 주울 수 있는 거리면 [E] 열쇠.
+        /// 가득 차서 못 줍는 것은 흐리게 '가득'. 가까울수록 또렷해진다.
+        /// </summary>
+        void DrawPickupLabels(PlayerCharacter p, Camera cam)
+        {
+            if (cam == null || Pickup.All.Count == 0 || GameInput.Mobile) return;
+            float k = W / Screen.width;
+            int shown = 0;
+            foreach (var pk in Pickup.All)
+            {
+                if (pk == null || shown >= 8) continue;
+                Vector3 wp = pk.transform.position + Vector3.up * 0.85f;
+                float dist = Vector3.Distance(wp, p.transform.position);
+                if (dist > 12f) continue;
+                Vector3 sp = cam.WorldToScreenPoint(wp);
+                if (sp.z < 0.2f) continue;
+                float x = sp.x * k, y = (Screen.height - sp.y) * k;
+                if (x < 0 || x > W || y < 0 || y > H) continue;
+                shown++;
+                bool can = pk.Takeable;
+                bool inReach = dist < Pickup.GrabRange + 0.6f;
+                float a = Mathf.Lerp(1f, 0.35f, Mathf.InverseLerp(4f, 12f, dist)) * (can ? 1f : 0.55f);
+                Color c = Pickup.ColorOf(pk.Kind);
+                string name = Pickup.NameOf(pk.Kind) + (can ? "" : "  가득");
+                float tw = 18 + name.Length * 13f + (inReach && can ? 30 : 0);
+                var r = new Rect(x - tw / 2f, y - 13, tw, 26);
+                UIKit.Tex(r, Texture2D.whiteTexture, new Color(0.05f, 0.045f, 0.04f, 0.62f * a));
+                UIKit.Tex(new Rect(r.x, r.yMax - 2, r.width, 2), Texture2D.whiteTexture, new Color(c.r, c.g, c.b, 0.8f * a));
+                float cx = r.x + 8;
+                if (inReach && can)
+                {
+                    var kr = new Rect(cx, r.y + 3, 22, 20);
+                    UIKit.Tex(kr, Texture2D.whiteTexture, new Color(0.9f, 0.86f, 0.76f, a));
+                    UIKit.Text(kr, "E", 14, new Color(0.08f, 0.07f, 0.06f, a), TextAnchor.MiddleCenter, bold: true);
+                    cx += 28;
+                }
+                UIKit.Text(new Rect(cx, r.y, r.xMax - cx - 4, r.height), name, 14, new Color(0.92f, 0.88f, 0.8f, a), TextAnchor.MiddleLeft);
+            }
+        }
 
         /// <summary>내 발 근처(7m)에 터지기 직전 수류탄이 있으면 그 위에 붉은 '!' — 화면 밖이면 가장자리에.</summary>
         void DrawGrenadeWarnings(PlayerCharacter p, Camera cam)
