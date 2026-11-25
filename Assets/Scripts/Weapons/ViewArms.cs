@@ -41,7 +41,7 @@ namespace Hunt.Weapons
 
         public static bool Has(string weaponId) => Poses.ContainsKey(PackGunModel.ModelId(weaponId));
 
-        Transform rHand, lHand, rFore, lFore, rUpper, lUpper;
+        Transform rHand, lHand, rFore, lFore, rUpper, lUpper, heldShell;
         Vector3 grip, foreRest, rElbow, lElbowOff, lPos;
         bool pistol;
         GunModel model;
@@ -186,6 +186,35 @@ namespace Hunt.Weapons
             LayLeft();
         }
 
+        /// <summary>산탄 한 발: 붉은 몸통 + 놋쇠 밑동 (총몸 방향으로 눕혀 손끝에).</summary>
+        static Transform MakeShell(Transform hand)
+        {
+            var root = new GameObject("산탄").transform;
+            root.gameObject.layer = GunModelBuilder.ViewLayer;
+            root.SetParent(hand, false);
+            root.localPosition = new Vector3(-0.01f, 0.004f, 0.035f);
+            var red = EnvMaterials.Plain(new Color(0.6f, 0.08f, 0.06f), 0.35f, 0f);
+            var brass = EnvMaterials.Plain(new Color(0.8f, 0.6f, 0.28f), 0.8f, 0.9f);
+            var body = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            Destroy(body.GetComponent<Collider>());
+            body.layer = GunModelBuilder.ViewLayer;
+            body.transform.SetParent(root, false);
+            body.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+            body.transform.localScale = new Vector3(0.019f, 0.026f, 0.019f);
+            body.GetComponent<Renderer>().sharedMaterial = red;
+            var cap = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            Destroy(cap.GetComponent<Collider>());
+            cap.layer = GunModelBuilder.ViewLayer;
+            cap.transform.SetParent(root, false);
+            cap.transform.localPosition = new Vector3(0f, 0f, -0.03f);
+            cap.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+            cap.transform.localScale = new Vector3(0.0205f, 0.007f, 0.0205f);
+            cap.GetComponent<Renderer>().sharedMaterial = brass;
+            foreach (var r in root.GetComponentsInChildren<Renderer>()) r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            root.gameObject.SetActive(false);
+            return root;
+        }
+
         /// <summary>소매: 손목 → 팔꿈치 (아래팔), 팔꿈치 → 어깨 쪽 (윗팔, 화면 밖으로).</summary>
         static void LayArm(Transform fore, Transform upper, Vector3 wrist, Vector3 elbow, Vector3 upperDir, float r)
         {
@@ -222,10 +251,14 @@ namespace Hunt.Weapons
                                                     : grip + new Vector3(0f, -0.06f, pistol ? 0.02f : 0.12f);
             Vector3 magHome = model.magazine != null ? model.magazineRest + new Vector3(-0.01f, -0.05f, 0f) : magPos;
             Vector3 away = magHome + new Vector3(-0.05f, -0.3f, -0.08f);
+            bool showShell = false;
             if (reloading && shell)
             {
                 float c = Mathf.PingPong(Time.time * 2.6f, 1f);
                 target = Vector3.Lerp(grip + new Vector3(-0.03f, -0.2f, 0.02f), grip + new Vector3(0f, -0.05f, 0.08f), Mathf.SmoothStep(0f, 1f, c));
+                // 올라올 때만 손가락 사이에 붉은 산탄 한 발 (넣고 나면 빈손으로 내려간다)
+                bool rising = Mathf.Repeat(Time.time * 2.6f, 2f) < 1f;
+                showShell = rising && c < 0.92f;
             }
             else if (reloading)
             {
@@ -241,6 +274,8 @@ namespace Hunt.Weapons
                 }
                 else if (p < inAt + 0.06f) target = magHome;
             }
+            if (showShell && heldShell == null) heldShell = MakeShell(lHand);
+            if (heldShell != null && heldShell.gameObject.activeSelf != showShell) heldShell.gameObject.SetActive(showShell);
             float follow = reloading ? 22f : 12f;
             lPos = Vector3.Lerp(lPos, target, 1f - Mathf.Exp(-follow * dt));
             LayLeft();
