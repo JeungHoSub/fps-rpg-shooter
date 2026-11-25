@@ -42,13 +42,23 @@ namespace Hunt.Core
 
         public static void Burst(Vector3 p, float radius, Color c)
         {
-            var go = FX.LowSphere();
+            // 부드러운 빛 덩이 (카메라를 보는 판). 색은 재질 사본 없이 MaterialPropertyBlock으로
+            var go = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            Object.Destroy(go.GetComponent<Collider>());
+            go.layer = 2;
             go.name = "Burst";
             if (Root != null) go.transform.SetParent(Root, true);
             go.transform.position = p;
-            go.transform.localScale = Vector3.one * radius * 2f;
-            // 색마다 재질 하나만 (전에는 터질 때마다 재질 사본이 남았다)
-            go.GetComponent<Renderer>().sharedMaterial = FX.UnlitMaterial(c);
+            go.transform.localScale = Vector3.one * radius * 3.6f;
+            var gm = GameManager.Instance;
+            var cam = gm != null && gm.ActiveCamera != null ? gm.ActiveCamera : Camera.main;
+            if (cam != null) go.transform.rotation = cam.transform.rotation;
+            var r = go.GetComponent<Renderer>();
+            r.sharedMaterial = FX.SoftMaterial(true);
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            var mpb = new MaterialPropertyBlock();
+            mpb.SetColor("_Color", c);
+            r.SetPropertyBlock(mpb);
             Object.Destroy(go, 0.12f);
         }
     }
