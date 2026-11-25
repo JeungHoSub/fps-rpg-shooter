@@ -46,6 +46,7 @@ namespace Hunt.Player
 
             if (model != null) Destroy(model.gameObject);
             model = GunModelBuilder.Build(transform, w);
+            arms = model != null && !(w.data.id == "pistol" || w.data.id == "sniper") && PackGunModel.Has(w.data.id) ? ViewArms.Attach(model, w.data.id) : null;
             builtSignature = sig;
             actionT = 1f;
             CreateFlash();
@@ -132,6 +133,7 @@ namespace Hunt.Player
             actionDuration = model.pumpAction ? Mathf.Max(0.35f, w.FireInterval * 0.8f) : Mathf.Min(0.08f, w.FireInterval * 0.8f);
         }
 
+        ViewArms arms;
         GunModel magFor; Quaternion magRestRot; int reloadVisStage = -1; bool holdAction;
         static float EaseIn(float t) => t * t;
         static float EaseOut(float t) => 1f - (1f - t) * (1f - t);
@@ -276,6 +278,8 @@ namespace Hunt.Player
                     model.magazine.gameObject.SetActive(true);
                 }
             }
+
+            if (arms != null) arms.Tick(dt, wp.IsReloading, wp.ShellReloading, Mathf.Clamp01(wp.ReloadProgress), wp.ReloadMagInAt, wp.ReloadFromEmpty);
 
             // 무기 교체: 내렸다가 올린다
             float sw = wp.SwapProgress;

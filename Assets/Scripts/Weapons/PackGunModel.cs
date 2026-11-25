@@ -24,7 +24,7 @@ namespace Hunt.Weapons
         static readonly Dictionary<string, TextAsset> found = new Dictionary<string, TextAsset>();
         static readonly Dictionary<string, Material> mats = new Dictionary<string, Material>();
 
-        static string ModelId(string weaponId) => Alias.TryGetValue(weaponId, out var a) ? a : weaponId;
+        public static string ModelId(string weaponId) => Alias.TryGetValue(weaponId, out var a) ? a : weaponId;
 
         static TextAsset Asset(string weaponId)
         {
