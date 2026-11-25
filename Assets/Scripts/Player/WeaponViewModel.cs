@@ -139,6 +139,8 @@ namespace Hunt.Player
         }
 
         ViewArms arms;
+        float strafeTilt, strafePush, wallCheckT, wallBlend;
+        bool wallNear;
         GunModel magFor; Quaternion magRestRot; int reloadVisStage = -1; bool holdAction;
         static float EaseIn(float t) => t * t;
         static float EaseOut(float t) => 1f - (1f - t) * (1f - t);
@@ -192,6 +194,29 @@ namespace Hunt.Player
             Vector3 ads = new Vector3(0f, -model.sightHeight, model.adsZ);
             Vector3 pos = Vector3.Lerp(model.hipOffset, ads, aim) + swayPos + bob + breathe + kickPos;
             Vector3 rot = new Vector3(swayRot.x, swayRot.y, 0f) + kickRot;
+
+            // 옆걸음: 총이 걷는 쪽으로 살짝 기운다 / 앞뒤로 걸으면 조금 밀리고 당겨진다
+            float mvx = input ? GameInput.MoveX : 0f, mvy = input ? GameInput.MoveY : 0f;
+            strafeTilt = Mathf.Lerp(strafeTilt, mvx, 1f - Mathf.Exp(-6f * dt));
+            strafePush = Mathf.Lerp(strafePush, mvy, 1f - Mathf.Exp(-5f * dt));
+            rot.z += -strafeTilt * 5f * (1f - aim * 0.8f);
+            pos += new Vector3(strafeTilt * 0.006f, 0f, -strafePush * 0.008f) * (1f - aim * 0.8f);
+
+            // 벽에 바짝 붙으면 총을 세워 거둔다 (조준·사격 중엔 하지 않음, 망자는 벽으로 치지 않는다)
+            wallCheckT -= dt;
+            if (wallCheckT <= 0f)
+            {
+                wallCheckT = 0.08f;
+                wallNear = false;
+                var cam = transform.parent;
+                if (cam != null && wp.Aim < 0.1f && wp.SinceShot > 0.6f && !wp.IsReloading &&
+                    Physics.Raycast(cam.position, cam.forward, out RaycastHit wh, 0.55f + model.hipOffset.z * 0.5f, ~(1 << 2 | 1 << GunModelBuilder.ViewLayer), QueryTriggerInteraction.Ignore))
+                    wallNear = wh.collider.GetComponentInParent<Hunt.Monsters.Monster>() == null && wh.collider.GetComponentInParent<PlayerCharacter>() == null;
+            }
+            wallBlend = Mathf.MoveTowards(wallBlend, wallNear ? 1f : 0f, dt * 5f);
+            float wb = Mathf.SmoothStep(0f, 1f, wallBlend);
+            pos += new Vector3(-0.02f, -0.03f, -0.1f) * wb;
+            rot += new Vector3(-38f, -14f, 10f) * wb;
 
             pos += new Vector3(-0.05f, -0.04f, -0.03f) * sprintBlend;
             rot += new Vector3(12f, -35f, 12f) * sprintBlend;

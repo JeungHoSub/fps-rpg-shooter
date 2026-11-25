@@ -21,6 +21,7 @@ namespace Hunt.Player
         public WeaponInstance Current => Slots.Count > 0 ? Slots[CurrentIndex] : null;
 
         public bool IsReloading => reloadTime > 0f;
+        public float SinceShot => Time.time - lastShotTime;
         public bool ReloadFromEmpty => reloadFromEmpty;
         public bool ShellReloading => shellReload;
         public float ReloadMagInAt => reloadFromEmpty ? 0.62f : 0.72f;
