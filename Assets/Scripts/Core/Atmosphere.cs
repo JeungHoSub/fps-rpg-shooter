@@ -374,6 +374,7 @@ namespace Hunt.Core
             {
                 cam.backgroundColor = RenderSettings.fogColor;
                 cam.farClipPlane = QualityManager.FarClip;
+                UpdateSkyDome(cam);
                 UpdateMoonDisc(cam);
                 Dokkaebi.Tick(transform, cam, Dawn); // 먼 곳의 도깨비불
             }
@@ -424,6 +425,83 @@ namespace Hunt.Core
         // ---- 하늘의 달: 비구름 사이로 흐릿하게 비친다 (빛 방향과 같은 쪽, 늘 멀리) ----
         Transform moonDisc;
         Material moonMat;
+
+        // ---- 하늘: 지평선은 안개색, 위로 갈수록 어둡고, 비구름이 천천히 흘러간다 (단색 배경 대신) ----
+        Transform skyDome;
+        Material skyMat;
+
+        void UpdateSkyDome(Camera cam)
+        {
+            if (skyDome == null)
+            {
+                // 텍스처: 가로 = 방위(이어짐), 세로 = 높이(0 지평선 → 1 천정)
+                const int TW = 256, TH = 64;
+                var tex = new Texture2D(TW, TH, TextureFormat.RGBA32, true) { wrapMode = TextureWrapMode.Repeat, name = "SkyDome", hideFlags = HideFlags.HideAndDontSave };
+                tex.wrapModeV = TextureWrapMode.Clamp;
+                var px = new Color32[TW * TH];
+                for (int y = 0; y < TH; y++)
+                {
+                    float h = y / (TH - 1f);
+                    float baseV = Mathf.Lerp(0.72f, 0.38f, Mathf.Pow(h, 0.6f)); // 위로 갈수록 어둡게
+                    for (int x = 0; x < TW; x++)
+                    {
+                        float ang = x / (float)TW * Mathf.PI * 2f;
+                        float cx = Mathf.Cos(ang) * 3f, cz = Mathf.Sin(ang) * 3f;          // 가로로 이어지는 구름 무늬
+                        float n = Mathf.PerlinNoise(cx + 10f + h * 4f, cz + 10f + h * 2.5f) * 0.65f
+                                + Mathf.PerlinNoise(cx * 2.3f + 40f, cz * 2.3f + h * 6f) * 0.35f;
+                        float cloud = Mathf.Clamp01((n - 0.45f) * 2.6f) * Mathf.Clamp01(h * 4f) * (1f - h * 0.5f); // 지평선 바로 위부터
+                        float v = Mathf.Clamp01(baseV + cloud * 0.32f);
+                        byte b = (byte)(v * 255f);
+                        px[y * TW + x] = new Color32(b, b, b, 255);
+                    }
+                }
+                tex.SetPixels32(px);
+                tex.Apply(true, true);
+                skyMat = new Material(Shader.Find("Sprites/Default")) { name = "SkyDome", mainTexture = tex, renderQueue = 1000 };
+                // 반구 메시 (안쪽을 본다), 지평선 아래로 조금 더 내려 틈이 없게
+                const int seg = 32, rings = 10;
+                var v3 = new System.Collections.Generic.List<Vector3>(); var uv = new System.Collections.Generic.List<Vector2>(); var tri = new System.Collections.Generic.List<int>();
+                for (int r = 0; r <= rings; r++)
+                {
+                    float e = Mathf.Lerp(-0.25f, 1f, r / (float)rings);           // 높이 (-0.25 ~ 1)
+                    float el = Mathf.Max(0f, e) * Mathf.PI * 0.5f;
+                    for (int s2 = 0; s2 <= seg; s2++)
+                    {
+                        float az = s2 / (float)seg * Mathf.PI * 2f;
+                        float ce = Mathf.Cos(el);
+                        float yy = e < 0f ? e : Mathf.Sin(el);
+                        v3.Add(new Vector3(Mathf.Cos(az) * ce, yy, Mathf.Sin(az) * ce));
+                        uv.Add(new Vector2(s2 / (float)seg, Mathf.Max(0f, e)));
+                    }
+                }
+                for (int r = 0; r < rings; r++)
+                    for (int s2 = 0; s2 < seg; s2++)
+                    {
+                        int i0 = r * (seg + 1) + s2, i1 = i0 + seg + 1;
+                        tri.Add(i0); tri.Add(i1); tri.Add(i0 + 1);
+                        tri.Add(i0 + 1); tri.Add(i1); tri.Add(i1 + 1);
+                    }
+                var mesh = new Mesh { name = "SkyDome" };
+                mesh.SetVertices(v3); mesh.SetUVs(0, uv); mesh.SetTriangles(tri, 0);
+                mesh.bounds = new Bounds(Vector3.zero, Vector3.one * 100000f); // 잘려 나가지 않게
+                var go = new GameObject("SkyDome");
+                go.transform.SetParent(transform, false);
+                go.layer = 2;
+                go.AddComponent<MeshFilter>().sharedMesh = mesh;
+                var mr = go.AddComponent<MeshRenderer>();
+                mr.sharedMaterial = skyMat;
+                mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                mr.receiveShadows = false;
+                skyDome = go.transform;
+            }
+            // 카메라를 따라다니고 (늘 같은 거리), 지평선 색은 안개색에 맞춘다 (번개·새벽도 함께)
+            float rad = cam.farClipPlane * 0.9f;
+            skyDome.position = cam.transform.position;
+            skyDome.localScale = Vector3.one * rad;
+            Color fc = RenderSettings.fogColor;
+            skyMat.color = new Color(fc.r / 0.72f, fc.g / 0.72f, fc.b / 0.72f, 1f);
+            skyMat.mainTextureOffset = new Vector2(Time.time * 0.0025f, 0f); // 구름이 천천히 흐른다
+        }
 
         void UpdateMoonDisc(Camera cam)
         {
