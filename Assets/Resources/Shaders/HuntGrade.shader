@@ -14,6 +14,8 @@ Shader "Hidden/Hunt/Grade"
             #include "UnityCG.cginc"
 
             sampler2D _MainTex;
+            float4 _MainTex_TexelSize;
+            float _Fxaa;
             float _Sat;
             float _Contrast;
             float _Pivot;
@@ -23,9 +25,36 @@ Shader "Hidden/Hunt/Grade"
             float4 _Shadow;
             float4 _Highlight;
 
+            float Luma (float3 c) { return dot(c, float3(0.299, 0.587, 0.114)); }
+
+            // 가벼운 계단 현상 줄이기 (FXAA 2 방식, 9번 읽기) — 안티에일리어싱이 꺼진 '하'·'중' 품질용
+            float3 Fxaa (float2 uv)
+            {
+                float2 t = _MainTex_TexelSize.xy;
+                float3 cM = tex2D(_MainTex, uv).rgb;
+                float lNW = Luma(tex2D(_MainTex, uv + float2(-1.0, -1.0) * t).rgb);
+                float lNE = Luma(tex2D(_MainTex, uv + float2( 1.0, -1.0) * t).rgb);
+                float lSW = Luma(tex2D(_MainTex, uv + float2(-1.0,  1.0) * t).rgb);
+                float lSE = Luma(tex2D(_MainTex, uv + float2( 1.0,  1.0) * t).rgb);
+                float lM = Luma(cM);
+                float lMin = min(lM, min(min(lNW, lNE), min(lSW, lSE)));
+                float lMax = max(lM, max(max(lNW, lNE), max(lSW, lSE)));
+                if (lMax - lMin < max(0.03, lMax * 0.125)) return cM; // 가장자리가 아니면 그대로
+                float2 dir;
+                dir.x = -((lNW + lNE) - (lSW + lSE));
+                dir.y =  ((lNW + lSW) - (lNE + lSE));
+                float reduce = max((lNW + lNE + lSW + lSE) * 0.03125, 1.0 / 128.0);
+                float rcpMin = 1.0 / (min(abs(dir.x), abs(dir.y)) + reduce);
+                dir = clamp(dir * rcpMin, -8.0, 8.0) * t;
+                float3 a = 0.5 * (tex2D(_MainTex, uv + dir * (1.0 / 3.0 - 0.5)).rgb + tex2D(_MainTex, uv + dir * (2.0 / 3.0 - 0.5)).rgb);
+                float3 b = a * 0.5 + 0.25 * (tex2D(_MainTex, uv - dir * 0.5).rgb + tex2D(_MainTex, uv + dir * 0.5).rgb);
+                float lB = Luma(b);
+                return (lB < lMin || lB > lMax) ? a : b;
+            }
+
             fixed4 frag (v2f_img i) : SV_Target
             {
-                float3 c = tex2D(_MainTex, i.uv).rgb;
+                float3 c = _Fxaa > 0.5 ? Fxaa(i.uv) : tex2D(_MainTex, i.uv).rgb;
                 float l = dot(c, float3(0.299, 0.587, 0.114));
                 c = lerp(float3(l, l, l), c, _Sat);
                 c *= lerp(_Shadow.rgb, _Highlight.rgb, saturate(l * 1.8));
