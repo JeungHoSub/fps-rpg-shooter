@@ -267,6 +267,7 @@ namespace Hunt.Weapons
             m.muzzle = muzzle;
         }
 
+        static Shader gunShader;
         static Material GetMaterial(string id, string name, Color col, string kind, float metal, float gloss)
         {
             string key = kind == "tex" ? id : kind + "|" + ColorUtility.ToHtmlStringRGB(col);
@@ -300,6 +301,20 @@ namespace Hunt.Weapons
                 mat.color = glass ? new Color(0.03f, 0.05f, 0.08f) : Color.Lerp(gun, col * (v / Mathf.Max(0.01f, l)), 0.25f);
                 metal = glass ? 0.9f : Mathf.Max(metal, 0.6f);
                 gloss = glass ? 0.9f : Mathf.Max(gloss, 0.6f);
+            }
+            // UV 없는 팩 모델: 물체 공간 결 셰이더로 바꿔 총철 입자·나뭇결·달빛 테두리 (없거나 안 되면 Standard 그대로)
+            if (kind != "tex" && !(name.IndexOf("Glass", System.StringComparison.OrdinalIgnoreCase) >= 0))
+            {
+                if (gunShader == null) gunShader = Resources.Load<Shader>("Shaders/GunMetal");
+                if (gunShader != null && gunShader.isSupported)
+                {
+                    var c0 = kind == "wood" ? col * 1.45f + new Color(0.05f, 0.02f, 0f) : mat.color;
+                    mat.shader = gunShader;
+                    mat.mainTexture = null;
+                    mat.color = c0;
+                    mat.SetFloat("_Wood", kind == "wood" ? 1f : 0f);
+                    mat.SetFloat("_Grain", 0.6f);
+                }
             }
             mat.SetFloat("_Metallic", metal);
             mat.SetFloat("_Glossiness", gloss);
