@@ -92,6 +92,9 @@ namespace Hunt.Core
 
         float haloK = 1f;
 
+        // 가로등을 쏴서 깨뜨리면(이 스크립트가 지워지면) 빛무리도 같이 사라진다
+        void OnDestroy() { if (halo != null) Destroy(halo.gameObject); }
+
         void Update()
         {
             if (lt == null) return;
