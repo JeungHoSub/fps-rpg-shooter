@@ -984,12 +984,13 @@ namespace Hunt.Monsters
                 burnFx = new Transform[3];
                 for (int i = 0; i < 3; i++)
                 {
-                    var f = FX.LowSphere(); // 가벼운 공 (판정 없음)
+                    var f = GameObject.CreatePrimitive(PrimitiveType.Quad); // 불꽃 혀 모양 판
+                    Destroy(f.GetComponent<Collider>());
                     f.layer = 2;
                     f.transform.SetParent(transform, false);
                     f.transform.localPosition = new Vector3((i - 1) * 0.18f, (0.7f + i * 0.35f) * Data.scale, 0.05f);
                     var r = f.GetComponent<Renderer>();
-                    r.sharedMaterial = FX.UnlitMaterial(i == 1 ? new Color(1f, 0.8f, 0.3f, 0.7f) : new Color(1f, 0.4f, 0.1f, 0.6f));
+                    r.sharedMaterial = FX.FlameMaterial();
                     r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                     burnFx[i] = f.transform;
                 }
@@ -999,8 +1000,14 @@ namespace Hunt.Monsters
                 if (burnFx[i] == null) continue;
                 if (burnFx[i].gameObject.activeSelf != on) burnFx[i].gameObject.SetActive(on);
                 if (!on) continue;
-                float h = (0.25f + 0.3f * Mathf.PerlinNoise(i * 2.3f, Time.time * 5f)) * Data.scale;
-                burnFx[i].localScale = new Vector3(0.22f * Data.scale, h, 0.22f * Data.scale);
+                float h = (0.25f + 0.3f * Mathf.PerlinNoise(i * 2.3f, Time.time * 5f)) * Data.scale * 1.7f;
+                burnFx[i].localScale = new Vector3(0.36f * Data.scale, h, 1f);
+                var cam = GameManager.Instance != null ? GameManager.Instance.ActiveCamera : null;
+                if (cam != null)
+                {
+                    Vector3 to = burnFx[i].position - cam.transform.position; to.y = 0f;
+                    if (to.sqrMagnitude > 0.0001f) burnFx[i].rotation = Quaternion.LookRotation(to);
+                }
             }
         }
 
