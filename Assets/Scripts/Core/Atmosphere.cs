@@ -401,7 +401,8 @@ namespace Hunt.Core
             var go = new GameObject("번개");
             go.transform.SetParent(transform, false);
             var lr = go.AddComponent<LineRenderer>();
-            lr.sharedMaterial = FX.UnlitMaterial(Color.white);
+            lr.sharedMaterial = FX.BeamMaterial(); // 가장자리가 번지는 번갯불
+            lr.textureMode = LineTextureMode.Stretch;
             lr.useWorldSpace = true;
             const int n = 9;
             lr.positionCount = n;
@@ -413,8 +414,8 @@ namespace Hunt.Core
                 if (i > 0 && i < n - 1) p += new Vector3(Random.Range(-1f, 1f), 0f, Random.Range(-1f, 1f)) * dist * 0.035f;
                 lr.SetPosition(i, p);
             }
-            lr.startWidth = dist * 0.006f;
-            lr.endWidth = dist * 0.003f;
+            lr.startWidth = dist * 0.01f;
+            lr.endWidth = dist * 0.005f;
             lr.startColor = new Color(0.85f, 0.9f, 1f, 0.95f);
             lr.endColor = new Color(0.75f, 0.82f, 1f, 0.7f);
             lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;

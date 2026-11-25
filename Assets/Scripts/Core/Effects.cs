@@ -27,7 +27,8 @@ namespace Hunt.Core
             var go = new GameObject("Tracer");
             if (Root != null) go.transform.SetParent(Root, false);
             var lr = go.AddComponent<LineRenderer>();
-            lr.sharedMaterial = LineMat;
+            lr.sharedMaterial = FX.BeamMaterial();
+            lr.textureMode = LineTextureMode.Stretch;
             lr.positionCount = 2;
             lr.SetPosition(0, a);
             lr.SetPosition(1, b);

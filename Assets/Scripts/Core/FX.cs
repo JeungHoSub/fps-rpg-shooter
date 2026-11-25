@@ -595,7 +595,7 @@ namespace Hunt.Core
         static Material beamMat;
 
         /// <summary>예광탄 줄: 폭 방향으로 가운데는 희고 밝게, 가장자리는 투명하게.</summary>
-        static Material BeamMaterial()
+        public static Material BeamMaterial()
         {
             if (beamMat != null) return beamMat;
             const int W = 4, H = 32;
