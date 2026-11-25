@@ -642,6 +642,8 @@ namespace Hunt.Monsters
             if (rig != null)
             {
                 rig.Flinch(info.direction, Mathf.Clamp01(kb / 4f + (crit ? 0.3f : 0f) + (zone == HitZone.WeakPoint ? 0.2f : 0f)), zone == HitZone.Head);
+                if (part != null && part.transform.parent != null && zone != HitZone.Head)
+                    rig.BoneJerk(part.transform.parent, info.direction, Mathf.Clamp01(0.35f + kb / 4f + (crit ? 0.3f : 0f)) * (IsBoss ? 0.4f : 1f)); // 맞은 팔·다리가 홱
                 if (kb > 2f || crit || zone == HitZone.Head) rig.PlayHit();
             }
 

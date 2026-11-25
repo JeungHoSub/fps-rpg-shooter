@@ -261,6 +261,26 @@ namespace Hunt.Monsters
             return true;
         }
 
+        // 맞은 팔·다리 뼈가 따로 홱 젖혀진다 (스프링 4칸)
+        readonly Transform[] jerkBone = new Transform[4];
+        readonly Vector3[] jerkAxis = new Vector3[4];
+        readonly float[] jerkAng = new float[4], jerkVel = new float[4];
+        int jerkNext;
+
+        /// <summary>뼈 하나(팔·다리·몸통 아래)를 총알 방향으로 홱. 같은 뼈면 더해진다.</summary>
+        public void BoneJerk(Transform bone, Vector3 hitDir, float strength)
+        {
+            if (dead || bone == null || bone == Spine || bone == Spine2 || bone == Head) return;
+            if (hitDir.sqrMagnitude < 0.0001f) return;
+            int slot = -1;
+            for (int i = 0; i < 4; i++) if (jerkBone[i] == bone) slot = i;
+            if (slot < 0) { slot = jerkNext; jerkNext = (jerkNext + 1) % 4; jerkAng[slot] = 0f; jerkVel[slot] = 0f; }
+            jerkBone[slot] = bone;
+            jerkAxis[slot] = Vector3.Cross(Vector3.up, hitDir.normalized);
+            if (jerkAxis[slot].sqrMagnitude < 0.01f) jerkAxis[slot] = transform.right;
+            jerkVel[slot] += Mathf.Lerp(500f, 1300f, Mathf.Clamp01(strength));
+        }
+
         /// <summary>피격 반응: 상체가 맞은 방향으로 젖혀진다. strength 0~1.</summary>
         public void Flinch(Vector3 hitDir, float strength, bool head)
         {
@@ -335,6 +355,15 @@ namespace Hunt.Monsters
                 Spine2.rotation = Quaternion.AngleAxis(flinch * 0.4f, flinchAxis) * Spine2.rotation;
             if (Head != null && headJerk > 0.01f)
                 Head.rotation = Quaternion.AngleAxis(headJerk, flinchAxis) * Head.rotation;
+            for (int i = 0; i < 4; i++)
+            {
+                if (jerkBone[i] == null) continue;
+                jerkVel[i] -= jerkAng[i] * 260f * dt;
+                jerkVel[i] *= Mathf.Exp(-12f * dt);
+                jerkAng[i] = Mathf.Clamp(jerkAng[i] + jerkVel[i] * dt, -15f, 45f);
+                if (Mathf.Abs(jerkAng[i]) < 0.05f && Mathf.Abs(jerkVel[i]) < 1f) { jerkBone[i] = null; continue; }
+                jerkBone[i].rotation = Quaternion.AngleAxis(jerkAng[i], jerkAxis[i]) * jerkBone[i].rotation;
+            }
         }
 
         /// <summary>살빛을 바꾼다 (다시 일어난 망자는 검푸르게 등).</summary>
