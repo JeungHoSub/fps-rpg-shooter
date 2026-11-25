@@ -149,11 +149,13 @@ namespace Hunt.Player
             flash.transform.localRotation = Quaternion.Euler(0, 0, Random.Range(0f, 360f));
 
             actionT = 0f;
-            actionDuration = model.pumpAction ? Mathf.Max(0.35f, w.FireInterval * 0.8f) : Mathf.Min(0.08f, w.FireInterval * 0.8f);
+            bool boltCycle = w.data.weaponClass == Combat.WeaponClass.Sniper && w.FireInterval > 0.6f; // 볼트 저격총: 쏠 때마다 노리쇠를 천천히 당겼다 민다
+            actionDuration = model.pumpAction ? Mathf.Max(0.35f, w.FireInterval * 0.8f) : boltCycle ? Mathf.Max(0.45f, w.FireInterval * 0.7f) : Mathf.Min(0.08f, w.FireInterval * 0.8f);
+            if (boltCycle) { boltRollT = 0f; }
         }
 
         ViewArms arms;
-        float strafeTilt, strafePush, wallCheckT, wallBlend;
+        float strafeTilt, strafePush, wallCheckT, wallBlend, boltRollT = 1f;
         bool wallNear;
         GunModel magFor; Quaternion magRestRot; int reloadVisStage = -1; bool holdAction;
         static float EaseIn(float t) => t * t;
@@ -342,6 +344,15 @@ namespace Hunt.Player
                 actionT += dt / Mathf.Max(0.01f, actionDuration);
                 float a = actionT >= 1f ? 0f : Mathf.Sin(Mathf.Clamp01(actionT) * Mathf.PI);
                 model.action.localPosition = model.actionRest + Vector3.back * model.actionTravel * a;
+            }
+
+            // 볼트 조작 중엔 총을 살짝 눕힌다 (조준 안 할 때 더 크게)
+            if (boltRollT < 1f)
+            {
+                boltRollT += dt / Mathf.Max(0.05f, actionDuration * 1.2f);
+                float bk = Mathf.Sin(Mathf.Clamp01(boltRollT) * Mathf.PI);
+                rot += new Vector3(-4f, 6f, 14f) * bk * (1f - aim * 0.6f);
+                pos += new Vector3(-0.01f, -0.015f, 0f) * bk * (1f - aim * 0.6f);
             }
 
             transform.localPosition = pos;
