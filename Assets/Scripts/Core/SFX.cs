@@ -300,16 +300,75 @@ namespace Hunt.Core
         /// <summary>계열마다 다른 타격음 (산탄 = 둔탁하고 큼, 저격 = 날카로운 관통음, 기관단총 = 가볍게).</summary>
         public static AudioClip HitFor(WeaponClass c)
         {
+            // 같은 소리가 반복되면 싸구려처럼 들려서 계열마다 3가지 중 하나를 고른다
+            int v = UnityEngine.Random.Range(0, 3);
             switch (c)
-            {
-                case WeaponClass.Shotgun: return Get("hit_sg", () => MakeFleshVariant(0.22f, 95f, 2.8f, 0.25f, 66));
-                case WeaponClass.Sniper: return Get("hit_sn", () => MakeFleshVariant(0.2f, 170f, 1.6f, 0.9f, 67));
-                case WeaponClass.SMG: return Get("hit_smg", () => MakeFleshVariant(0.1f, 210f, 1.6f, 0.35f, 68));
-                case WeaponClass.LMG: return Get("hit_lmg", () => MakeFleshVariant(0.15f, 120f, 2.2f, 0.4f, 69));
-                case WeaponClass.Pistol: return Get("hit_p", () => MakeFleshVariant(0.13f, 150f, 1.9f, 0.4f, 70));
+            {   // (길이, 살 울림 Hz, 저음 Hz, 저음 세기, 앞 '딱' 세기)
+                case WeaponClass.Shotgun: return Get("hit2_sg" + v, () => MakeImpact(0.26f, 380f, 70f, 1.3f, 0.7f, 166 + v));
+                case WeaponClass.Sniper: return Get("hit2_sn" + v, () => MakeImpact(0.24f, 620f, 85f, 1.1f, 1.2f, 167 + v * 7));
+                case WeaponClass.SMG: return Get("hit2_smg" + v, () => MakeImpact(0.11f, 820f, 120f, 0.45f, 0.7f, 168 + v * 7));
+                case WeaponClass.LMG: return Get("hit2_lmg" + v, () => MakeImpact(0.15f, 560f, 95f, 0.8f, 0.8f, 169 + v * 7));
+                case WeaponClass.Pistol: return Get("hit2_p" + v, () => MakeImpact(0.14f, 700f, 110f, 0.6f, 0.8f, 170 + v * 7));
                 case WeaponClass.Flamethrower: return Get("hit_fl", () => MakeWhoosh(0.18f, 0.35f));
-                default: return FleshHit;
+                default: return Get("hit2_ar" + v, () => MakeImpact(0.16f, 640f, 100f, 0.75f, 0.85f, 171 + v * 7));
             }
+        }
+
+        /// <summary>
+        /// 총알이 살에 박히는 소리: ① 아주 짧은 '딱'(고음 잡음) ② 공명 필터로 만든 젖은 '퍽'
+        /// ③ 음이 뚝 떨어지는 저음 '쿵' ④ 끝에 질척한 꼬리. 상태변수 필터로 소리 결을 만든다.
+        /// </summary>
+        static AudioClip MakeImpact(float len, float fleshHz, float subHz, float sub, float snap, int seed)
+        {
+            int n = (int)(Rate * len);
+            var d = new float[n];
+            var rnd = new System.Random(seed);
+            float jitter = 0.85f + (float)rnd.NextDouble() * 0.3f;
+            fleshHz *= jitter;
+            float low = 0f, band = 0f, low2 = 0f, band2 = 0f, hp = 0f, prev = 0f, wob = 0f;
+            for (int i = 0; i < n; i++)
+            {
+                float t = (float)i / Rate;
+                float noise = (float)(rnd.NextDouble() * 2.0 - 1.0);
+                // ① '딱': 고역 통과 잡음, 4ms
+                hp = 0.6f * (hp + noise - prev); prev = noise;
+                float crack = hp * Mathf.Exp(-t * 900f) * snap;
+                // ② 살 울림: 주파수가 내려가는 공명 대역 잡음
+                float fc = fleshHz * (1f - Mathf.Clamp01(t * 6f) * 0.45f);
+                float f = 2f * Mathf.Sin(Mathf.PI * fc / Rate);
+                low += f * band; float high = noise - low - 0.35f * band; band += f * high;
+                float flesh = band * Mathf.Exp(-t * 34f) * Mathf.Clamp01(t * 2000f);
+                // ④ 질척한 꼬리: 낮은 대역 + 느리게 흔들리는 세기
+                float f2 = 2f * Mathf.Sin(Mathf.PI * 260f / Rate);
+                low2 += f2 * band2; float high2 = noise - low2 - 0.6f * band2; band2 += f2 * high2;
+                wob += 0.002f * ((float)rnd.NextDouble() - wob);
+                float squelch = band2 * Mathf.Exp(-t * 16f) * (0.4f + wob * 1.2f) * Mathf.Clamp01((t - 0.012f) * 60f);
+                // ③ 저음 '쿵'
+                float sh = subHz * (1f - Mathf.Clamp01(t * 10f) * 0.5f);
+                float thump = Mathf.Sin(2f * Mathf.PI * sh * t) * Mathf.Exp(-t * 22f) * sub;
+                float env = Mathf.Clamp01((len - t) * 40f);
+                d[i] = SoftClip((crack * 1.4f + flesh * 3.2f + squelch * 1.6f + thump) * 1.5f) * env;
+            }
+            return Clip("impact", d);
+        }
+
+        /// <summary>적중 표시음: '삑' 대신 짧고 단단한 '틱' (고음 잡음 + 빠르게 꺼지는 금속 울림).</summary>
+        static AudioClip MakeMarker(float hz, float len, float ring, int seed)
+        {
+            int n = (int)(Rate * len);
+            var d = new float[n];
+            var rnd = new System.Random(seed);
+            float hp = 0f, prev = 0f;
+            for (int i = 0; i < n; i++)
+            {
+                float t = (float)i / Rate;
+                float noise = (float)(rnd.NextDouble() * 2.0 - 1.0);
+                hp = 0.5f * (hp + noise - prev); prev = noise;
+                float click = hp * Mathf.Exp(-t * 700f);
+                float tone = (Mathf.Sin(2f * Mathf.PI * hz * t) + 0.5f * Mathf.Sin(2f * Mathf.PI * hz * 1.51f * t)) * Mathf.Exp(-t * (90f / ring));
+                d[i] = SoftClip((click * 1.2f + tone * 0.55f) * 1.2f) * Mathf.Clamp01((len - t) * 200f);
+            }
+            return Clip("marker", d);
         }
 
         /// <summary>탄피가 바닥에 떨어지는 소리.</summary>
@@ -401,8 +460,8 @@ namespace Hunt.Core
         public static AudioClip MagIn => Mech("magin", () => MakeClick(0.12f, 1300f, 1f));
         public static AudioClip Rack => Mech("rack", () => MakeRack());
         public static AudioClip Swap => Get("swap", () => MakeClick(0.07f, 700f, 0.6f));
-        public static AudioClip HitTick => Get("hit", () => MakeTone(0.045f, 1500f, 1500f, 0.5f));
-        public static AudioClip WeakTick => Get("weak", () => MakeTone(0.06f, 2300f, 2600f, 0.6f));
+        public static AudioClip HitTick => Get("hit2", () => MakeMarker(2100f, 0.05f, 0.8f, 301));
+        public static AudioClip WeakTick => Get("weak2", () => MakeMarker(3100f, 0.09f, 1.6f, 302));
         public static AudioClip KillTick => Get("kill", () => MakeKill());
         public static AudioClip MonsterHurt => Rec("hurt", 6, () => Get("mhurt", () => MakeGrowl(0.25f, 70f, 1f)));
         public static AudioClip MonsterDie => Rec("die", 6, () => Get("mdie", () => MakeGrowl(0.7f, 55f, 0.6f)));

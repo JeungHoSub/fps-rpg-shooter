@@ -132,6 +132,11 @@ namespace Hunt.Player
             actionDuration = model.pumpAction ? Mathf.Max(0.35f, w.FireInterval * 0.8f) : Mathf.Min(0.08f, w.FireInterval * 0.8f);
         }
 
+        GunModel magFor; Quaternion magRestRot; int reloadVisStage = -1; bool holdAction;
+        static float EaseIn(float t) => t * t;
+        static float EaseOut(float t) => 1f - (1f - t) * (1f - t);
+        static float EaseIO(float t) => t * t * (3f - 2f * t);
+
         void LateUpdate()
         {
             if (player == null || player.Weapons == null || player.Weapons.Current == null) return;
@@ -184,24 +189,92 @@ namespace Hunt.Player
             pos += new Vector3(-0.05f, -0.04f, -0.03f) * sprintBlend;
             rot += new Vector3(12f, -35f, 12f) * sprintBlend;
 
-            // 재장전: 총을 기울이고 탄창을 뺐다가 끼운다
-            if (wp.IsReloading)
+            // 재장전: 실제처럼 — 총을 눕혀 탄창 쪽을 보이고, 빈 탄창을 뽑아 버리고,
+            // 새 탄창을 아래에서 가져와 비스듬히 대었다가 '탁' 밀어 넣고, 빈 총이면 노리쇠를 당긴다
+            if (wp.IsReloading && !wp.ShellReloading && model.magazine != null)
+            {
+                if (magFor != model) { magFor = model; magRestRot = model.magazine.localRotation; }
+                float p = Mathf.Clamp01(wp.ReloadProgress);
+                float inAt = wp.ReloadMagInAt;
+                bool empty = wp.ReloadFromEmpty;
+                float endAt = empty ? 0.95f : 0.9f;
+                // 몸 자세: 0~0.15 눕힘, 끝에서 돌아옴
+                float tilt = EaseIO(Mathf.InverseLerp(0f, 0.15f, p)) * (1f - EaseIO(Mathf.InverseLerp(endAt - 0.1f, 1f, p)));
+                pos += new Vector3(-0.035f, -0.03f, 0.01f) * tilt;
+                rot += new Vector3(-6f, 14f, 30f) * tilt;
+
+                Vector3 magOff = Vector3.zero; Quaternion magTilt = Quaternion.identity; bool show = true;
+                if (p < 0.18f)
+                {   // 탄창 멈치를 누르며 살짝 흔듦
+                    magOff = Vector3.down * 0.004f * Mathf.Sin(p * 90f) * Mathf.InverseLerp(0.08f, 0.18f, p);
+                }
+                else if (p < 0.3f)
+                {   // 빈 탄창을 빠르게 뽑음
+                    float t = EaseIn(Mathf.InverseLerp(0.18f, 0.3f, p));
+                    magOff = new Vector3(0f, -0.2f, 0.03f) * t;
+                    magTilt = Quaternion.Euler(-25f * t, 0f, 0f);
+                    show = t < 0.95f;
+                }
+                else if (p < inAt - 0.14f)
+                {   // 손이 새 탄창을 가지러 감 (보이지 않음)
+                    show = false;
+                }
+                else if (p < inAt - 0.04f)
+                {   // 새 탄창을 아래에서 가져와 비스듬히 댐
+                    float t = EaseOut(Mathf.InverseLerp(inAt - 0.14f, inAt - 0.04f, p));
+                    magOff = Vector3.Lerp(new Vector3(-0.02f, -0.24f, 0.05f), new Vector3(0f, -0.03f, 0.012f), t);
+                    magTilt = Quaternion.Euler(Mathf.Lerp(-30f, -12f, t), 0f, Mathf.Lerp(10f, 0f, t));
+                }
+                else if (p < inAt)
+                {   // 밀어 넣음
+                    float t = EaseIn(Mathf.InverseLerp(inAt - 0.04f, inAt, p));
+                    magOff = Vector3.Lerp(new Vector3(0f, -0.03f, 0.012f), Vector3.zero, t);
+                    magTilt = Quaternion.Euler(Mathf.Lerp(-12f, 0f, t), 0f, 0f);
+                }
+                model.magazine.localPosition = model.magazineRest + magOff;
+                model.magazine.localRotation = magRestRot * magTilt;
+                model.magazine.gameObject.SetActive(show);
+
+                // 장면 전환 순간의 '탁' 반동
+                int stage = p < 0.22f ? 0 : p < inAt ? 1 : (empty && p >= 0.84f) ? 3 : 2;
+                if (stage != reloadVisStage)
+                {
+                    if (stage == 1) { kickPos += new Vector3(0f, 0.006f, 0f); kickRot += new Vector3(-2f, 0f, 3f); }
+                    if (stage == 2) { kickPos += new Vector3(0f, 0.012f, 0.004f); kickRot += new Vector3(-5f, 1f, -4f); }
+                    if (stage == 3) { kickPos += new Vector3(0f, 0f, -0.014f); kickRot += new Vector3(-3f, -2f, 2f); }
+                    reloadVisStage = stage;
+                }
+                // 빈 총: 총을 반대로 돌리고 노리쇠를 끝까지 당겼다 놓음
+                if (empty)
+                {
+                    float c = Mathf.InverseLerp(inAt + 0.04f, 0.78f, p) * (1f - Mathf.InverseLerp(0.88f, 0.98f, p));
+                    rot += new Vector3(4f, -8f, -38f) * EaseIO(c);
+                    if (model.action != null && p > 0.76f && p < 0.86f)
+                    {
+                        float pull = EaseOut(Mathf.InverseLerp(0.76f, 0.84f, p));
+                        model.action.localPosition = model.actionRest + Vector3.back * Mathf.Max(0.035f, model.actionTravel * 1.6f) * pull;
+                        actionT = 1f; holdAction = true;
+                    }
+                    else holdAction = false;
+                }
+            }
+            else if (wp.IsReloading)
             {
                 float p = wp.ReloadProgress;
                 float k = Mathf.Sin(Mathf.Clamp01(p) * Mathf.PI);
                 pos += new Vector3(-0.02f, -0.05f, 0f) * k;
                 rot += new Vector3(18f, 10f, 32f) * k;
+                holdAction = false;
+            }
+            else
+            {
+                reloadVisStage = -1; holdAction = false;
                 if (model.magazine != null)
                 {
-                    float drop = p < 0.25f ? 0f : p < 0.55f ? Mathf.InverseLerp(0.25f, 0.45f, p) : p < 0.85f ? 1f - Mathf.InverseLerp(0.55f, 0.8f, p) : 0f;
-                    model.magazine.localPosition = model.magazineRest + Vector3.down * 0.25f * drop;
-                    model.magazine.gameObject.SetActive(drop < 0.98f);
+                    if (magFor == model) model.magazine.localRotation = magRestRot;
+                    model.magazine.localPosition = model.magazineRest;
+                    model.magazine.gameObject.SetActive(true);
                 }
-            }
-            else if (model.magazine != null)
-            {
-                model.magazine.localPosition = model.magazineRest;
-                model.magazine.gameObject.SetActive(true);
             }
 
             // 무기 교체: 내렸다가 올린다
@@ -210,7 +283,7 @@ namespace Hunt.Player
             rot.x += 40f * sw;
 
             // 슬라이드 / 펌프 / 노리쇠
-            if (model.action != null)
+            if (model.action != null && !holdAction)
             {
                 actionT += dt / Mathf.Max(0.01f, actionDuration);
                 float a = actionT >= 1f ? 0f : Mathf.Sin(Mathf.Clamp01(actionT) * Mathf.PI);

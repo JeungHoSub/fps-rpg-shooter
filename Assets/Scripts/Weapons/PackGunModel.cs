@@ -157,7 +157,7 @@ namespace Hunt.Weapons
             if (cached != null)
             {
                 Instantiate(cached, root, m);
-                Presets(d.weaponClass, m);
+                Presets(d.weaponClass, m); Tweak(id, m);
                 foreach (var t in root.GetComponentsInChildren<Transform>(true)) t.gameObject.layer = GunModelBuilder.ViewLayer;
                 return true;
             }
@@ -175,7 +175,7 @@ namespace Hunt.Weapons
                 for (int i = root.childCount - 1; i >= 0; i--) Object.Destroy(root.GetChild(i).gameObject);
                 return false;
             }
-            Presets(d.weaponClass, m);
+            Presets(d.weaponClass, m); Tweak(id, m);
             foreach (var t in root.GetComponentsInChildren<Transform>(true)) t.gameObject.layer = GunModelBuilder.ViewLayer;
             return true;
         }
@@ -308,6 +308,18 @@ namespace Hunt.Weapons
         }
 
         /// <summary>계열별 손 위치·조준 거리·반동 세기 (도형 총과 같은 값).</summary>
+        // 덩치 큰 모델 (긴 탄창·높은 가늠자) → 화면을 덜 가리게 더 멀리·낮게·오른쪽으로
+        static void Tweak(string id, GunModel m)
+        {
+            switch (id)
+            {
+                case "br762": m.hipOffset = new Vector3(0.155f, -0.175f, 0.3f); m.adsZ = 0.24f; break;
+                case "hmg": m.hipOffset = new Vector3(0.15f, -0.18f, 0.28f); break;
+                case "antimat": m.hipOffset = new Vector3(0.15f, -0.16f, 0.28f); break;
+                case "flamer": m.hipOffset = new Vector3(0.15f, -0.17f, 0.26f); break;
+            }
+        }
+
         static void Presets(WeaponClass c, GunModel m)
         {
             switch (c)

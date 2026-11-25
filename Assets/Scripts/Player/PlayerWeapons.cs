@@ -21,6 +21,9 @@ namespace Hunt.Player
         public WeaponInstance Current => Slots.Count > 0 ? Slots[CurrentIndex] : null;
 
         public bool IsReloading => reloadTime > 0f;
+        public bool ReloadFromEmpty => reloadFromEmpty;
+        public bool ShellReloading => shellReload;
+        public float ReloadMagInAt => reloadFromEmpty ? 0.62f : 0.72f;
         public float ReloadProgress => reloadTotal > 0f ? 1f - reloadTime / reloadTotal : 0f;
         public float SwapProgress => swapTotal > 0f && swapTime > 0f ? Mathf.Sin(swapTime / swapTotal * Mathf.PI) : 0f;
         /// <summary>교체 진행도 0→1 (0.5에서 총이 가장 아래).</summary>
@@ -199,7 +202,7 @@ namespace Hunt.Player
                 reloadTime -= dt;
                 float p = ReloadProgress;
                 float pitch = ReloadPitch(w.data.weaponClass);
-                float inAt = reloadFromEmpty ? 0.62f : 0.72f;
+                float inAt = ReloadMagInAt;
                 if (reloadStage == 0 && p > 0.25f)
                 {
                     SFX.PlayPitched(SFX.MagOut, 0.7f, pitch); reloadStage = 1;
