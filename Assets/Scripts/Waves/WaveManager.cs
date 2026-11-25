@@ -70,8 +70,8 @@ namespace Hunt.Waves
         {
             switch (r)
             {
-                case RoundRule.Defense: return "날이 밝을 때까지 서낭당 돌무더기를 지켜라";
-                case RoundRule.Mission: return "시간 안에 망자를 모두 쓰러뜨려라";
+                case RoundRule.Defense: return "돌무더기를 지키며 버텨라 — 밤 중간에 오는 보스를 쓰러뜨려야 끝";
+                case RoundRule.Mission: return "시간 안에 보스까지 쓰러뜨려라 (늦으면 보상 절반)";
                 default: return "기본 망자 → 엘리트 → 보스, 보스를 쓰러뜨려라";
             }
         }
