@@ -348,8 +348,8 @@ namespace Hunt.Monsters
                 case "shriek": eye = new Color(0.95f, 0.95f, 1f); eyeSize = 0.042f; break;  // 곡하는: 허연 눈
                 default: eye = new Color(1f, 0.15f, 0.08f); break;
             }
-            // 미친·그림자·곡하는 망자는 어둠 속에서 눈빛이 번진다 (멀리서도 '저건 위험하다'를 알게, '하'는 생략)
-            bool halo = (kind == "frenzy" || kind == "stalker" || kind == "shriek") && Hunt.Core.QualityManager.Level != Hunt.Core.GfxLevel.Low;
+            // 미친·곡하는 망자는 어둠 속에서 눈빛이 번진다 (그림자 망자는 숨어 다니니 제외) (멀리서도 '저건 위험하다'를 알게, '하'는 생략)
+            bool halo = (kind == "frenzy" || kind == "shriek") && Hunt.Core.QualityManager.Level != Hunt.Core.GfxLevel.Low;
             foreach (var sx in new[] { -0.045f, 0.045f })
             {
                 var e = Cosmetic(PrimitiveType.Sphere, rig.Head, eyeBase + R.right * sx * u, Quaternion.identity, Vector3.one * eyeSize * u, eye, true);
