@@ -1522,23 +1522,46 @@ namespace Hunt.UI
                     for (int x = 0; x < N; x++)
                     {
                         float d = Mathf.Sqrt((x - r + 0.5f) * (x - r + 0.5f) + (y - r + 0.5f) * (y - r + 0.5f)) / r;
-                        px[y * N + x] = new Color32(0, 0, 0, (byte)(Mathf.Clamp01((d - 0.94f) / 0.06f) * 255));
+                        // 바깥은 검게, 안쪽 가장자리는 렌즈 그늘이 서서히 진해진다
+                        float edge = Mathf.Clamp01((d - 0.94f) / 0.06f);
+                        float shade = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.62f, 0.94f, d)) * 0.6f;
+                        px[y * N + x] = new Color32(0, 0, 0, (byte)(Mathf.Clamp01(edge + (1f - edge) * shade) * 255));
                     }
                 scopeMask.SetPixels32(px);
                 scopeMask.Apply();
             }
-            float size = H, x0 = W / 2 - size / 2;
+            // 눈이 조준경 가운데서 살짝 어긋나면 그늘 고리가 밀린다 (시점을 돌리면 늦게 따라옴) — 조준선은 가운데 그대로
+            if (UIKit.IsRepaint)
+            {
+                var tgt = new Vector2(Mathf.Clamp(-GameInput.LookX * 7f, -28f, 28f), Mathf.Clamp(GameInput.LookY * 7f, -28f, 28f));
+                scopeOff = Vector2.Lerp(scopeOff, tgt, 1f - Mathf.Exp(-7f * Time.unscaledDeltaTime));
+            }
+            float size = H * 1.08f, x0 = W / 2 - size / 2 + scopeOff.x, y0 = H / 2 - size / 2 + scopeOff.y;
             UIKit.Fill(new Rect(0, 0, x0 + 1, H), Color.black);
             UIKit.Fill(new Rect(x0 + size - 1, 0, W - x0 - size + 1, H), Color.black);
-            UIKit.Tex(new Rect(x0, 0, size, size), scopeMask, Color.white);
+            if (y0 > 0) UIKit.Fill(new Rect(x0, 0, size, y0 + 1), Color.black);
+            if (y0 + size < H) UIKit.Fill(new Rect(x0, y0 + size - 1, size, H - y0 - size + 1), Color.black);
+            UIKit.Tex(new Rect(x0, y0, size, size), UITheme.Circle, new Color(0.55f, 0.75f, 0.9f, 0.035f)); // 렌즈 코팅 빛
+            UIKit.Tex(new Rect(x0, y0, size, size), scopeMask, Color.white);
             Color line = new Color(0, 0, 0, 0.9f);
-            float cx = W / 2, cy = H / 2;
-            UIKit.Fill(new Rect(x0, cy - 1, size, 2), line);
-            UIKit.Fill(new Rect(cx - 1, 0, 2, H), line);
-            UIKit.Fill(new Rect(x0 + size * 0.2f, cy - 3, size * 0.25f, 6), line);
-            UIKit.Fill(new Rect(x0 + size * 0.55f, cy - 3, size * 0.25f, 6), line);
-            UIKit.Fill(new Rect(cx - 3, cy + size * 0.08f, 6, size * 0.35f), line);
-            UIKit.Tex(new Rect(cx - 3, cy - 3, 6, 6), UITheme.Diamond, UITheme.BloodBright);
+            float cx = W / 2, cy = H / 2, half = H * 0.47f;
+            UIKit.Fill(new Rect(cx - half, cy - 0.5f, half * 2f, 1f), line);                 // 가는 십자선
+            UIKit.Fill(new Rect(cx - 0.5f, cy - half, 1f, half * 2f), line);
+            UIKit.Fill(new Rect(cx - half, cy - 2, half * 0.55f, 4), line);                   // 굵은 바깥 기둥
+            UIKit.Fill(new Rect(cx + half * 0.45f, cy - 2, half * 0.55f, 4), line);
+            UIKit.Fill(new Rect(cx - 2, cy + half * 0.3f, 4, half * 0.7f), line);
+            // 밀 점 (거리 가늠)
+            float step = half * 0.09f;
+            for (int i = 1; i <= 4; i++)
+            {
+                UIKit.Tex(new Rect(cx + step * i - 2.5f, cy - 2.5f, 5, 5), UITheme.Circle, line);
+                UIKit.Tex(new Rect(cx - step * i - 2.5f, cy - 2.5f, 5, 5), UITheme.Circle, line);
+                UIKit.Tex(new Rect(cx - 2.5f, cy + step * i - 2.5f, 5, 5), UITheme.Circle, line);
+                UIKit.Tex(new Rect(cx - 2.5f, cy - step * i - 2.5f, 5, 5), UITheme.Circle, line);
+            }
+            UIKit.Tex(new Rect(cx - 2.5f, cy - 2.5f, 5, 5), UITheme.Circle, UITheme.BloodBright); // 가운데 붉은 점
         }
+
+        Vector2 scopeOff;
     }
 }
