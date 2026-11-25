@@ -270,7 +270,8 @@ namespace Hunt.Weapons
         static Shader gunShader;
         static Material GetMaterial(string id, string name, Color col, string kind, float metal, float gloss)
         {
-            string key = kind == "tex" ? id : kind + "|" + ColorUtility.ToHtmlStringRGB(col);
+            bool fancy = Hunt.Core.GameSettings.Grade; // '화면 색감'을 끄면 총 결 셰이더도 끈다 (혹시 분홍색 등 문제가 나면 끌 수 있게)
+            string key = (kind == "tex" ? id : kind + "|" + ColorUtility.ToHtmlStringRGB(col)) + (fancy ? "|g" : "");
             if (mats.TryGetValue(key, out var mat) && mat != null) return mat;
             mat = new Material(Shader.Find("Standard")) { name = "Gun_" + (kind == "tex" ? id : name) };
             if (kind == "tex")
@@ -306,7 +307,7 @@ namespace Hunt.Weapons
             if (kind != "tex" && !(name.IndexOf("Glass", System.StringComparison.OrdinalIgnoreCase) >= 0))
             {
                 if (gunShader == null) gunShader = Resources.Load<Shader>("Shaders/GunMetal");
-                if (gunShader != null && gunShader.isSupported)
+                if (fancy && gunShader != null && gunShader.isSupported)
                 {
                     var c0 = kind == "wood" ? col * 1.45f + new Color(0.05f, 0.02f, 0f) : mat.color;
                     mat.shader = gunShader;
