@@ -461,7 +461,7 @@ namespace Hunt.Core
                     Vector3 v = (Vector3.up * 1.6f + Random.insideUnitSphere * 0.7f).normalized * Random.Range(1.8f, 3.6f);
                     Emit(debris, point + Vector3.up * 0.03f, v, Random.Range(0.03f, 0.07f), Random.Range(0.35f, 0.55f), new Color(0.32f, 0.3f, 0.26f, 0.85f));
                 }
-                Emit(debris, point + Vector3.up * 0.05f, Vector3.up * 0.5f, 0.35f, 0.5f, new Color(0.45f, 0.44f, 0.42f, 0.35f)); // 물안개
+                Emit(mist, point + Vector3.up * 0.05f, Vector3.up * 0.5f, 0.3f, 0.6f, new Color(0.45f, 0.44f, 0.42f, 0.35f)); // 물안개
                 BulletHole(point, normal);
                 return;
             }
@@ -470,10 +470,15 @@ namespace Hunt.Core
                 Vector3 v = (normal + Random.insideUnitSphere * 0.8f).normalized * Random.Range(4f, 9f);
                 Emit(sparks, point, v, Random.Range(0.02f, 0.035f), Random.Range(0.12f, 0.25f), new Color(1f, Random.Range(0.6f, 0.9f), 0.3f));
             }
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 3; i++)
             {
-                Vector3 v = (normal + Random.insideUnitSphere * 0.6f).normalized * Random.Range(0.8f, 2f);
-                Emit(debris, point + normal * 0.02f, v, Random.Range(0.08f, 0.16f), Random.Range(0.35f, 0.6f), new Color(0.55f, 0.52f, 0.47f, 0.8f));
+                Vector3 v = (normal + Random.insideUnitSphere * 0.6f).normalized * Random.Range(1.5f, 3.5f);
+                Emit(debris, point + normal * 0.02f, v, Random.Range(0.03f, 0.06f), Random.Range(0.35f, 0.6f), new Color(0.45f, 0.42f, 0.38f, 0.9f)); // 돌·나무 조각
+            }
+            for (int i = 0; i < 2; i++)
+            {
+                Vector3 v = (normal + Random.insideUnitSphere * 0.5f).normalized * Random.Range(0.4f, 1.1f);
+                Emit(mist, point + normal * 0.05f, v, Random.Range(0.18f, 0.3f), Random.Range(0.6f, 0.9f), new Color(0.55f, 0.52f, 0.47f, 0.4f)); // 퍼지는 먼지
             }
             BulletHole(point, normal);
         }
@@ -525,6 +530,39 @@ namespace Hunt.Core
             }
         }
 
+        static Material holeMat;
+
+        /// <summary>탄흔: 가운데 검은 구멍 + 거칠게 깨진 둘레(조금 밝은 회색 가루) + 가장자리로 사라짐. 네모난 검은 판 대신.</summary>
+        static Material HoleMaterial()
+        {
+            if (holeMat != null) return holeMat;
+            const int S = 32;
+            var tex = new Texture2D(S, S, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, name = "BulletHole" };
+            var px = new Color32[S * S];
+            var rnd = new System.Random(91);
+            for (int y = 0; y < S; y++)
+                for (int x = 0; x < S; x++)
+                {
+                    float dx = (x - S / 2f + 0.5f) / (S / 2f), dy = (y - S / 2f + 0.5f) / (S / 2f);
+                    float r = Mathf.Sqrt(dx * dx + dy * dy);
+                    float ang = Mathf.Atan2(dy, dx);
+                    float jag = 0.12f * Mathf.Sin(ang * 7f) + 0.08f * Mathf.Sin(ang * 13f + 1.3f) + (float)rnd.NextDouble() * 0.08f;
+                    Color c;
+                    if (r < 0.2f + jag * 0.3f) c = new Color(0.02f, 0.02f, 0.02f, 1f);                       // 구멍
+                    else if (r < 0.42f + jag) c = new Color(0.12f, 0.115f, 0.11f, 0.95f);                    // 패인 자리
+                    else
+                    {
+                        float a = Mathf.Clamp01((0.95f + jag - r) * 2.2f) * 0.55f * (0.6f + (float)rnd.NextDouble() * 0.4f);
+                        c = new Color(0.28f, 0.27f, 0.25f, a);                                                 // 둘레 가루·그을음
+                    }
+                    px[y * S + x] = c;
+                }
+            tex.SetPixels32(px);
+            tex.Apply(false, true);
+            holeMat = new Material(Shader.Find("Sprites/Default")) { name = "BulletHole", mainTexture = tex };
+            return holeMat;
+        }
+
         static void BulletHole(Vector3 point, Vector3 normal)
         {
             if (root == null) return;
@@ -536,7 +574,7 @@ namespace Hunt.Core
                 go.name = "BulletHole";
                 go.transform.SetParent(root, false);
                 var r = go.GetComponent<Renderer>();
-                r.sharedMaterial = UnlitMaterial(new Color(0.05f, 0.05f, 0.05f));
+                r.sharedMaterial = HoleMaterial();
                 r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 r.receiveShadows = false;
                 h = go.transform;
@@ -550,7 +588,7 @@ namespace Hunt.Core
             }
             h.position = point + normal * 0.004f;
             h.rotation = Quaternion.LookRotation(-normal) * Quaternion.Euler(0, 0, Random.Range(0f, 360f));
-            h.localScale = Vector3.one * Random.Range(0.05f, 0.08f);
+            h.localScale = Vector3.one * Random.Range(0.1f, 0.15f); // 둘레 패인 자국까지 포함한 크기
         }
 
         /// <summary>총구 → 탄착점으로 날아가는 예광탄.</summary>
