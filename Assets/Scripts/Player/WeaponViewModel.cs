@@ -418,6 +418,7 @@ namespace Hunt.Player
             mine = Root("MineHeld");
             Piece(mine.transform, PrimitiveType.Cylinder, Vector3.zero, new Vector3(0.26f, 0.03f, 0.26f), Mat(new Color(0.2f, 0.24f, 0.16f), 0.4f, 0.3f));
             Piece(mine.transform, PrimitiveType.Sphere, new Vector3(0.08f, 0.035f, 0f), Vector3.one * 0.02f, FX.UnlitMaterial(new Color(1f, 0.15f, 0.1f)));
+            ViewArms.HeldHand(mine.transform, new Vector3(0.05f, -0.045f, -0.04f), new Vector3(0f, 0f, 90f), new Vector3(0.14f, -0.17f, -0.28f)); // 지뢰를 아래에서 받친 손
 
             turretKit = Root("TurretHeld");
             Piece(turretKit.transform, PrimitiveType.Cube, Vector3.zero, new Vector3(0.14f, 0.14f, 0.42f), Mat(new Color(0.22f, 0.24f, 0.2f), 0.55f, 0.6f));
