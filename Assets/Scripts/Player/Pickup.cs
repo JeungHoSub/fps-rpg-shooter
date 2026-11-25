@@ -404,11 +404,11 @@ namespace Hunt.Player
                                  new Color(0.6f, 0.58f, 0.54f), full, false);
             }
             else if (d > 3f) toldFull = false;
-            float reach = dawn ? 30f : 4f;
+            float reach = dawn ? 30f : 2.5f; // 밟으면 줍고, 멀리 있는 건 E (5m)
             if (d < reach && can)
             {
                 // 자석처럼 끌려온다
-                float speed = dawn ? 9f + (reach - d) * 0.6f : 3f + (4f - d) * 3f;
+                float speed = dawn ? 9f + (reach - d) * 0.6f : 5f + (reach - d) * 4f;
                 transform.position = Vector3.MoveTowards(transform.position, new Vector3(p.transform.position.x, basePos.y, p.transform.position.z), speed * dt);
                 if (d < 0.9f) { Take(p); Destroy(gameObject); }
             }
