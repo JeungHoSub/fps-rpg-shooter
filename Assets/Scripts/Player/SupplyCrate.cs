@@ -77,17 +77,53 @@ namespace Hunt.Player
             l.transform.localScale = new Vector3(0.82f, 0.05f, 0.52f);
             l.GetComponent<Renderer>().sharedMaterial = EnvMaterials.Plain(new Color(0.26f, 0.29f, 0.19f), 0.3f);
             lid = l.transform;
-            // 노란 빛기둥 (높이 솟아 멀리서도 보인다)
-            var b = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            // 노란 빛줄기: 바닥에서 위로 갈수록 옅어지는 부드러운 빛 (늘 나를 향해 돌아선 판 하나 — 딱딱한 원기둥 대신)
+            var b = GameObject.CreatePrimitive(PrimitiveType.Quad);
             Destroy(b.GetComponent<Collider>());
             b.layer = 2;
             b.transform.SetParent(transform, false);
             b.transform.localPosition = new Vector3(0f, 3f, 0f);
-            b.transform.localScale = new Vector3(0.08f, 3f, 0.08f);
+            b.transform.localScale = new Vector3(0.7f, 6f, 1f);
             var br = b.GetComponent<Renderer>();
-            br.sharedMaterial = FX.UnlitMaterial(new Color(1f, 0.82f, 0.35f, 0.22f));
+            br.sharedMaterial = BeamMaterial();
             br.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            br.receiveShadows = false;
             beam = b.transform;
+        }
+
+        static Material beamMat;
+
+        /// <summary>빛줄기 재질: 가운데 밝고 양옆으로 번지며, 위로 갈수록 사라진다.</summary>
+        static Material BeamMaterial()
+        {
+            if (beamMat != null) return beamMat;
+            const int W = 32, H = 64;
+            var tex = new Texture2D(W, H, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, hideFlags = HideFlags.HideAndDontSave };
+            var px = new Color32[W * H];
+            for (int y = 0; y < H; y++)
+                for (int x = 0; x < W; x++)
+                {
+                    float u = Mathf.Abs((x + 0.5f) / W * 2f - 1f);          // 가운데 0 → 가장자리 1
+                    float v = (y + 0.5f) / H;                                // 아래 0 → 위 1
+                    float across = Mathf.Pow(1f - u, 2.2f);
+                    float up = Mathf.Pow(1f - v, 1.6f) * Mathf.Clamp01(v * 12f); // 바닥에서 살짝 올라가 시작, 위로 옅어짐
+                    px[y * W + x] = new Color32(255, 255, 255, (byte)(255 * across * up));
+                }
+            tex.SetPixels32(px);
+            tex.Apply();
+            beamMat = new Material(Shader.Find("Sprites/Default")) { name = "CrateBeam", mainTexture = tex, color = new Color(1f, 0.82f, 0.4f, 0.55f) };
+            return beamMat;
+        }
+
+        void LateUpdate()
+        {
+            // 빛줄기 판이 늘 나를 향하게 (세로축으로만 돈다)
+            if (beam == null) return;
+            var gm = GameManager.Instance;
+            var cam = gm != null ? gm.ActiveCamera : null;
+            if (cam == null) return;
+            Vector3 to = beam.position - cam.transform.position; to.y = 0f;
+            if (to.sqrMagnitude > 0.001f) beam.rotation = Quaternion.LookRotation(to);
         }
 
         /// <summary>플레이어 가까이(2.4m)에 열 수 있는 상자가 있으면 그것.</summary>
@@ -114,7 +150,7 @@ namespace Hunt.Player
             float dt = Time.deltaTime;
             if (!opened)
             {
-                if (beam != null) beam.localScale = new Vector3(0.08f + 0.02f * Mathf.Sin(Time.time * 3f), 3f, 0.08f + 0.02f * Mathf.Sin(Time.time * 3f));
+                if (beam != null) beam.localScale = new Vector3(0.7f + 0.12f * Mathf.Sin(Time.time * 2.4f), 6f, 1f); // 은은하게 숨 쉰다
                 if (gm.AcceptsGameplayInput && GameInput.PickupDown && ReferenceEquals(NearestToPlayer(), this)) Open(gm.Player);
                 return;
             }
@@ -126,7 +162,7 @@ namespace Hunt.Player
                 lid.localPosition = new Vector3(0.6f * k, 0.52f + Mathf.Sin(k * Mathf.PI) * 0.9f - 0.45f * k, 0f);
                 lid.localRotation = Quaternion.Euler(0f, 0f, -110f * k);
             }
-            if (beam != null) { beam.localScale = Vector3.Lerp(beam.localScale, new Vector3(0f, 3f, 0f), dt * 4f); if (openT > 1.5f) { Destroy(beam.gameObject); beam = null; } }
+            if (beam != null) { beam.localScale = Vector3.Lerp(beam.localScale, new Vector3(0f, 6f, 1f), dt * 4f); if (openT > 1.5f) { Destroy(beam.gameObject); beam = null; } }
         }
 
         void Open(PlayerCharacter p)
