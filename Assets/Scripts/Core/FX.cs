@@ -489,7 +489,7 @@ namespace Hunt.Core
         {
             Vector3 v = right * Random.Range(1.6f, 2.6f) + up * Random.Range(1.2f, 2.2f) + Random.insideUnitSphere * 0.4f;
             Color c = shell ? new Color(0.75f, 0.12f, 0.08f) : new Color(0.85f, 0.65f, 0.28f);
-            Emit(debris, pos, v, shell ? 0.045f : 0.028f, Random.Range(0.6f, 0.9f), c);
+            Emit(sparks, pos, v, shell ? 0.05f : 0.032f, Random.Range(0.6f, 0.9f), c); // 날아가는 방향으로 늘어난 놋쇠 (둥근 점보다 탄피처럼)
         }
 
         /// <summary>총구 연기: 쏘고 나서 피어오르는 희미한 연기.</summary>
