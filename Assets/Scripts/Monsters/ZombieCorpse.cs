@@ -10,6 +10,7 @@ namespace Hunt.Monsters
     {
         Vector3 axis;
         float t, unit;
+        bool landed;
         Quaternion startRot;
         Vector3 startPos, slide;
 
@@ -88,6 +89,14 @@ namespace Hunt.Monsters
             if (gm != null && gm.Paused) return;
             if (clampSlide) ClampSlideToWalls();
             t += Time.deltaTime;
+            // 땅에 닿는 순간 '털썩' + 젖은 흙탕물
+            float landAt = deathLength > 0f ? deathLength * 0.55f : 0.45f;
+            if (!landed && t >= landAt)
+            {
+                landed = true;
+                Hunt.Core.SFX.PlayAt3D(Hunt.Core.SFX.BodyFall, transform.position, 0.9f, Random.Range(0.5f, 0.62f));
+                Hunt.Core.FX.Splash(transform.position + Vector3.up * 0.05f, 0.6f);
+            }
             if (deathLength > 0f)
             {
                 // 동작 끝 프레임에서 멈춘 채 누워 있다가 가라앉는다

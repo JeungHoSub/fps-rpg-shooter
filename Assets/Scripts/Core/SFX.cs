@@ -525,6 +525,8 @@ namespace Hunt.Core
             a.Play();
         }
         public static AudioClip PlayerHurt => Get("phurt", () => MakeThud());
+        /// <summary>몸이 젖은 땅에 쓰러지는 둔탁한 소리 (같은 '퍽'을 낮게 재생).</summary>
+        public static AudioClip BodyFall => PlayerHurt;
         public static AudioClip UiHover => Get("uihover", () => MakeTone(0.035f, 900f, 1100f, 0.18f));
         public static AudioClip UiClick => Get("uiclick", () => MakeClick(0.06f, 520f, 0.45f));
         /// <summary>출정·웨이브 시작: 낮게 울리는 징 소리.</summary>
