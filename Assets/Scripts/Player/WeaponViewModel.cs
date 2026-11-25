@@ -351,6 +351,7 @@ namespace Hunt.Player
             Piece(machete.transform, PrimitiveType.Cube, new Vector3(0f, 0.012f, 0.36f), new Vector3(0.006f, 0.055f, 0.42f), steel);
             Piece(machete.transform, PrimitiveType.Cube, new Vector3(0f, -0.016f, 0.37f), new Vector3(0.004f, 0.012f, 0.4f), edge);
             Piece(machete.transform, PrimitiveType.Cube, new Vector3(0f, 0.0f, 0.585f), new Vector3(0.006f, 0.04f, 0.05f), steel, Quaternion.Euler(-30f, 0f, 0f));
+            ViewArms.HeldHand(machete.transform, new Vector3(0f, 0f, 0.055f), new Vector3(90f, 0f, 0f), new Vector3(0.09f, -0.13f, -0.24f)); // 손잡이를 쥔 손
 
             grenade = Root("GrenadeHeld");
             if (PropModels.PlaceHeld("stick_grenade", grenade.transform, 0.36f, GunModelBuilder.ViewLayer, new Color(0.7f, 0.7f, 0.65f)) == null)

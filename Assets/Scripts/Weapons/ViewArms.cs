@@ -74,6 +74,22 @@ namespace Hunt.Weapons
             return a;
         }
 
+        /// <summary>칼 같은 손에 든 물건용: 주먹 쥔 손 + 소매 (pos·euler = 손잡이 자리, 손잡이 축은 손의 위쪽).</summary>
+        public static void HeldHand(Transform parent, Vector3 pos, Vector3 euler, Vector3 elbow)
+        {
+            Mats();
+            var h = new GameObject("손").transform;
+            h.gameObject.layer = GunModelBuilder.ViewLayer;
+            h.SetParent(parent, false);
+            h.localPosition = pos;
+            h.localRotation = Quaternion.Euler(euler);
+            GripHand(h, false);
+            Vector3 wrist = pos + h.localRotation * new Vector3(0.036f, -0.03f, -0.058f);
+            var fore = Piece(parent, Vector3.zero, Vector3.one, sleeve, Vector3.zero, true);
+            var upper = Piece(parent, Vector3.zero, Vector3.one, sleeve, Vector3.zero, true);
+            LayArm(fore, upper, wrist, elbow, new Vector3(0.06f, -0.12f, -0.25f), 0.034f);
+        }
+
         static void Mats()
         {
             if (glove != null) return;
@@ -82,7 +98,7 @@ namespace Hunt.Weapons
             cuff = EnvMaterials.Plain(new Color(0.12f, 0.11f, 0.09f), 0.1f, 0f);
         }
 
-        Transform Piece(Transform parent, Vector3 pos, Vector3 scale, Material mat, Vector3 euler, bool capsule)
+        static Transform Piece(Transform parent, Vector3 pos, Vector3 scale, Material mat, Vector3 euler, bool capsule)
         {
             GameObject g = capsule ? GameObject.CreatePrimitive(PrimitiveType.Capsule) : FX.LowSphere();
             var col = g.GetComponent<Collider>();
@@ -111,7 +127,7 @@ namespace Hunt.Weapons
         }
 
         /// <summary>손잡이를 쥔 손 (손잡이 축 = 위, 손가락은 앞쪽을 감싼다).</summary>
-        void GripHand(Transform h, bool trigger)
+        static void GripHand(Transform h, bool trigger)
         {
             Piece(h, new Vector3(0.024f, 0.0f, -0.008f), new Vector3(0.036f, 0.085f, 0.07f), glove, Vector3.zero, false);    // 손바닥·손등
             Piece(h, new Vector3(0.034f, -0.004f, -0.026f), new Vector3(0.04f, 0.07f, 0.055f), glove, Vector3.zero, false);  // 손등 두께
