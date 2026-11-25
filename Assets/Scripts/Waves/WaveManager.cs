@@ -482,6 +482,7 @@ namespace Hunt.Waves
                 if (a == MonsterArchetype.Boss && m != null)
                 {
                     Boss = m;
+                    if (!bossSpawned) bossKillsAtSpawn = Monster.BossKills;
                     bossSpawned = true;
                     m.Revealed = true; // 보스 위치는 항상 화면에 표시
                     m.Alert(999f);
@@ -613,13 +614,15 @@ namespace Hunt.Waves
         /// <summary>보스가 쓰러지면 남은 망자도 함께 무너진다.</summary>
         bool overtime, timedOut;
         /// <summary>이번 밤 보스가 나왔다가 쓰러졌다 (쓰러지면 오브젝트가 곧 사라져 null이 된다).</summary>
-        bool BossDown => bossSpawned && (Boss == null || Boss.IsDead);
+        bool BossDown => bossSpawned && Monster.BossKills > bossKillsAtSpawn && (Boss == null || Boss.IsDead);
+        int bossKillsAtSpawn;
         int bossRetries;
 
         /// <summary>보스 단계인데 보스가 없다 (생성 실패): 다시 부른다. 세 번 다 실패할 때만 밤을 넘긴다.</summary>
         void RetryBoss(GameManager gm)
         {
-            if (bossSpawned) { ClearRound(gm); return; } // 이미 나왔다가 사라졌다 = 쓰러졌다
+            if (bossSpawned && Monster.BossKills > bossKillsAtSpawn) { ClearRound(gm); return; } // 나왔다가 쓰러졌다
+            if (bossSpawned) bossSpawned = false; // 쓰러지지 않고 사라졌다 (맵 밖으로 빠짐 등) → 다시 부른다
             if (++bossRetries > 3) { Debug.LogWarning("[Hunt] 보스를 세 번 불러도 나오지 않아 밤을 넘깁니다."); ClearRound(gm); return; }
             queue.Enqueue(MonsterArchetype.Boss);
             spawnTimer = 0f;
@@ -629,7 +632,7 @@ namespace Hunt.Waves
         void ClearRound(GameManager gm)
         {
             // 보스를 쓰러뜨려 끝났나 (보스 오브젝트는 죽으면 곧 사라지므로 '나왔었다' 표시로 판단)
-            bool bossKill = bossSpawned && (Boss == null || Boss.IsDead);
+            bool bossKill = bossSpawned && Monster.BossKills > bossKillsAtSpawn;
             bossSpawned = false;
             Stage = RoundStage.Cleared;
             Spawning = false;

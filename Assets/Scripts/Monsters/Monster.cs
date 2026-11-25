@@ -1162,10 +1162,14 @@ namespace Hunt.Monsters
         // 최근 쓰러진 자리 (25초): 지나가던 망자가 6m 안에서 보면 뒤지러 온다
         static readonly List<Vector4> recentBodies = new List<Vector4>(); // xyz = 자리, w = 쓰러진 때
 
+        /// <summary>판 전체에서 실제로 쓰러진 보스 수 (WaveManager가 '사라진 것'과 '쓰러진 것'을 가린다).</summary>
+        public static int BossKills;
+
         void Die()
         {
             if (IsDead) return;
             IsDead = true;
+            if (IsBoss) BossKills++;
             if (recentBodies.Count >= 12) recentBodies.RemoveAt(0);
             recentBodies.Add(new Vector4(transform.position.x, transform.position.y, transform.position.z, Time.time));
             Alive.Remove(this);
