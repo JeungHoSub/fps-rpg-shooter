@@ -120,7 +120,7 @@ Unity 1인칭 싱글플레이 좀비 슈터 + RPG. **비 오는 밤의 한국 �
     18:21~: 망자 시야 벽 검사(`Sense` blocked, 2.5m 안은 앎) · 돌풍 `SFX.Wind`(`Noise.GustUntil` ×0.8, `Hiding.ShakeAll`, 소리 막대 표시) · 떼 가까우면 땅울림(`hordeThump`).
     19:21~: 벽 너머 그르렁 작게 · 현상금 망자 덤불 숨기(`bountyBush` → `Lurk`) · 떼 함께 알아챔(`packAlerted`) · 둘째 밤 몰래 하기 안내(`hunt.tut.stealth`) · `HUD.Notify(text, color, seconds)`. 20:22 보고함. 떼 바삐 걷기 `Monster.InHorde`.
     21:21~: 물 댄 논 `Hiding.InPaddy`(발소리 ×1.6, 걸음 ×0.85, 망자도 느림, 소리 막대 표시) · 물 튐 `FX.Splash`(나·망자 첨벙). 22:25 보고함.
-    23:21~: 벽 너머 망자 발소리 작게. 00:21~: 시체 발견 → 뒤지기 (`Monster.recentBodies`, `seenBodyAt`).
+    23:21~: 벽 너머 망자 발소리 작게. 00:21~: 시체 발견 → 뒤지기 (`Monster.recentBodies`, `seenBodyAt`). 01:21~: 도감 버릇 7줄.
   - 2026-11-24 05:55~10:20 작업 서버 재시작으로 멈춤 → 10:22 재개. 커밋 전 컴파일 확인은 scratchpad `ship.sh "메시지"` (오류면 커밋 안 함).
   - 보류: 망자 모델 다양화 (Mixamo — 사용자 토큰 다시 필요, 토큰은 하루쯤 지나면 만료).
   - 이후 작은 후보: 사용자 피드백 반영 → 성능(실기기 확인 필요) · 버그 점검 · 소리/연출 다듬기.
