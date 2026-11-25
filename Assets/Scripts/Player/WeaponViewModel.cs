@@ -331,7 +331,13 @@ namespace Hunt.Player
             rot.x += 40f * sw;
 
             // 슬라이드 / 펌프 / 노리쇠
-            if (model.action != null && !holdAction)
+            // 권총: 마지막 탄을 쏘면 슬라이드가 뒤로 물린 채 멈춘다 (장전 끝에 놓아 준다)
+            var cw = wp.Current;
+            bool slideLock = model.action != null && cw != null && cw.data.weaponClass == Combat.WeaponClass.Pistol && cw.ammoInMag == 0
+                             && actionT >= 0.5f && !(wp.IsReloading && wp.ReloadProgress > 0.86f);
+            if (slideLock)
+                model.action.localPosition = model.actionRest + Vector3.back * model.actionTravel;
+            else if (model.action != null && !holdAction)
             {
                 actionT += dt / Mathf.Max(0.01f, actionDuration);
                 float a = actionT >= 1f ? 0f : Mathf.Sin(Mathf.Clamp01(actionT) * Mathf.PI);
