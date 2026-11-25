@@ -348,8 +348,13 @@ namespace Hunt.Monsters
                 case "shriek": eye = new Color(0.95f, 0.95f, 1f); eyeSize = 0.042f; break;  // 곡하는: 허연 눈
                 default: eye = new Color(1f, 0.15f, 0.08f); break;
             }
+            // 미친·그림자·곡하는 망자는 어둠 속에서 눈빛이 번진다 (멀리서도 '저건 위험하다'를 알게, '하'는 생략)
+            bool halo = (kind == "frenzy" || kind == "stalker" || kind == "shriek") && Hunt.Core.QualityManager.Level != Hunt.Core.GfxLevel.Low;
             foreach (var sx in new[] { -0.045f, 0.045f })
-                Cosmetic(PrimitiveType.Sphere, rig.Head, eyeBase + R.right * sx * u, Quaternion.identity, Vector3.one * eyeSize * u, eye, true);
+            {
+                var e = Cosmetic(PrimitiveType.Sphere, rig.Head, eyeBase + R.right * sx * u, Quaternion.identity, Vector3.one * eyeSize * u, eye, true);
+                if (halo) Hunt.Core.FX.MakeGlow(e, new Color(eye.r, eye.g, eye.b, 0.6f), 4.5f, false);
+            }
             KindDressing(kind, rig, R, u);
             EliteDressing(d, rig, R, u);
 
@@ -587,7 +592,7 @@ namespace Hunt.Monsters
             return Volume(PrimitiveType.Cube, m, zone, bone, (a + b) * 0.5f, rot, new Vector3(width, len, depth), hp);
         }
 
-        static void Cosmetic(PrimitiveType type, Transform parent, Vector3 worldPos, Quaternion worldRot, Vector3 worldScale, Color c, bool glow)
+        static GameObject Cosmetic(PrimitiveType type, Transform parent, Vector3 worldPos, Quaternion worldRot, Vector3 worldScale, Color c, bool glow)
         {
             // 공은 가벼운 공(꼭짓점 ~60, 기본 공은 515) — 망자 수십 마리 × 장식 여럿이라 차이가 크다
             var go = type == PrimitiveType.Sphere ? Hunt.Core.FX.LowSphere() : GameObject.CreatePrimitive(type);
@@ -602,6 +607,7 @@ namespace Hunt.Monsters
             // 작은 장식(눈·징·진액·술 등)은 그림자를 만들지 않는다 — 망자 수십 마리 × 장식 십여 개의 그림자 계산을 줄임
             if (glow || worldScale.magnitude < 0.25f) { r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; r.receiveShadows = false; }
             go.transform.SetParent(parent, true);
+            return go;
         }
 
         static MonsterPart WeakPoint(Transform root, Monster m, WeakPointLocation loc, float size)
