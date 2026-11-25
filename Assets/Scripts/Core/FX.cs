@@ -592,13 +592,37 @@ namespace Hunt.Core
         }
 
         /// <summary>총구 → 탄착점으로 날아가는 예광탄.</summary>
+        static Material beamMat;
+
+        /// <summary>예광탄 줄: 폭 방향으로 가운데는 희고 밝게, 가장자리는 투명하게.</summary>
+        static Material BeamMaterial()
+        {
+            if (beamMat != null) return beamMat;
+            const int W = 4, H = 32;
+            var tex = new Texture2D(W, H, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, name = "TracerBeam" };
+            var px = new Color32[W * H];
+            for (int y = 0; y < H; y++)
+            {
+                float v = Mathf.Abs((y + 0.5f) / H - 0.5f) * 2f;
+                float a = Mathf.Pow(Mathf.Clamp01(1f - v), 1.6f);
+                float core = Mathf.Clamp01(1f - v * 3f);
+                for (int x = 0; x < W; x++) px[y * W + x] = new Color(1f, 1f, Mathf.Lerp(0.85f, 1f, core), a);
+            }
+            tex.SetPixels32(px);
+            tex.Apply(false, true);
+            beamMat = new Material(Shader.Find("Sprites/Default")) { name = "TracerBeam", mainTexture = tex };
+            return beamMat;
+        }
+
         public static void Tracer(Vector3 from, Vector3 to, Color color, float width)
         {
             var go = new GameObject("Tracer");
             if (root != null) go.transform.SetParent(root, false);
             var lr = go.AddComponent<LineRenderer>();
-            lr.sharedMaterial = UnlitMaterial(Color.white);
+            lr.sharedMaterial = BeamMaterial(); // 가로로 부드럽게 사라지는 빛줄기 (딱딱한 띠 대신)
+            lr.textureMode = LineTextureMode.Stretch;
             lr.positionCount = 2;
+            width *= 1.6f; // 가장자리가 투명해진 만큼
             lr.startWidth = width;
             lr.endWidth = width * 0.3f;
             lr.startColor = color;
