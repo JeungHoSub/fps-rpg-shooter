@@ -142,6 +142,8 @@ namespace Hunt.Waves
             bossSpawned = false;
             defenseBossSent = false;
             Failed = false;
+            overtime = timedOut = false;
+            bossRetries = 0;
             Monster.GlobalRush = false;
             Monster.DefendTarget = null;
             ChooseRule();
@@ -237,7 +239,7 @@ namespace Hunt.Waves
         }
 
         /// <summary>보상 배율: 변고 하나마다 +25%.</summary>
-        public float RewardMult => 1f + 0.25f * Modifiers.Count;
+        public float RewardMult => (1f + 0.25f * Modifiers.Count) * (timedOut ? 0.5f : 1f);
 
         void SetupDefense()
         {
@@ -534,11 +536,19 @@ namespace Hunt.Waves
                 if (prevT > 30f && TimeLeft <= 30f)
                     HUD.Notify(Rule == RoundRule.Mission ? "30초 남았다 — 남은 망자를 서둘러 찾아라 (M 지도)" : "30초만 더 버텨라 — 곧 날이 밝는다", new Color(1f, 0.75f, 0.4f));
                 if (prevT > 10f && TimeLeft <= 10f && Rule == RoundRule.Mission) { HUD.Notify("10초!", new Color(1f, 0.35f, 0.3f)); SFX.Play(SFX.Gong, 0.5f, 0f); }
-                if (TimeLeft <= 0f)
+                if (TimeLeft <= 0f && !overtime)
                 {
-                    if (Rule == RoundRule.Defense) { HUD.Notify("날이 밝았다 — 끝까지 지켜냈다", new Color(0.5f, 1f, 0.6f)); ClearRound(gm); }
-                    else FailRound("시간이 다 됐다");
-                    return;
+                    // 시간이 다 돼도 보스가 살아 있으면 밤은 끝나지 않는다 (보스를 쓰러뜨려야 새벽)
+                    overtime = true;
+                    if (Rule == RoundRule.Defense)
+                        HUD.Notify("버텨 냈다 — 이제 보스를 쓰러뜨려야 날이 밝는다", new Color(1f, 0.75f, 0.4f), 6f);
+                    else
+                    {
+                        timedOut = true; // 소탕 시간 초과: 보상 절반
+                        HUD.Notify("시간이 다 됐다 — 보상은 절반, 보스를 쓰러뜨려야 날이 밝는다", new Color(1f, 0.5f, 0.4f), 6f);
+                    }
+                    // 아직 보스가 안 나왔으면 바로 부른다
+                    if (Boss == null && !queue.Contains(MonsterArchetype.Boss)) { Stage = RoundStage.Boss; stageClock = 0f; queue.Clear(); queue.Enqueue(MonsterArchetype.Boss); spawnTimer = 0f; }
                 }
             }
 
@@ -559,7 +569,7 @@ namespace Hunt.Waves
                     HUD.Notify("보스 '대감의 그림자'가 돌무더기를 노린다 — 쓰러뜨리면 밤이 끝난다", new Color(1f, 0.35f, 0.35f));
                     SFX.Play(SFX.Gong, 0.9f, 0f);
                 }
-                if (Stage == RoundStage.Boss && Boss != null && Boss.IsDead) { ClearRound(gm); return; }
+                if (Stage == RoundStage.Boss && BossDown) { ClearRound(gm); return; }
                 if (queue.Count == 0 && Monster.Alive.Count < QualityManager.MaxAliveMonsters - 2)
                     queue.Enqueue(Random.value < 0.15f + Wave * 0.02f ? (Random.value < 0.6f ? MonsterArchetype.Brute : MonsterArchetype.Spitter) : MonsterArchetype.Runner);
                 Monster.GlobalRush = true;
@@ -570,8 +580,8 @@ namespace Hunt.Waves
                 // 소탕: 기본 → 엘리트 → 보스, 보스까지 모두 잡으면 클리어
                 if (Stage == RoundStage.Normal && queue.Count == 0 && Monster.Alive.Count <= 2) BeginStage(RoundStage.Elite);
                 else if (Stage == RoundStage.Elite && queue.Count == 0 && (Monster.Alive.Count == 0 || stageClock > 75f)) BeginStage(RoundStage.Boss);
-                else if (Stage == RoundStage.Boss && Boss != null && Boss.IsDead) ClearRound(gm);
-                else if (Stage == RoundStage.Boss && queue.Count == 0 && Boss == null && stageClock > 5f) ClearRound(gm);
+                else if (Stage == RoundStage.Boss && BossDown) ClearRound(gm);
+                else if (Stage == RoundStage.Boss && queue.Count == 0 && Boss == null && stageClock > 5f) RetryBoss(gm);
                 return;
             }
 
@@ -586,8 +596,8 @@ namespace Hunt.Waves
                     if (queue.Count == 0 && (CountElites() == 0 || stageClock > 75f)) BeginStage(RoundStage.Boss);
                     break;
                 case RoundStage.Boss:
-                    if (Boss != null && Boss.IsDead) ClearRound(gm);
-                    else if (queue.Count == 0 && Boss == null && stageClock > 5f) ClearRound(gm); // 안전장치 (보스 생성 실패)
+                    if (BossDown) ClearRound(gm);
+                    else if (queue.Count == 0 && Boss == null && stageClock > 5f) RetryBoss(gm); // 보스가 안 나왔으면 다시 부른다
                     break;
             }
         }
@@ -601,6 +611,21 @@ namespace Hunt.Waves
         }
 
         /// <summary>보스가 쓰러지면 남은 망자도 함께 무너진다.</summary>
+        bool overtime, timedOut;
+        /// <summary>이번 밤 보스가 나왔다가 쓰러졌다 (쓰러지면 오브젝트가 곧 사라져 null이 된다).</summary>
+        bool BossDown => bossSpawned && (Boss == null || Boss.IsDead);
+        int bossRetries;
+
+        /// <summary>보스 단계인데 보스가 없다 (생성 실패): 다시 부른다. 세 번 다 실패할 때만 밤을 넘긴다.</summary>
+        void RetryBoss(GameManager gm)
+        {
+            if (bossSpawned) { ClearRound(gm); return; } // 이미 나왔다가 사라졌다 = 쓰러졌다
+            if (++bossRetries > 3) { Debug.LogWarning("[Hunt] 보스를 세 번 불러도 나오지 않아 밤을 넘깁니다."); ClearRound(gm); return; }
+            queue.Enqueue(MonsterArchetype.Boss);
+            spawnTimer = 0f;
+            stageClock = 0f;
+        }
+
         void ClearRound(GameManager gm)
         {
             // 보스를 쓰러뜨려 끝났나 (보스 오브젝트는 죽으면 곧 사라지므로 '나왔었다' 표시로 판단)
