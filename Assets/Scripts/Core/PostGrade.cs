@@ -10,6 +10,7 @@ namespace Hunt.Core
     [RequireComponent(typeof(Camera))]
     public class PostGrade : MonoBehaviour
     {
+        float hurt;
         Material mat;
         bool failed;
 
@@ -30,10 +31,15 @@ namespace Hunt.Core
                 return;
             }
             float dawn = Atmosphere.Instance != null ? Atmosphere.Instance.Dawn : 0f;
-            mat.SetFloat("_Sat", Mathf.Lerp(0.82f, 0.95f, dawn));                       // 밤은 빛이 바랜 색
+            // 많이 다치면 세상이 잿빛으로 바래고 가장자리가 좁아진다 (생명 35% 아래부터, 천천히 따라감)
+            var gm = GameManager.Instance;
+            var pl = gm != null ? gm.Player : null;
+            float hurtTarget = pl != null && !pl.IsDead && pl.MaxHp > 0f ? Mathf.InverseLerp(0.35f, 0.1f, pl.Hp / pl.MaxHp) : 0f;
+            hurt = Mathf.MoveTowards(hurt, hurtTarget, Time.unscaledDeltaTime * 1.5f);
+            mat.SetFloat("_Sat", Mathf.Lerp(0.82f, 0.95f, dawn) * Mathf.Lerp(1f, 0.35f, hurt)); // 밤은 빛이 바랜 색
             mat.SetFloat("_Contrast", 1.12f);
             mat.SetFloat("_Pivot", 0.28f);
-            mat.SetFloat("_Vignette", 0.85f); // 모서리 약 60% 밝기 (밤이라 너무 어둡지 않게)
+            mat.SetFloat("_Vignette", 0.85f + hurt * 0.6f); // 모서리 약 60% 밝기 (밤이라 너무 어둡지 않게)
             mat.SetFloat("_Grain", QualityManager.Level == GfxLevel.Low ? 0.018f : 0.028f);
             mat.SetFloat("_Seed", Time.unscaledTime % 97f);
             mat.SetFloat("_Fxaa", QualitySettings.antiAliasing > 0 ? 0f : 1f); // MSAA가 없으면 가장자리 계단을 부드럽게
