@@ -232,6 +232,7 @@ namespace Hunt.Core
 
         void Update()
         {
+            Shader.SetGlobalFloat("_HuntWet", Mathf.Clamp01(RainIntensity) * (1f - Dawn * 0.5f)); // 총이 빗물에 젖는다 (GunMetal 셰이더)
             var gm = GameManager.Instance;
             var cam = gm != null ? gm.ActiveCamera : null;
             float dt = Time.unscaledDeltaTime;

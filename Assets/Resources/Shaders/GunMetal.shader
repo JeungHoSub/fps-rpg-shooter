@@ -21,6 +21,7 @@ Shader "Hunt/GunMetal"
 
         fixed4 _Color;
         half _Metallic, _Glossiness, _Grain, _Wood, _Rim;
+        float _HuntWet; // 비 세기 (Atmosphere가 전역으로 넣는다, 0~1)
 
         struct Input
         {
@@ -67,10 +68,14 @@ Shader "Hunt/GunMetal"
             float woodTone = lerp(0.72, 1.18, ring) * lerp(0.9, 1.05, mid);
             float tone = lerp(metalTone, woodTone, _Wood);
 
-            o.Albedo = _Color.rgb * tone;
+            // 비에 젖음: 조금 어둡고 더 반들반들 + 군데군데 맺힌 물방울
+            float wet = saturate(_HuntWet);
+            float drop = step(0.9, vnoise(p * 420.0 + 3.0)) * wet;
+            o.Albedo = _Color.rgb * tone * lerp(1.0, 0.85, wet) * (1.0 - drop * 0.25);
             o.Metallic = _Metallic * (1.0 - _Wood);
             // 손이 닿는 곳처럼 군데군데 더 반들반들 (닳은 광택)
             o.Smoothness = saturate(_Glossiness * lerp(0.7, 1.15, wear) * lerp(1.0, 0.55, _Wood) * lerp(0.9, 1.05, fine));
+            o.Smoothness = saturate(lerp(o.Smoothness, max(o.Smoothness, 0.75), wet * 0.6) + drop);
 
             half rim = 1.0 - saturate(dot(normalize(IN.viewDir), normalize(IN.worldNormal)));
             o.Emission = pow(rim, 3.0) * _Rim * half3(0.32, 0.38, 0.5) * 0.22 * (1.0 - _Wood * 0.6);
