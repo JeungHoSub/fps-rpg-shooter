@@ -42,6 +42,46 @@ namespace Hunt.Core
             poolIndex = 0;
             debris = MakeSystem("FX_Debris", 1.3f, ParticleSystemRenderMode.Billboard);
             sparks = MakeSystem("FX_Sparks", 0.7f, ParticleSystemRenderMode.Stretch);
+            mist = MakeSystem("FX_Mist", -0.03f, ParticleSystemRenderMode.Billboard);
+            // 연기·피 안개: 퍼지며 커진다
+            var msol = mist.sizeOverLifetime;
+            msol.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 0.45f), new Keyframe(0.3f, 1f), new Keyframe(1f, 1.6f)));
+            var mcol = mist.colorOverLifetime;
+            mcol.enabled = true;
+            var mg = new Gradient();
+            mg.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                       new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(0.6f, 0.4f), new GradientAlphaKey(0f, 1f) });
+            mcol.color = mg;
+            var mmain = mist.main;
+            mmain.maxParticles = 400;
+            mist.GetComponent<ParticleSystemRenderer>().sharedMaterial = SoftMaterial(true);
+        }
+
+        static ParticleSystem mist;     // 피 안개·연기 (부드럽게 커지며 사라짐)
+        static Material softDotMat, softCloudMat;
+
+        /// <summary>둥근 입자 재질: dot = 가운데가 진한 작은 방울, cloud = 아주 부드러운 구름.</summary>
+        static Material SoftMaterial(bool cloud)
+        {
+            var m = cloud ? softCloudMat : softDotMat;
+            if (m != null) return m;
+            const int S = 32;
+            var tex = new Texture2D(S, S, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, name = cloud ? "SoftCloud" : "SoftDot" };
+            var px = new Color32[S * S];
+            for (int y = 0; y < S; y++)
+                for (int x = 0; x < S; x++)
+                {
+                    float dx = (x - S / 2f + 0.5f) / (S / 2f), dy = (y - S / 2f + 0.5f) / (S / 2f);
+                    float r = Mathf.Sqrt(dx * dx + dy * dy);
+                    float a = cloud ? Mathf.Pow(Mathf.Clamp01(1f - r), 2.2f)
+                                    : Mathf.Clamp01((1f - r) * 3.5f);
+                    px[y * S + x] = new Color32(255, 255, 255, (byte)(255 * a));
+                }
+            tex.SetPixels32(px);
+            tex.Apply(false, true);
+            m = new Material(Shader.Find("Sprites/Default")) { name = tex.name, mainTexture = tex };
+            if (cloud) softCloudMat = m; else softDotMat = m;
+            return m;
         }
 
         static ParticleSystem MakeSystem(string name, float gravity, ParticleSystemRenderMode mode)
@@ -63,7 +103,7 @@ namespace Hunt.Core
             sol.enabled = true;
             sol.size = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.Linear(0f, 1f, 1f, 0f));
             var r = go.GetComponent<ParticleSystemRenderer>();
-            r.sharedMaterial = UnlitMaterial(Color.white);
+            r.sharedMaterial = SoftMaterial(false); // 둥글고 가장자리가 부드러운 입자 (네모 입자는 싸구려처럼 보인다)
             r.renderMode = mode;
             if (mode == ParticleSystemRenderMode.Stretch)
             {
@@ -388,8 +428,8 @@ namespace Hunt.Core
         {
             int n = Mathf.Max(1, Mathf.RoundToInt(2f * amount));
             for (int i = 0; i < n; i++)
-                Emit(debris, pos + fwd * 0.05f, fwd * Random.Range(0.3f, 0.8f) + Vector3.up * Random.Range(0.4f, 0.9f) + Random.insideUnitSphere * 0.2f,
-                    Random.Range(0.12f, 0.24f) * amount, Random.Range(0.5f, 0.9f), new Color(0.55f, 0.55f, 0.55f, 0.22f));
+                Emit(mist, pos + fwd * 0.05f, fwd * Random.Range(0.3f, 0.8f) + Vector3.up * Random.Range(0.3f, 0.7f) + Random.insideUnitSphere * 0.2f,
+                    Random.Range(0.12f, 0.22f) * amount, Random.Range(0.7f, 1.2f), new Color(0.6f, 0.6f, 0.62f, 0.2f));
         }
 
         public static void ImpactFlesh(Vector3 point, Vector3 shotDir, Color color, int amount)
@@ -399,6 +439,14 @@ namespace Hunt.Core
             {
                 Vector3 v = (shotDir * 0.6f + Random.insideUnitSphere).normalized * Random.Range(1.5f, 4.5f) + Vector3.up;
                 Emit(debris, point, v, Random.Range(0.04f, 0.1f), Random.Range(0.3f, 0.6f), color * Random.Range(0.75f, 1.1f));
+            }
+            // 맞은 자리에서 확 퍼지는 피 안개 (총알이 나가는 쪽으로 조금 더)
+            int puffs = amount >= 8 ? 3 : 2;
+            for (int i = 0; i < puffs; i++)
+            {
+                Color mc = new Color(color.r * 0.8f, color.g * 0.6f, color.b * 0.6f, 0.45f);
+                Emit(mist, point + shotDir * 0.05f, shotDir * Random.Range(0.6f, 1.6f) + Random.insideUnitSphere * 0.5f,
+                    Random.Range(0.22f, 0.36f), Random.Range(0.3f, 0.45f), mc);
             }
         }
 
