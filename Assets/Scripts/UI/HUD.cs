@@ -24,7 +24,7 @@ namespace Hunt.UI
             for (int i = 0; i < notes.Count; i++)
                 if (notes[i].text == text) { notes.RemoveAt(i); break; } // 같은 알림은 갱신
             notes.Add(new Note { text = text, color = color, time = seconds, y = -1f });
-            if (notes.Count > 6) notes.RemoveAt(0);
+            if (notes.Count > 4) notes.RemoveAt(0); // 화면이 어지럽지 않게 4줄까지
         }
 
         // 화면 객체는 Awake에서 만든다 (필드 초기화 시점에는 유니티 오브젝트 생성이 금지됨)
@@ -215,12 +215,13 @@ namespace Hunt.UI
                 if (n.y < 0f) n.y = y;
                 else if (UIKit.IsRepaint) n.y = Mathf.Lerp(n.y, y, 1f - Mathf.Exp(-14f * Mathf.Min(Time.unscaledDeltaTime, 0.05f)));
                 notes[i] = n;
-                var r = new Rect(W / 2 - 420, n.y + slide, 840, 34);
-                UIKit.Tex(new Rect(r.x, r.y + 2, r.width, r.height - 4), UITheme.LineFade, new Color(0f, 0f, 0f, 0.55f * a));
+                // 알림 글씨는 작고 차분하게 (화면 가운데를 덜 가리게), 새 알림만 또렷하고 오래된 건 옅게
+                var r = new Rect(W / 2 - 400, n.y + slide, 800, 28);
+                UIKit.Tex(new Rect(r.x, r.y + 2, r.width, r.height - 4), UITheme.LineFade, new Color(0f, 0f, 0f, 0.45f * a));
                 var c = n.color;
-                c.a = a;
-                UIKit.Text(r, n.text, 21, c, TextAnchor.MiddleCenter, serif: true, bold: true);
-                y += 36;
+                c.a = a * (i == notes.Count - 1 ? 1f : 0.8f);
+                UIKit.Text(r, n.text, 17, c, TextAnchor.MiddleCenter, serif: true, bold: i == notes.Count - 1);
+                y += 29;
             }
         }
     }
