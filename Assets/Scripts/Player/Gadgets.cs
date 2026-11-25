@@ -557,7 +557,6 @@ namespace Hunt.Player
         PlayerCharacter owner;
         float damage, radius, life = 6f;
         bool rocket;
-        TrailRenderer trail;
 
         public static void Fire(Vector3 from, Vector3 velocity, PlayerCharacter owner, float damage, float radius, bool rocket)
         {
