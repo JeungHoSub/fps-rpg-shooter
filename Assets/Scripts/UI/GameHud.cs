@@ -592,6 +592,8 @@ namespace Hunt.UI
                 if (sp.z < 0.2f) continue;
                 float x = sp.x * k, y = (Screen.height - sp.y) * k;
                 if (x < 0 || x > W || y < 0 || y > H) continue;
+                // 벽·집 너머에 있는 건 이름표를 띄우지 않는다 (가까운 3m 안은 그대로)
+                if (dist > 3f && Physics.Linecast(cam.transform.position, wp, ~((1 << 2) | (1 << 1)), QueryTriggerInteraction.Ignore)) continue;
                 shown++;
                 bool can = pk.Takeable;
                 bool inReach = dist < Pickup.GrabRange + 0.6f;
