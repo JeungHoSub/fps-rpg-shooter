@@ -22,6 +22,8 @@ namespace Hunt.Monsters
             go.transform.localScale = Vector3.one * 0.35f;
             go.GetComponent<Renderer>().sharedMaterial = EnvMaterials.Emissive(new Color(0.55f, 1f, 0.2f), 1.2f); // 공유 재질 (침마다 재질이 새로 남지 않게), 어둠에서도 보이게 빛남
 
+            FX.MakeGlow(go, new Color(0.55f, 1f, 0.25f, 0.6f), 3f, false); // 독침 둘레 초록 빛무리
+
             var p = go.AddComponent<MonsterProjectile>();
             p.target = target;
             p.damage = damage;

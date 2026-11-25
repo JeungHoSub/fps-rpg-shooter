@@ -84,6 +84,43 @@ namespace Hunt.Core
             return flameMat;
         }
 
+        /// <summary>
+        /// 빛 덩이: host의 단색 공은 숨기고(hideHost) 카메라를 보는 부드러운 빛 판 + 작은 밝은 심을 붙인다.
+        /// 도깨비불·혼불처럼 '공'이 아니라 번지는 빛으로 보여야 하는 것.
+        /// </summary>
+        public static void MakeGlow(GameObject host, Color c, float size, bool hideHost = true)
+        {
+            var hr = host.GetComponent<Renderer>();
+            if (hr != null && hideHost) hr.enabled = false;
+            for (int i = 0; i < 2; i++)
+            {
+                var q = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                Object.Destroy(q.GetComponent<Collider>());
+                q.layer = host.layer;
+                q.transform.SetParent(host.transform, false);
+                q.transform.localScale = Vector3.one * (i == 0 ? size : size * 0.35f);
+                var r = q.GetComponent<Renderer>();
+                r.sharedMaterial = SoftMaterial(i == 0);
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                r.receiveShadows = false;
+                var mpb = new MaterialPropertyBlock();
+                mpb.SetColor("_Color", i == 0 ? new Color(c.r, c.g, c.b, c.a * 0.8f) : Color.Lerp(c, Color.white, 0.6f));
+                r.SetPropertyBlock(mpb);
+                q.AddComponent<FaceCam>();
+            }
+        }
+
+        /// <summary>판이 늘 카메라를 본다.</summary>
+        public class FaceCam : MonoBehaviour
+        {
+            void LateUpdate()
+            {
+                var gm = GameManager.Instance;
+                var cam = gm != null && gm.ActiveCamera != null ? gm.ActiveCamera : Camera.main;
+                if (cam != null) transform.rotation = cam.transform.rotation;
+            }
+        }
+
         static ParticleSystem mist;     // 피 안개·연기 (부드럽게 커지며 사라짐)
         static Material softDotMat, softCloudMat;
 

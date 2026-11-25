@@ -45,6 +45,7 @@ namespace Hunt.Core
                 r.sharedMaterial = FX.UnlitMaterial(new Color(0.45f, 0.75f, 1f, 0.75f));
                 r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 r.receiveShadows = false;
+                FX.MakeGlow(o, new Color(0.45f, 0.75f, 1f, 0.75f), 4.5f); // 공 대신 번지는 푸른 빛
                 orbs[i] = o.transform;
             }
         }
@@ -85,6 +86,7 @@ namespace Hunt.Core
             r.sharedMaterial = FX.UnlitMaterial(new Color(0.55f, 0.8f, 1f, 0.7f));
             r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             r.receiveShadows = false;
+            FX.MakeGlow(o, new Color(0.55f, 0.8f, 1f, 0.7f), 5f);
             var w = o.AddComponent<SoulWisp>();
             w.drift = new Vector3(Random.Range(-0.3f, 0.3f), 0f, Random.Range(-0.3f, 0.3f));
         }
