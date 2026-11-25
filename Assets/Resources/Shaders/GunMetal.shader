@@ -70,7 +70,7 @@ Shader "Hunt/GunMetal"
 
             // 비에 젖음: 조금 어둡고 더 반들반들 + 군데군데 맺힌 물방울
             float wet = saturate(_HuntWet);
-            float drop = step(0.9, vnoise(p * 420.0 + 3.0)) * wet;
+            float drop = step(0.9, vnoise(p * 260.0 + 3.0)) * wet;
             o.Albedo = _Color.rgb * tone * lerp(1.0, 0.85, wet) * (1.0 - drop * 0.25);
             o.Metallic = _Metallic * (1.0 - _Wood);
             // 손이 닿는 곳처럼 군데군데 더 반들반들 (닳은 광택)
