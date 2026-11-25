@@ -130,8 +130,9 @@ namespace Hunt.Monsters
 
         static void HatPiece(Transform head, PrimitiveType t, Vector3 worldPos, Quaternion rot, Vector3 scale, Material mat)
         {
-            var g = GameObject.CreatePrimitive(t);
-            Object.Destroy(g.GetComponent<Collider>());
+            var g = t == PrimitiveType.Sphere ? Hunt.Core.FX.LowSphere() : GameObject.CreatePrimitive(t);
+            var hc = g.GetComponent<Collider>();
+            if (hc != null) Object.Destroy(hc);
             g.name = "Hat";
             g.layer = 2;
             g.transform.position = worldPos;
@@ -588,8 +589,10 @@ namespace Hunt.Monsters
 
         static void Cosmetic(PrimitiveType type, Transform parent, Vector3 worldPos, Quaternion worldRot, Vector3 worldScale, Color c, bool glow)
         {
-            var go = GameObject.CreatePrimitive(type);
-            Object.DestroyImmediate(go.GetComponent<Collider>());
+            // 공은 가벼운 공(꼭짓점 ~60, 기본 공은 515) — 망자 수십 마리 × 장식 여럿이라 차이가 크다
+            var go = type == PrimitiveType.Sphere ? Hunt.Core.FX.LowSphere() : GameObject.CreatePrimitive(type);
+            var gcol = go.GetComponent<Collider>();
+            if (gcol != null) Object.DestroyImmediate(gcol);
             go.transform.position = worldPos;
             go.transform.rotation = worldRot;
             go.transform.localScale = worldScale;
