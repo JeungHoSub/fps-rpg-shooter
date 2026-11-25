@@ -33,7 +33,7 @@ namespace Hunt.Core
             mat.SetFloat("_Sat", Mathf.Lerp(0.82f, 0.95f, dawn));                       // 밤은 빛이 바랜 색
             mat.SetFloat("_Contrast", 1.12f);
             mat.SetFloat("_Pivot", 0.28f);
-            mat.SetFloat("_Vignette", 1.15f);
+            mat.SetFloat("_Vignette", 0.85f); // 모서리 약 60% 밝기 (밤이라 너무 어둡지 않게)
             mat.SetFloat("_Grain", QualityManager.Level == GfxLevel.Low ? 0.018f : 0.028f);
             mat.SetFloat("_Seed", Time.unscaledTime % 97f);
             // 어두운 곳: 푸르스름한 먹빛 / 밝은 곳(불빛·손전등): 따뜻한 등잔 빛
