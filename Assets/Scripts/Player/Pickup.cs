@@ -211,8 +211,9 @@ namespace Hunt.Player
         // ---- 모양 만들기 (도형 몇 개 + 단색/빛나는 재질, 가볍게) ----
         Transform Part(PrimitiveType t, Vector3 pos, Vector3 scale, Material m, Vector3? euler = null)
         {
-            var go = GameObject.CreatePrimitive(t);
-            Destroy(go.GetComponent<Collider>());
+            var go = t == PrimitiveType.Sphere ? FX.LowSphere() : GameObject.CreatePrimitive(t); // 공은 가벼운 공 (보급품이 많이 떨어져도)
+            var gc = go.GetComponent<Collider>();
+            if (gc != null) Destroy(gc);
             go.layer = 2;
             go.transform.SetParent(visual, false);
             go.transform.localPosition = pos;
