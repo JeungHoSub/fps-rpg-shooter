@@ -381,6 +381,8 @@ namespace Hunt.Player
             grenade = Root("GrenadeHeld");
             if (PropModels.PlaceHeld("stick_grenade", grenade.transform, 0.36f, GunModelBuilder.ViewLayer, new Color(0.7f, 0.7f, 0.65f)) == null)
                 Piece(grenade.transform, PrimitiveType.Sphere, Vector3.zero, Vector3.one * 0.08f, Gadgets.Dark);
+            // 방망이 수류탄 자루 가운데(머리가 어느 쪽이든 자루인 자리)를 쥔 손
+            ViewArms.HeldHand(grenade.transform, new Vector3(0f, 0f, -0.03f), new Vector3(90f, 0f, 0f), new Vector3(0.09f, -0.13f, -0.26f));
 
             mine = Root("MineHeld");
             Piece(mine.transform, PrimitiveType.Cylinder, Vector3.zero, new Vector3(0.26f, 0.03f, 0.26f), Mat(new Color(0.2f, 0.24f, 0.16f), 0.4f, 0.3f));
