@@ -521,6 +521,20 @@ namespace Hunt.Monsters
                 blocked = !CanSee(Flashlight.Eye.position, transform.position + Vector3.up * 1.5f * Data.scale);
             if (blocked) Suspicion *= 0.5f;
             if (dist < sightThr && !blocked) { Alert(3f); Suspicion = 0f; return; }
+            // 쓰러진 동료를 보면 그 자리를 뒤지러 간다 ('?')
+            if (!IsAlerted && !hasInvestigate)
+                for (int bi = recentBodies.Count - 1; bi >= 0; bi--)
+                {
+                    var b = recentBodies[bi];
+                    if (Time.time - b.w > 25f) { recentBodies.RemoveAt(bi); continue; }
+                    var bp = new Vector3(b.x, b.y, b.z);
+                    if ((bp - transform.position).sqrMagnitude < 6f * 6f && (bp - transform.position).sqrMagnitude > 1f
+                        && CanSee(transform.position + Vector3.up * 1.5f * Data.scale, bp + Vector3.up * 0.4f))
+                    {
+                        HearNoise(bp, false);
+                        break;
+                    }
+                }
             if (hidden && !IsAlerted)
             {
                 if (dist < 3.5f && !passedHidden)
@@ -1132,10 +1146,15 @@ namespace Hunt.Monsters
             }
         }
 
+        // 최근 쓰러진 자리 (25초): 지나가던 망자가 6m 안에서 보면 뒤지러 온다
+        static readonly List<Vector4> recentBodies = new List<Vector4>(); // xyz = 자리, w = 쓰러진 때
+
         void Die()
         {
             if (IsDead) return;
             IsDead = true;
+            if (recentBodies.Count >= 12) recentBodies.RemoveAt(0);
+            recentBodies.Add(new Vector4(transform.position.x, transform.position.y, transform.position.z, Time.time));
             Alive.Remove(this);
             if (GameManager.Instance != null) GameManager.Instance.OnMonsterKilled(this);
             FX.BloodBurst(transform.position + Vector3.up * Data.scale, new Color(0.4f, 0.05f, 0.08f), Data.scale);
