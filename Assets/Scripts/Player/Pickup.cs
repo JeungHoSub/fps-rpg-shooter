@@ -224,18 +224,33 @@ namespace Hunt.Player
             return go.transform;
         }
 
+        /// <summary>치료 키트: 국방색 천 구급낭 (지퍼 테·손잡이 끈) + 흰 바탕 붉은 십자 천 조각.</summary>
         void BuildKit(Color c)
         {
-            Part(PrimitiveType.Cube, Vector3.zero, new Vector3(0.34f, 0.2f, 0.26f), FX.UnlitMaterial(c * 0.85f));
-            var white = FX.UnlitMaterial(new Color(0.95f, 0.92f, 0.85f));
-            Part(PrimitiveType.Cube, new Vector3(0f, 0.1f, 0f), new Vector3(0.2f, 0.03f, 0.06f), white);
-            Part(PrimitiveType.Cube, new Vector3(0f, 0.1f, 0f), new Vector3(0.06f, 0.03f, 0.2f), white);
+            var canvas = EnvMaterials.Plain(new Color(0.3f, 0.31f, 0.22f), 0.12f, 0f);
+            var seam = EnvMaterials.Plain(new Color(0.16f, 0.16f, 0.13f), 0.2f, 0f);
+            var white = EnvMaterials.Plain(new Color(0.9f, 0.88f, 0.82f), 0.2f, 0f);
+            var red = FX.UnlitMaterial(new Color(0.78f, 0.12f, 0.1f));
+            Part(PrimitiveType.Sphere, Vector3.zero, new Vector3(0.34f, 0.17f, 0.24f), canvas);                  // 불룩한 천 주머니
+            Part(PrimitiveType.Cube, new Vector3(0f, 0.035f, 0f), new Vector3(0.3f, 0.012f, 0.21f), seam);       // 지퍼 테
+            Part(PrimitiveType.Cube, new Vector3(0f, 0.075f, 0f), new Vector3(0.14f, 0.012f, 0.03f), seam);      // 손잡이 끈
+            Part(PrimitiveType.Cube, new Vector3(0f, 0.02f, 0.118f), new Vector3(0.1f, 0.08f, 0.004f), white);   // 십자 천 조각
+            Part(PrimitiveType.Cube, new Vector3(0f, 0.02f, 0.121f), new Vector3(0.065f, 0.018f, 0.003f), red);
+            Part(PrimitiveType.Cube, new Vector3(0f, 0.02f, 0.121f), new Vector3(0.018f, 0.06f, 0.003f), red);
         }
 
+        /// <summary>스태미너 회복제: 작은 갈색 유리 드링크 병 + 노란 띠지 + 금빛 뚜껑 (시골 가게의 그 병).</summary>
         void BuildBottle(Color c)
         {
-            Part(PrimitiveType.Cylinder, Vector3.zero, new Vector3(0.12f, 0.15f, 0.12f), FX.UnlitMaterial(c * 0.85f));
-            Part(PrimitiveType.Cylinder, new Vector3(0f, 0.19f, 0f), new Vector3(0.05f, 0.05f, 0.05f), FX.UnlitMaterial(new Color(0.85f, 0.8f, 0.7f)));
+            var glass = EnvMaterials.Plain(new Color(0.32f, 0.14f, 0.04f), 0.92f, 0.1f);
+            var label = EnvMaterials.Plain(new Color(0.92f, 0.78f, 0.25f), 0.3f, 0f);
+            var cap = EnvMaterials.Plain(new Color(0.75f, 0.6f, 0.3f), 0.75f, 0.85f);
+            Part(PrimitiveType.Cylinder, Vector3.zero, new Vector3(0.1f, 0.1f, 0.1f), glass);                    // 몸통
+            Part(PrimitiveType.Cylinder, new Vector3(0f, -0.005f, 0f), new Vector3(0.104f, 0.045f, 0.104f), label); // 띠지
+            Part(PrimitiveType.Sphere, new Vector3(0f, 0.1f, 0f), new Vector3(0.1f, 0.06f, 0.1f), glass);        // 어깨
+            Part(PrimitiveType.Cylinder, new Vector3(0f, 0.14f, 0f), new Vector3(0.045f, 0.03f, 0.045f), glass); // 목
+            Part(PrimitiveType.Cylinder, new Vector3(0f, 0.175f, 0f), new Vector3(0.05f, 0.012f, 0.05f), cap);   // 뚜껑
+            Part(PrimitiveType.Cube, new Vector3(0.025f, 0.03f, 0.03f), new Vector3(0.012f, 0.1f, 0.004f), FX.UnlitMaterial(new Color(1f, 0.9f, 0.75f, 0.5f)), new Vector3(0f, 45f, 0f)); // 유리 반짝임
         }
 
         /// <summary>탄약: 국방색 철제 탄약통 (손잡이·잠금쇠·노란 글씨 띠) + 뚜껑 위 놋쇠 탄알. 멀리서도 '탄약'으로 읽힌다.</summary>
