@@ -1018,40 +1018,28 @@ namespace Hunt.UI
             var r = new Rect(W / 2 - 110, H - 92, 220, 6);
             Color c = Color.Lerp(UITheme.GoldDim, UITheme.BloodBright, Mathf.InverseLerp(0.5f, 1f, loud));
             UIKit.Bar(r, loud, c);
-            float mask = Noise.RainMask;
-            string rain = mask < 0.75f ? "  ·  빗소리가 소리를 덮는다" : mask < 0.95f ? "  ·  빗소리" : "";
-            if (Time.time < Noise.GustUntil) rain += "  ·  돌풍";
-            if (gm.Player != null && Hiding.InPaddy(gm.Player.transform.position)) rain += "  ·  논물 첨벙";
-            float sightK = Atmosphere.SightMult;
-            if (sightK < 0.8f) rain += "  ·  안개(덜 보임)";
-            else if (sightK > 1.05f) rain += "  ·  달빛(잘 보임)";
-            string light = Flashlight.Disabled ? "  ·  손전등 금지" : Flashlight.Active ? $"  ·  <color=#{UIKit.Hex(UITheme.GoldBright)}>손전등 켜짐 — 망자가 빛을 본다</color>" : "  ·  손전등 꺼짐 (F)";
-            UIKit.Text(new Rect(r.x - 160, r.y - 22, r.width + 320, 20), "소 리" + rain + light, 13, UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true);
-            // 둘째 줄: 가로등 불빛 · 쫓는 망자 수 · 부적 (있을 때만)
-            string st = "";
-            if (!Flashlight.Active && ShootableLamp.PlayerLit()) st += $"<color=#{UIKit.Hex(UITheme.GoldBright)}>가로등 불빛 아래 — 눈에 띈다</color>";
-            var hp0 = gm.Player;
-            if (hp0 != null && hp0.Controller != null && Hiding.InBush(hp0.transform.position))
+            // 화면을 깔끔하게: 막대 왼쪽에 작은 '소리' 글자, 위에는 지금 중요한 상태만 (최대 3개, 없으면 아무것도 안 씀)
+            UIKit.Text(new Rect(r.x - 52, r.y - 8, 46, 20), "소리", 12, new Color(UITheme.BoneDim.r, UITheme.BoneDim.g, UITheme.BoneDim.b, 0.7f), TextAnchor.MiddleRight, serif: true);
+            var chips = new System.Collections.Generic.List<string>(4);
+            string Col(Color cc, string t) => $"<color=#{UIKit.Hex(cc)}>{t}</color>";
+            var pl0 = gm.Player;
+            if (Flashlight.Active) chips.Add(Col(UITheme.GoldBright, "손전등 켜짐 — 망자가 빛을 본다"));
+            else if (ShootableLamp.PlayerLit()) chips.Add(Col(UITheme.GoldBright, "가로등 불빛 아래"));
+            if (pl0 != null && pl0.Controller != null && Hiding.InBush(pl0.transform.position))
             {
-                bool hid = !Flashlight.Active && hp0.Controller.IsCrouching;
+                bool hid = !Flashlight.Active && pl0.Controller.IsCrouching;
                 if (!hid && !bushMuttered) { bushMuttered = true; Mutter("여기 앉아 숨으면 안 보이겠다"); }
-                string tip = hid ? (hp0.Controller.HoldingBreath ? "숨 참는 중" : "덤불에 숨음 (Shift 숨 참기)") : Flashlight.Active ? "덤불 — 손전등을 끄면 숨는다" : "덤불 — 앉으면(Ctrl) 숨는다";
-                st += (st.Length > 0 ? "  ·  " : "") + $"<color=#{UIKit.Hex(hid ? new Color(0.6f, 0.85f, 0.55f) : new Color(0.55f, 0.65f, 0.5f))}>{tip}</color>";
+                string tip = hid ? (pl0.Controller.HoldingBreath ? "숨 참는 중" : "숨었다 (Shift 숨 참기)") : Flashlight.Active ? "덤불 — 손전등을 끄면 숨는다" : "덤불 — 앉으면(Ctrl) 숨는다";
+                chips.Add(Col(hid ? new Color(0.6f, 0.85f, 0.55f) : new Color(0.6f, 0.7f, 0.55f), tip));
             }
             int chasing = 0;
             foreach (var cm in Monster.Alive) if (cm != null && !cm.IsDead && cm.IsAlerted) chasing++;
-            if (chasing > 0) st += (st.Length > 0 ? "  ·  " : "") + $"<color=#{UIKit.Hex(chasing >= 6 ? UITheme.BloodBright : UITheme.Warn)}>쫓는 망자 {chasing}</color>";
-            var pc = gm.Player;
-            if (pc != null && (pc.CharmGuard || pc.CharmSwift || pc.CharmAim || pc.CharmHide || pc.CharmIncense))
-                st += (st.Length > 0 ? "  ·  " : "") + $"<color=#{UIKit.Hex(new Color(0.95f, 0.85f, 0.6f))}>부적: {(pc.CharmGuard ? "호신 " : "")}{(pc.CharmSwift ? "축지 " : "")}{(pc.CharmAim ? "명중 " : "")}{(pc.CharmHide ? "은신 " : "")}{(pc.CharmIncense ? "쑥향" : "")}</color>";
-            if (pc != null && pc.Firecrackers > 0)
-                st += (st.Length > 0 ? "  ·  " : "") + $"<color=#{UIKit.Hex(new Color(1f, 0.55f, 0.45f))}>폭죽 {pc.Firecrackers} (B)</color>";
-            if (st.Length > 0)
-            {
-                // 글이 길면(태그 뺀 글자 38자 넘게) 한 단계 작게 — 무기 칸과 겹치지 않게
-                int plain = System.Text.RegularExpressions.Regex.Replace(st, "<[^>]+>", "").Length;
-                UIKit.Text(new Rect(r.x - 160, r.y - 42, r.width + 320, 20), st, plain > 38 ? 11 : 13, UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true);
-            }
+            if (chasing > 0) chips.Add(Col(chasing >= 6 ? UITheme.BloodBright : UITheme.Warn, $"쫓는 망자 {chasing}"));
+            if (chips.Count < 3 && pl0 != null && Hiding.InPaddy(pl0.transform.position)) chips.Add(Col(new Color(0.65f, 0.75f, 0.85f), "논물 첨벙"));
+            if (chips.Count < 3 && Time.time < Noise.GustUntil) chips.Add(Col(new Color(0.7f, 0.78f, 0.85f), "돌풍 — 소리가 묻힌다"));
+            if (chips.Count < 3 && pl0 != null && pl0.Firecrackers > 0) chips.Add(Col(new Color(1f, 0.6f, 0.5f), $"폭죽 {pl0.Firecrackers} (B)"));
+            if (chips.Count > 0)
+                UIKit.Text(new Rect(r.x - 200, r.y - 24, r.width + 400, 20), string.Join("   ·   ", chips), 13, UITheme.BoneDim, TextAnchor.MiddleCenter, serif: true);
         }
 
         // ---- 새벽 기록 카드: 그 밤에 한 일을 날이 밝을 때 잠깐 보여 준다 ----
