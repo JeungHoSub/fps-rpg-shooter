@@ -591,7 +591,6 @@ namespace Hunt.Player
             tr.startColor = rocket ? new Color(1f, 0.75f, 0.4f, 0.9f) : new Color(0.7f, 0.7f, 0.7f, 0.5f);
             tr.endColor = new Color(tr.startColor.r, tr.startColor.g, tr.startColor.b, 0f);
             tr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            if (rocket) FX.MakeGlow(go, new Color(1f, 0.6f, 0.25f, 0.8f), 5f, false); // 꽁무니 불빛
         }
 
         float puffClock;
