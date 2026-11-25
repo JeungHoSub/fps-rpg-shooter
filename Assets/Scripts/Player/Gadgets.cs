@@ -261,13 +261,15 @@ namespace Hunt.Player
             flames = new Transform[n];
             for (int i = 0; i < n; i++)
             {
-                var f = FX.LowSphere(); // 가벼운 공 (판정 없음)
+                // 불꽃 혀 모양 판 (카메라 쪽으로 돌아선다) — 단색 공보다 진짜 불처럼
+                var f = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                Destroy(f.GetComponent<Collider>());
                 f.layer = 2;
                 f.transform.SetParent(transform, false);
                 Vector2 p = Random.insideUnitCircle * radius * 0.85f;
                 f.transform.localPosition = new Vector3(p.x, 0.25f, p.y);
                 var r = f.GetComponent<Renderer>();
-                r.sharedMaterial = FX.UnlitMaterial(i % 3 == 0 ? new Color(1f, 0.85f, 0.3f, 0.75f) : new Color(1f, 0.42f, 0.1f, 0.6f));
+                r.sharedMaterial = FX.FlameMaterial();
                 r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 flames[i] = f.transform;
             }
@@ -292,12 +294,19 @@ namespace Hunt.Player
             life -= dt;
             float fade = Mathf.Clamp01(life / 1.2f) * Mathf.Clamp01((maxLife - life) / 0.25f);
             float t = Time.time;
+            var camT = gm != null && gm.ActiveCamera != null ? gm.ActiveCamera.transform : null;
             for (int i = 0; i < flames.Length; i++)
             {
                 if (flames[i] == null) continue;
-                float h = (0.5f + 0.5f * Mathf.PerlinNoise(i * 3.1f, t * 4f)) * 1.1f * fade;
-                flames[i].localScale = new Vector3(0.45f * fade, h, 0.45f * fade);
-                var lp = flames[i].localPosition; lp.y = h * 0.5f; flames[i].localPosition = lp;
+                float h = (0.5f + 0.5f * Mathf.PerlinNoise(i * 3.1f, t * 4f)) * 1.1f * fade * 1.35f;
+                float wv = (0.55f + 0.15f * Mathf.PerlinNoise(t * 5f, i * 1.7f)) * fade;
+                flames[i].localScale = new Vector3(wv, h, 1f);
+                var lp = flames[i].localPosition; lp.y = h * 0.45f; flames[i].localPosition = lp;
+                if (camT != null)
+                {
+                    Vector3 to = flames[i].position - camT.position; to.y = 0f;
+                    if (to.sqrMagnitude > 0.0001f) flames[i].rotation = Quaternion.LookRotation(to) * Quaternion.Euler(0f, 0f, (Mathf.PerlinNoise(i, t * 3f) - 0.5f) * 14f);
+                }
             }
             if (glow != null) glow.intensity = (2f + Mathf.PerlinNoise(t * 6f, 1f)) * fade;
             crackleClock -= dt;

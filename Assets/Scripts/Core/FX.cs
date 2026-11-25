@@ -57,6 +57,33 @@ namespace Hunt.Core
             mist.GetComponent<ParticleSystemRenderer>().sharedMaterial = SoftMaterial(true);
         }
 
+        static Material flameMat;
+
+        /// <summary>불꽃 한 혀: 아래는 희고 노란 심, 위로 갈수록 가늘고 주황·붉게 (물방울을 뒤집은 모양).</summary>
+        public static Material FlameMaterial()
+        {
+            if (flameMat != null) return flameMat;
+            const int TW = 32, TH = 64;
+            var tex = new Texture2D(TW, TH, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, name = "Flame" };
+            var px = new Color32[TW * TH];
+            for (int y = 0; y < TH; y++)
+                for (int x = 0; x < TW; x++)
+                {
+                    float v = (y + 0.5f) / TH;                      // 0 아래 → 1 위
+                    float u = Mathf.Abs((x + 0.5f) / TW - 0.5f) * 2f; // 0 가운데 → 1 가장자리
+                    float width = Mathf.Lerp(0.95f, 0.05f, Mathf.Pow(v, 0.8f)) * Mathf.Clamp01(v * 6f + 0.35f);
+                    float a = Mathf.Clamp01((width - u) / Mathf.Max(0.05f, width) * 2.2f) * Mathf.Clamp01((1f - v) * 3f);
+                    float core = Mathf.Clamp01(1f - u / Mathf.Max(0.05f, width * 0.55f)) * Mathf.Clamp01(1f - v * 1.6f);
+                    Color c = Color.Lerp(new Color(1f, 0.38f, 0.08f), new Color(1f, 0.75f, 0.25f), Mathf.Clamp01(1f - v * 1.3f));
+                    c = Color.Lerp(c, new Color(1f, 0.95f, 0.75f), core);
+                    px[y * TW + x] = new Color(c.r, c.g, c.b, a);
+                }
+            tex.SetPixels32(px);
+            tex.Apply(false, true);
+            flameMat = new Material(Shader.Find("Sprites/Default")) { name = "Flame", mainTexture = tex };
+            return flameMat;
+        }
+
         static ParticleSystem mist;     // 피 안개·연기 (부드럽게 커지며 사라짐)
         static Material softDotMat, softCloudMat;
 
