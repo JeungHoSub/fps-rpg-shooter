@@ -46,7 +46,12 @@ namespace Hunt.Player
 
             if (model != null) Destroy(model.gameObject);
             model = GunModelBuilder.Build(transform, w);
-            arms = model != null && !(w.data.id == "pistol" || w.data.id == "sniper") && PackGunModel.Has(w.data.id) ? ViewArms.Attach(model, w.data.id) : null;
+            arms = null;
+            if (model != null)
+            {
+                arms = model.transform.Find("RealModel") != null ? ViewArms.AttachReal(model, w.data.weaponClass)
+                     : PackGunModel.Has(w.data.id) ? ViewArms.Attach(model, w.data.id) : null;
+            }
             builtSignature = sig;
             actionT = 1f;
             CreateFlash();

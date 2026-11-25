@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Hunt.Combat;
 using Hunt.Core;
 using UnityEngine;
 
@@ -52,6 +53,24 @@ namespace Hunt.Weapons
             if (m == null || !Poses.TryGetValue(PackGunModel.ModelId(weaponId), out var p)) return null;
             var a = m.gameObject.AddComponent<ViewArms>();
             a.Build(m, p.gz, p.gy, p.fz, p.fy, p.pistol);
+            return a;
+        }
+
+        /// <summary>
+        /// 실사 모델(기본 권총·볼트 저격총): 원점 = 방아쇠 위. 권총은 손잡이 속 탄창 자리를 손잡이로,
+        /// 저격총은 방아쇠 뒤 개머리 목과 앞 총몸 아래.
+        /// </summary>
+        public static ViewArms AttachReal(GunModel m, WeaponClass c)
+        {
+            if (m == null || m.transform.Find("RealModel") == null) return null;
+            var a = m.gameObject.AddComponent<ViewArms>();
+            if (c == WeaponClass.Pistol)
+            {
+                Vector3 g = m.magazine != null ? m.magazineRest + new Vector3(0f, 0.012f, -0.004f) : new Vector3(0f, -0.06f, -0.04f);
+                a.Build(m, g.z, g.y, 0f, 0f, true);
+            }
+            else if (c == WeaponClass.Sniper) a.Build(m, -0.07f, -0.06f, 0.26f, -0.045f, false);
+            else { Destroy(a); return null; }
             return a;
         }
 
