@@ -19,7 +19,9 @@ namespace Hunt.Core
         const float Life = 2.2f;
 
         static Material baseMat;
-        static Material BaseMat => baseMat != null ? baseMat : (baseMat = new Material(Shader.Find("Sprites/Default")) { name = "ExplosionFx" });
+        static Material BaseMat => baseMat != null ? baseMat : (baseMat = new Material(FX.SoftMaterial(true)) { name = "ExplosionFx" });
+        const float Q = 1.9f; // 부드러운 구름 판은 가장자리가 투명해 실제로 보이는 크기가 작아서 키운다
+        float[] spin;
 
         public static void Spawn(Vector3 point, float radius, Color fireColor)
         {
@@ -32,7 +34,9 @@ namespace Hunt.Core
 
         static Transform Ball(Transform parent, Material m)
         {
-            var b = FX.LowSphere(); // 가벼운 공 (판정 없음)
+            // 카메라를 보는 부드러운 구름 판 (단색 공은 딱딱해 보였다)
+            var b = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            Object.Destroy(b.GetComponent<Collider>());
             b.layer = 2;
             b.transform.SetParent(parent, false);
             var r = b.GetComponent<Renderer>();
@@ -50,18 +54,20 @@ namespace Hunt.Core
 
             fireMat = new Material(BaseMat) { color = c };
             fire = Ball(transform, fireMat);
-            fire.localScale = Vector3.one * r * 0.3f;
+            fire.localScale = Vector3.one * r * 0.3f * Q;
 
             smokeMat = new Material(BaseMat) { color = new Color(0.16f, 0.15f, 0.14f, 0f) };
             int n = low ? 4 : 7;
             puffs = new Transform[n];
             puffVel = new Vector3[n];
+            spin = new float[n + 1];
+            for (int i = 0; i <= n; i++) spin[i] = Random.Range(0f, 360f);
             for (int i = 0; i < n; i++)
             {
                 puffs[i] = Ball(transform, smokeMat);
                 var dir = Random.insideUnitSphere; dir.y = Mathf.Abs(dir.y) + 0.3f;
                 puffs[i].localPosition = dir * r * 0.15f;
-                puffs[i].localScale = Vector3.one * r * 0.25f;
+                puffs[i].localScale = Vector3.one * r * 0.25f * Q;
                 puffVel[i] = dir.normalized * r * Random.Range(0.25f, 0.5f) + Vector3.up * r * 0.25f;
             }
 
@@ -101,7 +107,7 @@ namespace Hunt.Core
             if (fire != null)
             {
                 float grow = 1f - Mathf.Pow(1f - Mathf.Clamp01(t / 0.12f), 2f);
-                fire.localScale = Vector3.one * radius * Mathf.Lerp(0.3f, 1.25f, grow);
+                fire.localScale = Vector3.one * radius * Mathf.Lerp(0.3f, 1.25f, grow) * Q;
                 float a = Mathf.Clamp01(1f - (t - 0.08f) / 0.27f);
                 fireMat.color = new Color(Mathf.Lerp(0.6f, fireCol.r, a), Mathf.Lerp(0.2f, fireCol.g, a), fireCol.b * a, a);
                 if (a <= 0f) { Destroy(fire.gameObject); fire = null; }
@@ -115,7 +121,16 @@ namespace Hunt.Core
                 puffVel[i] *= 1f - 2.2f * dt;
                 puffVel[i] += Vector3.up * 0.9f * dt;
                 puffs[i].localPosition += puffVel[i] * dt;
-                puffs[i].localScale += Vector3.one * radius * 0.35f * dt;
+                puffs[i].localScale += Vector3.one * radius * 0.35f * Q * dt;
+            }
+
+            // 판이 늘 카메라를 보게 (저마다 조금씩 돌려 겹친 모양이 똑같지 않게)
+            var cam = gm != null && gm.ActiveCamera != null ? gm.ActiveCamera : Camera.main;
+            if (cam != null)
+            {
+                Quaternion face = cam.transform.rotation;
+                if (fire != null) fire.rotation = face * Quaternion.Euler(0f, 0f, spin[puffs.Length] + t * 40f);
+                for (int i = 0; i < puffs.Length; i++) puffs[i].rotation = face * Quaternion.Euler(0f, 0f, spin[i] + t * (i % 2 == 0 ? 25f : -25f));
             }
 
             if (flash != null)
