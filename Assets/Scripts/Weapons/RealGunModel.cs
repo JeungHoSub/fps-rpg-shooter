@@ -151,6 +151,7 @@ namespace Hunt.Weapons
             if (actionR != null) m.action = Detach(actionR.transform, root, "Action");
             if (magR != null) m.magazine = Detach(magR.transform, root, "Magazine");
             if (m.action != null) m.actionRest = m.action.localPosition;
+            if (c == WeaponClass.Sniper) m.actionTravel = 0.075f; // 노리쇠는 길게 당긴다
             if (m.magazine != null) m.magazineRest = m.magazine.localPosition;
 
             foreach (var t in root.GetComponentsInChildren<Transform>(true)) t.gameObject.layer = GunModelBuilder.ViewLayer;
