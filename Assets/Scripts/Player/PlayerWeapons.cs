@@ -21,6 +21,7 @@ namespace Hunt.Player
         public WeaponInstance Current => Slots.Count > 0 ? Slots[CurrentIndex] : null;
 
         public bool IsReloading => reloadTime > 0f;
+        float magClatterAt;
         public float SinceShot => Time.time - lastShotTime;
         public bool ReloadFromEmpty => reloadFromEmpty;
         public bool ShellReloading => shellReload;
@@ -174,6 +175,14 @@ namespace Hunt.Player
                 return;
             }
 
+            // 빈 탄창이 발밑에 떨어지는 '달그락'
+            if (magClatterAt > 0f && Time.time >= magClatterAt)
+            {
+                magClatterAt = 0f;
+                SFX.PlayPitched(SFX.Casing, 0.55f, 0.42f);
+                SFX.PlayPitched(SFX.Casing, 0.3f, 0.55f);
+            }
+
             // ---- 재장전 (진행도에 맞춰 탄창 빼는/끼우는 소리) ----
             if (reloadTime > 0f && shellReload)
             {
@@ -214,6 +223,7 @@ namespace Hunt.Player
                         var ct = cam.transform;
                         Hunt.Monsters.MonsterGib.Chunk(null, ct.position + ct.forward * 0.35f - ct.up * 0.3f + ct.right * 0.05f,
                             ct.forward * 0.6f - ct.up * 0.5f + Random.insideUnitSphere * 0.3f, new Color(0.13f, 0.13f, 0.14f), 0.07f);
+                        magClatterAt = Time.time + 0.42f; // 발밑에 떨어져 '달그락'
                     }
                 }
                 if (reloadStage == 1 && p > inAt) { SFX.PlayPitched(SFX.MagIn, 0.85f, pitch); reloadStage = 2; }
