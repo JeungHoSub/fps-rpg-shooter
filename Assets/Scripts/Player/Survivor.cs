@@ -74,7 +74,20 @@ namespace Hunt.Player
                 Part(PrimitiveType.Capsule, new Vector3(sx, 0.2f, 0.42f), new Vector3(0.13f, 0.2f, 0.13f), Quaternion.Euler(-20f, 0f, 0f), pants, false); // 정강이
                 Part(PrimitiveType.Capsule, new Vector3(sx * 1.6f, 0.6f, 0.12f), new Vector3(0.11f, 0.22f, 0.11f), Quaternion.Euler(60f, 0f, sx > 0 ? -20f : 20f), cloth, false); // 무릎 감싼 팔
             }
-            Part(PrimitiveType.Cube, new Vector3(0.1f, 0.5f, 0.05f), new Vector3(0.16f, 0.12f, 0.02f), Quaternion.identity, blood, false); // 옆구리 상처
+            // 젖은 담요를 어깨부터 무릎까지 덮어쓴 모습 (도형 팔다리가 덜 드러나게) + 담요에 번진 핏자국
+            var blanket = EnvMaterials.Plain(new Color(0.2f, 0.17f, 0.14f), 0.55f);    // 빗물에 젖어 번들거리는 갈색 담요
+            var b1 = FX.LowSphere(); b1.transform.SetParent(body, false);
+            b1.transform.localPosition = new Vector3(0f, 0.52f, 0.06f); b1.transform.localScale = new Vector3(0.62f, 0.72f, 0.66f);
+            b1.GetComponent<Renderer>().sharedMaterial = blanket;
+            var b2 = FX.LowSphere(); b2.transform.SetParent(body, false);              // 무릎 쪽으로 흘러내린 자락
+            b2.transform.localPosition = new Vector3(0f, 0.3f, 0.34f); b2.transform.localScale = new Vector3(0.56f, 0.4f, 0.46f);
+            b2.GetComponent<Renderer>().sharedMaterial = blanket;
+            var hood = FX.LowSphere(); hood.transform.SetParent(body, false);           // 머리 뒤로 걸친 자락
+            hood.transform.localPosition = new Vector3(0f, 0.98f, -0.08f); hood.transform.localScale = new Vector3(0.34f, 0.32f, 0.3f);
+            hood.GetComponent<Renderer>().sharedMaterial = blanket;
+            var st = FX.LowSphere(); st.transform.SetParent(body, false);                // 옆구리에 배어 나온 피
+            st.transform.localPosition = new Vector3(0.22f, 0.5f, 0.12f); st.transform.localScale = new Vector3(0.18f, 0.2f, 0.16f);
+            st.GetComponent<Renderer>().sharedMaterial = blood;
             // 곁에 놓인 꺼져 가는 휴대폰 불빛 (어둠 속에서 찾는 실마리, 조명은 안 씀)
             var phone = FX.LowSphere();
             phone.layer = 2;
