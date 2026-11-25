@@ -123,6 +123,7 @@ Unity 1인칭 싱글플레이 좀비 슈터 + RPG. **비 오는 밤의 한국 �
     19:21~: 벽 너머 그르렁 작게 · 현상금 망자 덤불 숨기(`bountyBush` → `Lurk`) · 떼 함께 알아챔(`packAlerted`) · 둘째 밤 몰래 하기 안내(`hunt.tut.stealth`) · `HUD.Notify(text, color, seconds)`. 20:22 보고함. 떼 바삐 걷기 `Monster.InHorde`.
     21:21~: 물 댄 논 `Hiding.InPaddy`(발소리 ×1.6, 걸음 ×0.85, 망자도 느림, 소리 막대 표시) · 물 튐 `FX.Splash`(나·망자 첨벙). 22:25 보고함.
     23:21~: 벽 너머 망자 발소리 작게. 00:21~: 시체 발견 → 뒤지기 (`Monster.recentBodies`, `seenBodyAt`). 01:21~: 도감 버릇 7줄. 02:21~ 점검(경고 0) · 03:21 하 품질 망자 물 튐 생략.
+    **피드백 (2026-11-25) "아직도 게임이 조잡해"** → 화면 색감 `Core/PostGrade.cs` + `Resources/Shaders/HuntGrade.shader`(채도·푸른 그늘/따뜻한 빛·대비·비네트·입자·FXAA, `GameSettings.Grade`, Esc PC줄 셋째 칸) · 소리 막대 위 글씨 최소화(중요 상태 3개까지) · 알림 4줄·17px.
   - 2026-11-24 05:55~10:20 작업 서버 재시작으로 멈춤 → 10:22 재개. 커밋 전 컴파일 확인은 scratchpad `ship.sh "메시지"` (오류면 커밋 안 함).
   - 보류: 망자 모델 다양화 (Mixamo — 사용자 토큰 다시 필요, 토큰은 하루쯤 지나면 만료).
   - 이후 작은 후보: 사용자 피드백 반영 → 성능(실기기 확인 필요) · 버그 점검 · 소리/연출 다듬기.
