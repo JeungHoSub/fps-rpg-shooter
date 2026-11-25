@@ -586,9 +586,15 @@ namespace Hunt.Player
             tr.time = rocket ? 0.5f : 0.2f;
             tr.startWidth = rocket ? 0.18f : 0.05f;
             tr.endWidth = 0f;
-            tr.sharedMaterial = FX.UnlitMaterial(rocket ? new Color(1f, 0.7f, 0.4f) : new Color(0.6f, 0.6f, 0.6f));
+            tr.sharedMaterial = FX.BeamMaterial(); // 가장자리가 번지는 꼬리
+            tr.textureMode = LineTextureMode.Stretch;
+            tr.startColor = rocket ? new Color(1f, 0.75f, 0.4f, 0.9f) : new Color(0.7f, 0.7f, 0.7f, 0.5f);
+            tr.endColor = new Color(tr.startColor.r, tr.startColor.g, tr.startColor.b, 0f);
             tr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            if (rocket) FX.MakeGlow(go, new Color(1f, 0.6f, 0.25f, 0.8f), 5f, false); // 꽁무니 불빛
         }
+
+        float puffClock;
 
         void Update()
         {
@@ -608,6 +614,13 @@ namespace Hunt.Player
             }
             transform.position += step;
             transform.rotation = Quaternion.LookRotation(vel) * Quaternion.Euler(90f, 0f, 0f);
+            // 로켓은 뒤로 회색 연기를 길게 남긴다
+            puffClock -= dt;
+            if (puffClock <= 0f)
+            {
+                puffClock = rocket ? 0.025f : 0.06f;
+                FX.Puff(transform.position - vel.normalized * 0.2f, rocket ? 0.3f : 0.15f, rocket ? new Color(0.55f, 0.53f, 0.5f, 0.4f) : new Color(0.6f, 0.6f, 0.6f, 0.2f));
+            }
         }
     }
 }

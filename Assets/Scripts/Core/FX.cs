@@ -493,6 +493,12 @@ namespace Hunt.Core
         }
 
         /// <summary>총구 연기: 쏘고 나서 피어오르는 희미한 연기.</summary>
+        /// <summary>연기 한 덩이 (제자리에서 천천히 퍼지며 떠오름).</summary>
+        public static void Puff(Vector3 at, float size, Color c)
+        {
+            Emit(mist, at, Random.insideUnitSphere * 0.25f + Vector3.up * 0.2f, size, Random.Range(0.9f, 1.5f), c);
+        }
+
         /// <summary>화염방사기 불줄기: 총구에서 앞으로 굴러가며 커지는 불덩이 몇 개 + 끝에 검은 연기.</summary>
         public static void FlameJet(Vector3 from, Vector3 to)
         {
