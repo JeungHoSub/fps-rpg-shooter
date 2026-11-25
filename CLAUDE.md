@@ -16,6 +16,8 @@ Unity 1인칭 싱글플레이 좀비 슈터 + RPG. **비 오는 밤의 한국 �
 - 사용자는 비개발자. 업데이트는 GitHub ZIP + PowerShell robocopy로 바탕화면 `fps-rpg-shooter`에 덮어씀 (삭제된 파일은 남음). 명령 문구: `Docs/UPDATE_POWERSHELL.txt`.
 - 여기(클라우드)에서는 유니티 실행 불가 → 변경 후 컴파일만 확인 가능:
   dotnet SDK + NuGet `UnityEngine.Modules 2021.3.33` 참조로 `Assets/Scripts/**/*.cs` 빌드 (2022+ API는 `#if UNITY_2022_2_OR_NEWER`).
+  **주의 (2026-11-25 사용자 유니티 오류)**: 프로젝트는 `Packages/manifest.json`에 켜진 모듈만 쓸 수 있다 (ScreenCapture 모듈이 없어 F12 사진에서 CS0103 → 모듈 추가로 고침).
+  컴파일 확인은 그 모듈 DLL만 참조하는 scratchpad `modcheck` 로 한다 (`ship.sh`가 사용). 새 모듈 API(ImageConversion·Terrain·Video 등)를 쓰려면 manifest에 모듈을 먼저 추가.
 
 ## 진행 순서 (2026-11-19 사용자 결정): **PC 방식으로 게임을 끝까지 완성 → 마지막에 모바일 조작으로 맞춤**
 - 지금은 키보드·마우스 기준으로 작업. 모바일 코드는 유지하되 PC 기본값은 꺼짐 (`GameSettings.ForceMobileControls` 기본 false).
