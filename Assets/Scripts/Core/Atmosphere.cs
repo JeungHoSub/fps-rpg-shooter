@@ -175,8 +175,8 @@ namespace Hunt.Core
             main.simulationSpace = ParticleSystemSimulationSpace.World;
             main.startLifetime = 1.1f;
             main.startSpeed = 0f;
-            main.startSize = new ParticleSystem.MinMaxCurve(0.012f, 0.022f);
-            main.startColor = new Color(0.65f, 0.7f, 0.8f, 0.35f);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.016f, 0.028f); // 부드러운 빗줄기는 가늘어 보여서 조금 굵게
+            main.startColor = new Color(0.65f, 0.7f, 0.8f, 0.4f);
             main.gravityModifier = 0f;
 
             var em = ps.emission;
@@ -194,7 +194,7 @@ namespace Hunt.Core
             vel.z = new ParticleSystem.MinMaxCurve(0.2f, 0.8f);
 
             var r = go.GetComponent<ParticleSystemRenderer>();
-            r.sharedMaterial = FX.UnlitMaterial(Color.white);
+            r.sharedMaterial = FX.SoftMaterial(false); // 끝이 가늘어지는 빗줄기 (네모 막대 대신)
             r.renderMode = ParticleSystemRenderMode.Stretch;
             r.velocityScale = 0.045f;
             r.lengthScale = 1f;
@@ -224,7 +224,7 @@ namespace Hunt.Core
             sol.enabled = true;
             sol.size = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.Linear(0f, 1f, 1f, 0f));
             var r = go.GetComponent<ParticleSystemRenderer>();
-            r.sharedMaterial = FX.UnlitMaterial(Color.white);
+            r.sharedMaterial = FX.SoftMaterial(false);
             r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             ps.Play();
             return ps;

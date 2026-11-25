@@ -61,7 +61,7 @@ namespace Hunt.Core
         static Material softDotMat, softCloudMat;
 
         /// <summary>둥근 입자 재질: dot = 가운데가 진한 작은 방울, cloud = 아주 부드러운 구름.</summary>
-        static Material SoftMaterial(bool cloud)
+        public static Material SoftMaterial(bool cloud)
         {
             var m = cloud ? softCloudMat : softDotMat;
             if (m != null) return m;
