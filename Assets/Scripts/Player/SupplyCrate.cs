@@ -68,15 +68,18 @@ namespace Hunt.Player
                 box.transform.localScale = new Vector3(0.8f, 0.5f, 0.5f);
                 box.GetComponent<Renderer>().sharedMaterial = EnvMaterials.Plain(new Color(0.3f, 0.33f, 0.22f), 0.3f);
             }
-            // 뚜껑 (열 때 튀어 오른다)
-            var l = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            Destroy(l.GetComponent<Collider>());
-            l.layer = 2;
-            l.transform.SetParent(transform, false);
-            l.transform.localPosition = new Vector3(0f, 0.52f, 0f);
-            l.transform.localScale = new Vector3(0.82f, 0.05f, 0.52f);
-            l.GetComponent<Renderer>().sharedMaterial = EnvMaterials.Plain(new Color(0.26f, 0.29f, 0.19f), 0.3f);
-            lid = l.transform;
+            // 뚜껑 (열 때 튀어 오른다) — 실사 상자 모델이 있으면 그 위에 판자를 덧대지 않는다 (어색해 보여서, 대신 열 때 상자가 들썩인다)
+            if (model == null)
+            {
+                var l = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                Destroy(l.GetComponent<Collider>());
+                l.layer = 2;
+                l.transform.SetParent(transform, false);
+                l.transform.localPosition = new Vector3(0f, 0.52f, 0f);
+                l.transform.localScale = new Vector3(0.82f, 0.05f, 0.52f);
+                l.GetComponent<Renderer>().sharedMaterial = EnvMaterials.Plain(new Color(0.26f, 0.29f, 0.19f), 0.3f);
+                lid = l.transform;
+            }
             // 노란 빛줄기: 바닥에서 위로 갈수록 옅어지는 부드러운 빛 (늘 나를 향해 돌아선 판 하나 — 딱딱한 원기둥 대신)
             var b = GameObject.CreatePrimitive(PrimitiveType.Quad);
             Destroy(b.GetComponent<Collider>());
@@ -156,6 +159,8 @@ namespace Hunt.Player
             }
             // 뚜껑: 튀어 올라 빙글 돌다 옆에 떨어진다
             openT += dt;
+            if (lid == null && openT < 0.5f) // 모델 상자: 열 때 한 번 들썩
+                transform.localScale = Vector3.one * (1f + Mathf.Sin(openT / 0.5f * Mathf.PI) * 0.08f);
             if (lid != null && openT < 1.2f)
             {
                 float k = openT / 1.2f;
