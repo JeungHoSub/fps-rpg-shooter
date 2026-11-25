@@ -493,6 +493,26 @@ namespace Hunt.Core
         }
 
         /// <summary>총구 연기: 쏘고 나서 피어오르는 희미한 연기.</summary>
+        /// <summary>화염방사기 불줄기: 총구에서 앞으로 굴러가며 커지는 불덩이 몇 개 + 끝에 검은 연기.</summary>
+        public static void FlameJet(Vector3 from, Vector3 to)
+        {
+            if (mist == null) return;
+            Vector3 d = to - from;
+            float len = d.magnitude;
+            if (len < 0.1f) return;
+            Vector3 dir = d / len;
+            int n = QualityManager.Level == GfxLevel.Low ? 3 : 5;
+            for (int i = 0; i < n; i++)
+            {
+                float t = Random.Range(0.05f, 0.35f);
+                Color c = Color.Lerp(new Color(1f, 0.85f, 0.4f, 0.75f), new Color(1f, 0.35f, 0.08f, 0.6f), Random.value);
+                Emit(mist, from + dir * len * t, dir * Random.Range(len * 1.2f, len * 2f) + Random.insideUnitSphere * 0.8f + Vector3.up * 0.4f,
+                    Random.Range(0.25f, 0.45f), Random.Range(0.35f, 0.55f), c);
+            }
+            if (Random.value < 0.35f)
+                Emit(mist, to + Vector3.up * 0.2f, Vector3.up * 1.2f + Random.insideUnitSphere * 0.4f, 0.5f, 1.2f, new Color(0.08f, 0.07f, 0.06f, 0.35f));
+        }
+
         public static void MuzzleSmoke(Vector3 pos, Vector3 fwd, float amount)
         {
             int n = Mathf.Max(1, Mathf.RoundToInt(2f * amount));

@@ -942,7 +942,7 @@ namespace Hunt.Player
                 }
                 info.baseDamage = pelletBase;
                 // 화염: 굵고 짧은 불줄기 / 산탄은 일부 펠릿만 예광탄 표시
-                if (flame) { if (i == 0) FX.Tracer(muzzle, Vector3.Lerp(muzzle, end, Random.Range(0.6f, 1f)), new Color(1f, Random.Range(0.35f, 0.6f), 0.1f), Random.Range(0.12f, 0.22f)); }
+                if (flame) { if (i == 0) { FX.Tracer(muzzle, Vector3.Lerp(muzzle, end, Random.Range(0.6f, 1f)), new Color(1f, Random.Range(0.35f, 0.6f), 0.1f), Random.Range(0.12f, 0.22f)); FX.FlameJet(muzzle, end); } }
                 else if (pellets == 1 || i % 3 == 0) FX.Tracer(muzzle, end, tracer, tracerWidth);
             }
 
