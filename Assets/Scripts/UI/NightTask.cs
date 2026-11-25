@@ -14,7 +14,8 @@ namespace Hunt.UI
         static Kind kind;
         static int goal, baseline, reward;
         static bool active, done;
-        static float doneAt = -100f;
+        static float doneAt = -100f, changedAt;
+        static int lastProg = -1;
 
         public static void Begin(PlayerCharacter p, int wave)
         {
@@ -67,6 +68,9 @@ namespace Hunt.UI
                 SFX.PlayPitched(SFX.LevelUp, 0.6f, 1f);
             }
             float a = done ? Mathf.Clamp01(1f - (Time.unscaledTime - doneAt - 4f) / 1f) : 1f; // 이룬 뒤 4초 있다가 사라짐
+            // 화면을 덜 어지럽게: 진행이 바뀐 뒤 8초가 지나면 옅게 (다시 바뀌면 또렷하게)
+            if (prog != lastProg) { lastProg = prog; changedAt = Time.unscaledTime; }
+            if (!done) a *= Mathf.Lerp(1f, 0.4f, Mathf.Clamp01((Time.unscaledTime - changedAt - 8f) / 1.5f));
             if (a <= 0f) return;
             float keep = UIKit.Alpha;
             UIKit.Alpha = keep * a;
