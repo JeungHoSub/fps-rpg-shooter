@@ -175,7 +175,14 @@ namespace Hunt.Player
                 return;
             }
 
-            if (cycleSoundAt > 0f && Time.time >= cycleSoundAt) { cycleSoundAt = 0f; SFX.PlayPitched(SFX.Bolt, 0.75f, cyclePitch); }
+            if (cycleSoundAt > 0f && Time.time >= cycleSoundAt)
+            {
+                cycleSoundAt = 0f;
+                SFX.PlayPitched(SFX.Bolt, 0.75f, cyclePitch);
+                // 펌프·노리쇠를 당기는 순간 빈 탄피가 튀어나온다 (산탄 = 붉은 껍데기)
+                var ctc = cam.transform;
+                FX.Casing(ctc.position + ctc.forward * 0.45f + ctc.right * 0.12f - ctc.up * 0.1f, ctc.right, ctc.up, cyclePitch > 1f);
+            }
 
             // 빈 탄창이 발밑에 떨어지는 '달그락'
             if (magClatterAt > 0f && Time.time >= magClatterAt)
