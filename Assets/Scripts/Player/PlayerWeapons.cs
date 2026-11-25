@@ -564,10 +564,11 @@ namespace Hunt.Player
                 var go = new GameObject("수류탄 길");
                 go.layer = 2;
                 arcLine = go.AddComponent<LineRenderer>();
-                arcLine.sharedMaterial = FX.UnlitMaterial(Color.white);
+                arcLine.sharedMaterial = FX.BeamMaterial(); // 가장자리가 번지는 선
+                arcLine.textureMode = LineTextureMode.Stretch;
                 arcLine.useWorldSpace = true;
-                arcLine.startWidth = 0.035f;
-                arcLine.endWidth = 0.02f;
+                arcLine.startWidth = 0.05f;
+                arcLine.endWidth = 0.03f;
                 arcLine.startColor = new Color(1f, 0.85f, 0.55f, 0.15f);
                 arcLine.endColor = new Color(1f, 0.6f, 0.35f, 0.8f);
                 arcLine.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;

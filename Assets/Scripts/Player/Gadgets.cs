@@ -183,13 +183,14 @@ namespace Hunt.Player
             bottle.layer = 2;
             bottle.transform.SetParent(go.transform, false);
             bottle.transform.localScale = new Vector3(0.08f, 0.1f, 0.08f);
-            bottle.GetComponent<Renderer>().sharedMaterial = FX.UnlitMaterial(new Color(0.35f, 0.5f, 0.3f, 0.85f));
+            bottle.GetComponent<Renderer>().sharedMaterial = EnvMaterials.Plain(new Color(0.22f, 0.36f, 0.2f), 0.92f, 0.1f); // 반들거리는 초록 유리 소주병
             var wick = FX.LowSphere(); // 가벼운 공 (판정 없음)
             wick.layer = 2;
             wick.transform.SetParent(go.transform, false);
             wick.transform.localPosition = new Vector3(0f, 0.13f, 0f);
             wick.transform.localScale = Vector3.one * 0.06f;
             wick.GetComponent<Renderer>().sharedMaterial = FX.UnlitMaterial(new Color(1f, 0.6f, 0.15f));
+            FX.MakeGlow(wick, new Color(1f, 0.55f, 0.15f, 0.8f), 6f, true); // 심지 불: 번지는 불빛
             var col = go.AddComponent<SphereCollider>();
             col.radius = 0.06f;
             var rb = go.AddComponent<Rigidbody>();
