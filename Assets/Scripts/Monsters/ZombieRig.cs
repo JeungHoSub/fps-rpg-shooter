@@ -272,13 +272,14 @@ namespace Hunt.Monsters
         {
             if (dead || bone == null || bone == Spine || bone == Spine2 || bone == Head) return;
             if (hitDir.sqrMagnitude < 0.0001f) return;
+            if (bone.name.IndexOf("hip", System.StringComparison.OrdinalIgnoreCase) >= 0 || bone.name.IndexOf("pelvis", System.StringComparison.OrdinalIgnoreCase) >= 0) strength *= 0.3f; // 골반은 몸 전체가 돌아가니 약하게
             int slot = -1;
             for (int i = 0; i < 4; i++) if (jerkBone[i] == bone) slot = i;
             if (slot < 0) { slot = jerkNext; jerkNext = (jerkNext + 1) % 4; jerkAng[slot] = 0f; jerkVel[slot] = 0f; }
             jerkBone[slot] = bone;
             jerkAxis[slot] = Vector3.Cross(Vector3.up, hitDir.normalized);
             if (jerkAxis[slot].sqrMagnitude < 0.01f) jerkAxis[slot] = transform.right;
-            jerkVel[slot] += Mathf.Lerp(500f, 1300f, Mathf.Clamp01(strength));
+            jerkVel[slot] += Mathf.Lerp(150f, 1300f, Mathf.Clamp01(strength));
         }
 
         /// <summary>피격 반응: 상체가 맞은 방향으로 젖혀진다. strength 0~1.</summary>
