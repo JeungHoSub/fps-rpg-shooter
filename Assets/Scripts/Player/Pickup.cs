@@ -88,6 +88,23 @@ namespace Hunt.Player
         void OnDisable() { all.Remove(this); }
 
         /// <summary>플레이어 3.5m 안에 보급품이 있나 (E를 줍기로 쓸지 재생으로 쓸지).</summary>
+        /// <summary>E 한 번에 집을 수 있는 보급품 수.</summary>
+        public static int CountTakeableNear()
+        {
+            var gm = GameManager.Instance;
+            var p = gm != null ? gm.Player : null;
+            if (p == null || p.IsDead) return 0;
+            int n = 0;
+            float bd = GrabRange * GrabRange;
+            foreach (var k in all)
+            {
+                if (k == null || k.grabbed || !k.CanTake(p)) continue;
+                Vector3 d = k.transform.position - p.transform.position; d.y = 0f;
+                if (d.sqrMagnitude < bd) n++;
+            }
+            return n;
+        }
+
         public static bool AnyNearPlayer()
         {
             // 주울 수 있는 것만 (가득 차서 못 줍는 부적 때문에 E 재생이 막히지 않게)

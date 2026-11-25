@@ -1333,7 +1333,11 @@ namespace Hunt.UI
         /// <summary>발밑 보급품 안내: [E] 줍기 / 가득 차서 못 줍는 이유.</summary>
         void DrawPickupPrompt()
         {
-            bool near = Pickup.NearestInfo(out string name, out bool can);
+            // 보급품은 저마다 이름표에 [E]가 있으니, 여러 개일 때만 '모두 줍기'를 아래에 띄운다
+            int many = Pickup.CountTakeableNear();
+            bool near = many >= 2;
+            string name = near ? $"모두 줍기 ({many})" : null;
+            bool can = near;
             if (!near && SupplyCrate.NearestToPlayer() != null) { near = true; name = "보급 상자 열기"; can = true; }
             if (!near && Jangseung.NearestToPlayer() != null) { near = true; name = "장승에게 절하기"; can = true; }
             if (!near && SentryTurret.NearestToPlayer() != null) { near = true; name = "기관총 거두기"; can = true; }
@@ -1350,7 +1354,7 @@ namespace Hunt.UI
             UIKit.Tex(r, UITheme.LineFade, new Color(0f, 0f, 0f, 0.6f));
             string text = lastPromptCan
                 ? (lastPromptName == "보급 상자 열기" || lastPromptName == "장승에게 절하기" || lastPromptName == "기관총 거두기" || lastPromptName.StartsWith("사이렌") || lastPromptName.StartsWith("상처") ? $"<color=#{UIKit.Hex(UITheme.GoldBright)}><b>[E]</b></color>  {lastPromptName}"
-                   : $"<color=#{UIKit.Hex(UITheme.GoldBright)}><b>[E]</b></color>  줍기  ·  {lastPromptName}")
+                   : $"<color=#{UIKit.Hex(UITheme.GoldBright)}><b>[E]</b></color>  {lastPromptName}")
                 : $"{lastPromptName}  ·  <color=#{UIKit.Hex(UITheme.Ash)}>{(lastPromptName == Pickup.NameOf(PickupKind.Rune) ? "생명이 가득해 못 줍는다" : "가득 차서 못 줍는다")}</color>";
             UIKit.Text(r, text, 18, UITheme.Bone, TextAnchor.MiddleCenter, serif: true);
             UIKit.Alpha = keep;
