@@ -100,6 +100,10 @@ namespace Hunt.Weapons
 
         static Transform Piece(Transform parent, Vector3 pos, Vector3 scale, Material mat, Vector3 euler, bool capsule)
         {
+            // 손가락 같은 작은 마디는 가벼운 공을 길게 늘여 쓴다 (캡슐은 꼭짓점이 많아 손 하나에 수천 개가 된다).
+            // 소매(크기 1로 만들어 뒤에 Seg로 늘림)만 캡슐.
+            bool small = capsule && scale.x < 0.2f;
+            if (small) { scale = new Vector3(scale.x, scale.y * 2f, scale.z); capsule = false; }
             GameObject g = capsule ? GameObject.CreatePrimitive(PrimitiveType.Capsule) : FX.LowSphere();
             var col = g.GetComponent<Collider>();
             if (col != null) Destroy(col);
