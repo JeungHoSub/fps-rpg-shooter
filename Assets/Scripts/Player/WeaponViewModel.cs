@@ -92,9 +92,23 @@ namespace Hunt.Player
             flash.transform.SetParent(model.muzzle, false);
             flash.transform.localPosition = new Vector3(0, 0, 0.05f);
             var r = flash.GetComponent<Renderer>();
-            r.sharedMaterial = FX.UnlitMaterial(new Color(1f, 0.85f, 0.45f));
-            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            r.enabled = false; // 단색 공은 숨기고(크기 기준으로만 씀) 부드러운 빛 판으로 심을 그린다
             flash.layer = GunModelBuilder.ViewLayer;
+            {
+                var glow = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                DestroyImmediate(glow.GetComponent<Collider>());
+                glow.name = "FlashGlow";
+                glow.layer = GunModelBuilder.ViewLayer;
+                glow.transform.SetParent(flash.transform, false);
+                glow.transform.localScale = new Vector3(3.2f, 3.2f, 1f);
+                var gr = glow.GetComponent<Renderer>();
+                gr.sharedMaterial = FX.SoftMaterial(true);
+                gr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                gr.receiveShadows = false;
+                var mpb = new MaterialPropertyBlock();
+                mpb.SetColor("_Color", new Color(1f, 0.78f, 0.4f, 0.9f));
+                gr.SetPropertyBlock(mpb);
+            }
             // 별 모양 불꽃 두 장: 정면(총구를 마주 보는 별) + 옆면(총열 따라 뻗는 혀) — 공 하나보다 총구 불꽃처럼 보이게
             var starMat = StarMaterial();
             for (int i = 0; i < 2; i++)
