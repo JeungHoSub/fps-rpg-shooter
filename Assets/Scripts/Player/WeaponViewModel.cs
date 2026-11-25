@@ -422,6 +422,7 @@ namespace Hunt.Player
             turretKit = Root("TurretHeld");
             Piece(turretKit.transform, PrimitiveType.Cube, Vector3.zero, new Vector3(0.14f, 0.14f, 0.42f), Mat(new Color(0.22f, 0.24f, 0.2f), 0.55f, 0.6f));
             Piece(turretKit.transform, PrimitiveType.Cylinder, new Vector3(0f, 0.02f, 0.3f), new Vector3(0.045f, 0.12f, 0.045f), Gadgets.Dark, Quaternion.Euler(90f, 0f, 0f));
+            ViewArms.HeldHand(turretKit.transform, new Vector3(0.088f, -0.02f, -0.06f), new Vector3(0f, 0f, 0f), new Vector3(0.15f, -0.15f, -0.3f)); // 상자 옆을 움켜쥔 손
             ShowHeld(null);
         }
 
