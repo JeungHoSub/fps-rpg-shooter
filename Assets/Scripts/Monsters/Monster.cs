@@ -527,11 +527,13 @@ namespace Hunt.Monsters
                 {
                     var b = recentBodies[bi];
                     if (Time.time - b.w > 25f) { recentBodies.RemoveAt(bi); continue; }
+                    if (b.w <= seenBodyAt) continue; // 이미 본 시체는 다시 안 뒤진다
                     var bp = new Vector3(b.x, b.y, b.z);
                     if ((bp - transform.position).sqrMagnitude < 6f * 6f && (bp - transform.position).sqrMagnitude > 1f
                         && CanSee(transform.position + Vector3.up * 1.5f * Data.scale, bp + Vector3.up * 0.4f))
                     {
                         HearNoise(bp, false);
+                        seenBodyAt = b.w;
                         break;
                     }
                 }
@@ -796,7 +798,7 @@ namespace Hunt.Monsters
         /// <summary>0~1: 나를 알아채기 직전인 정도 (HUD '…').</summary>
         public float Suspicion { get; private set; }
         bool inBush, passedHidden, sniffWarned;
-        float lookAround, bountyBushSearch;
+        float lookAround, bountyBushSearch, seenBodyAt = -1f;
         /// <summary>망자 떼의 일원 (뒤지러 갈 때 더 빨리 걷는다).</summary>
         public bool InHorde;
         Vector3? bountyBush;
