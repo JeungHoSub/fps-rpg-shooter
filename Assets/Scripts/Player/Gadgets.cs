@@ -130,6 +130,8 @@ namespace Hunt.Player
             g.spark.sharedMaterial = FX.UnlitMaterial(new Color(1f, 0.25f, 0.1f));
             g.spark.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             g.spark.enabled = false;
+            FX.MakeGlow(sp, new Color(1f, 0.35f, 0.1f, 0.8f), 5f, false); // 불씨 빛 (불씨와 함께 깜빡인다)
+            foreach (Transform c in sp.transform) c.gameObject.SetActive(false);
             SFX.Play(SFX.Swap, 0.5f);
         }
 
@@ -153,6 +155,7 @@ namespace Hunt.Player
                     sparkOn = !sparkOn;
                     blinkClock = sparkOn ? 0.05f : interval;
                     spark.enabled = sparkOn;
+                    foreach (Transform c in spark.transform) c.gameObject.SetActive(sparkOn);
                     if (sparkOn) SFX.PlayAt(SFX.HitTick, transform.position, 0.25f);
                 }
             }

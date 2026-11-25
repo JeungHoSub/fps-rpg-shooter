@@ -740,6 +740,7 @@ namespace Hunt.Monsters
             var r = l.GetComponent<Renderer>();
             r.sharedMaterial = FX.UnlitMaterial(new Color(1f, 0.82f, 0.3f));
             r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            FX.MakeGlow(l, new Color(1f, 0.75f, 0.3f, 0.7f), 5f, false); // 등불 둘레 번지는 빛
             bountyLamp = l.transform;
             if (QualityManager.Level != GfxLevel.Low)
             {
@@ -837,6 +838,7 @@ namespace Hunt.Monsters
                 var r = e.GetComponent<Renderer>();
                 r.sharedMaterial = FX.UnlitMaterial(new Color(1f, 0.15f, 0.08f));
                 r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                FX.MakeGlow(e, new Color(1f, 0.12f, 0.05f, 0.75f), 4f, false); // 어둠 속에서 번지는 붉은 눈빛
             }
             lurkEyes.SetActive(false);
         }
