@@ -11,6 +11,7 @@ Shader "Hidden/Hunt/Grade"
             CGPROGRAM
             #pragma vertex vert_img
             #pragma fragment frag
+            #pragma target 3.0
             #include "UnityCG.cginc"
 
             sampler2D _MainTex;
@@ -25,17 +26,18 @@ Shader "Hidden/Hunt/Grade"
             float4 _Shadow;
             float4 _Highlight;
 
+            float3 S (float2 uv) { return tex2Dlod(_MainTex, float4(uv, 0.0, 0.0)).rgb; } // 분기 안에서도 안전한 읽기
             float Luma (float3 c) { return dot(c, float3(0.299, 0.587, 0.114)); }
 
             // 가벼운 계단 현상 줄이기 (FXAA 2 방식, 9번 읽기) — 안티에일리어싱이 꺼진 '하'·'중' 품질용
             float3 Fxaa (float2 uv)
             {
                 float2 t = _MainTex_TexelSize.xy;
-                float3 cM = tex2D(_MainTex, uv).rgb;
-                float lNW = Luma(tex2D(_MainTex, uv + float2(-1.0, -1.0) * t).rgb);
-                float lNE = Luma(tex2D(_MainTex, uv + float2( 1.0, -1.0) * t).rgb);
-                float lSW = Luma(tex2D(_MainTex, uv + float2(-1.0,  1.0) * t).rgb);
-                float lSE = Luma(tex2D(_MainTex, uv + float2( 1.0,  1.0) * t).rgb);
+                float3 cM = S(uv);
+                float lNW = Luma(S(uv + float2(-1.0, -1.0) * t));
+                float lNE = Luma(S(uv + float2( 1.0, -1.0) * t));
+                float lSW = Luma(S(uv + float2(-1.0,  1.0) * t));
+                float lSE = Luma(S(uv + float2( 1.0,  1.0) * t));
                 float lM = Luma(cM);
                 float lMin = min(lM, min(min(lNW, lNE), min(lSW, lSE)));
                 float lMax = max(lM, max(max(lNW, lNE), max(lSW, lSE)));
@@ -46,8 +48,8 @@ Shader "Hidden/Hunt/Grade"
                 float reduce = max((lNW + lNE + lSW + lSE) * 0.03125, 1.0 / 128.0);
                 float rcpMin = 1.0 / (min(abs(dir.x), abs(dir.y)) + reduce);
                 dir = clamp(dir * rcpMin, -8.0, 8.0) * t;
-                float3 a = 0.5 * (tex2D(_MainTex, uv + dir * (1.0 / 3.0 - 0.5)).rgb + tex2D(_MainTex, uv + dir * (2.0 / 3.0 - 0.5)).rgb);
-                float3 b = a * 0.5 + 0.25 * (tex2D(_MainTex, uv - dir * 0.5).rgb + tex2D(_MainTex, uv + dir * 0.5).rgb);
+                float3 a = 0.5 * (S(uv + dir * (1.0 / 3.0 - 0.5)) + S(uv + dir * (2.0 / 3.0 - 0.5)));
+                float3 b = a * 0.5 + 0.25 * (S(uv - dir * 0.5) + S(uv + dir * 0.5));
                 float lB = Luma(b);
                 return (lB < lMin || lB > lMax) ? a : b;
             }
