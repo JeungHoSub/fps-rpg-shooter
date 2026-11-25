@@ -21,7 +21,7 @@ namespace Hunt.Player
         public WeaponInstance Current => Slots.Count > 0 ? Slots[CurrentIndex] : null;
 
         public bool IsReloading => reloadTime > 0f;
-        float magClatterAt;
+        float magClatterAt, cycleSoundAt, cyclePitch = 1f;
         public float SinceShot => Time.time - lastShotTime;
         public bool ReloadFromEmpty => reloadFromEmpty;
         public bool ShellReloading => shellReload;
@@ -174,6 +174,8 @@ namespace Hunt.Player
                 if (Mode != Hand.Gadget) { charging = false; ThrowCharge = 0f; }
                 return;
             }
+
+            if (cycleSoundAt > 0f && Time.time >= cycleSoundAt) { cycleSoundAt = 0f; SFX.PlayPitched(SFX.Bolt, 0.75f, cyclePitch); }
 
             // 빈 탄창이 발밑에 떨어지는 '달그락'
             if (magClatterAt > 0f && Time.time >= magClatterAt)
@@ -762,6 +764,10 @@ namespace Hunt.Player
             var inf = player.Infection;
             fireCooldown = w.FireInterval;
             w.ammoInMag--;
+            // 펌프 산탄총·볼트 저격총: 쏘고 나서 '척-척' 장전 소리
+            bool pump = w.data.weaponClass == WeaponClass.Shotgun && !w.data.automatic && w.data.magazine > 2;
+            bool bolt = w.data.weaponClass == WeaponClass.Sniper && w.FireInterval > 0.6f;
+            if (pump || bolt) { cycleSoundAt = Time.time + (pump ? 0.22f : 0.3f); cyclePitch = pump ? 1.15f : 0.92f; }
             player.InterruptItem();
             lastShotTime = Time.time;
 
