@@ -98,8 +98,15 @@ namespace Hunt.Core
             set { ambVol = Mathf.Clamp(value, 0f, 1.5f); Save(AmbKey, ambVol.Value); }
         }
 
-        const string GoreKey = "hunt.gore", CrouchKey = "hunt.crouchtoggle", MarksKey = "hunt.marks";
-        static bool? crouchToggle, marks;
+        const string GoreKey = "hunt.gore", CrouchKey = "hunt.crouchtoggle", MarksKey = "hunt.marks", GradeKey = "hunt.grade";
+        static bool? crouchToggle, marks, grade;
+
+        /// <summary>화면 색감(영화풍 색·가장자리 어둡게·필름 입자). 끄면 원래 색.</summary>
+        public static bool Grade
+        {
+            get { if (grade == null) grade = Load(GradeKey, 1f) > 0.5f; return grade.Value; }
+            set { grade = value; Save(GradeKey, value ? 1f : 0f); }
+        }
 
         /// <summary>망자 머리 위 '!'·'?'·'…' 표시 (끄면 소리·눈치로만 판단).</summary>
         public static bool Marks

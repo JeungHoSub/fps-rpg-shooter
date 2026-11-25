@@ -200,6 +200,7 @@ namespace Hunt.Core
             cam.clearFlags = CameraClearFlags.SolidColor;
             camGo.AddComponent<AudioListener>();
             camGo.AddComponent<EarRing>(); // 폭발 귀 울림 · 생명이 낮을 때 먹먹함
+            camGo.AddComponent<PostGrade>(); // 화면 색감 (영화풍, Esc에서 끌 수 있음)
             cam.cullingMask &= ~(1 << GunModelBuilder.ViewLayer);
             ActiveCamera = cam;
 

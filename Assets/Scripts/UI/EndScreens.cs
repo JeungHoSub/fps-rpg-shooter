@@ -132,8 +132,11 @@ namespace Hunt.UI
                     GameSettings.CrouchToggle = !GameSettings.CrouchToggle;
                 if (UIKit.Button(new Rect(r.x + 66 + tw, y, tw, 52), "머리 위 표시", 16, GameSettings.Marks, true, GameSettings.Marks ? "! ? … 켜짐" : "꺼짐"))
                     GameSettings.Marks = !GameSettings.Marks;
+                // 화면 색감 (영화풍) — 터치 미리보기는 유니티 메뉴 Hunt → 모바일 조작 미리보기 로 옮김
+                if (UIKit.Button(new Rect(r.x + 72 + tw * 2, y, tw, 52), "화면 색감", 16, GameSettings.Grade, true, GameSettings.Grade ? "영화풍 켜짐" : "원래 색"))
+                    GameSettings.Grade = !GameSettings.Grade;
             }
-            if (!Application.isMobilePlatform &&
+            if (GameInput.Mobile && !Application.isMobilePlatform &&
                 UIKit.Button(new Rect(r.x + 72 + tw * 2, y, tw, 52), "터치 미리보기", 16, GameSettings.ForceMobileControls, true, GameSettings.ForceMobileControls ? "켜짐" : "꺼짐"))
                 GameSettings.ForceMobileControls = !GameSettings.ForceMobileControls;
             y += 70;
